@@ -21,6 +21,7 @@ type ListingEntry struct {
 	Version  *version.Version
 	URL      *url.URL
 	Checksum string
+	Type     DatabaseType
 }
 
 // ListingEntryJSON is a helper struct for converting a ListingEntry into JSON (or parsing from JSON)
@@ -29,6 +30,7 @@ type ListingEntryJSON struct {
 	Version  string `json:"version"`
 	URL      string `json:"url"`
 	Checksum string `json:"checksum"`
+	Type     string `json:"type"`
 }
 
 // NewListingEntryFromArchive creates a new ListingEntry based on the metadata from a database flat file.
@@ -41,12 +43,17 @@ func NewListingEntryFromArchive(fs afero.Fs, metadata Metadata, dbArchivePath st
 	dbArchiveName := filepath.Base(dbArchivePath)
 	fileURL, _ := url.Parse(baseURL.String())
 	fileURL.Path = path.Join(fileURL.Path, dbArchiveName)
+	dbType := ParseDatabaseTypeFromArchivePath(dbArchiveName)
+	if dbType == UnknownDbType {
+		return ListingEntry{}, fmt.Errorf("unable to determine db type from %q", dbArchiveName)
+	}
 
 	return ListingEntry{
 		Built:    metadata.Built,
 		Version:  metadata.Version,
 		URL:      fileURL,
 		Checksum: "sha256:" + checksum,
+		Type:     dbType,
 	}, nil
 }
 
@@ -72,6 +79,7 @@ func (l ListingEntryJSON) ToListingEntry() (ListingEntry, error) {
 		Version:  ver,
 		URL:      u,
 		Checksum: l.Checksum,
+		Type:     DatabaseType(l.Type),
 	}, nil
 }
 
@@ -94,6 +102,7 @@ func (l *ListingEntry) MarshalJSON() ([]byte, error) {
 		Version:  l.Version.String(),
 		Checksum: l.Checksum,
 		URL:      l.URL.String(),
+		Type:     string(l.Type),
 	})
 }
 

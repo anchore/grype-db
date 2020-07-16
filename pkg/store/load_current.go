@@ -8,9 +8,8 @@ import (
 )
 
 // LoadCurrent provides the current default vulnerability store object; currently defaults to sqlite.
-func LoadCurrent(path string, overwrite bool) (db.Store, func() error, error) {
-	slOptions := sqlite.Options{FilePath: path, Clean: overwrite}
-	store, storeCleanupFn, err := sqlite.NewStore(&slOptions)
+func LoadCurrent(dbDir string, overwrite bool) (db.Store, func() error, error) {
+	store, storeCleanupFn, err := sqlite.NewStore(dbDir, overwrite)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load current store: %w", err)
 	}

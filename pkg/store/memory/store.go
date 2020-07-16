@@ -6,29 +6,39 @@ import (
 
 // integrity check
 var _ db.VulnerabilityStoreWriter = &Store{}
+var _ db.VulnerabilityMetadataStoreWriter = &Store{}
 
 // Store holds an instance of the database connection
 type Store struct {
-	db map[string][]*db.Vulnerability
+	vulnerabilities map[string][]*db.Vulnerability
+	metadata        map[string]*db.VulnerabilityMetadata
 }
 
 // NewStore creates a new instance of the store
 func NewStore() *Store {
 	return &Store{
-		db: make(map[string][]*db.Vulnerability),
+		vulnerabilities: make(map[string][]*db.Vulnerability),
 	}
 }
 
-func (b *Store) AddVulnerability(vulns ...*db.Vulnerability) error {
-	for _, v := range vulns {
-		if _, ok := b.db[v.Namespace]; !ok {
-			b.db[v.Namespace] = make([]*db.Vulnerability, 0)
+func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
+	for _, v := range vulnerabilities {
+		if _, ok := s.vulnerabilities[v.Namespace]; !ok {
+			s.vulnerabilities[v.Namespace] = make([]*db.Vulnerability, 0)
 		}
-		b.db[v.Namespace] = append(b.db[v.Namespace], v)
+		s.vulnerabilities[v.Namespace] = append(s.vulnerabilities[v.Namespace], v)
 	}
 	return nil
 }
 
-func (b *Store) All() map[string][]*db.Vulnerability {
-	return b.db
+func (s *Store) All() map[string][]*db.Vulnerability {
+	return s.vulnerabilities
+}
+
+func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
+	for _, m := range metadata {
+		s.metadata[m.ID] = m
+	}
+
+	return nil
 }

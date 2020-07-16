@@ -38,6 +38,7 @@ func TestNewListingFromPath(t *testing.T) {
 					URL:      mustUrl(url.Parse("http://localhost:5000/vulnerability-db-v1.1.0+2020-6-13.tar.gz")),
 					Version:  version.Must(version.NewVersion("1.1.0")),
 					Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
+					Type: VulnerabilityDbType,
 				},
 				Available: []ListingEntry{
 					{
@@ -45,6 +46,7 @@ func TestNewListingFromPath(t *testing.T) {
 						URL:      mustUrl(url.Parse("http://localhost:5000/vulnerability-db-v0.2.0+2020-6-12.tar.gz")),
 						Version:  version.Must(version.NewVersion("0.2.0")),
 						Checksum: "sha256:e20c251202948df7f853ddc812f64826bdcd6a285c839a7c65939e68609dfc6e",
+						Type: VulnerabilityDbType,
 					},
 				},
 			},
@@ -81,6 +83,7 @@ func TestListingBestUpdate(t *testing.T) {
 				URL:      mustUrl(url.Parse("http://localhost:5000/vulnerability-db-v1.1.0+2020-6-13.tar.gz")),
 				Version:  version.Must(version.NewVersion("1.1.0")),
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
+				Type: VulnerabilityDbType,
 			},
 		},
 		{
@@ -91,6 +94,7 @@ func TestListingBestUpdate(t *testing.T) {
 				URL:      mustUrl(url.Parse("http://localhost:5000/vulnerability-db-v0.2.0+2020-6-12.tar.gz")),
 				Version:  version.Must(version.NewVersion("0.2.0")),
 				Checksum: "sha256:e20c251202948df7f853ddc812f64826bdcd6a285c839a7c65939e68609dfc6e",
+				Type: VulnerabilityDbType,
 			},
 		},
 	}
