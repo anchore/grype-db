@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
-	"path/filepath"
 	"time"
 
 	"github.com/anchore/go-version"
@@ -14,13 +13,14 @@ import (
 	"github.com/spf13/afero"
 )
 
+const MetadataFileName = "metadata.json"
+
 // Metadata represents the basic identifying information of a database flat file (built/version) and a way to
 // verify the contents (checksum).
 type Metadata struct {
 	Built    time.Time
 	Version  *version.Version
 	Checksum string
-	Type     DatabaseType
 }
 
 // MetadataJSON is a helper struct for parsing and assembling Metadata objects to and from JSON.
@@ -28,7 +28,6 @@ type MetadataJSON struct {
 	Built    string `json:"built"` // RFC 3339
 	Version  string `json:"version"`
 	Checksum string `json:"checksum"`
-	Type     string `json:"type"`
 }
 
 // ToMetadata converts a MetadataJSON object to a Metadata object.
@@ -47,50 +46,33 @@ func (m MetadataJSON) ToMetadata() (Metadata, error) {
 		Built:    build.UTC(),
 		Version:  ver,
 		Checksum: m.Checksum,
-		Type: DatabaseType(m.Type),
 	}
 
 	return metadata, nil
 }
 
-// NewMetadataFromDir generates a Metadata object from a directory containing database metadata files.
-func NewMetadataFromDir(fs afero.Fs, dir string) ([]Metadata, error) {
-	var metadata = make([]Metadata, 0)
-	patterns := []string{
-		path.Join(dir, VulnerabilityDbType+".json"),
-		path.Join(dir, VulnerabilityMetadataDbType+".json"),
+func metadataPath(dir string) string {
+	return path.Join(dir, MetadataFileName)
+}
+
+// NewMetadataFromDir generates a Metadata object from a directory containing a vulnerability.db flat file.
+func NewMetadataFromDir(fs afero.Fs, dir string) (*Metadata, error) {
+	metadataFilePath := metadataPath(dir)
+	if !file.Exists(fs, metadataFilePath) {
+		return nil, nil
 	}
-
-	for _, pattern := range patterns {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse metadata files from dir: %w", err)
-		}
-
-		for _, metadataFilePath := range matches {
-
-			if !file.Exists(fs, metadataFilePath) {
-				return nil, nil
-			}
-			f, err := fs.Open(metadataFilePath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to open DB metadata path (%s): %w", metadataFilePath, err)
-			}
-
-			var m Metadata
-			err = json.NewDecoder(f).Decode(&m)
-			if err != nil {
-				_ = f.Close()
-				return nil, fmt.Errorf("unable to parse DB metadata (%s): %w", metadataFilePath, err)
-			}
-			_ = f.Close()
-
-			metadata = append(metadata, m)
-		}
-
+	f, err := fs.Open(metadataFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open DB metadata path (%s): %w", metadataFilePath, err)
 	}
+	defer f.Close()
 
-	return metadata, nil
+	var m Metadata
+	err = json.NewDecoder(f).Decode(&m)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse DB metadata (%s): %w", metadataFilePath, err)
+	}
+	return &m, nil
 }
 
 func (m *Metadata) UnmarshalJSON(data []byte) error {
@@ -106,9 +88,9 @@ func (m *Metadata) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// IsSupersededBy takes a ListingEntry and determines if the entry candidate is newer than what is hinted at
+// IsSupercededBy takes a ListingEntry and determines if the entry candidate is newer than what is hinted at
 // in the current Metadata object.
-func (m *Metadata) IsSupersededBy(entry *ListingEntry) bool {
+func (m *Metadata) IsSupercededBy(entry *ListingEntry) bool {
 	if m == nil {
 		log.Debugf("cannot find existing metadata, using update...")
 		// any valid update beats no database, use it!
@@ -132,7 +114,7 @@ func (m *Metadata) IsSupersededBy(entry *ListingEntry) bool {
 }
 
 func (m Metadata) String() string {
-	return fmt.Sprintf("Metadata(built=%s version=%s checksum=%s type=%s)", m.Built, m.Version, m.Checksum, m.Type)
+	return fmt.Sprintf("Metadata(built=%s version=%s checksum=%s)", m.Built, m.Version, m.Checksum)
 }
 
 // Write out a Metadata object to the given path.
@@ -141,7 +123,6 @@ func (m Metadata) Write(toPath string) error {
 		Built:    m.Built.UTC().Format(time.RFC3339),
 		Version:  m.Version.String(),
 		Checksum: m.Checksum,
-		Type:     string(m.Type),
 	}
 
 	contents, err := json.MarshalIndent(&metadata, "", " ")

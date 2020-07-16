@@ -12,7 +12,7 @@ type ID struct {
 }
 
 type IDReader interface {
-	GetID() (ID, error)
+	GetID() (*ID, error)
 }
 
 type IDWriter interface {

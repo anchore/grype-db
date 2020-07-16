@@ -2,12 +2,10 @@ package sqlite
 
 import (
 	"fmt"
-	"path"
 	"sort"
 
 	"github.com/anchore/siren-db/internal"
 	"github.com/anchore/siren-db/pkg/db"
-	"github.com/hashicorp/go-multierror"
 	"github.com/jinzhu/gorm"
 
 	// provide the sqlite dialect to gorm via import
@@ -20,23 +18,14 @@ var _ db.Store = &Store{}
 // Store holds an instance of the database connection
 type Store struct {
 	vulnDb *gorm.DB
-	metadataDb *gorm.DB
 }
 
 type CleanupFn func() error
 
 // NewStore creates a new instance of the store
-func NewStore(dbDir string, overwrite bool) (*Store, CleanupFn, error) {
+func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 	vulnDbObj, err := open(config{
-		DbPath:    path.Join(dbDir, db.VulnerabilityStoreFileName),
-		Overwrite: overwrite,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	metadataDbObj, err := open(config{
-		DbPath:    path.Join(dbDir, db.VulnerabilityMetadataStoreFileName),
+		DbPath:    dbFilePath,
 		Overwrite: overwrite,
 	})
 	if err != nil {
@@ -46,34 +35,29 @@ func NewStore(dbDir string, overwrite bool) (*Store, CleanupFn, error) {
 	// TODO: this will affect schema before we validate we should be using this DB
 	vulnDbObj.AutoMigrate(&idModel{})
 	vulnDbObj.AutoMigrate(&vulnerabilityModel{})
-	metadataDbObj.AutoMigrate(&vulnerabilityMetadataModel{})
-
-	cleanupFn := func() error {
-		var errs error
-
-		err = vulnDbObj.Close()
-		if err != nil {
-			errs = multierror.Append(errs, err)
-		}
-
-		err = metadataDbObj.Close()
-		if err != nil {
-			errs = multierror.Append(errs, err)
-		}
-
-		return errs
-	}
+	vulnDbObj.AutoMigrate(&vulnerabilityMetadataModel{})
 
 	return &Store{
 		vulnDb: vulnDbObj,
-		metadataDb: metadataDbObj,
-	}, cleanupFn, nil
+	}, vulnDbObj.Close, nil
 }
 
-func (s *Store) GetID() (db.ID, error) {
-	var model idModel
-	result := s.vulnDb.Last(&model)
-	return model.Inflate(), result.Error
+func (s *Store) GetID() (*db.ID, error) {
+	var models []idModel
+	result := s.vulnDb.Find(&models)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	switch {
+	case len(models) > 1:
+		return nil, fmt.Errorf("found multiple DB IDs")
+	case len(models) == 1:
+		id := models[0].Inflate()
+		return &id, nil
+	}
+
+	return nil, nil
 }
 
 func (s *Store) SetID(id db.ID) error {
@@ -129,7 +113,7 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
 	var models []vulnerabilityMetadataModel
 
-	result := s.metadataDb.Where(&vulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
+	result := s.vulnDb.Where(&vulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -171,7 +155,7 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 			sort.Strings(existing.Links)
 
 			model := newVulnerabilityMetadataModel(*existing)
-			result := s.metadataDb.Save(&model)
+			result := s.vulnDb.Save(&model)
 
 			if result.RowsAffected != 1 {
 				return fmt.Errorf("unable to merge vulnerability metadata (%d rows affected)", result.RowsAffected)
@@ -183,7 +167,7 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 		} else {
 			model := newVulnerabilityMetadataModel(*m)
 			// this is a new entry
-			result := s.metadataDb.Create(&model)
+			result := s.vulnDb.Create(&model)
 			if result.Error != nil {
 				return result.Error
 			}

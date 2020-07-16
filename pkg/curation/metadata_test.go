@@ -12,29 +12,23 @@ import (
 func TestMetadataParse(t *testing.T) {
 	tests := []struct {
 		fixture  string
-		expected []Metadata
+		expected Metadata
 		err      bool
 	}{
 		{
 			fixture: "test-fixtures/metadata-gocase",
-			expected: []Metadata{
-				{
-					Built:    time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
-					Version:  version.Must(version.NewVersion("0.2.0")),
-					Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
-					Type:     VulnerabilityDbType,
-				},
+			expected: Metadata{
+				Built:    time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
+				Version:  version.Must(version.NewVersion("0.2.0")),
+				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
 			},
 		},
 		{
 			fixture: "test-fixtures/metadata-edt-timezone",
-			expected: []Metadata{
-				{
-					Built:    time.Date(2020, 06, 15, 18, 02, 36, 0, time.UTC),
-					Version:  version.Must(version.NewVersion("0.2.0")),
-					Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
-					Type:     VulnerabilityMetadataDbType,
-				},
+			expected: Metadata{
+				Built:    time.Date(2020, 06, 15, 18, 02, 36, 0, time.UTC),
+				Version:  version.Must(version.NewVersion("0.2.0")),
+				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
 			},
 		},
 	}
@@ -48,18 +42,18 @@ func TestMetadataParse(t *testing.T) {
 				t.Fatalf("expected errer but got none")
 			}
 
-			if len(metadata) == 0 {
+			if metadata == nil {
 				t.Fatalf("metadata not found: %+v", test.fixture)
 			}
 
-			for _, diff := range deep.Equal(metadata, test.expected) {
+			for _, diff := range deep.Equal(*metadata, test.expected) {
 				t.Errorf("metadata difference: %s", diff)
 			}
 		})
 	}
 }
 
-func TestMetadataIsSupersededBy(t *testing.T) {
+func TestMetadataIsSupercededBy(t *testing.T) {
 	tests := []struct {
 		name                string
 		current             *Metadata
@@ -103,7 +97,7 @@ func TestMetadataIsSupersededBy(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := test.current.IsSupersededBy(test.update)
+			actual := test.current.IsSupercededBy(test.update)
 
 			if test.expectedToSupercede != actual {
 				t.Errorf("failed supercede assertion: got %+v", actual)

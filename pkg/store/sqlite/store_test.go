@@ -11,13 +11,13 @@ import (
 )
 
 func TestStore_GetID_SetID(t *testing.T) {
-	dbFilePath, err := ioutil.TempFile("", "siren-db-test-store")
+	dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
-	defer os.Remove(dbFilePath.Name())
+	defer os.RemoveAll(dbTempDir)
 
-	store, cleanupFn, err := NewStore(WithDbPath(dbFilePath.Name()))
+	store, cleanupFn, err := NewStore(dbTempDir, true)
 	defer cleanupFn()
 	if err != nil {
 		t.Fatalf("could not create store: %+v", err)
@@ -35,7 +35,7 @@ func TestStore_GetID_SetID(t *testing.T) {
 	if actual, err := store.GetID(); err != nil {
 		t.Fatalf("failed to get ID: %+v", err)
 	} else {
-		diffs := deep.Equal(expected, actual)
+		diffs := deep.Equal(&expected, actual)
 		if len(diffs) > 0 {
 			for _, d := range diffs {
 				t.Errorf("Diff: %+v", d)
@@ -45,13 +45,13 @@ func TestStore_GetID_SetID(t *testing.T) {
 }
 
 func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
-	dbFilePath, err := ioutil.TempFile("", "siren-db-test-store")
+	dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
-	defer os.Remove(dbFilePath.Name())
+	defer os.RemoveAll(dbTempDir)
 
-	store, cleanupFn, err := NewStore(WithDbPath(dbFilePath.Name()))
+	store, cleanupFn, err := NewStore(dbTempDir, true)
 	defer cleanupFn()
 	if err != nil {
 		t.Fatalf("could not create store: %+v", err)
@@ -96,13 +96,13 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 }
 
 func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
-	dbFilePath, err := ioutil.TempFile("", "siren-db-test-store")
+	dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
-	defer os.Remove(dbFilePath.Name())
+	defer os.RemoveAll(dbTempDir)
 
-	store, cleanupFn, err := NewStore(WithDbPath(dbFilePath.Name()))
+	store, cleanupFn, err := NewStore(dbTempDir, true)
 	defer cleanupFn()
 	if err != nil {
 		t.Fatalf("could not create store: %+v", err)
@@ -139,15 +139,13 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 	}
 }
 
-
-
 func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 	tests := []struct {
 		name     string
 		add      []db.VulnerabilityMetadata
 		expected db.VulnerabilityMetadata
-		err bool
-	} {
+		err      bool
+	}{
 		{
 			name: "go-case",
 			add: []db.VulnerabilityMetadata{
@@ -213,17 +211,16 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 			err: true,
 		},
 	}
-	
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
-			dbFilePath, err := ioutil.TempFile("", "siren-db-test-store")
+			dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
 			if err != nil {
 				t.Fatalf("could not create temp file: %+v", err)
 			}
-			defer os.Remove(dbFilePath.Name())
+			defer os.RemoveAll(dbTempDir)
 
-			store, cleanupFn, err := NewStore(WithDbPath(dbFilePath.Name()))
+			store, cleanupFn, err := NewStore(dbTempDir, true)
 			defer cleanupFn()
 			if err != nil {
 				t.Fatalf("could not create store: %+v", err)
