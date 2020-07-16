@@ -1,14 +1,15 @@
 package sqlite
 
 import (
-	"database/sql"
-	"encoding/json"
 	"fmt"
-	"time"
+	"sort"
 
-	"github.com/anchore/go-version"
-	"github.com/anchore/siren-db/internal/log"
+	"github.com/anchore/siren-db/internal"
 	"github.com/anchore/siren-db/pkg/db"
+	"github.com/jinzhu/gorm"
+
+	// provide the sqlite dialect to gorm via import
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 // integrity check
@@ -16,174 +17,164 @@ var _ db.Store = &Store{}
 
 // Store holds an instance of the database connection
 type Store struct {
-	db *sql.DB
+	vulnDb *gorm.DB
 }
 
 type CleanupFn func() error
 
 // NewStore creates a new instance of the store
-func NewStore(options *Options) (*Store, CleanupFn, error) {
-	d, err := Open(options)
+func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
+	vulnDbObj, err := open(config{
+		DbPath:    dbFilePath,
+		Overwrite: overwrite,
+	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to create a new connection to sqlite3 db: %s", err)
+		return nil, nil, err
 	}
 
-	// When a new instance is created, ensure that the table exists
-	initStatements := []string{
-		// Vulnerabilities table
-		`CREATE TABLE IF NOT EXISTS vulns(
-		id INTEGER PRIMARY KEY,
-		cve_id,
-		description,
-		epochless_version,
-		name,
-		namespace_name,
-		severity,
-		version,
-		version_format,
-		cpes);`,
-
-		// index to optimize GetVulnerability()
-		`CREATE INDEX IF NOT EXISTS vuln_name_namespace_index ON vulns (namespace_name, name);`,
-
-		// ID table, restricting the primary key to a single value to enforce a single ID row
-		`CREATE TABLE IF NOT EXISTS id(id INTEGER PRIMARY KEY CHECK (id = 0), build_timestamp, schema_version);`,
-
-		// performance improvements (note: will result in lost data on interruption).
-		// on my box it reduces the time to write from 10 minutes to 10 seconds (with ~1GB memory utilization spikes)
-		`PRAGMA synchronous = OFF`,
-		`PRAGMA journal_mode = MEMORY`,
-	}
-
-	for _, sqlStmt := range initStatements {
-		_, err = d.Exec(sqlStmt)
-		if err != nil {
-			return nil, nil, fmt.Errorf("%w: %s", err, sqlStmt)
-		}
-	}
+	// TODO: this will affect schema before we validate we should be using this DB
+	vulnDbObj.AutoMigrate(&idModel{})
+	vulnDbObj.AutoMigrate(&vulnerabilityModel{})
+	vulnDbObj.AutoMigrate(&vulnerabilityMetadataModel{})
 
 	return &Store{
-		db: d,
-	}, d.Close, nil
+		vulnDb: vulnDbObj,
+	}, vulnDbObj.Close, nil
 }
 
-func (b *Store) GetID() (db.ID, error) {
-	rows, err := b.db.Query("SELECT build_timestamp, schema_version from id")
-	if err != nil {
-		return db.ID{}, fmt.Errorf("unable to query for ID: %w", err)
-	}
-	if err = rows.Err(); err != nil {
-		return db.ID{}, fmt.Errorf("bad DB ID row: %w", err)
-	}
-	defer func() {
-		err = rows.Close()
-		if err != nil {
-			log.Errorf("failed to close ID store row: %+v", err)
-		}
-	}()
-
-	var idStr struct {
-		BuildTimestamp string
-		SchemaVersion  string
-	}
-	var id db.ID
-
-	if !rows.Next() {
-		return db.ID{}, fmt.Errorf("no DB ID rows")
-	}
-	if err = rows.Err(); err != nil {
-		return db.ID{}, fmt.Errorf("bad DB ID row on read: %w", err)
+func (s *Store) GetID() (*db.ID, error) {
+	var models []idModel
+	result := s.vulnDb.Find(&models)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
-	if err := rows.Scan(&idStr.BuildTimestamp, &idStr.SchemaVersion); err != nil {
-		return db.ID{}, fmt.Errorf("unable to scan over ID row: %w", err)
+	switch {
+	case len(models) > 1:
+		return nil, fmt.Errorf("found multiple DB IDs")
+	case len(models) == 1:
+		id := models[0].Inflate()
+		return &id, nil
 	}
 
-	ver, err := version.NewVersion(idStr.SchemaVersion)
-	if err != nil {
-		return db.ID{}, fmt.Errorf("bad version from DB (%s): %w", idStr.SchemaVersion, err)
-	}
-	id.SchemaVersion = ver
-
-	buildTime, err := time.Parse(time.RFC3339, idStr.BuildTimestamp)
-	if err != nil {
-		return db.ID{}, fmt.Errorf("bad build time from DB (%s): %w", idStr.BuildTimestamp, err)
-	}
-	id.BuildTimestamp = buildTime
-
-	return id, nil
+	return nil, nil
 }
 
-func (b *Store) SetID(id db.ID) error {
-	insertStmt := `INSERT OR REPLACE INTO id('id', 'build_timestamp', 'schema_version') VALUES (?,?,?)`
+func (s *Store) SetID(id db.ID) error {
+	var ids []idModel
 
-	statement, err := b.db.Prepare(insertStmt)
-	if err != nil {
-		return fmt.Errorf("failed to prep DB ID entry: %w", err)
+	// replace the existing ID with the given one
+	s.vulnDb.Find(&ids).Delete(&ids)
+
+	var model = newIDModel(id)
+	result := s.vulnDb.Create(&model)
+
+	if result.RowsAffected != 1 {
+		return fmt.Errorf("unable to add id (%d rows affected)", result.RowsAffected)
 	}
 
-	_, err = statement.Exec(0, id.BuildTimestamp.Format(time.RFC3339), id.SchemaVersion.String())
-	if err != nil {
-		return fmt.Errorf("failed to set DB ID entry: %w", err)
-	}
-
-	return nil
+	return result.Error
 }
 
 // Get retrieves one or more vulnerabilities given a namespace and package name
-func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, error) {
-	var vulnerabilities []db.Vulnerability
-	rows, err := b.db.Query("SELECT cve_id,name,namespace_name,severity,version,version_format,cpes from vulns WHERE (namespace_name=? AND name=?)", namespace, name)
-	if err != nil {
-		return nil, fmt.Errorf("unable to query: %w", err)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("bad DB row: %w", err)
-	}
+func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerability, error) {
+	var models []vulnerabilityModel
 
-	defer func() {
-		err = rows.Close()
-		if err != nil {
-			log.Errorf("failed to close vulnerability store row: %+v", err)
-		}
-	}()
+	result := s.vulnDb.Where("namespace = ? AND package_name = ?", namespace, packageName).Find(&models)
 
-	for rows.Next() {
-		var v db.Vulnerability
-		var cpesStr string
-		if err := rows.Scan(&v.ID, &v.PackageName, &v.Namespace, &v.Severity, &v.VersionConstraint, &v.VersionFormat, &cpesStr); err != nil {
-			return nil, fmt.Errorf("unable to scan over row: %w", err)
-		}
-		if err = rows.Err(); err != nil {
-			return nil, fmt.Errorf("bad DB row on read: %w", err)
-		}
-		if err = json.Unmarshal([]byte(cpesStr), &v.CPEs); err != nil {
-			return nil, fmt.Errorf("bad DB row on CPEs decode: %w", err)
-		}
-
-		vulnerabilities = append(vulnerabilities, v)
+	var vulnerabilities = make([]db.Vulnerability, len(models))
+	for idx, m := range models {
+		vulnerabilities[idx] = m.Inflate()
 	}
 
-	return vulnerabilities, nil
+	return vulnerabilities, result.Error
 }
 
 // AddVulnerability saves a vulnerability in the sqlite3 store
-func (b *Store) AddVulnerability(vulns ...*db.Vulnerability) error {
-	for _, v := range vulns {
-		insertStmt := `INSERT INTO vulns('cve_id', 'namespace_name', 'name', 'version', 'version_format', 'severity', 'cpes') VALUES (?,?,?,?,?,?,?)`
-		statement, err := b.db.Prepare(insertStmt)
-		if err != nil {
-			return fmt.Errorf("failed to prep vuln entry: %w", err)
+func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
+	for _, vulnerability := range vulnerabilities {
+		if vulnerability == nil {
+			continue
+		}
+		model := newVulnerabilityModel(*vulnerability)
+
+		result := s.vulnDb.Create(&model)
+		if result.Error != nil {
+			return result.Error
 		}
 
-		data, err := json.Marshal(v.CPEs)
-		if err != nil {
-			return fmt.Errorf("failed to encode CPES: %w", err)
+		if result.RowsAffected != 1 {
+			return fmt.Errorf("unable to add vulnerability (%d rows affected)", result.RowsAffected)
+		}
+	}
+	return nil
+}
+
+func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
+	var models []vulnerabilityMetadataModel
+
+	result := s.vulnDb.Where(&vulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	switch {
+	case len(models) > 1:
+		return nil, fmt.Errorf("found multiple metadatas for single ID=%q RecordSource=%q", id, recordSource)
+	case len(models) == 1:
+		metadata := models[0].Inflate()
+		return &metadata, nil
+	}
+
+	return nil, nil
+}
+
+func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
+	for _, m := range metadata {
+		if m == nil {
+			continue
 		}
 
-		_, err = statement.Exec(v.ID, v.Namespace, v.PackageName, v.VersionConstraint, v.VersionFormat, v.Severity, data)
+		existing, err := s.GetVulnerabilityMetadata(m.ID, m.RecordSource)
 		if err != nil {
-			return fmt.Errorf("failed to add vuln entry: %w", err)
+			return fmt.Errorf("failed to verify existing entry: %w", err)
+		}
+
+		if existing != nil {
+			// merge with the existing entry
+			if existing.Severity != m.Severity {
+				return fmt.Errorf("existing metadata has mismatched severity (%q!=%q)", existing.Severity, m.Severity)
+			}
+
+			links := internal.NewStringSetFromSlice(existing.Links)
+			for _, l := range m.Links {
+				links.Add(l)
+			}
+
+			existing.Links = links.ToSlice()
+			sort.Strings(existing.Links)
+
+			model := newVulnerabilityMetadataModel(*existing)
+			result := s.vulnDb.Save(&model)
+
+			if result.RowsAffected != 1 {
+				return fmt.Errorf("unable to merge vulnerability metadata (%d rows affected)", result.RowsAffected)
+			}
+
+			if result.Error != nil {
+				return result.Error
+			}
+		} else {
+			model := newVulnerabilityMetadataModel(*m)
+			// this is a new entry
+			result := s.vulnDb.Create(&model)
+			if result.Error != nil {
+				return result.Error
+			}
+
+			if result.RowsAffected != 1 {
+				return fmt.Errorf("unable to add vulnerability metadata (%d rows affected)", result.RowsAffected)
+			}
 		}
 	}
 	return nil

@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-type VulnerabilityProvider interface {
+type DataProvider interface {
 	Age() time.Time
 	Update(context.Context) error
-	Provide() (*Vulnerability, error)
+	Provide() (*Vulnerability, *VulnerabilityMetadata, error)
 }
