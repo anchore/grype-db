@@ -1,53 +1,41 @@
-package sqlite
+package storm
 
 import (
+	"errors"
 	"fmt"
-	"github.com/anchore/siren-db/pkg/store/sqlite/model"
-	"sort"
-
 	"github.com/anchore/siren-db/internal"
 	"github.com/anchore/siren-db/pkg/db"
-	"github.com/jinzhu/gorm"
-
-	// provide the sqlite dialect to gorm via import
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/anchore/siren-db/pkg/store/storm/model"
+	"github.com/asdine/storm/v3"
+	"sort"
 )
 
 // integrity check
 var _ db.Store = &Store{}
 
-// Store holds an instance of the database connection
 type Store struct {
-	vulnDb *gorm.DB
+	vulnDb *storm.DB
 }
 
 type CleanupFn func() error
 
 // NewStore creates a new instance of the store
 func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
-	vulnDbObj, err := open(config{
-		DbPath:    dbFilePath,
-		Overwrite: overwrite,
-	})
+	vulnDb, err := storm.Open(dbFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// TODO: this will affect schema before we validate we should be using this DB
-	vulnDbObj.AutoMigrate(&model.ID{})
-	vulnDbObj.AutoMigrate(&model.Vulnerability{})
-	vulnDbObj.AutoMigrate(&model.VulnerabilityMetadata{})
-
 	return &Store{
-		vulnDb: vulnDbObj,
-	}, vulnDbObj.Close, nil
+		vulnDb: vulnDb,
+	}, vulnDb.Close, nil
 }
 
 func (s *Store) GetID() (*db.ID, error) {
 	var models []model.ID
-	result := s.vulnDb.Find(&models)
-	if result.Error != nil {
-		return nil, result.Error
+	err := s.vulnDb.All(&models)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ID: %w", err)
 	}
 
 	switch {
@@ -65,30 +53,44 @@ func (s *Store) SetID(id db.ID) error {
 	var ids []model.ID
 
 	// replace the existing ID with the given one
-	s.vulnDb.Find(&ids).Delete(&ids)
-
-	m := model.NewIDModel(id)
-	result := s.vulnDb.Create(&m)
-
-	if result.RowsAffected != 1 {
-		return fmt.Errorf("unable to add id (%d rows affected)", result.RowsAffected)
+	err := s.vulnDb.All(&ids)
+	if err != nil {
+		return fmt.Errorf("failed find all IDs: %w", err)
+	}
+	for _, i := range ids {
+		err = s.vulnDb.DeleteStruct(i)
+		if err != nil {
+			return fmt.Errorf("failed delete ID (%+v): %w", i, err)
+		}
 	}
 
-	return result.Error
+	m := model.NewIDModel(id)
+	if err := s.vulnDb.Save(&m); err != nil {
+		return fmt.Errorf("unable to add id: %w", err)
+	}
+
+	return nil
 }
 
 // Get retrieves one or more vulnerabilities given a namespace and package name
 func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerability, error) {
-	var models []model.Vulnerability
+	var models = make([]model.Vulnerability, 0)
 
-	result := s.vulnDb.Where("namespace = ? AND package_name = ?", namespace, packageName).Find(&models)
+	idx := model.VulnerabilityIndex{
+		PackageName: packageName,
+		Namespace:   namespace,
+	}
+	err := s.vulnDb.Find("Index", idx, &models)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get vulnerablities (index=%+v): %w", idx, err)
+	}
 
 	var vulnerabilities = make([]db.Vulnerability, len(models))
 	for idx, m := range models {
 		vulnerabilities[idx] = m.Inflate()
 	}
 
-	return vulnerabilities, result.Error
+	return vulnerabilities, nil
 }
 
 // AddVulnerability saves a vulnerability in the sqlite3 store
@@ -99,13 +101,9 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 		}
 		m := model.NewVulnerabilityModel(*vulnerability)
 
-		result := s.vulnDb.Create(&m)
-		if result.Error != nil {
-			return result.Error
-		}
-
-		if result.RowsAffected != 1 {
-			return fmt.Errorf("unable to add vulnerability (%d rows affected)", result.RowsAffected)
+		err := s.vulnDb.Save(&m)
+		if err != nil {
+			return fmt.Errorf("unable to add vulnerability (%+v): %w", m, err)
 		}
 	}
 	return nil
@@ -114,9 +112,15 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
 	var models []model.VulnerabilityMetadata
 
-	result := s.vulnDb.Where(&model.VulnerabilityMetadata{ID: id, RecordSource: recordSource}).Find(&models)
-	if result.Error != nil {
-		return nil, result.Error
+	idx := model.VulnerabilityMetadataIndex{
+		ID: id,
+		RecordSource: recordSource,
+	}
+	err := s.vulnDb.Find("Index", idx, &models)
+	if errors.Is(err, storm.ErrNotFound) {
+		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("unable to fetch vulnerability metadata (id=%v, recordSource=%v): %w", id, recordSource, err)
 	}
 
 	switch {
@@ -156,25 +160,18 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 			sort.Strings(existing.Links)
 
 			m := model.NewVulnerabilityMetadataModel(*existing)
-			result := s.vulnDb.Save(&m)
+			err := s.vulnDb.Save(&m)
 
-			if result.RowsAffected != 1 {
-				return fmt.Errorf("unable to merge vulnerability metadata (%d rows affected)", result.RowsAffected)
+			if err != nil {
+				return fmt.Errorf("unable to merge vulnerability metadata: %w", err)
 			}
 
-			if result.Error != nil {
-				return result.Error
-			}
 		} else {
 			m := model.NewVulnerabilityMetadataModel(*m)
 			// this is a new entry
-			result := s.vulnDb.Create(&m)
-			if result.Error != nil {
-				return result.Error
-			}
-
-			if result.RowsAffected != 1 {
-				return fmt.Errorf("unable to add vulnerability metadata (%d rows affected)", result.RowsAffected)
+			err := s.vulnDb.Save(&m)
+			if err != nil {
+				return fmt.Errorf("unable to save vulnerability metadata: %w", err)
 			}
 		}
 	}
