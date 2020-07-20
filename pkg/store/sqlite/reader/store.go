@@ -2,6 +2,7 @@ package reader
 
 import (
 	"fmt"
+
 	"github.com/alicebob/sqlittle"
 	"github.com/anchore/siren-db/pkg/db"
 	"github.com/anchore/siren-db/pkg/store/sqlite/model"
@@ -12,72 +13,112 @@ var _ db.StoreReader = &Store{}
 
 // Store holds an instance of the database connection
 type Store struct {
-	vulnDb *sqlittle.DB
+	db *sqlittle.DB
 }
 
 type CleanupFn func() error
 
 // NewStore creates a new instance of the store
 func NewStore(dbFilePath string) (*Store, CleanupFn, error) {
-	vulnDb, err := sqlittle.Open(dbFilePath)
+	d, err := Open(&config{
+		DbPath:    dbFilePath,
+		Overwrite: false,
+	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to open DB: %w", err)
+		return nil, nil, fmt.Errorf("unable to create a new connection to sqlite3 db: %s", err)
 	}
 
 	return &Store{
-		vulnDb: vulnDb,
-	}, vulnDb.Close, nil
+		db: d,
+	}, d.Close, nil
 }
 
-func (s *Store) GetID() (*db.ID, error) {
-	var models []model.IdModel
-	err := s.vulnDb.Select(model.IdTableName, func(r sqlittle.Row) {
+func (b *Store) GetID() (*db.ID, error) {
+	var scanErr error
+	var id db.ID
+	total := 0
+	err := b.db.Select(model.IDTableName, func(row sqlittle.Row) {
+		total++
+		var m model.IDModel
 
+		if scanErr = row.Scan(&m.BuildTimestamp, &m.SchemaVersion); scanErr != nil {
+			return
+		}
+
+		id = m.Inflate()
 	}, "build_timestamp", "schema_version")
+
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch ID: %w", err)
+		return nil, fmt.Errorf("unable to query for ID: %w", err)
+	}
+	if scanErr != nil {
+		return nil, scanErr
 	}
 
 	switch {
-	case len(models) > 1:
-		return nil, fmt.Errorf("found multiple DB IDs")
-	case len(models) == 1:
-		id := models[0].Inflate()
-		return &id, nil
+	case total == 0:
+		return nil, nil
+	case total > 1:
+		return nil, fmt.Errorf("discovered more than one DB ID")
 	}
 
-	return nil, nil
+	return &id, nil
 }
 
 // Get retrieves one or more vulnerabilities given a namespace and package name
-func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerability, error) {
-	var models []vulnerabilityModel
+func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, error) {
+	var vulnerabilities []db.Vulnerability
+	var scanErr error
 
-	result := s.vulnDb.Where("namespace = ? AND package_name = ?", namespace, packageName).Find(&models)
+	err := b.db.IndexedSelectEq(model.VulnerabilityTableName, model.GetVulnerabilityIndexName, sqlittle.Key{name, namespace}, func(row sqlittle.Row) {
+		var m model.VulnerabilityModel
 
-	var vulnerabilities = make([]db.Vulnerability, len(models))
-	for idx, m := range models {
-		vulnerabilities[idx] = m.Inflate()
+		if err := row.Scan(&m.Namespace, &m.PackageName, &m.ID, &m.RecordSource, &m.VersionConstraint, &m.VersionFormat, &m.CPEs, &m.ProxyVulnerabilities); err != nil {
+			scanErr = fmt.Errorf("unable to scan over row: %w", err)
+			return
+		}
+
+		vulnerabilities = append(vulnerabilities, m.Inflate())
+	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities")
+	if err != nil {
+		return nil, fmt.Errorf("unable to query: %w", err)
+	}
+	if scanErr != nil {
+		return nil, scanErr
 	}
 
-	return vulnerabilities, result.Error
+	return vulnerabilities, nil
 }
 
-func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
-	var models []vulnerabilityMetadataModel
+func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
+	var metadata db.VulnerabilityMetadata
+	var scanErr error
+	total := 0
 
-	result := s.vulnDb.Where(&vulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
-	if result.Error != nil {
-		return nil, result.Error
+	err := b.db.PKSelect(model.VulnerabilityTableName, sqlittle.Key{id, recordSource}, func(row sqlittle.Row) {
+		total++
+		var m model.VulnerabilityMetadataModel
+
+		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links); err != nil {
+			scanErr = fmt.Errorf("unable to scan over row: %w", err)
+			return
+		}
+
+		metadata = m.Inflate()
+	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities")
+	if err != nil {
+		return nil, fmt.Errorf("unable to query: %w", err)
+	}
+	if scanErr != nil {
+		return nil, scanErr
 	}
 
 	switch {
-	case len(models) > 1:
-		return nil, fmt.Errorf("found multiple metadatas for single ID=%q RecordSource=%q", id, recordSource)
-	case len(models) == 1:
-		metadata := models[0].Inflate()
-		return &metadata, nil
+	case total == 0:
+		return nil, nil
+	case total > 1:
+		return nil, fmt.Errorf("discovered more than one DB metadata record")
 	}
 
-	return nil, nil
+	return &metadata, nil
 }

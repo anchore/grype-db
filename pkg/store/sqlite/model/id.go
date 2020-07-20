@@ -1,34 +1,40 @@
 package model
 
 import (
+	"time"
+
 	"github.com/anchore/go-version"
 	"github.com/anchore/siren-db/pkg/db"
-	"time"
 )
 
 const (
-	IdTableName = "id"
+	IDTableName = "id"
 )
 
-type IdModel struct {
-	BuildTimestamp time.Time `gorm:"column:build_timestamp"`
-	SchemaVersion  string    `gorm:"column:schema_version"`
+type IDModel struct {
+	BuildTimestamp string `gorm:"column:build_timestamp"`
+	SchemaVersion  string `gorm:"column:schema_version"`
 }
 
-func NewIDModel(id db.ID) IdModel {
-	return IdModel{
-		BuildTimestamp: id.BuildTimestamp,
+func NewIDModel(id db.ID) IDModel {
+	return IDModel{
+		BuildTimestamp: id.BuildTimestamp.Format(time.RFC3339Nano),
 		SchemaVersion:  id.SchemaVersion.String(),
 	}
 }
 
-func (IdModel) TableName() string {
-	return IdTableName
+func (IDModel) TableName() string {
+	return IDTableName
 }
 
-func (m *IdModel) Inflate() db.ID {
+func (m *IDModel) Inflate() db.ID {
+	buildTime, err := time.Parse(time.RFC3339Nano, m.BuildTimestamp)
+	if err != nil {
+		// TODO: just no...
+		panic(err)
+	}
 	return db.ID{
-		BuildTimestamp: m.BuildTimestamp,
+		BuildTimestamp: buildTime,
 		SchemaVersion:  *version.Must(version.NewVersion(m.SchemaVersion)),
 	}
 }

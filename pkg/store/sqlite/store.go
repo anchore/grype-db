@@ -2,11 +2,11 @@ package sqlite
 
 import (
 	"fmt"
-	"github.com/anchore/siren-db/pkg/store/sqlite/model"
 	"sort"
 
 	"github.com/anchore/siren-db/internal"
 	"github.com/anchore/siren-db/pkg/db"
+	"github.com/anchore/siren-db/pkg/store/sqlite/model"
 	"github.com/jinzhu/gorm"
 
 	// provide the sqlite dialect to gorm via import
@@ -34,7 +34,7 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 	}
 
 	// TODO: this will affect schema before we validate we should be using this DB
-	vulnDbObj.AutoMigrate(&model.IdModel{})
+	vulnDbObj.AutoMigrate(&model.IDModel{})
 	vulnDbObj.AutoMigrate(&model.VulnerabilityModel{})
 	vulnDbObj.AutoMigrate(&model.VulnerabilityMetadataModel{})
 
@@ -44,7 +44,7 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 }
 
 func (s *Store) GetID() (*db.ID, error) {
-	var models []model.IdModel
+	var models []model.IDModel
 	result := s.vulnDb.Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
@@ -62,13 +62,13 @@ func (s *Store) GetID() (*db.ID, error) {
 }
 
 func (s *Store) SetID(id db.ID) error {
-	var ids []model.IdModel
+	var ids []model.IDModel
 
 	// replace the existing ID with the given one
 	s.vulnDb.Find(&ids).Delete(&ids)
 
-	var model = model.NewIDModel(id)
-	result := s.vulnDb.Create(&model)
+	m := model.NewIDModel(id)
+	result := s.vulnDb.Create(&m)
 
 	if result.RowsAffected != 1 {
 		return fmt.Errorf("unable to add id (%d rows affected)", result.RowsAffected)
@@ -114,7 +114,7 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
 	var models []model.VulnerabilityMetadataModel
 
-	result := s.vulnDb.Where(&models.VulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
+	result := s.vulnDb.Where(&model.VulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}
