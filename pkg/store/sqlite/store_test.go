@@ -3,6 +3,7 @@ package sqlite
 import (
 	"github.com/anchore/go-version"
 	"github.com/anchore/siren-db/pkg/db"
+	"github.com/anchore/siren-db/pkg/store/sqlite/model"
 	"github.com/go-test/deep"
 	"io/ioutil"
 	"os"
@@ -73,7 +74,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 		t.Fatalf("failed to set Vulnerability: %+v", err)
 	}
 
-	var allEntries []vulnerabilityModel
+	var allEntries []model.VulnerabilityModel
 	store.vulnDb.Find(&allEntries)
 	if len(allEntries) != 1 {
 		t.Fatalf("unexpected number of entries: %d", len(allEntries))
@@ -120,7 +121,7 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 		t.Fatalf("failed to set metadata: %+v", err)
 	}
 
-	var allEntries []vulnerabilityMetadataModel
+	var allEntries []model.VulnerabilityMetadataModel
 	store.vulnDb.Find(&allEntries)
 	if len(allEntries) != 1 {
 		t.Fatalf("unexpected number of entries: %d", len(allEntries))
@@ -245,7 +246,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 			}
 
 			// ensure there is exactly one entry
-			var allEntries []vulnerabilityMetadataModel
+			var allEntries []model.VulnerabilityMetadataModel
 			store.vulnDb.Find(&allEntries)
 			if len(allEntries) != 1 {
 				t.Fatalf("unexpected number of entries: %d", len(allEntries))

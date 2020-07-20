@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"fmt"
+	"github.com/anchore/siren-db/pkg/store/sqlite/model"
 	"sort"
 
 	"github.com/anchore/siren-db/internal"
@@ -33,9 +34,9 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 	}
 
 	// TODO: this will affect schema before we validate we should be using this DB
-	vulnDbObj.AutoMigrate(&idModel{})
-	vulnDbObj.AutoMigrate(&vulnerabilityModel{})
-	vulnDbObj.AutoMigrate(&vulnerabilityMetadataModel{})
+	vulnDbObj.AutoMigrate(&model.IdModel{})
+	vulnDbObj.AutoMigrate(&model.VulnerabilityModel{})
+	vulnDbObj.AutoMigrate(&model.VulnerabilityMetadataModel{})
 
 	return &Store{
 		vulnDb: vulnDbObj,
@@ -43,7 +44,7 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 }
 
 func (s *Store) GetID() (*db.ID, error) {
-	var models []idModel
+	var models []model.IdModel
 	result := s.vulnDb.Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
@@ -61,12 +62,12 @@ func (s *Store) GetID() (*db.ID, error) {
 }
 
 func (s *Store) SetID(id db.ID) error {
-	var ids []idModel
+	var ids []model.IdModel
 
 	// replace the existing ID with the given one
 	s.vulnDb.Find(&ids).Delete(&ids)
 
-	var model = newIDModel(id)
+	var model = model.NewIDModel(id)
 	result := s.vulnDb.Create(&model)
 
 	if result.RowsAffected != 1 {
@@ -78,7 +79,7 @@ func (s *Store) SetID(id db.ID) error {
 
 // Get retrieves one or more vulnerabilities given a namespace and package name
 func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerability, error) {
-	var models []vulnerabilityModel
+	var models []model.VulnerabilityModel
 
 	result := s.vulnDb.Where("namespace = ? AND package_name = ?", namespace, packageName).Find(&models)
 
@@ -96,7 +97,7 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 		if vulnerability == nil {
 			continue
 		}
-		model := newVulnerabilityModel(*vulnerability)
+		model := model.NewVulnerabilityModel(*vulnerability)
 
 		result := s.vulnDb.Create(&model)
 		if result.Error != nil {
@@ -111,9 +112,9 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 }
 
 func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
-	var models []vulnerabilityMetadataModel
+	var models []model.VulnerabilityMetadataModel
 
-	result := s.vulnDb.Where(&vulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
+	result := s.vulnDb.Where(&models.VulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -154,7 +155,7 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 			existing.Links = links.ToSlice()
 			sort.Strings(existing.Links)
 
-			model := newVulnerabilityMetadataModel(*existing)
+			model := model.NewVulnerabilityMetadataModel(*existing)
 			result := s.vulnDb.Save(&model)
 
 			if result.RowsAffected != 1 {
@@ -165,7 +166,7 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 				return result.Error
 			}
 		} else {
-			model := newVulnerabilityMetadataModel(*m)
+			model := model.NewVulnerabilityMetadataModel(*m)
 			// this is a new entry
 			result := s.vulnDb.Create(&model)
 			if result.Error != nil {
