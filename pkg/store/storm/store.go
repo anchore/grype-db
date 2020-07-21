@@ -7,6 +7,7 @@ import (
 	"github.com/anchore/siren-db/pkg/db"
 	"github.com/anchore/siren-db/pkg/store/storm/model"
 	"github.com/asdine/storm/v3"
+	"os"
 	"sort"
 )
 
@@ -21,7 +22,11 @@ type CleanupFn func() error
 
 // NewStore creates a new instance of the store
 func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
-	vulnDb, err := storm.Open(dbFilePath)
+	if overwrite {
+		// ignore if the file does not exist
+		_ = os.Remove(dbFilePath)
+	}
+	vulnDb, err := storm.Open(dbFilePath, storm.Batch())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -95,16 +100,26 @@ func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerabil
 
 // AddVulnerability saves a vulnerability in the sqlite3 store
 func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
+	tx, err := s.vulnDb.Begin(true)
+	if err != nil {
+		return fmt.Errorf("unable to start vulnerability transaction: %w", err)
+	}
 	for _, vulnerability := range vulnerabilities {
 		if vulnerability == nil {
 			continue
 		}
 		m := model.NewVulnerabilityModel(*vulnerability)
 
-		err := s.vulnDb.Save(&m)
-		if err != nil {
+		if err := tx.Save(&m); err != nil {
+			if err = tx.Rollback(); err != nil {
+				return fmt.Errorf("failed to rollback vulnerability transaction: %w", err)
+			}
 			return fmt.Errorf("unable to add vulnerability (%+v): %w", m, err)
 		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit vulnerability transaction: %w", err)
 	}
 	return nil
 }
@@ -135,6 +150,10 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 }
 
 func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
+	tx, err := s.vulnDb.Begin(true)
+	if err != nil {
+		return fmt.Errorf("unable to start metadata transaction: %w", err)
+	}
 	for _, m := range metadata {
 		if m == nil {
 			continue
@@ -160,20 +179,29 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 			sort.Strings(existing.Links)
 
 			m := model.NewVulnerabilityMetadataModel(*existing)
-			err := s.vulnDb.Save(&m)
 
-			if err != nil {
+			if err := tx.Save(&m); err != nil {
+				if err = tx.Rollback(); err != nil {
+					return fmt.Errorf("failed to rollback metadata transaction: %w", err)
+				}
 				return fmt.Errorf("unable to merge vulnerability metadata: %w", err)
 			}
 
 		} else {
 			m := model.NewVulnerabilityMetadataModel(*m)
 			// this is a new entry
-			err := s.vulnDb.Save(&m)
-			if err != nil {
+			if err := tx.Save(&m); err != nil {
+				if err = tx.Rollback(); err != nil {
+					return fmt.Errorf("failed to rollback metadata transaction: %w", err)
+				}
 				return fmt.Errorf("unable to save vulnerability metadata: %w", err)
 			}
 		}
 	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit vulnerability transaction: %w", err)
+	}
+
 	return nil
 }
