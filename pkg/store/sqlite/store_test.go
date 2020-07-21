@@ -3,6 +3,8 @@ package sqlite
 import (
 	"github.com/anchore/go-version"
 	"github.com/anchore/siren-db/pkg/db"
+	"github.com/anchore/siren-db/pkg/store/sqlite/model"
+	"github.com/anchore/siren-db/pkg/store/sqlite/reader"
 	"github.com/go-test/deep"
 	"io/ioutil"
 	"os"
@@ -10,14 +12,28 @@ import (
 	"time"
 )
 
+func assertIDReader(t *testing.T, reader db.IDReader, expected db.ID) {
+	t.Helper()
+	if actual, err := reader.GetID(); err != nil {
+		t.Fatalf("failed to get ID: %+v", err)
+	} else {
+		diffs := deep.Equal(&expected, actual)
+		if len(diffs) > 0 {
+			for _, d := range diffs {
+				t.Errorf("Diff: %+v", d)
+			}
+		}
+	}
+}
+
 func TestStore_GetID_SetID(t *testing.T) {
-	dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
+	dbTempFile, err := ioutil.TempFile("", "siren-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
-	defer os.RemoveAll(dbTempDir)
+	defer os.Remove(dbTempFile.Name())
 
-	store, cleanupFn, err := NewStore(dbTempDir, true)
+	store, cleanupFn, err := NewStore(dbTempFile.Name(), true)
 	defer cleanupFn()
 	if err != nil {
 		t.Fatalf("could not create store: %+v", err)
@@ -32,67 +48,138 @@ func TestStore_GetID_SetID(t *testing.T) {
 		t.Fatalf("failed to set ID: %+v", err)
 	}
 
-	if actual, err := store.GetID(); err != nil {
-		t.Fatalf("failed to get ID: %+v", err)
+	assertIDReader(t, store, expected)
+
+	// gut check on reader
+	storeReader, othercleanfn, err := reader.NewStore(dbTempFile.Name())
+	defer othercleanfn()
+	if err != nil {
+		t.Fatalf("could not open db reader: %+v", err)
+	}
+	assertIDReader(t, storeReader, expected)
+
+}
+
+func assertVulnerabilityReader(t *testing.T, reader db.VulnerabilityStoreReader, namespace, name string, expected []*db.Vulnerability) {
+	if actual, err := reader.GetVulnerability(namespace, name); err != nil {
+		t.Fatalf("failed to get Vulnerability: %+v", err)
 	} else {
-		diffs := deep.Equal(&expected, actual)
-		if len(diffs) > 0 {
-			for _, d := range diffs {
-				t.Errorf("Diff: %+v", d)
+		if len(actual) != len(expected) {
+			t.Fatalf("unexpected number of vulns: %d", len(actual))
+		}
+
+		for idx := range actual {
+			diffs := deep.Equal(expected[idx], &actual[idx])
+			if len(diffs) > 0 {
+				for _, d := range diffs {
+					t.Errorf("Diff: %+v", d)
+				}
 			}
 		}
 	}
 }
 
 func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
-	dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
+	dbTempFile, err := ioutil.TempFile("", "siren-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
-	defer os.RemoveAll(dbTempDir)
+	defer os.Remove(dbTempFile.Name())
 
-	store, cleanupFn, err := NewStore(dbTempDir, true)
+	store, cleanupFn, err := NewStore(dbTempFile.Name(), true)
 	defer cleanupFn()
 	if err != nil {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	expected := db.Vulnerability{
-		ID:                   "my-cve",
-		RecordSource:         "record-source",
-		PackageName:          "package-name",
-		Namespace:            "my-namespace",
-		VersionConstraint:    "< 1.0",
-		VersionFormat:        "semver",
-		CPEs:                 []string{"a-cool-cpe"},
-		ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+	extra := []*db.Vulnerability{
+		{
+			ID:                   "my-cve-33333",
+			RecordSource:         "record-source",
+			PackageName:          "package-name-2",
+			Namespace:            "my-namespace",
+			VersionConstraint:    "< 1.0",
+			VersionFormat:        "semver",
+			CPEs:                 []string{"a-cool-cpe"},
+			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+		},
+		{
+			ID:                   "my-other-cve-33333",
+			RecordSource:         "record-source",
+			PackageName:          "package-name-3",
+			Namespace:            "my-namespace",
+			VersionConstraint:    "< 509.2.2",
+			VersionFormat:        "semver",
+			CPEs:                 []string{"a-cool-cpe"},
+			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+		},
 	}
 
+	expected := []*db.Vulnerability{
+		{
+			ID:                   "my-cve",
+			RecordSource:         "record-source",
+			PackageName:          "package-name",
+			Namespace:            "my-namespace",
+			VersionConstraint:    "< 1.0",
+			VersionFormat:        "semver",
+			CPEs:                 []string{"a-cool-cpe"},
+			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+		},
+		{
+			ID:                   "my-other-cve",
+			RecordSource:         "record-source",
+			PackageName:          "package-name",
+			Namespace:            "my-namespace",
+			VersionConstraint:    "< 509.2.2",
+			VersionFormat:        "semver",
+			CPEs:                 []string{"a-cool-cpe"},
+			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+		},
+	}
+
+	total := append(expected, extra...)
+
 	// case: ignore nil entries
-	if err = store.AddVulnerability(&expected, nil, nil, nil, nil); err != nil {
+	if err = store.AddVulnerability(nil, nil, nil, nil); err != nil {
 		t.Fatalf("failed to set Vulnerability: %+v", err)
 	}
 
-	var allEntries []vulnerabilityModel
+	if err = store.AddVulnerability(total...); err != nil {
+		t.Fatalf("failed to set Vulnerability: %+v", err)
+	}
+
+	var allEntries []model.VulnerabilityModel
 	store.vulnDb.Find(&allEntries)
-	if len(allEntries) != 1 {
+	if len(allEntries) != len(total) {
 		t.Fatalf("unexpected number of entries: %d", len(allEntries))
 	}
 
-	if actual, err := store.GetVulnerability(expected.Namespace, expected.PackageName); err != nil {
-		t.Fatalf("failed to get Vulnerability: %+v", err)
-	} else {
-		if len(actual) != 1 {
-			t.Fatalf("unexpected number of vulns: %d", len(actual))
-		}
+	assertVulnerabilityReader(t, store, expected[0].Namespace, expected[0].PackageName, expected)
 
-		diffs := deep.Equal(expected, actual[0])
+	// gut check on reader
+	storeReader, othercleanfn, err := reader.NewStore(dbTempFile.Name())
+	defer othercleanfn()
+	if err != nil {
+		t.Fatalf("could not open db reader: %+v", err)
+	}
+	assertVulnerabilityReader(t, storeReader, expected[0].Namespace, expected[0].PackageName, expected)
+
+}
+
+func assertVulnerabilityMetadataReader(t *testing.T, reader db.VulnerabilityMetadataStoreReader, id, recordSource string, expected *db.VulnerabilityMetadata) {
+	if actual, err := reader.GetVulnerabilityMetadata(id, recordSource); err != nil {
+		t.Fatalf("failed to get metadata: %+v", err)
+	} else {
+
+		diffs := deep.Equal(expected, actual)
 		if len(diffs) > 0 {
 			for _, d := range diffs {
 				t.Errorf("Diff: %+v", d)
 			}
 		}
 	}
+
 }
 
 func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
@@ -108,35 +195,38 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	expected := db.VulnerabilityMetadata{
-		ID:           "my-cve",
-		RecordSource: "record-source",
-		Severity:     "pretty bad",
-		Links:        []string{"https://ancho.re"},
+	total := []*db.VulnerabilityMetadata{
+		{
+			ID:           "my-cve",
+			RecordSource: "record-source",
+			Severity:     "pretty bad",
+			Links:        []string{"https://ancho.re"},
+		},
+		{
+			ID:           "my-other-cve",
+			RecordSource: "record-source",
+			Severity:     "pretty bad",
+			Links:        []string{"https://ancho.re"},
+		},
 	}
 
 	// case: ignore nil entries
-	if err = store.AddVulnerabilityMetadata(&expected, nil, nil, nil); err != nil {
+	if err = store.AddVulnerabilityMetadata(nil, nil, nil, nil); err != nil {
 		t.Fatalf("failed to set metadata: %+v", err)
 	}
 
-	var allEntries []vulnerabilityMetadataModel
+	if err = store.AddVulnerabilityMetadata(total...); err != nil {
+		t.Fatalf("failed to set metadata: %+v", err)
+	}
+
+	var allEntries []model.VulnerabilityMetadataModel
 	store.vulnDb.Find(&allEntries)
-	if len(allEntries) != 1 {
+	if len(allEntries) != len(total) {
 		t.Fatalf("unexpected number of entries: %d", len(allEntries))
 	}
 
-	if actual, err := store.GetVulnerabilityMetadata(expected.ID, expected.RecordSource); err != nil {
-		t.Fatalf("failed to get metadata: %+v", err)
-	} else {
+	assertVulnerabilityMetadataReader(t, store, total[0].ID, total[0].RecordSource, total[0])
 
-		diffs := deep.Equal(&expected, actual)
-		if len(diffs) > 0 {
-			for _, d := range diffs {
-				t.Errorf("Diff: %+v", d)
-			}
-		}
-	}
 }
 
 func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
@@ -245,7 +335,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 			}
 
 			// ensure there is exactly one entry
-			var allEntries []vulnerabilityMetadataModel
+			var allEntries []model.VulnerabilityMetadataModel
 			store.vulnDb.Find(&allEntries)
 			if len(allEntries) != 1 {
 				t.Fatalf("unexpected number of entries: %d", len(allEntries))
