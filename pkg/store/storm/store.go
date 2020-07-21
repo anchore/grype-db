@@ -16,6 +16,7 @@ var _ db.Store = &Store{}
 
 type Store struct {
 	vulnDb *storm.DB
+	metadataDb *storm.DB
 }
 
 type CleanupFn func() error
@@ -31,8 +32,14 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 		return nil, nil, err
 	}
 
+	metadataDb, err := storm.Open(dbFilePath+"metadata", storm.Batch())
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return &Store{
 		vulnDb: vulnDb,
+		metadataDb: metadataDb,
 	}, vulnDb.Close, nil
 }
 
@@ -131,7 +138,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 		ID: id,
 		RecordSource: recordSource,
 	}
-	err := s.vulnDb.Find("Index", idx, &models)
+	err := s.metadataDb.Find("Index", idx, &models)
 	if errors.Is(err, storm.ErrNotFound) {
 		return nil, nil
 	} else if err != nil {
@@ -150,7 +157,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 }
 
 func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
-	tx, err := s.vulnDb.Begin(true)
+	tx, err := s.metadataDb.Begin(true)
 	if err != nil {
 		return fmt.Errorf("unable to start metadata transaction: %w", err)
 	}
