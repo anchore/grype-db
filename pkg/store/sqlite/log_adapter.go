@@ -1,6 +1,6 @@
 package sqlite
 
-import "github.com/anchore/siren-db/internal/log"
+import "github.com/anchore/grype-db/internal/log"
 
 type logAdapter struct {
 }

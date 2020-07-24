@@ -1,4 +1,4 @@
-module github.com/anchore/siren-db
+module github.com/anchore/grype-db
 
 go 1.14
 

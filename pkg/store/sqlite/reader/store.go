@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/alicebob/sqlittle"
-	"github.com/anchore/siren-db/pkg/db"
-	"github.com/anchore/siren-db/pkg/store/sqlite/model"
+	"github.com/anchore/grype-db/pkg/db"
+	"github.com/anchore/grype-db/pkg/store/sqlite/model"
 )
 
 // integrity check

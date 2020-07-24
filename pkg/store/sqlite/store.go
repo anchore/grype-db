@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/anchore/siren-db/internal"
-	"github.com/anchore/siren-db/pkg/db"
-	"github.com/anchore/siren-db/pkg/store/sqlite/model"
+	"github.com/anchore/grype-db/internal"
+	"github.com/anchore/grype-db/pkg/db"
+	"github.com/anchore/grype-db/pkg/store/sqlite/model"
 	"github.com/jinzhu/gorm"
 
 	// provide the sqlite dialect to gorm via import

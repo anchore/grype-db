@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/anchore/go-version"
-	"github.com/anchore/siren-db/internal/log"
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/spf13/afero"
 )
 
@@ -52,7 +52,7 @@ func NewListingFromFile(fs afero.Fs, path string) (Listing, error) {
 
 // NewListingFromURL loads a Listing from a URL.
 func NewListingFromURL(fs afero.Fs, getter FileGetter, listingURL string) (Listing, error) {
-	tempFile, err := afero.TempFile(fs, "", "siren-db-listing")
+	tempFile, err := afero.TempFile(fs, "", "grype-db-listing")
 	if err != nil {
 		return Listing{}, fmt.Errorf("unable to create listing temp file: %w", err)
 	}

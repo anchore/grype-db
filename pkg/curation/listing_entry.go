@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/anchore/go-version"
-	"github.com/anchore/siren-db/internal/file"
+	"github.com/anchore/grype-db/internal/file"
 	"github.com/spf13/afero"
 )
 

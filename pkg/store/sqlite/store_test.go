@@ -2,9 +2,9 @@ package sqlite
 
 import (
 	"github.com/anchore/go-version"
-	"github.com/anchore/siren-db/pkg/db"
-	"github.com/anchore/siren-db/pkg/store/sqlite/model"
-	"github.com/anchore/siren-db/pkg/store/sqlite/reader"
+	"github.com/anchore/grype-db/pkg/db"
+	"github.com/anchore/grype-db/pkg/store/sqlite/model"
+	"github.com/anchore/grype-db/pkg/store/sqlite/reader"
 	"github.com/go-test/deep"
 	"io/ioutil"
 	"os"
@@ -27,7 +27,7 @@ func assertIDReader(t *testing.T, reader db.IDReader, expected db.ID) {
 }
 
 func TestStore_GetID_SetID(t *testing.T) {
-	dbTempFile, err := ioutil.TempFile("", "siren-db-test-store")
+	dbTempFile, err := ioutil.TempFile("", "grype-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
@@ -80,7 +80,7 @@ func assertVulnerabilityReader(t *testing.T, reader db.VulnerabilityStoreReader,
 }
 
 func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
-	dbTempFile, err := ioutil.TempFile("", "siren-db-test-store")
+	dbTempFile, err := ioutil.TempFile("", "grype-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
@@ -183,7 +183,7 @@ func assertVulnerabilityMetadataReader(t *testing.T, reader db.VulnerabilityMeta
 }
 
 func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
-	dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
+	dbTempDir, err := ioutil.TempDir("", "grype-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
@@ -304,7 +304,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dbTempDir, err := ioutil.TempDir("", "siren-db-test-store")
+			dbTempDir, err := ioutil.TempDir("", "grype-db-test-store")
 			if err != nil {
 				t.Fatalf("could not create temp file: %+v", err)
 			}

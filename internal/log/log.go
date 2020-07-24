@@ -1,6 +1,6 @@
 package log
 
-import "github.com/anchore/siren-db/pkg/logger"
+import "github.com/anchore/grype-db/pkg/logger"
 
 var Log logger.Logger = &nopLogger{}
 
