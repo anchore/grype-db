@@ -25,7 +25,7 @@ jobs:
           key: go-<< parameters.version >>-{{ checksum "go.sum" }}-{{ checksum "Makefile" }}
           paths:
             - "/go/pkg/mod"
-            - ".tmp"it stat
+            - ".tmp"
 
       - run:
           name: run static analysis
