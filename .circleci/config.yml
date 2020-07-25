@@ -29,11 +29,7 @@ jobs:
 
       - run:
           name: run static analysis
-          command: make lint
-
-      - run:
-          name: run license checker
-          command: make check-licenses
+          command: make static-analysis
 
   run-tests:
     parameters:
