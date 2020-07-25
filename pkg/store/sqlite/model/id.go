@@ -3,7 +3,6 @@ package model
 import (
 	"time"
 
-	"github.com/anchore/go-version"
 	"github.com/anchore/grype-db/pkg/db"
 )
 
@@ -13,13 +12,13 @@ const (
 
 type IDModel struct {
 	BuildTimestamp string `gorm:"column:build_timestamp"`
-	SchemaVersion  string `gorm:"column:schema_version"`
+	SchemaVersion  int    `gorm:"column:schema_version"`
 }
 
 func NewIDModel(id db.ID) IDModel {
 	return IDModel{
 		BuildTimestamp: id.BuildTimestamp.Format(time.RFC3339Nano),
-		SchemaVersion:  id.SchemaVersion.String(),
+		SchemaVersion:  id.SchemaVersion,
 	}
 }
 
@@ -35,6 +34,6 @@ func (m *IDModel) Inflate() db.ID {
 	}
 	return db.ID{
 		BuildTimestamp: buildTime,
-		SchemaVersion:  *version.Must(version.NewVersion(m.SchemaVersion)),
+		SchemaVersion:  m.SchemaVersion,
 	}
 }

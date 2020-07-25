@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anchore/go-version"
 	"github.com/go-test/deep"
 	"github.com/spf13/afero"
 )
@@ -19,7 +18,7 @@ func TestMetadataParse(t *testing.T) {
 			fixture: "test-fixtures/metadata-gocase",
 			expected: Metadata{
 				Built:    time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
-				Version:  version.Must(version.NewVersion("0.2.0")),
+				Version:  2,
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
 			},
 		},
@@ -27,7 +26,7 @@ func TestMetadataParse(t *testing.T) {
 			fixture: "test-fixtures/metadata-edt-timezone",
 			expected: Metadata{
 				Built:    time.Date(2020, 06, 15, 18, 02, 36, 0, time.UTC),
-				Version:  version.Must(version.NewVersion("0.2.0")),
+				Version:  2,
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
 			},
 		},
@@ -65,11 +64,11 @@ func TestMetadataIsSupercededBy(t *testing.T) {
 			expectedToSupercede: true,
 			current: &Metadata{
 				Built:   time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
-				Version: version.Must(version.NewVersion("0.2.0")),
+				Version: 2,
 			},
 			update: &ListingEntry{
 				Built:   time.Date(2020, 06, 13, 17, 13, 13, 0, time.UTC),
-				Version: version.Must(version.NewVersion("0.3.0")),
+				Version: 3,
 			},
 		},
 		{
@@ -77,11 +76,11 @@ func TestMetadataIsSupercededBy(t *testing.T) {
 			expectedToSupercede: false,
 			current: &Metadata{
 				Built:   time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
-				Version: version.Must(version.NewVersion("1.1.0")),
+				Version: 1,
 			},
 			update: &ListingEntry{
 				Built:   time.Date(2020, 06, 13, 17, 13, 13, 0, time.UTC),
-				Version: version.Must(version.NewVersion("1.1.0")),
+				Version: 1,
 			},
 		},
 		{
@@ -90,14 +89,14 @@ func TestMetadataIsSupercededBy(t *testing.T) {
 			current:             nil,
 			update: &ListingEntry{
 				Built:   time.Date(2020, 06, 13, 17, 13, 13, 0, time.UTC),
-				Version: version.Must(version.NewVersion("1.1.0")),
+				Version: 1,
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := test.current.IsSupercededBy(test.update)
+			actual := test.current.IsSupersededBy(test.update)
 
 			if test.expectedToSupercede != actual {
 				t.Errorf("failed supercede assertion: got %+v", actual)

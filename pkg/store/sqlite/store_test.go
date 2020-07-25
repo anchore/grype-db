@@ -1,7 +1,6 @@
 package sqlite
 
 import (
-	"github.com/anchore/go-version"
 	"github.com/anchore/grype-db/pkg/db"
 	"github.com/anchore/grype-db/pkg/store/sqlite/model"
 	"github.com/anchore/grype-db/pkg/store/sqlite/reader"
@@ -41,7 +40,7 @@ func TestStore_GetID_SetID(t *testing.T) {
 
 	expected := db.ID{
 		BuildTimestamp: time.Now().UTC(),
-		SchemaVersion:  *version.Must(version.NewVersion("2.3.4")),
+		SchemaVersion:  2,
 	}
 
 	if err = store.SetID(expected); err != nil {

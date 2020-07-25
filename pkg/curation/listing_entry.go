@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/anchore/go-version"
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/spf13/afero"
 )
@@ -18,7 +17,7 @@ import (
 // as well as how to obtain and verify the archive (URL/checksum).
 type ListingEntry struct {
 	Built    time.Time // RFC 3339
-	Version  *version.Version
+	Version  int
 	URL      *url.URL
 	Checksum string
 }
@@ -26,7 +25,7 @@ type ListingEntry struct {
 // ListingEntryJSON is a helper struct for converting a ListingEntry into JSON (or parsing from JSON)
 type ListingEntryJSON struct {
 	Built    string `json:"built"`
-	Version  string `json:"version"`
+	Version  int    `json:"version"`
 	URL      string `json:"url"`
 	Checksum string `json:"checksum"`
 }
@@ -57,11 +56,6 @@ func (l ListingEntryJSON) ToListingEntry() (ListingEntry, error) {
 		return ListingEntry{}, fmt.Errorf("cannot convert built time (%s): %+v", l.Built, err)
 	}
 
-	ver, err := version.NewVersion(l.Version)
-	if err != nil {
-		return ListingEntry{}, fmt.Errorf("cannot parse version (%s): %+v", l.Version, err)
-	}
-
 	u, err := url.Parse(l.URL)
 	if err != nil {
 		return ListingEntry{}, fmt.Errorf("cannot parse url (%s): %+v", l.URL, err)
@@ -69,7 +63,7 @@ func (l ListingEntryJSON) ToListingEntry() (ListingEntry, error) {
 
 	return ListingEntry{
 		Built:    build.UTC(),
-		Version:  ver,
+		Version:  l.Version,
 		URL:      u,
 		Checksum: l.Checksum,
 	}, nil
@@ -91,7 +85,7 @@ func (l *ListingEntry) UnmarshalJSON(data []byte) error {
 func (l *ListingEntry) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&ListingEntryJSON{
 		Built:    l.Built.Format(time.RFC3339),
-		Version:  l.Version.String(),
+		Version:  l.Version,
 		Checksum: l.Checksum,
 		URL:      l.URL.String(),
 	})

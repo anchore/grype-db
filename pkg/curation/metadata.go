@@ -7,7 +7,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/anchore/go-version"
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/spf13/afero"
@@ -19,14 +18,14 @@ const MetadataFileName = "metadata.json"
 // verify the contents (checksum).
 type Metadata struct {
 	Built    time.Time
-	Version  *version.Version
+	Version  int
 	Checksum string
 }
 
 // MetadataJSON is a helper struct for parsing and assembling Metadata objects to and from JSON.
 type MetadataJSON struct {
 	Built    string `json:"built"` // RFC 3339
-	Version  string `json:"version"`
+	Version  int    `json:"version"`
 	Checksum string `json:"checksum"`
 }
 
@@ -37,14 +36,9 @@ func (m MetadataJSON) ToMetadata() (Metadata, error) {
 		return Metadata{}, fmt.Errorf("cannot convert built time (%s): %+v", m.Built, err)
 	}
 
-	ver, err := version.NewVersion(m.Version)
-	if err != nil {
-		return Metadata{}, fmt.Errorf("cannot parse version (%s): %+v", m.Version, err)
-	}
-
 	metadata := Metadata{
 		Built:    build.UTC(),
-		Version:  ver,
+		Version:  m.Version,
 		Checksum: m.Checksum,
 	}
 
@@ -88,16 +82,16 @@ func (m *Metadata) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// IsSupercededBy takes a ListingEntry and determines if the entry candidate is newer than what is hinted at
+// IsSupersededBy takes a ListingEntry and determines if the entry candidate is newer than what is hinted at
 // in the current Metadata object.
-func (m *Metadata) IsSupercededBy(entry *ListingEntry) bool {
+func (m *Metadata) IsSupersededBy(entry *ListingEntry) bool {
 	if m == nil {
 		log.Debugf("cannot find existing metadata, using update...")
 		// any valid update beats no database, use it!
 		return true
 	}
 
-	if entry.Version.GreaterThan(m.Version) {
+	if entry.Version > m.Version {
 		log.Debugf("update is a newer version than the current database, using update...")
 		// the listing is newer than the existing db, use it!
 		return true
@@ -114,14 +108,14 @@ func (m *Metadata) IsSupercededBy(entry *ListingEntry) bool {
 }
 
 func (m Metadata) String() string {
-	return fmt.Sprintf("Metadata(built=%s version=%s checksum=%s)", m.Built, m.Version, m.Checksum)
+	return fmt.Sprintf("Metadata(built=%s version=%d checksum=%s)", m.Built, m.Version, m.Checksum)
 }
 
 // Write out a Metadata object to the given path.
 func (m Metadata) Write(toPath string) error {
 	metadata := MetadataJSON{
 		Built:    m.Built.UTC().Format(time.RFC3339),
-		Version:  m.Version.String(),
+		Version:  m.Version,
 		Checksum: m.Checksum,
 	}
 
