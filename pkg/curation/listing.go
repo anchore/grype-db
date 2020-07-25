@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"sort"
 
-	"github.com/anchore/go-version"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/spf13/afero"
 )
@@ -15,22 +15,29 @@ const ListingFileName = "listing.json"
 // Listing represents the json file which is served up and made available for applications to download and
 // consume one or more vulnerability db flat files.
 type Listing struct {
-	Latest    ListingEntry   `json:"latest"`
-	Available []ListingEntry `json:"available"`
+	Available map[int][]ListingEntry `json:"available"`
 }
 
 // NewListing creates a listing from one or more given ListingEntries.
 func NewListing(entries ...ListingEntry) Listing {
 	listing := Listing{
-		Available: make([]ListingEntry, 0),
+		Available: make(map[int][]ListingEntry),
 	}
-	for idx, entry := range entries {
-		if idx == 0 {
-			listing.Latest = entry
-			continue
+	for _, entry := range entries {
+		if _, ok := listing.Available[entry.Version]; !ok {
+			listing.Available[entry.Version] = make([]ListingEntry, 0)
 		}
-		listing.Available = append(listing.Available, entry)
+		listing.Available[entry.Version] = append(listing.Available[entry.Version], entry)
 	}
+
+	// sort each entry descending by date
+	for idx := range listing.Available {
+		listingEntries := listing.Available[idx]
+		sort.SliceStable(listingEntries, func(i, j int) bool {
+			return listingEntries[i].Built.After(listingEntries[j].Built)
+		})
+	}
+
 	return listing
 }
 
@@ -47,6 +54,15 @@ func NewListingFromFile(fs afero.Fs, path string) (Listing, error) {
 	if err != nil {
 		return Listing{}, fmt.Errorf("unable to parse DB listing: %w", err)
 	}
+
+	// sort each entry descending by date
+	for idx := range l.Available {
+		listingEntries := l.Available[idx]
+		sort.SliceStable(listingEntries, func(i, j int) bool {
+			return listingEntries[i].Built.After(listingEntries[j].Built)
+		})
+	}
+
 	return l, nil
 }
 
@@ -78,27 +94,13 @@ func NewListingFromURL(fs afero.Fs, getter FileGetter, listingURL string) (Listi
 }
 
 // BestUpdate returns the ListingEntry from a Listing that meets the given version constraints.
-func (l *Listing) BestUpdate(constraint version.Constraints) *ListingEntry {
-	// extract the latest available db
-	candidates := []ListingEntry{l.Latest}
-	candidates = append(candidates, l.Available...)
-
-	// TODO: sort candidates by version and built date
-
-	for _, candidate := range candidates {
-		log.Debugf("found update: %s", candidate)
-	}
-
-	var updateEntry *ListingEntry
-	for _, candidate := range candidates {
-		if constraint.Check(candidate.Version) {
-			copy := candidate
-			updateEntry = &copy
-			break
+func (l *Listing) BestUpdate(targetSchema int) *ListingEntry {
+	if listingEntries, ok := l.Available[targetSchema]; ok {
+		if len(listingEntries) > 0 {
+			return &listingEntries[0]
 		}
 	}
-
-	return updateEntry
+	return nil
 }
 
 // Write the current listing to the given filepath.

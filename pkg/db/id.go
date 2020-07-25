@@ -2,13 +2,11 @@ package db
 
 import (
 	"time"
-
-	"github.com/anchore/go-version"
 )
 
 type ID struct {
 	BuildTimestamp time.Time
-	SchemaVersion  version.Version
+	SchemaVersion  int
 }
 
 type IDReader interface {
@@ -22,6 +20,6 @@ type IDWriter interface {
 func NewID(age time.Time) ID {
 	return ID{
 		BuildTimestamp: age.UTC(),
-		SchemaVersion:  *version.Must(version.NewVersion(SchemaVersion)),
+		SchemaVersion:  SchemaVersion,
 	}
 }
