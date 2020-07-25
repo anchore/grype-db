@@ -9,8 +9,8 @@ jobs:
       - image: circleci/golang:<< parameters.version >>
         environment:
           GO111MODULE: "on"
-    # 1CPU / 2GB RAM
-    resource_class: small
+    # 2CPU / 4GB RAM
+    resource_class: medium
     steps:
 
       - checkout
@@ -25,7 +25,7 @@ jobs:
           key: go-<< parameters.version >>-{{ checksum "go.sum" }}-{{ checksum "Makefile" }}
           paths:
             - "/go/pkg/mod"
-            - ".tmp"
+            - ".tmp"it stat
 
       - run:
           name: run static analysis
@@ -39,8 +39,8 @@ jobs:
       - image: circleci/golang:<< parameters.version >>
         environment:
           GO111MODULE: "on"
-    # 1CPU / 2GB RAM
-    resource_class: small
+    # 2CPU / 4GB RAM
+    resource_class: medium
     steps:
 
       - checkout
