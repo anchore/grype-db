@@ -1,4 +1,4 @@
-package db
+package v1
 
 import (
 	"context"
@@ -8,5 +8,5 @@ import (
 type DataProvider interface {
 	Age() time.Time
 	Update(context.Context) error
-	Provide() (*Vulnerability, *VulnerabilityMetadata, error)
+	Provide() *Entry
 }
