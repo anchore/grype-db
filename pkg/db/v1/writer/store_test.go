@@ -1,17 +1,18 @@
-package sqlite
+package writer
 
 import (
-	"github.com/anchore/grype-db/pkg/db"
-	"github.com/anchore/grype-db/pkg/store/sqlite/model"
-	"github.com/anchore/grype-db/pkg/store/sqlite/reader"
-	"github.com/go-test/deep"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/anchore/grype-db/pkg/db/v1"
+	"github.com/anchore/grype-db/pkg/db/v1/model"
+	"github.com/anchore/grype-db/pkg/db/v1/reader"
+	"github.com/go-test/deep"
 )
 
-func assertIDReader(t *testing.T, reader db.IDReader, expected db.ID) {
+func assertIDReader(t *testing.T, reader v1.IDReader, expected v1.ID) {
 	t.Helper()
 	if actual, err := reader.GetID(); err != nil {
 		t.Fatalf("failed to get ID: %+v", err)
@@ -38,7 +39,7 @@ func TestStore_GetID_SetID(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	expected := db.ID{
+	expected := v1.ID{
 		BuildTimestamp: time.Now().UTC(),
 		SchemaVersion:  2,
 	}
@@ -59,7 +60,7 @@ func TestStore_GetID_SetID(t *testing.T) {
 
 }
 
-func assertVulnerabilityReader(t *testing.T, reader db.VulnerabilityStoreReader, namespace, name string, expected []*db.Vulnerability) {
+func assertVulnerabilityReader(t *testing.T, reader v1.VulnerabilityStoreReader, namespace, name string, expected []*v1.Vulnerability) {
 	if actual, err := reader.GetVulnerability(namespace, name); err != nil {
 		t.Fatalf("failed to get Vulnerability: %+v", err)
 	} else {
@@ -91,7 +92,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	extra := []*db.Vulnerability{
+	extra := []*v1.Vulnerability{
 		{
 			ID:                   "my-cve-33333",
 			RecordSource:         "record-source",
@@ -114,7 +115,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 		},
 	}
 
-	expected := []*db.Vulnerability{
+	expected := []*v1.Vulnerability{
 		{
 			ID:                   "my-cve",
 			RecordSource:         "record-source",
@@ -166,7 +167,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 
 }
 
-func assertVulnerabilityMetadataReader(t *testing.T, reader db.VulnerabilityMetadataStoreReader, id, recordSource string, expected *db.VulnerabilityMetadata) {
+func assertVulnerabilityMetadataReader(t *testing.T, reader v1.VulnerabilityMetadataStoreReader, id, recordSource string, expected *v1.VulnerabilityMetadata) {
 	if actual, err := reader.GetVulnerabilityMetadata(id, recordSource); err != nil {
 		t.Fatalf("failed to get metadata: %+v", err)
 	} else {
@@ -194,7 +195,7 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	total := []*db.VulnerabilityMetadata{
+	total := []*v1.VulnerabilityMetadata{
 		{
 			ID:           "my-cve",
 			RecordSource: "record-source",
@@ -231,13 +232,13 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 	tests := []struct {
 		name     string
-		add      []db.VulnerabilityMetadata
-		expected db.VulnerabilityMetadata
+		add      []v1.VulnerabilityMetadata
+		expected v1.VulnerabilityMetadata
 		err      bool
 	}{
 		{
 			name: "go-case",
-			add: []db.VulnerabilityMetadata{
+			add: []v1.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
@@ -245,7 +246,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Links:        []string{"https://ancho.re"},
 				},
 			},
-			expected: db.VulnerabilityMetadata{
+			expected: v1.VulnerabilityMetadata{
 				ID:           "my-cve",
 				RecordSource: "record-source",
 				Severity:     "pretty bad",
@@ -254,7 +255,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		},
 		{
 			name: "merge-links",
-			add: []db.VulnerabilityMetadata{
+			add: []v1.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
@@ -274,7 +275,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Links:        []string{"https://yahoo.com"},
 				},
 			},
-			expected: db.VulnerabilityMetadata{
+			expected: v1.VulnerabilityMetadata{
 				ID:           "my-cve",
 				RecordSource: "record-source",
 				Severity:     "pretty bad",
@@ -283,7 +284,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		},
 		{
 			name: "bad-severity",
-			add: []db.VulnerabilityMetadata{
+			add: []v1.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",

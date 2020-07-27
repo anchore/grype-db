@@ -1,12 +1,12 @@
-package sqlite
+package writer
 
 import (
 	"fmt"
 	"sort"
 
 	"github.com/anchore/grype-db/internal"
-	"github.com/anchore/grype-db/pkg/db"
-	"github.com/anchore/grype-db/pkg/store/sqlite/model"
+	v1 "github.com/anchore/grype-db/pkg/db/v1"
+	"github.com/anchore/grype-db/pkg/db/v1/model"
 	"github.com/jinzhu/gorm"
 
 	// provide the sqlite dialect to gorm via import
@@ -14,7 +14,7 @@ import (
 )
 
 // integrity check
-var _ db.Store = &Store{}
+var _ v1.Store = &Store{}
 
 // Store holds an instance of the database connection
 type Store struct {
@@ -43,7 +43,7 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 	}, vulnDbObj.Close, nil
 }
 
-func (s *Store) GetID() (*db.ID, error) {
+func (s *Store) GetID() (*v1.ID, error) {
 	var models []model.IDModel
 	result := s.vulnDb.Find(&models)
 	if result.Error != nil {
@@ -61,7 +61,7 @@ func (s *Store) GetID() (*db.ID, error) {
 	return nil, nil
 }
 
-func (s *Store) SetID(id db.ID) error {
+func (s *Store) SetID(id v1.ID) error {
 	var ids []model.IDModel
 
 	// replace the existing ID with the given one
@@ -78,12 +78,12 @@ func (s *Store) SetID(id db.ID) error {
 }
 
 // Get retrieves one or more vulnerabilities given a namespace and package name
-func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerability, error) {
+func (s *Store) GetVulnerability(namespace, packageName string) ([]v1.Vulnerability, error) {
 	var models []model.VulnerabilityModel
 
 	result := s.vulnDb.Where("namespace = ? AND package_name = ?", namespace, packageName).Find(&models)
 
-	var vulnerabilities = make([]db.Vulnerability, len(models))
+	var vulnerabilities = make([]v1.Vulnerability, len(models))
 	for idx, m := range models {
 		vulnerabilities[idx] = m.Inflate()
 	}
@@ -92,7 +92,7 @@ func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerabil
 }
 
 // AddVulnerability saves a vulnerability in the sqlite3 store
-func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
+func (s *Store) AddVulnerability(vulnerabilities ...*v1.Vulnerability) error {
 	for _, vulnerability := range vulnerabilities {
 		if vulnerability == nil {
 			continue
@@ -111,7 +111,7 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 	return nil
 }
 
-func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
+func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
 	var models []model.VulnerabilityMetadataModel
 
 	result := s.vulnDb.Where(&model.VulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
@@ -130,7 +130,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 	return nil, nil
 }
 
-func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
+func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) error {
 	for _, m := range metadata {
 		if m == nil {
 			continue

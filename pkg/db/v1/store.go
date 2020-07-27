@@ -1,4 +1,4 @@
-package db
+package v1
 
 type Store interface {
 	StoreReader

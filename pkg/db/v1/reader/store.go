@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/alicebob/sqlittle"
-	"github.com/anchore/grype-db/pkg/db"
-	"github.com/anchore/grype-db/pkg/store/sqlite/model"
+	v1 "github.com/anchore/grype-db/pkg/db/v1"
+	"github.com/anchore/grype-db/pkg/db/v1/model"
 )
 
 // integrity check
-var _ db.StoreReader = &Store{}
+var _ v1.StoreReader = &Store{}
 
 // Store holds an instance of the database connection
 type Store struct {
@@ -33,9 +33,9 @@ func NewStore(dbFilePath string) (*Store, CleanupFn, error) {
 	}, d.Close, nil
 }
 
-func (b *Store) GetID() (*db.ID, error) {
+func (b *Store) GetID() (*v1.ID, error) {
 	var scanErr error
-	var id db.ID
+	var id v1.ID
 	total := 0
 	err := b.db.Select(model.IDTableName, func(row sqlittle.Row) {
 		total++
@@ -66,8 +66,8 @@ func (b *Store) GetID() (*db.ID, error) {
 }
 
 // Get retrieves one or more vulnerabilities given a namespace and package name
-func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, error) {
-	var vulnerabilities []db.Vulnerability
+func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, error) {
+	var vulnerabilities []v1.Vulnerability
 	var scanErr error
 
 	err := b.db.IndexedSelectEq(model.VulnerabilityTableName, model.GetVulnerabilityIndexName, sqlittle.Key{name, namespace}, func(row sqlittle.Row) {
@@ -90,8 +90,8 @@ func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, er
 	return vulnerabilities, nil
 }
 
-func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
-	var metadata db.VulnerabilityMetadata
+func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
+	var metadata v1.VulnerabilityMetadata
 	var scanErr error
 	total := 0
 
