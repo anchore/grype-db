@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/anchore/grype-db/internal/log"
+	"github.com/hashicorp/go-getter"
 	"github.com/spf13/afero"
 )
 
@@ -67,7 +68,7 @@ func NewListingFromFile(fs afero.Fs, path string) (Listing, error) {
 }
 
 // NewListingFromURL loads a Listing from a URL.
-func NewListingFromURL(fs afero.Fs, getter FileGetter, listingURL string) (Listing, error) {
+func NewListingFromURL(fs afero.Fs, listingURL string) (Listing, error) {
 	tempFile, err := afero.TempFile(fs, "", "grype-db-listing")
 	if err != nil {
 		return Listing{}, fmt.Errorf("unable to create listing temp file: %w", err)
