@@ -201,12 +201,38 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 			RecordSource: "record-source",
 			Severity:     "pretty bad",
 			Links:        []string{"https://ancho.re"},
+			Description:  "best description ever",
+			CvssV2: &v1.Cvss{
+				BaseScore:           1.1,
+				ExploitabilityScore: 2.2,
+				ImpactScore:         3.3,
+				Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--NOT",
+			},
+			CvssV3: &v1.Cvss{
+				BaseScore:           1.3,
+				ExploitabilityScore: 2.1,
+				ImpactScore:         3.2,
+				Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--NICE",
+			},
 		},
 		{
 			ID:           "my-other-cve",
 			RecordSource: "record-source",
 			Severity:     "pretty bad",
 			Links:        []string{"https://ancho.re"},
+			Description:  "worst description ever",
+			CvssV2: &v1.Cvss{
+				BaseScore:           4.1,
+				ExploitabilityScore: 5.2,
+				ImpactScore:         6.3,
+				Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+			},
+			CvssV3: &v1.Cvss{
+				BaseScore:           1.4,
+				ExploitabilityScore: 2.5,
+				ImpactScore:         3.6,
+				Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+			},
 		},
 	}
 
@@ -244,6 +270,19 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					RecordSource: "record-source",
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
+					Description:  "worst description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 2.5,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
 				},
 			},
 			expected: v1.VulnerabilityMetadata{
@@ -251,6 +290,19 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 				RecordSource: "record-source",
 				Severity:     "pretty bad",
 				Links:        []string{"https://ancho.re"},
+				Description:  "worst description ever",
+				CvssV2: &v1.Cvss{
+					BaseScore:           4.1,
+					ExploitabilityScore: 5.2,
+					ImpactScore:         6.3,
+					Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+				},
+				CvssV3: &v1.Cvss{
+					BaseScore:           1.4,
+					ExploitabilityScore: 2.5,
+					ImpactScore:         3.6,
+					Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+				},
 			},
 		},
 		{
@@ -300,6 +352,138 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 			},
 			err: true,
 		},
+		{
+			name: "mismatch-description",
+			err:  true,
+			add: []v1.VulnerabilityMetadata{
+				{
+					ID:           "my-cve",
+					RecordSource: "record-source",
+					Severity:     "pretty bad",
+					Links:        []string{"https://ancho.re"},
+					Description:  "best description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 2.5,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
+				},
+				{
+					ID:           "my-cve",
+					RecordSource: "record-source",
+					Severity:     "pretty bad",
+					Links:        []string{"https://ancho.re"},
+					Description:  "worst description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 2.5,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
+				},
+			},
+		},
+		{
+			name: "mismatch-cvss2",
+			err:  true,
+			add: []v1.VulnerabilityMetadata{
+				{
+					ID:           "my-cve",
+					RecordSource: "record-source",
+					Severity:     "pretty bad",
+					Links:        []string{"https://ancho.re"},
+					Description:  "best description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 2.5,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
+				},
+				{
+					ID:           "my-cve",
+					RecordSource: "record-source",
+					Severity:     "pretty bad",
+					Links:        []string{"https://ancho.re"},
+					Description:  "best description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 2.5,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
+				},
+			},
+		},
+		{
+			name: "mismatch-cvss3",
+			err:  true,
+			add: []v1.VulnerabilityMetadata{
+				{
+					ID:           "my-cve",
+					RecordSource: "record-source",
+					Severity:     "pretty bad",
+					Links:        []string{"https://ancho.re"},
+					Description:  "best description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 2.5,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
+				},
+				{
+					ID:           "my-cve",
+					RecordSource: "record-source",
+					Severity:     "pretty bad",
+					Links:        []string{"https://ancho.re"},
+					Description:  "best description ever",
+					CvssV2: &v1.Cvss{
+						BaseScore:           4.1,
+						ExploitabilityScore: 5.2,
+						ImpactScore:         6.3,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
+					},
+					CvssV3: &v1.Cvss{
+						BaseScore:           1.4,
+						ExploitabilityScore: 0,
+						ImpactScore:         3.6,
+						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -322,6 +506,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 				err = store.AddVulnerabilityMetadata(&metadata)
 				if err != nil {
 					theErr = err
+					break
 				}
 			}
 
