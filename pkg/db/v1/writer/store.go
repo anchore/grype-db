@@ -7,6 +7,7 @@ import (
 	"github.com/anchore/grype-db/internal"
 	v1 "github.com/anchore/grype-db/pkg/db/v1"
 	"github.com/anchore/grype-db/pkg/db/v1/model"
+	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
 
 	// provide the sqlite dialect to gorm via import
@@ -130,6 +131,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.Vulnerabi
 	return nil, nil
 }
 
+// nolint:gocognit,funlen
 func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) error {
 	for _, m := range metadata {
 		if m == nil {
@@ -147,6 +149,20 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) 
 				return fmt.Errorf("existing metadata has mismatched severity (%q!=%q)", existing.Severity, m.Severity)
 			}
 
+			if existing.Description != m.Description {
+				return fmt.Errorf("existing metadata has mismatched description (%q!=%q)", existing.Description, m.Description)
+			}
+
+			if diffs := deep.Equal(existing.CvssV2, m.CvssV2); existing.CvssV2 != nil && len(diffs) > 0 {
+				return fmt.Errorf("existing metadata has mismatched cvss-v2: %+v", diffs)
+			}
+			existing.CvssV2 = m.CvssV2
+
+			if diffs := deep.Equal(existing.CvssV3, m.CvssV3); existing.CvssV3 != nil && len(diffs) > 0 {
+				return fmt.Errorf("existing metadata has mismatched cvss-v3: %+v", diffs)
+			}
+			existing.CvssV3 = m.CvssV3
+
 			links := internal.NewStringSetFromSlice(existing.Links)
 			for _, l := range m.Links {
 				links.Add(l)
@@ -155,8 +171,8 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) 
 			existing.Links = links.ToSlice()
 			sort.Strings(existing.Links)
 
-			model := model.NewVulnerabilityMetadataModel(*existing)
-			result := s.vulnDb.Save(&model)
+			newModel := model.NewVulnerabilityMetadataModel(*existing)
+			result := s.vulnDb.Save(&newModel)
 
 			if result.RowsAffected != 1 {
 				return fmt.Errorf("unable to merge vulnerability metadata (%d rows affected)", result.RowsAffected)
@@ -166,9 +182,9 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) 
 				return result.Error
 			}
 		} else {
-			model := model.NewVulnerabilityMetadataModel(*m)
+			newModel := model.NewVulnerabilityMetadataModel(*m)
 			// this is a new entry
-			result := s.vulnDb.Create(&model)
+			result := s.vulnDb.Create(&newModel)
 			if result.Error != nil {
 				return result.Error
 			}
