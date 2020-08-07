@@ -95,17 +95,25 @@ func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.Vulnerabi
 	var scanErr error
 	total := 0
 
-	err := b.db.PKSelect(model.VulnerabilityTableName, sqlittle.Key{id, recordSource}, func(row sqlittle.Row) {
+	err := b.db.PKSelect(model.VulnerabilityMetadataTableName, sqlittle.Key{id, recordSource}, func(row sqlittle.Row) {
 		total++
 		var m model.VulnerabilityMetadataModel
 
-		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links); err != nil {
+		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links, &m.Description, &m.CvssV2.String, &m.CvssV3.String); err != nil {
 			scanErr = fmt.Errorf("unable to scan over row: %w", err)
 			return
 		}
 
+		if m.CvssV2.String != "" {
+			m.CvssV2.Valid = true
+		}
+
+		if m.CvssV3.String != "" {
+			m.CvssV3.Valid = true
+		}
+
 		metadata = m.Inflate()
-	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities")
+	}, "id", "record_source", "severity", "links", "description", "cvss_v2", "cvss_v3")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
 	}

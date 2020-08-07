@@ -183,13 +183,13 @@ func assertVulnerabilityMetadataReader(t *testing.T, reader v1.VulnerabilityMeta
 }
 
 func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
-	dbTempDir, err := ioutil.TempDir("", "grype-db-test-store")
+	dbTempFile, err := ioutil.TempFile("", "grype-db-test-store")
 	if err != nil {
 		t.Fatalf("could not create temp file: %+v", err)
 	}
-	defer os.RemoveAll(dbTempDir)
+	defer os.Remove(dbTempFile.Name())
 
-	store, cleanupFn, err := NewStore(dbTempDir, true)
+	store, cleanupFn, err := NewStore(dbTempFile.Name(), true)
 	defer cleanupFn()
 	if err != nil {
 		t.Fatalf("could not create store: %+v", err)
@@ -251,7 +251,14 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 		t.Fatalf("unexpected number of entries: %d", len(allEntries))
 	}
 
-	assertVulnerabilityMetadataReader(t, store, total[0].ID, total[0].RecordSource, total[0])
+	// gut check on reader
+	storeReader, othercleanfn, err := reader.NewStore(dbTempFile.Name())
+	defer othercleanfn()
+	if err != nil {
+		t.Fatalf("could not open db reader: %+v", err)
+	}
+
+	assertVulnerabilityMetadataReader(t, storeReader, total[0].ID, total[0].RecordSource, total[0])
 
 }
 
