@@ -98,9 +98,9 @@ func (s *Store) AddVulnerability(vulnerabilities ...*v1.Vulnerability) error {
 		if vulnerability == nil {
 			continue
 		}
-		model := model.NewVulnerabilityModel(*vulnerability)
+		m := model.NewVulnerabilityModel(*vulnerability)
 
-		result := s.vulnDb.Create(&model)
+		result := s.vulnDb.Create(&m)
 		if result.Error != nil {
 			return result.Error
 		}
