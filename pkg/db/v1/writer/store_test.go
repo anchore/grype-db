@@ -102,6 +102,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 			VersionFormat:        "semver",
 			CPEs:                 []string{"a-cool-cpe"},
 			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+			FixedInVersion:       "2.0.1",
 		},
 		{
 			ID:                   "my-other-cve-33333",
@@ -125,6 +126,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 			VersionFormat:        "semver",
 			CPEs:                 []string{"a-cool-cpe"},
 			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+			FixedInVersion:       "1.0.1",
 		},
 		{
 			ID:                   "my-other-cve",
@@ -135,6 +137,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 			VersionFormat:        "semver",
 			CPEs:                 []string{"a-cool-cpe"},
 			ProxyVulnerabilities: []string{"another-cve", "an-other-cve"},
+			FixedInVersion:       "4.0.5",
 		},
 	}
 

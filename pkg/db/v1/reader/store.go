@@ -11,14 +11,15 @@ import (
 // integrity check
 var _ v1.StoreReader = &Store{}
 
-// Store holds an instance of the database connection
+// Store holds an instance of the database connection.
 type Store struct {
 	db *sqlittle.DB
 }
 
+// CleanupFn is a callback for closing a DB connection.
 type CleanupFn func() error
 
-// NewStore creates a new instance of the store
+// NewStore creates a new instance of the store.
 func NewStore(dbFilePath string) (*Store, CleanupFn, error) {
 	d, err := Open(&config{
 		DbPath:    dbFilePath,
@@ -33,6 +34,7 @@ func NewStore(dbFilePath string) (*Store, CleanupFn, error) {
 	}, d.Close, nil
 }
 
+// GetID fetches the metadata about the databases schema version and build time.
 func (b *Store) GetID() (*v1.ID, error) {
 	var scanErr error
 	var id v1.ID
@@ -65,7 +67,7 @@ func (b *Store) GetID() (*v1.ID, error) {
 	return &id, nil
 }
 
-// Get retrieves one or more vulnerabilities given a namespace and package name
+// GetVulnerability retrieves one or more vulnerabilities given a namespace and package name.
 func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, error) {
 	var vulnerabilities []v1.Vulnerability
 	var scanErr error
@@ -73,13 +75,13 @@ func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, er
 	err := b.db.IndexedSelectEq(model.VulnerabilityTableName, model.GetVulnerabilityIndexName, sqlittle.Key{name, namespace}, func(row sqlittle.Row) {
 		var m model.VulnerabilityModel
 
-		if err := row.Scan(&m.Namespace, &m.PackageName, &m.ID, &m.RecordSource, &m.VersionConstraint, &m.VersionFormat, &m.CPEs, &m.ProxyVulnerabilities); err != nil {
+		if err := row.Scan(&m.Namespace, &m.PackageName, &m.ID, &m.RecordSource, &m.VersionConstraint, &m.VersionFormat, &m.CPEs, &m.ProxyVulnerabilities, &m.FixedInVersion); err != nil {
 			scanErr = fmt.Errorf("unable to scan over row: %w", err)
 			return
 		}
 
 		vulnerabilities = append(vulnerabilities, m.Inflate())
-	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities")
+	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities", "fixed_in_version")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
 	}
@@ -90,6 +92,7 @@ func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, er
 	return vulnerabilities, nil
 }
 
+// GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
 func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
 	var metadata v1.VulnerabilityMetadata
 	var scanErr error
