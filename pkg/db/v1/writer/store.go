@@ -22,9 +22,10 @@ type Store struct {
 	vulnDb *gorm.DB
 }
 
+// CleanupFn is a callback for closing a DB connection.
 type CleanupFn func() error
 
-// NewStore creates a new instance of the store
+// NewStore creates a new instance of the store.
 func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 	vulnDbObj, err := open(config{
 		DbPath:    dbFilePath,
@@ -44,6 +45,7 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 	}, vulnDbObj.Close, nil
 }
 
+// GetID fetches the metadata about the databases schema version and build time.
 func (s *Store) GetID() (*v1.ID, error) {
 	var models []model.IDModel
 	result := s.vulnDb.Find(&models)
@@ -62,6 +64,7 @@ func (s *Store) GetID() (*v1.ID, error) {
 	return nil, nil
 }
 
+// SetID stores the databases schema version and build time.
 func (s *Store) SetID(id v1.ID) error {
 	var ids []model.IDModel
 
@@ -78,7 +81,7 @@ func (s *Store) SetID(id v1.ID) error {
 	return result.Error
 }
 
-// Get retrieves one or more vulnerabilities given a namespace and package name
+// GetVulnerability retrieves one or more vulnerabilities given a namespace and package name.
 func (s *Store) GetVulnerability(namespace, packageName string) ([]v1.Vulnerability, error) {
 	var models []model.VulnerabilityModel
 
@@ -92,7 +95,7 @@ func (s *Store) GetVulnerability(namespace, packageName string) ([]v1.Vulnerabil
 	return vulnerabilities, result.Error
 }
 
-// AddVulnerability saves a vulnerability in the sqlite3 store
+// AddVulnerability saves one or more vulnerabilities into the sqlite3 store.
 func (s *Store) AddVulnerability(vulnerabilities ...*v1.Vulnerability) error {
 	for _, vulnerability := range vulnerabilities {
 		if vulnerability == nil {
@@ -112,6 +115,7 @@ func (s *Store) AddVulnerability(vulnerabilities ...*v1.Vulnerability) error {
 	return nil
 }
 
+// GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
 func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
 	var models []model.VulnerabilityMetadataModel
 
@@ -132,6 +136,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.Vulnerabi
 }
 
 // nolint:gocognit,funlen
+// AddVulnerabilityMetadata stores one or more vulnerability metadata models into the sqlite DB.
 func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) error {
 	for _, m := range metadata {
 		if m == nil {
