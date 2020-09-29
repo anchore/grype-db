@@ -37,17 +37,14 @@ func NewStore(dbFilePath string) (*Store, CleanupFn, error) {
 // GetID fetches the metadata about the databases schema version and build time.
 func (b *Store) GetID() (*v1.ID, error) {
 	var scanErr error
-	var id v1.ID
 	total := 0
+	var m model.IDModel
 	err := b.db.Select(model.IDTableName, func(row sqlittle.Row) {
 		total++
-		var m model.IDModel
 
 		if scanErr = row.Scan(&m.BuildTimestamp, &m.SchemaVersion); scanErr != nil {
 			return
 		}
-
-		id = m.Inflate()
 	}, "build_timestamp", "schema_version")
 
 	if err != nil {
@@ -55,6 +52,11 @@ func (b *Store) GetID() (*v1.ID, error) {
 	}
 	if scanErr != nil {
 		return nil, scanErr
+	}
+
+	id, err := m.Inflate()
+	if err != nil {
+		return nil, err
 	}
 
 	switch {
@@ -69,8 +71,8 @@ func (b *Store) GetID() (*v1.ID, error) {
 
 // GetVulnerability retrieves one or more vulnerabilities given a namespace and package name.
 func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, error) {
-	var vulnerabilities []v1.Vulnerability
 	var scanErr error
+	var vulnerabilityModels []model.VulnerabilityModel
 
 	err := b.db.IndexedSelectEq(model.VulnerabilityTableName, model.GetVulnerabilityIndexName, sqlittle.Key{name, namespace}, func(row sqlittle.Row) {
 		var m model.VulnerabilityModel
@@ -80,7 +82,7 @@ func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, er
 			return
 		}
 
-		vulnerabilities = append(vulnerabilities, m.Inflate())
+		vulnerabilityModels = append(vulnerabilityModels, m)
 	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities", "fixed_in_version")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
@@ -89,33 +91,32 @@ func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, er
 		return nil, scanErr
 	}
 
+	vulnerabilities := make([]v1.Vulnerability, 0, len(vulnerabilityModels))
+
+	for _, m := range vulnerabilityModels {
+		vulnerability, err := m.Inflate()
+		if err != nil {
+			return nil, err
+		}
+		vulnerabilities = append(vulnerabilities, vulnerability)
+	}
+
 	return vulnerabilities, nil
 }
 
 // GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
 func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
-	var metadata v1.VulnerabilityMetadata
-	var scanErr error
 	total := 0
+	var m model.VulnerabilityMetadataModel
+	var scanErr error
 
 	err := b.db.PKSelect(model.VulnerabilityMetadataTableName, sqlittle.Key{id, recordSource}, func(row sqlittle.Row) {
 		total++
-		var m model.VulnerabilityMetadataModel
 
 		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links, &m.Description, &m.CvssV2.String, &m.CvssV3.String); err != nil {
 			scanErr = fmt.Errorf("unable to scan over row: %w", err)
 			return
 		}
-
-		if m.CvssV2.String != "" {
-			m.CvssV2.Valid = true
-		}
-
-		if m.CvssV3.String != "" {
-			m.CvssV3.Valid = true
-		}
-
-		metadata = m.Inflate()
 	}, "id", "record_source", "severity", "links", "description", "cvss_v2", "cvss_v3")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
@@ -129,6 +130,19 @@ func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.Vulnerabi
 		return nil, nil
 	case total > 1:
 		return nil, fmt.Errorf("discovered more than one DB metadata record")
+	}
+
+	if m.CvssV2.String != "" {
+		m.CvssV2.Valid = true
+	}
+
+	if m.CvssV3.String != "" {
+		m.CvssV3.Valid = true
+	}
+
+	metadata, err := m.Inflate()
+	if err != nil {
+		return nil, err
 	}
 
 	return &metadata, nil

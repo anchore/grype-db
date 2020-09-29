@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
 	v1 "github.com/anchore/grype-db/pkg/db/v1"
@@ -26,14 +27,14 @@ func (IDModel) TableName() string {
 	return IDTableName
 }
 
-func (m *IDModel) Inflate() v1.ID {
+func (m *IDModel) Inflate() (v1.ID, error) {
 	buildTime, err := time.Parse(time.RFC3339Nano, m.BuildTimestamp)
 	if err != nil {
-		// TODO: just no...
-		panic(err)
+		return v1.ID{}, fmt.Errorf("unable to parse build timestamp (%+v): %w", m.BuildTimestamp, err)
 	}
+
 	return v1.ID{
 		BuildTimestamp: buildTime,
 		SchemaVersion:  m.SchemaVersion,
-	}
+	}, nil
 }
