@@ -35,7 +35,9 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 		return nil, nil, err
 	}
 
-	// TODO: this will affect schema before we validate we should be using this DB
+	// TODO: automigrate could write to the database,
+	//  we should be validating the database is the correct database based on the version in the ID table before
+	//  automigrating
 	vulnDbObj.AutoMigrate(&model.IDModel{})
 	vulnDbObj.AutoMigrate(&model.VulnerabilityModel{})
 	vulnDbObj.AutoMigrate(&model.VulnerabilityMetadataModel{})
@@ -57,7 +59,10 @@ func (s *Store) GetID() (*v1.ID, error) {
 	case len(models) > 1:
 		return nil, fmt.Errorf("found multiple DB IDs")
 	case len(models) == 1:
-		id := models[0].Inflate()
+		id, err := models[0].Inflate()
+		if err != nil {
+			return nil, err
+		}
 		return &id, nil
 	}
 
@@ -89,7 +94,11 @@ func (s *Store) GetVulnerability(namespace, packageName string) ([]v1.Vulnerabil
 
 	var vulnerabilities = make([]v1.Vulnerability, len(models))
 	for idx, m := range models {
-		vulnerabilities[idx] = m.Inflate()
+		vulnerability, err := m.Inflate()
+		if err != nil {
+			return nil, err
+		}
+		vulnerabilities[idx] = vulnerability
 	}
 
 	return vulnerabilities, result.Error
@@ -128,7 +137,11 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.Vulnerabi
 	case len(models) > 1:
 		return nil, fmt.Errorf("found multiple metadatas for single ID=%q RecordSource=%q", id, recordSource)
 	case len(models) == 1:
-		metadata := models[0].Inflate()
+		metadata, err := models[0].Inflate()
+		if err != nil {
+			return nil, err
+		}
+
 		return &metadata, nil
 	}
 
