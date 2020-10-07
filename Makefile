@@ -35,7 +35,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BOLD)$(CYAN)%-25s$(RESET)%s\n", $$1, $$2}'
 
 .PHONY: ci-bootstrap
-ci-bootstrap: bootstrap
+ci-bootstrap:
 	sudo apt install -y bc
 
 .PHONY: bootstrap
@@ -81,16 +81,6 @@ unit: ## Run unit tests (with coverage)
 	@go tool cover -func $(COVER_REPORT) | grep total |  awk '{print substr($$3, 1, length($$3)-1)}' > $(COVER_TOTAL)
 	@echo "Coverage: $$(cat $(COVER_TOTAL))"
 	@if [ $$(echo "$$(cat $(COVER_TOTAL)) >= $(COVERAGE_THRESHOLD)" | bc -l) -ne 1 ]; then echo "$(RED)$(BOLD)Failed coverage quality gate (> $(COVERAGE_THRESHOLD)%)$(RESET)" && false; fi
-
-.PHONY: check-pipeline
-check-pipeline: ## Run local CircleCI pipeline locally (sanity check)
-	$(call title,Check pipeline)
-	# note: this is meant for local development & testing of the pipeline, NOT to be run in CI
-	mkdir -p $(TEMPDIR)
-	circleci config process .circleci/config.yml > .tmp/circleci.yml
-	circleci local execute -c .tmp/circleci.yml --job "Static Analysis"
-	circleci local execute -c .tmp/circleci.yml --job "Unit Tests (go-latest)"
-	@printf '$(SUCCESS)Pipeline checks pass!$(RESET)\n'
 
 .PHONY: check-licenses
 check-licenses:
