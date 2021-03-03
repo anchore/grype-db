@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/alicebob/sqlittle"
-	v1 "github.com/anchore/grype-db/pkg/db/v1"
-	"github.com/anchore/grype-db/pkg/db/v1/model"
+	"github.com/anchore/grype-db/pkg/db"
+	"github.com/anchore/grype-db/pkg/db/model"
 )
 
 // integrity check
-var _ v1.StoreReader = &Store{}
+var _ db.StoreReader = &Store{}
 
 // Store holds an instance of the database connection.
 type Store struct {
@@ -35,7 +35,7 @@ func NewStore(dbFilePath string) (*Store, CleanupFn, error) {
 }
 
 // GetID fetches the metadata about the databases schema version and build time.
-func (b *Store) GetID() (*v1.ID, error) {
+func (b *Store) GetID() (*db.ID, error) {
 	var scanErr error
 	total := 0
 	var m model.IDModel
@@ -70,7 +70,7 @@ func (b *Store) GetID() (*v1.ID, error) {
 }
 
 // GetVulnerability retrieves one or more vulnerabilities given a namespace and package name.
-func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, error) {
+func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, error) {
 	var scanErr error
 	var vulnerabilityModels []model.VulnerabilityModel
 
@@ -91,7 +91,7 @@ func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, er
 		return nil, scanErr
 	}
 
-	vulnerabilities := make([]v1.Vulnerability, 0, len(vulnerabilityModels))
+	vulnerabilities := make([]db.Vulnerability, 0, len(vulnerabilityModels))
 
 	for _, m := range vulnerabilityModels {
 		vulnerability, err := m.Inflate()
@@ -105,7 +105,7 @@ func (b *Store) GetVulnerability(namespace, name string) ([]v1.Vulnerability, er
 }
 
 // GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
-func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
+func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
 	total := 0
 	var m model.VulnerabilityMetadataModel
 	var scanErr error
