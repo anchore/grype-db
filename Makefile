@@ -3,7 +3,7 @@ RESULTSDIR = $(TEMPDIR)/results
 COVER_REPORT = $(RESULTSDIR)/cover.report
 COVER_TOTAL = $(RESULTSDIR)/cover.total
 LICENSES_REPORT = $(RESULTSDIR)/licenses.json
-LINTCMD = $(TEMPDIR)/golangci-lint run --tests=false --config .golangci.yaml
+LINTCMD = $(TEMPDIR)/golangci-lint run --timeout 2m0s --tests=false --config .golangci.yaml
 BOLD := $(shell tput -T linux bold)
 PURPLE := $(shell tput -T linux setaf 5)
 GREEN := $(shell tput -T linux setaf 2)
