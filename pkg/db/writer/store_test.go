@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anchore/grype-db/pkg/db/v1"
-	"github.com/anchore/grype-db/pkg/db/v1/model"
-	"github.com/anchore/grype-db/pkg/db/v1/reader"
+	"github.com/anchore/grype-db/pkg/db"
+	"github.com/anchore/grype-db/pkg/db/model"
+	"github.com/anchore/grype-db/pkg/db/reader"
 	"github.com/go-test/deep"
 )
 
-func assertIDReader(t *testing.T, reader v1.IDReader, expected v1.ID) {
+func assertIDReader(t *testing.T, reader db.IDReader, expected db.ID) {
 	t.Helper()
 	if actual, err := reader.GetID(); err != nil {
 		t.Fatalf("failed to get ID: %+v", err)
@@ -39,7 +39,7 @@ func TestStore_GetID_SetID(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	expected := v1.ID{
+	expected := db.ID{
 		BuildTimestamp: time.Now().UTC(),
 		SchemaVersion:  2,
 	}
@@ -60,7 +60,7 @@ func TestStore_GetID_SetID(t *testing.T) {
 
 }
 
-func assertVulnerabilityReader(t *testing.T, reader v1.VulnerabilityStoreReader, namespace, name string, expected []*v1.Vulnerability) {
+func assertVulnerabilityReader(t *testing.T, reader db.VulnerabilityStoreReader, namespace, name string, expected []*db.Vulnerability) {
 	if actual, err := reader.GetVulnerability(namespace, name); err != nil {
 		t.Fatalf("failed to get Vulnerability: %+v", err)
 	} else {
@@ -92,7 +92,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	extra := []*v1.Vulnerability{
+	extra := []*db.Vulnerability{
 		{
 			ID:                   "my-cve-33333",
 			RecordSource:         "record-source",
@@ -116,7 +116,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 		},
 	}
 
-	expected := []*v1.Vulnerability{
+	expected := []*db.Vulnerability{
 		{
 			ID:                   "my-cve",
 			RecordSource:         "record-source",
@@ -170,7 +170,7 @@ func TestStore_GetVulnerability_SetVulnerability(t *testing.T) {
 
 }
 
-func assertVulnerabilityMetadataReader(t *testing.T, reader v1.VulnerabilityMetadataStoreReader, id, recordSource string, expected *v1.VulnerabilityMetadata) {
+func assertVulnerabilityMetadataReader(t *testing.T, reader db.VulnerabilityMetadataStoreReader, id, recordSource string, expected *db.VulnerabilityMetadata) {
 	if actual, err := reader.GetVulnerabilityMetadata(id, recordSource); err != nil {
 		t.Fatalf("failed to get metadata: %+v", err)
 	} else {
@@ -198,20 +198,20 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 		t.Fatalf("could not create store: %+v", err)
 	}
 
-	total := []*v1.VulnerabilityMetadata{
+	total := []*db.VulnerabilityMetadata{
 		{
 			ID:           "my-cve",
 			RecordSource: "record-source",
 			Severity:     "pretty bad",
 			Links:        []string{"https://ancho.re"},
 			Description:  "best description ever",
-			CvssV2: &v1.Cvss{
+			CvssV2: &db.Cvss{
 				BaseScore:           1.1,
 				ExploitabilityScore: 2.2,
 				ImpactScore:         3.3,
 				Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--NOT",
 			},
-			CvssV3: &v1.Cvss{
+			CvssV3: &db.Cvss{
 				BaseScore:           1.3,
 				ExploitabilityScore: 2.1,
 				ImpactScore:         3.2,
@@ -224,13 +224,13 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 			Severity:     "pretty bad",
 			Links:        []string{"https://ancho.re"},
 			Description:  "worst description ever",
-			CvssV2: &v1.Cvss{
+			CvssV2: &db.Cvss{
 				BaseScore:           4.1,
 				ExploitabilityScore: 5.2,
 				ImpactScore:         6.3,
 				Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 			},
-			CvssV3: &v1.Cvss{
+			CvssV3: &db.Cvss{
 				BaseScore:           1.4,
 				ExploitabilityScore: 2.5,
 				ImpactScore:         3.6,
@@ -268,26 +268,26 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 	tests := []struct {
 		name     string
-		add      []v1.VulnerabilityMetadata
-		expected v1.VulnerabilityMetadata
+		add      []db.VulnerabilityMetadata
+		expected db.VulnerabilityMetadata
 		err      bool
 	}{
 		{
 			name: "go-case",
-			add: []v1.VulnerabilityMetadata{
+			add: []db.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "worst description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 2.5,
 						ImpactScore:         3.6,
@@ -295,19 +295,19 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					},
 				},
 			},
-			expected: v1.VulnerabilityMetadata{
+			expected: db.VulnerabilityMetadata{
 				ID:           "my-cve",
 				RecordSource: "record-source",
 				Severity:     "pretty bad",
 				Links:        []string{"https://ancho.re"},
 				Description:  "worst description ever",
-				CvssV2: &v1.Cvss{
+				CvssV2: &db.Cvss{
 					BaseScore:           4.1,
 					ExploitabilityScore: 5.2,
 					ImpactScore:         6.3,
 					Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 				},
-				CvssV3: &v1.Cvss{
+				CvssV3: &db.Cvss{
 					BaseScore:           1.4,
 					ExploitabilityScore: 2.5,
 					ImpactScore:         3.6,
@@ -317,7 +317,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		},
 		{
 			name: "merge-links",
-			add: []v1.VulnerabilityMetadata{
+			add: []db.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
@@ -337,7 +337,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Links:        []string{"https://yahoo.com"},
 				},
 			},
-			expected: v1.VulnerabilityMetadata{
+			expected: db.VulnerabilityMetadata{
 				ID:           "my-cve",
 				RecordSource: "record-source",
 				Severity:     "pretty bad",
@@ -346,7 +346,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		},
 		{
 			name: "bad-severity",
-			add: []v1.VulnerabilityMetadata{
+			add: []db.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
@@ -365,20 +365,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		{
 			name: "mismatch-description",
 			err:  true,
-			add: []v1.VulnerabilityMetadata{
+			add: []db.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "best description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 2.5,
 						ImpactScore:         3.6,
@@ -391,13 +391,13 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "worst description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 2.5,
 						ImpactScore:         3.6,
@@ -409,20 +409,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		{
 			name: "mismatch-cvss2",
 			err:  true,
-			add: []v1.VulnerabilityMetadata{
+			add: []db.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "best description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 2.5,
 						ImpactScore:         3.6,
@@ -435,13 +435,13 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "best description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 2.5,
 						ImpactScore:         3.6,
@@ -453,20 +453,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 		{
 			name: "mismatch-cvss3",
 			err:  true,
-			add: []v1.VulnerabilityMetadata{
+			add: []db.VulnerabilityMetadata{
 				{
 					ID:           "my-cve",
 					RecordSource: "record-source",
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "best description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 2.5,
 						ImpactScore:         3.6,
@@ -479,13 +479,13 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Severity:     "pretty bad",
 					Links:        []string{"https://ancho.re"},
 					Description:  "best description ever",
-					CvssV2: &v1.Cvss{
+					CvssV2: &db.Cvss{
 						BaseScore:           4.1,
 						ExploitabilityScore: 5.2,
 						ImpactScore:         6.3,
 						Vector:              "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
-					CvssV3: &v1.Cvss{
+					CvssV3: &db.Cvss{
 						BaseScore:           1.4,
 						ExploitabilityScore: 0,
 						ImpactScore:         3.6,

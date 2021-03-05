@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	"github.com/anchore/grype-db/internal"
-	v1 "github.com/anchore/grype-db/pkg/db/v1"
-	"github.com/anchore/grype-db/pkg/db/v1/model"
+	"github.com/anchore/grype-db/pkg/db"
+	"github.com/anchore/grype-db/pkg/db/model"
 	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
 
@@ -15,7 +15,7 @@ import (
 )
 
 // integrity check
-var _ v1.Store = &Store{}
+var _ db.Store = &Store{}
 
 // Store holds an instance of the database connection
 type Store struct {
@@ -48,7 +48,7 @@ func NewStore(dbFilePath string, overwrite bool) (*Store, CleanupFn, error) {
 }
 
 // GetID fetches the metadata about the databases schema version and build time.
-func (s *Store) GetID() (*v1.ID, error) {
+func (s *Store) GetID() (*db.ID, error) {
 	var models []model.IDModel
 	result := s.vulnDb.Find(&models)
 	if result.Error != nil {
@@ -70,7 +70,7 @@ func (s *Store) GetID() (*v1.ID, error) {
 }
 
 // SetID stores the databases schema version and build time.
-func (s *Store) SetID(id v1.ID) error {
+func (s *Store) SetID(id db.ID) error {
 	var ids []model.IDModel
 
 	// replace the existing ID with the given one
@@ -87,12 +87,12 @@ func (s *Store) SetID(id v1.ID) error {
 }
 
 // GetVulnerability retrieves one or more vulnerabilities given a namespace and package name.
-func (s *Store) GetVulnerability(namespace, packageName string) ([]v1.Vulnerability, error) {
+func (s *Store) GetVulnerability(namespace, packageName string) ([]db.Vulnerability, error) {
 	var models []model.VulnerabilityModel
 
 	result := s.vulnDb.Where("namespace = ? AND package_name = ?", namespace, packageName).Find(&models)
 
-	var vulnerabilities = make([]v1.Vulnerability, len(models))
+	var vulnerabilities = make([]db.Vulnerability, len(models))
 	for idx, m := range models {
 		vulnerability, err := m.Inflate()
 		if err != nil {
@@ -105,7 +105,7 @@ func (s *Store) GetVulnerability(namespace, packageName string) ([]v1.Vulnerabil
 }
 
 // AddVulnerability saves one or more vulnerabilities into the sqlite3 store.
-func (s *Store) AddVulnerability(vulnerabilities ...*v1.Vulnerability) error {
+func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 	for _, vulnerability := range vulnerabilities {
 		if vulnerability == nil {
 			continue
@@ -125,7 +125,7 @@ func (s *Store) AddVulnerability(vulnerabilities ...*v1.Vulnerability) error {
 }
 
 // GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
-func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.VulnerabilityMetadata, error) {
+func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
 	var models []model.VulnerabilityMetadataModel
 
 	result := s.vulnDb.Where(&model.VulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
@@ -150,7 +150,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*v1.Vulnerabi
 
 // nolint:gocognit,funlen
 // AddVulnerabilityMetadata stores one or more vulnerability metadata models into the sqlite DB.
-func (s *Store) AddVulnerabilityMetadata(metadata ...*v1.VulnerabilityMetadata) error {
+func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
 	for _, m := range metadata {
 		if m == nil {
 			continue

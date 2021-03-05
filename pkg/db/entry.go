@@ -1,4 +1,4 @@
-package v1
+package db
 
 type Entry struct {
 	Vulnerability         *Vulnerability
