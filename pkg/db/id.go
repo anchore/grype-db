@@ -17,9 +17,9 @@ type IDWriter interface {
 	SetID(ID) error
 }
 
-func NewID(age time.Time) ID {
+func NewID(age time.Time, schemaVersion int) ID {
 	return ID{
 		BuildTimestamp: age.UTC(),
-		SchemaVersion:  SchemaVersion,
+		SchemaVersion:  schemaVersion,
 	}
 }
