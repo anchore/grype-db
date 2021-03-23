@@ -14,6 +14,8 @@ TITLE := $(BOLD)$(PURPLE)
 SUCCESS := $(BOLD)$(GREEN)
 # the quality gate lower threshold for unit test total % coverage (by function statements)
 COVERAGE_THRESHOLD := 55
+# supported database schema
+DATABASE_SCHEMA_VERSION = 1
 
 ifndef TEMPDIR
     $(error TEMPDIR is not set)
@@ -85,3 +87,8 @@ unit: ## Run unit tests (with coverage)
 .PHONY: check-licenses
 check-licenses:
 	$(TEMPDIR)/bouncer check
+
+.PHONY: check-schema
+check-schema: ## Ensure that there aren't any accidental changes to the DB schema version
+	@ grep -qHr "const SchemaVersion" pkg || { echo "SchemaVersion constant not found, check must be udpated to verify proper version" && exit 1;}
+	@ grep -r "const SchemaVersion" pkg | grep -q "= $(DATABASE_SCHEMA_VERSION)" || { echo "Expected database schema version $(DATABASE_SCHEMA_VERSION) not found. Ensure 'const SchemaVersion = $(DATABASE_SCHEMA_VERSION)' is defined" && exit 1;}

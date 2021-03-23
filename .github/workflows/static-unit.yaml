@@ -77,3 +77,6 @@ jobs:
 
       - name: Run unit tests
         run: make unit
+
+      - name: Ensure DB Schema is correct
+        run: make check-schema
