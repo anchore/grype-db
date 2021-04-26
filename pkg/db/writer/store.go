@@ -148,7 +148,7 @@ func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 	return nil, nil
 }
 
-// nolint:gocognit,funlen
+// nolint:gocognit
 // AddVulnerabilityMetadata stores one or more vulnerability metadata models into the sqlite DB.
 func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) error {
 	for _, m := range metadata {
@@ -164,21 +164,18 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 		if existing != nil {
 			// merge with the existing entry
 
-			cvssV3Diffs := deep.Equal(existing.CvssV3, m.CvssV3)
-			cvssV2Diffs := deep.Equal(existing.CvssV2, m.CvssV2)
+			cvssDiffs := deep.Equal(existing.Cvss, m.Cvss)
 
 			switch {
 			case existing.Severity != m.Severity:
 				return fmt.Errorf("existing metadata has mismatched severity (%q!=%q)", existing.Severity, m.Severity)
 			case existing.Description != m.Description:
 				return fmt.Errorf("existing metadata has mismatched description (%q!=%q)", existing.Description, m.Description)
-			case existing.CvssV2 != nil && len(cvssV2Diffs) > 0:
-				return fmt.Errorf("existing metadata has mismatched cvss-v2: %+v", cvssV2Diffs)
-			case existing.CvssV3 != nil && len(cvssV3Diffs) > 0:
-				return fmt.Errorf("existing metadata has mismatched cvss-v3: %+v", cvssV3Diffs)
+			case existing.Cvss != nil && m.Cvss != nil && len(cvssDiffs) > 0:
+				// TODO: compare each entry for existence and take unique entries
+				return fmt.Errorf("existing metadata has mismatched cvss: %+v", cvssDiffs)
 			default:
-				existing.CvssV2 = m.CvssV2
-				existing.CvssV3 = m.CvssV3
+				existing.Cvss = m.Cvss
 			}
 
 			links := internal.NewStringSetFromSlice(existing.Links)

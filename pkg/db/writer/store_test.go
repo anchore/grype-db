@@ -342,6 +342,7 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 				RecordSource: "record-source",
 				Severity:     "pretty bad",
 				Links:        []string{"https://ancho.re", "https://google.com", "https://yahoo.com"},
+				Cvss:         []db.Cvss{},
 			},
 		},
 		{
