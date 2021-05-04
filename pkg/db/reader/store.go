@@ -113,11 +113,11 @@ func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 	err := b.db.PKSelect(model.VulnerabilityMetadataTableName, sqlittle.Key{id, recordSource}, func(row sqlittle.Row) {
 		total++
 
-		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links, &m.Description, &m.CvssV2.String, &m.CvssV3.String); err != nil {
+		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links, &m.Description, &m.Cvss); err != nil {
 			scanErr = fmt.Errorf("unable to scan over row: %w", err)
 			return
 		}
-	}, "id", "record_source", "severity", "links", "description", "cvss_v2", "cvss_v3")
+	}, "id", "record_source", "severity", "links", "description", "cvss")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
 	}
@@ -130,14 +130,6 @@ func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.Vulnerabi
 		return nil, nil
 	case total > 1:
 		return nil, fmt.Errorf("discovered more than one DB metadata record")
-	}
-
-	if m.CvssV2.String != "" {
-		m.CvssV2.Valid = true
-	}
-
-	if m.CvssV3.String != "" {
-		m.CvssV3.Valid = true
 	}
 
 	metadata, err := m.Inflate()
