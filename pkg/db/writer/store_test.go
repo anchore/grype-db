@@ -216,8 +216,8 @@ func sortMetadataCvss(cvss []db.Cvss) {
 		if cvss[i].Vector < cvss[j].Vector {
 			return false
 		}
-		// then try to sort by ImpactScore if Vector is the same
-		return cvss[i].Metrics.ImpactScore < cvss[j].Metrics.ImpactScore
+		// then try to sort by BaseScore if Vector is the same
+		return cvss[i].Metrics.BaseScore < cvss[j].Metrics.BaseScore
 	})
 }
 
@@ -256,20 +256,20 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 						SuperScore: "1000",
 					},
 					Version: "2.0",
-					Metrics: db.CvssMetrics{
-						BaseScore:           1.1,
-						ExploitabilityScore: 2.2,
-						ImpactScore:         3.3,
-					},
+					Metrics: db.NewCvssMetrics(
+						1.1,
+						2.2,
+						3.3,
+					),
 					Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--NOT",
 				},
 				{
 					Version: "3.0",
-					Metrics: db.CvssMetrics{
-						BaseScore:           1.3,
-						ExploitabilityScore: 2.1,
-						ImpactScore:         3.2,
-					},
+					Metrics: db.NewCvssMetrics(
+						1.3,
+						2.1,
+						3.2,
+					),
 					Vector:         "AV:N/AC:L/Au:N/C:P/I:P/A:P--NICE",
 					VendorMetadata: nil,
 				},
@@ -284,20 +284,20 @@ func TestStore_GetVulnerabilityMetadata_SetVulnerabilityMetadata(t *testing.T) {
 			Cvss: []db.Cvss{
 				{
 					Version: "2.0",
-					Metrics: db.CvssMetrics{
-						BaseScore:           4.1,
-						ExploitabilityScore: 5.2,
-						ImpactScore:         6.3,
-					},
+					Metrics: db.NewCvssMetrics(
+						4.1,
+						5.2,
+						6.3,
+					),
 					Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 				},
 				{
 					Version: "3.0",
-					Metrics: db.CvssMetrics{
-						BaseScore:           1.4,
-						ExploitabilityScore: 2.5,
-						ImpactScore:         3.6,
-					},
+					Metrics: db.NewCvssMetrics(
+						1.4,
+						2.5,
+						3.6,
+					),
 					Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 				},
 			},
@@ -349,20 +349,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -377,20 +377,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 				Cvss: []db.Cvss{
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
 					{
 						Version: "3.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           1.4,
-							ExploitabilityScore: 2.5,
-							ImpactScore:         3.6,
-						},
+						Metrics: db.NewCvssMetrics(
+							1.4,
+							2.5,
+							3.6,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 					},
 				},
@@ -457,20 +457,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -484,20 +484,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -517,20 +517,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -544,20 +544,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -572,29 +572,29 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 				Cvss: []db.Cvss{
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
 					{
 						Version: "3.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           1.4,
-							ExploitabilityScore: 2.5,
-							ImpactScore:         3.6,
-						},
+						Metrics: db.NewCvssMetrics(
+							1.4,
+							2.5,
+							3.6,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 					},
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:P--VERY",
 					},
 				},
@@ -613,20 +613,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -640,20 +640,20 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 0,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								0,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -668,29 +668,29 @@ func TestStore_MergeVulnerabilityMetadata(t *testing.T) {
 				Cvss: []db.Cvss{
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
 					{
 						Version: "3.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           1.4,
-							ExploitabilityScore: 2.5,
-							ImpactScore:         3.6,
-						},
+						Metrics: db.NewCvssMetrics(
+							1.4,
+							2.5,
+							3.6,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 					},
 					{
 						Version: "3.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           1.4,
-							ExploitabilityScore: 0,
-							ImpactScore:         3.6,
-						},
+						Metrics: db.NewCvssMetrics(
+							1.4,
+							0,
+							3.6,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 					},
 				},
@@ -771,11 +771,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 					},
@@ -789,11 +789,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -808,20 +808,20 @@ func TestCvssScoresInMetadata(t *testing.T) {
 				Cvss: []db.Cvss{
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
 					{
 						Version: "3.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           1.4,
-							ExploitabilityScore: 2.5,
-							ImpactScore:         3.6,
-						},
+						Metrics: db.NewCvssMetrics(
+							1.4,
+							2.5,
+							3.6,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 					},
 				},
@@ -839,11 +839,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						},
 					},
@@ -857,11 +857,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "2.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           4.1,
-								ExploitabilityScore: 5.2,
-								ImpactScore:         6.3,
-							},
+							Metrics: db.NewCvssMetrics(
+								4.1,
+								5.2,
+								6.3,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 							VendorMetadata: CustomMetadata{
 								SuperScore: "100",
@@ -880,20 +880,20 @@ func TestCvssScoresInMetadata(t *testing.T) {
 				Cvss: []db.Cvss{
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 					},
 					{
 						Version: "2.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           4.1,
-							ExploitabilityScore: 5.2,
-							ImpactScore:         6.3,
-						},
+						Metrics: db.NewCvssMetrics(
+							4.1,
+							5.2,
+							6.3,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--VERY",
 						VendorMetadata: CustomMetadata{
 							SuperScore: "100",
@@ -915,11 +915,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -933,11 +933,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 					Cvss: []db.Cvss{
 						{
 							Version: "3.0",
-							Metrics: db.CvssMetrics{
-								BaseScore:           1.4,
-								ExploitabilityScore: 2.5,
-								ImpactScore:         3.6,
-							},
+							Metrics: db.NewCvssMetrics(
+								1.4,
+								2.5,
+								3.6,
+							),
 							Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 						},
 					},
@@ -952,11 +952,11 @@ func TestCvssScoresInMetadata(t *testing.T) {
 				Cvss: []db.Cvss{
 					{
 						Version: "3.0",
-						Metrics: db.CvssMetrics{
-							BaseScore:           1.4,
-							ExploitabilityScore: 2.5,
-							ImpactScore:         3.6,
-						},
+						Metrics: db.NewCvssMetrics(
+							1.4,
+							2.5,
+							3.6,
+						),
 						Vector: "AV:N/AC:L/Au:N/C:P/I:P/A:P--GOOD",
 					},
 				},
