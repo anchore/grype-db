@@ -32,7 +32,12 @@ func (o config) ConnectionString() (string, error) {
 func open(cfg config) (*gorm.DB, error) {
 	if cfg.Overwrite {
 		// the file may or may not exist, so we ignore the error explicitly
-		_ = os.Remove(cfg.DbPath)
+		if _, err := os.Stat(cfg.DbPath); !os.IsNotExist(err) {
+			rmErr := os.Remove(cfg.DbPath)
+			if rmErr != nil {
+				return nil, rmErr
+			}
+		}
 	}
 
 	connStr, err := cfg.ConnectionString()
