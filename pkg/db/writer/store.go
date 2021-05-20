@@ -164,21 +164,26 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 		if existing != nil {
 			// merge with the existing entry
 
-			cvssV3Diffs := deep.Equal(existing.CvssV3, m.CvssV3)
-			cvssV2Diffs := deep.Equal(existing.CvssV2, m.CvssV2)
-
 			switch {
 			case existing.Severity != m.Severity:
 				return fmt.Errorf("existing metadata has mismatched severity (%q!=%q)", existing.Severity, m.Severity)
 			case existing.Description != m.Description:
 				return fmt.Errorf("existing metadata has mismatched description (%q!=%q)", existing.Description, m.Description)
-			case existing.CvssV2 != nil && len(cvssV2Diffs) > 0:
-				return fmt.Errorf("existing metadata has mismatched cvss-v2: %+v", cvssV2Diffs)
-			case existing.CvssV3 != nil && len(cvssV3Diffs) > 0:
-				return fmt.Errorf("existing metadata has mismatched cvss-v3: %+v", cvssV3Diffs)
-			default:
-				existing.CvssV2 = m.CvssV2
-				existing.CvssV3 = m.CvssV3
+			}
+
+		incoming:
+			// go through all incoming CVSS and see if they are already stored.
+			// If they exist already in the database then skip adding them,
+			// preventing a duplicate
+			for _, incomingCvss := range m.Cvss {
+				for _, existingCvss := range existing.Cvss {
+					if len(deep.Equal(incomingCvss, existingCvss)) == 0 {
+						// duplicate found, so incoming CVSS shouldn't get added
+						continue incoming
+					}
+				}
+				// a duplicate CVSS entry wasn't found, so append the incoming CVSS
+				existing.Cvss = append(existing.Cvss, incomingCvss)
 			}
 
 			links := internal.NewStringSetFromSlice(existing.Links)
