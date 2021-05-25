@@ -90,5 +90,6 @@ check-licenses:
 
 .PHONY: check-schema
 check-schema: ## Ensure that there aren't any accidental changes to the DB schema version
-	@ grep -qHr "const SchemaVersion" pkg || { echo "SchemaVersion constant not found, check must be updated to verify proper version" && exit 1;}
-	@ grep -r "const SchemaVersion" pkg | grep -q "= $(DATABASE_SCHEMA_VERSION)" || { echo "Expected database schema version $(DATABASE_SCHEMA_VERSION) not found. Ensure 'const SchemaVersion = $(DATABASE_SCHEMA_VERSION)' is defined" && exit 1;}
+	@ grep -r "const SchemaVersion" pkg/db/schema_version.go | grep -q "= $${GITHUB_BASE_REF#v}" || { echo "Expected GITHUB_BASE_REF ($${GITHUB_BASE_REF#v}) to match database schema ($(DATABASE_SCHEMA_VERSION)) version but did not" && exit 1;}
+	@ grep -qHr "const SchemaVersion" pkg/db/schema_version.go || { echo "SchemaVersion constant not found, check must be updated to verify proper version" && exit 1;}
+	@ grep -r "const SchemaVersion" pkg/db/schema_version.go | grep -q "= $(DATABASE_SCHEMA_VERSION)" || { echo "Expected database schema version $(DATABASE_SCHEMA_VERSION) not found. Ensure 'const SchemaVersion = $(DATABASE_SCHEMA_VERSION)' is defined" && exit 1;}
