@@ -1,3 +1,3 @@
 package db
 
-const SchemaVersion = 3
+const SchemaVersion = 2
