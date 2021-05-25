@@ -15,7 +15,7 @@ SUCCESS := $(BOLD)$(GREEN)
 # the quality gate lower threshold for unit test total % coverage (by function statements)
 COVERAGE_THRESHOLD := 55
 # supported database schema
-DATABASE_SCHEMA_VERSION = 2
+DATABASE_SCHEMA_VERSION = 3
 
 ifndef TEMPDIR
     $(error TEMPDIR is not set)
