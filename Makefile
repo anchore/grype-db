@@ -54,7 +54,7 @@ bootstrap: ## Download and install all project dependencies (+ prep tooling in t
 	[ -f "$(TEMPDIR)/bouncer" ] || curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMPDIR)/ v0.2.0
 
 .PHONY: static-analysis
-static-analysis: lint check-licenses
+static-analysis: lint check-schema check-licenses
 
 .PHONY: lint
 lint: ## Run gofmt + golangci lint checks
@@ -90,5 +90,13 @@ check-licenses:
 
 .PHONY: check-schema
 check-schema: ## Ensure that there aren't any accidental changes to the DB schema version
-	@ grep -qHr "const SchemaVersion" pkg || { echo "SchemaVersion constant not found, check must be updated to verify proper version" && exit 1;}
-	@ grep -r "const SchemaVersion" pkg | grep -q "= $(DATABASE_SCHEMA_VERSION)" || { echo "Expected database schema version $(DATABASE_SCHEMA_VERSION) not found. Ensure 'const SchemaVersion = $(DATABASE_SCHEMA_VERSION)' is defined" && exit 1;}
+	@ grep -r "const SchemaVersion" pkg/db/schema_version.go | grep -q "= $(DATABASE_SCHEMA_VERSION)" || { echo "Expected database schema version $(DATABASE_SCHEMA_VERSION) not found" && exit 1;}
+
+	@bash -c '\
+		if [ "$$GITHUB_BASE_REF" == "" ]; then\
+			echo "Empty GITHUB_BASE_REF, skipping..."; \
+		else \
+			grep -r "const SchemaVersion" pkg/db/schema_version.go | grep -q "= $${GITHUB_BASE_REF#v}" || { echo "Expected GITHUB_BASE_REF ($${GITHUB_BASE_REF#v}) to match database schema ($(DATABASE_SCHEMA_VERSION)) version but did not" && exit 1;} ;\
+			echo "schema version consistent"; \
+		fi \
+	'
