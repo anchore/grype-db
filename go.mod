@@ -1,6 +1,6 @@
 module github.com/anchore/grype-db
 
-go 1.14
+go 1.16
 
 require (
 	github.com/alicebob/sqlittle v1.4.0
@@ -9,5 +9,5 @@ require (
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/jinzhu/gorm v1.9.14
 	github.com/spf13/afero v1.3.2
-	github.com/stretchr/testify v1.5.1 // indirect
+	github.com/stretchr/testify v1.5.1
 )

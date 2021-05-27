@@ -125,17 +125,17 @@ func (s *Store) AddVulnerability(vulnerabilities ...*db.Vulnerability) error {
 }
 
 // GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
-func (s *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
+func (s *Store) GetVulnerabilityMetadata(id, namespace string) (*db.VulnerabilityMetadata, error) {
 	var models []model.VulnerabilityMetadataModel
 
-	result := s.vulnDb.Where(&model.VulnerabilityMetadataModel{ID: id, RecordSource: recordSource}).Find(&models)
+	result := s.vulnDb.Where(&model.VulnerabilityMetadataModel{ID: id, Namespace: namespace}).Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	switch {
 	case len(models) > 1:
-		return nil, fmt.Errorf("found multiple metadatas for single ID=%q RecordSource=%q", id, recordSource)
+		return nil, fmt.Errorf("found multiple metadatas for single ID=%q Namespace=%q", id, namespace)
 	case len(models) == 1:
 		metadata, err := models[0].Inflate()
 		if err != nil {
@@ -156,7 +156,7 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 			continue
 		}
 
-		existing, err := s.GetVulnerabilityMetadata(m.ID, m.RecordSource)
+		existing, err := s.GetVulnerabilityMetadata(m.ID, m.Namespace)
 		if err != nil {
 			return fmt.Errorf("failed to verify existing entry: %w", err)
 		}
@@ -186,13 +186,13 @@ func (s *Store) AddVulnerabilityMetadata(metadata ...*db.VulnerabilityMetadata) 
 				existing.Cvss = append(existing.Cvss, incomingCvss)
 			}
 
-			links := internal.NewStringSetFromSlice(existing.Links)
-			for _, l := range m.Links {
+			links := internal.NewStringSetFromSlice(existing.URLs)
+			for _, l := range m.URLs {
 				links.Add(l)
 			}
 
-			existing.Links = links.ToSlice()
-			sort.Strings(existing.Links)
+			existing.URLs = links.ToSlice()
+			sort.Strings(existing.URLs)
 
 			newModel := model.NewVulnerabilityMetadataModel(*existing)
 			result := s.vulnDb.Save(&newModel)

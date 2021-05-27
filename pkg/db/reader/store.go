@@ -77,13 +77,13 @@ func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, er
 	err := b.db.IndexedSelectEq(model.VulnerabilityTableName, model.GetVulnerabilityIndexName, sqlittle.Key{name, namespace}, func(row sqlittle.Row) {
 		var m model.VulnerabilityModel
 
-		if err := row.Scan(&m.Namespace, &m.PackageName, &m.ID, &m.RecordSource, &m.VersionConstraint, &m.VersionFormat, &m.CPEs, &m.ProxyVulnerabilities, &m.FixedInVersion); err != nil {
+		if err := row.Scan(&m.Namespace, &m.PackageName, &m.ID, &m.VersionConstraint, &m.VersionFormat, &m.CPEs, &m.RelatedVulnerabilities, &m.FixedInVersions, &m.FixState, &m.Advisories); err != nil {
 			scanErr = fmt.Errorf("unable to scan over row: %w", err)
 			return
 		}
 
 		vulnerabilityModels = append(vulnerabilityModels, m)
-	}, "namespace", "package_name", "id", "record_source", "version_constraint", "version_format", "cpes", "proxy_vulnerabilities", "fixed_in_version")
+	}, "namespace", "package_name", "id", "version_constraint", "version_format", "cpes", "related_vulnerabilities", "fixed_in_versions", "fix_state", "advisories")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
 	}
@@ -105,19 +105,19 @@ func (b *Store) GetVulnerability(namespace, name string) ([]db.Vulnerability, er
 }
 
 // GetVulnerabilityMetadata retrieves metadata for the given vulnerability ID relative to a specific record source.
-func (b *Store) GetVulnerabilityMetadata(id, recordSource string) (*db.VulnerabilityMetadata, error) {
+func (b *Store) GetVulnerabilityMetadata(id, namespace string) (*db.VulnerabilityMetadata, error) {
 	total := 0
 	var m model.VulnerabilityMetadataModel
 	var scanErr error
 
-	err := b.db.PKSelect(model.VulnerabilityMetadataTableName, sqlittle.Key{id, recordSource}, func(row sqlittle.Row) {
+	err := b.db.PKSelect(model.VulnerabilityMetadataTableName, sqlittle.Key{id, namespace}, func(row sqlittle.Row) {
 		total++
 
-		if err := row.Scan(&m.ID, &m.RecordSource, &m.Severity, &m.Links, &m.Description, &m.Cvss); err != nil {
+		if err := row.Scan(&m.ID, &m.Namespace, &m.DataSource, &m.RecordSource, &m.Severity, &m.URLs, &m.Description, &m.Cvss); err != nil {
 			scanErr = fmt.Errorf("unable to scan over row: %w", err)
 			return
 		}
-	}, "id", "record_source", "severity", "links", "description", "cvss")
+	}, "id", "namespace", "data_source", "record_source", "severity", "urls", "description", "cvss")
 	if err != nil {
 		return nil, fmt.Errorf("unable to query: %w", err)
 	}
