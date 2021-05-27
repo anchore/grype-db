@@ -54,7 +54,7 @@ bootstrap: ## Download and install all project dependencies (+ prep tooling in t
 	[ -f "$(TEMPDIR)/bouncer" ] || curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMPDIR)/ v0.2.0
 
 .PHONY: static-analysis
-static-analysis: lint check-schema check-licenses
+static-analysis: lint check-go-mod-tidy check-schema check-licenses
 
 .PHONY: lint
 lint: ## Run gofmt + golangci lint checks
@@ -70,11 +70,15 @@ lint: ## Run gofmt + golangci lint checks
 	$(eval MALFORMED_FILENAMES := $(shell find . | grep -e ':'))
 	@bash -c "[[ '$(MALFORMED_FILENAMES)' == '' ]] || (printf '\nfound unsupported filename characters:\n$(MALFORMED_FILENAMES)\n\n' && false)"
 
+check-go-mod-tidy:
+	@ .github/scripts/go-mod-tidy-check.sh && echo "go.mod and go.sum are tidy!"
+
 .PHONY: lint-fix
 lint-fix: ## Auto-format all source code + run golangci lint fixers
 	$(call title,Running lint fixers)
 	gofmt -w -s .
 	$(LINTCMD) --fix
+	go mod tidy
 
 .PHONY: unit
 unit: ## Run unit tests (with coverage)
