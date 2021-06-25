@@ -10,13 +10,13 @@ import (
 
 func TestMetadataParse(t *testing.T) {
 	tests := []struct {
-		fixture  string
-		expected Metadata
-		err      bool
+		fixture       string
+		expected      *Metadata
+		expectedError string
 	}{
 		{
 			fixture: "test-fixtures/metadata-gocase",
-			expected: Metadata{
+			expected: &Metadata{
 				Built:    time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
 				Version:  2,
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
@@ -24,29 +24,37 @@ func TestMetadataParse(t *testing.T) {
 		},
 		{
 			fixture: "test-fixtures/metadata-edt-timezone",
-			expected: Metadata{
+			expected: &Metadata{
 				Built:    time.Date(2020, 06, 15, 18, 02, 36, 0, time.UTC),
 				Version:  2,
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
 			},
+		},
+		{
+			fixture:       "/dev/null/impossible",
+			expectedError: "unable to check if DB metadata path exists (/dev/null/impossible/metadata.json): stat /dev/null/impossible/metadata.json: not a directory",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.fixture, func(t *testing.T) {
 			metadata, err := NewMetadataFromDir(afero.NewOsFs(), test.fixture)
-			if err != nil && !test.err {
+			if err != nil && test.expectedError == "" {
 				t.Fatalf("failed to get metadata: %+v", err)
-			} else if err == nil && test.err {
-				t.Fatalf("expected errer but got none")
-			}
-
-			if metadata == nil {
+			} else if err == nil && test.expectedError != "" {
+				t.Fatalf("expected error but got none")
+			} else if metadata == nil && test.expected != nil {
 				t.Fatalf("metadata not found: %+v", test.fixture)
 			}
 
-			for _, diff := range deep.Equal(*metadata, test.expected) {
-				t.Errorf("metadata difference: %s", diff)
+			if err != nil && err.Error() != test.expectedError {
+				t.Errorf("error difference: expected '%s' but got '%s'", test.expectedError, err.Error())
+			}
+
+			if metadata != nil && test.expected != nil {
+				for _, diff := range deep.Equal(*metadata, *test.expected) {
+					t.Errorf("metadata difference: %s", diff)
+				}
 			}
 		})
 	}
