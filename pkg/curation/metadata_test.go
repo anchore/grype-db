@@ -10,9 +10,9 @@ import (
 
 func TestMetadataParse(t *testing.T) {
 	tests := []struct {
-		fixture       string
-		expected      *Metadata
-		expectedError string
+		fixture  string
+		expected *Metadata
+		err      bool
 	}{
 		{
 			fixture: "test-fixtures/metadata-gocase",
@@ -31,24 +31,20 @@ func TestMetadataParse(t *testing.T) {
 			},
 		},
 		{
-			fixture:       "/dev/null/impossible",
-			expectedError: "unable to check if DB metadata path exists (/dev/null/impossible/metadata.json): stat /dev/null/impossible/metadata.json: not a directory",
+			fixture: "/dev/null/impossible",
+			err:     true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.fixture, func(t *testing.T) {
 			metadata, err := NewMetadataFromDir(afero.NewOsFs(), test.fixture)
-			if err != nil && test.expectedError == "" {
+			if err != nil && !test.err {
 				t.Fatalf("failed to get metadata: %+v", err)
-			} else if err == nil && test.expectedError != "" {
+			} else if err == nil && test.err {
 				t.Fatalf("expected error but got none")
 			} else if metadata == nil && test.expected != nil {
 				t.Fatalf("metadata not found: %+v", test.fixture)
-			}
-
-			if err != nil && err.Error() != test.expectedError {
-				t.Errorf("error difference: expected '%s' but got '%s'", test.expectedError, err.Error())
 			}
 
 			if metadata != nil && test.expected != nil {
