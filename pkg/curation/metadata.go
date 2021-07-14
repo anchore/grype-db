@@ -52,7 +52,11 @@ func metadataPath(dir string) string {
 // NewMetadataFromDir generates a Metadata object from a directory containing a vulnerability.db flat file.
 func NewMetadataFromDir(fs afero.Fs, dir string) (*Metadata, error) {
 	metadataFilePath := metadataPath(dir)
-	if !file.Exists(fs, metadataFilePath) {
+	exists, err := file.Exists(fs, metadataFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to check if DB metadata path exists (%s): %w", metadataFilePath, err)
+	}
+	if !exists {
 		return nil, nil
 	}
 	f, err := fs.Open(metadataFilePath)
