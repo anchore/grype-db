@@ -11,12 +11,12 @@ import (
 func TestMetadataParse(t *testing.T) {
 	tests := []struct {
 		fixture  string
-		expected Metadata
+		expected *Metadata
 		err      bool
 	}{
 		{
 			fixture: "test-fixtures/metadata-gocase",
-			expected: Metadata{
+			expected: &Metadata{
 				Built:    time.Date(2020, 06, 15, 14, 02, 36, 0, time.UTC),
 				Version:  2,
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
@@ -24,11 +24,15 @@ func TestMetadataParse(t *testing.T) {
 		},
 		{
 			fixture: "test-fixtures/metadata-edt-timezone",
-			expected: Metadata{
+			expected: &Metadata{
 				Built:    time.Date(2020, 06, 15, 18, 02, 36, 0, time.UTC),
 				Version:  2,
 				Checksum: "sha256:dcd6a285c839a7c65939e20c251202912f64826be68609dfc6e48df7f853ddc8",
 			},
+		},
+		{
+			fixture: "/dev/null/impossible",
+			err:     true,
 		},
 	}
 
@@ -38,15 +42,15 @@ func TestMetadataParse(t *testing.T) {
 			if err != nil && !test.err {
 				t.Fatalf("failed to get metadata: %+v", err)
 			} else if err == nil && test.err {
-				t.Fatalf("expected errer but got none")
-			}
-
-			if metadata == nil {
+				t.Fatalf("expected error but got none")
+			} else if metadata == nil && test.expected != nil {
 				t.Fatalf("metadata not found: %+v", test.fixture)
 			}
 
-			for _, diff := range deep.Equal(*metadata, test.expected) {
-				t.Errorf("metadata difference: %s", diff)
+			if metadata != nil && test.expected != nil {
+				for _, diff := range deep.Equal(*metadata, *test.expected) {
+					t.Errorf("metadata difference: %s", diff)
+				}
 			}
 		})
 	}
