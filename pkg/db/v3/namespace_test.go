@@ -46,7 +46,7 @@ func Test_NamespaceFromRecordSource(t *testing.T) {
 		{
 			Feed:      "microsoft",
 			Group:     "msrc:11769",
-			Namespace: "msrc",
+			Namespace: "msrc:11769",
 		},
 	}
 
@@ -159,7 +159,7 @@ func Test_NamespaceForDistro(t *testing.T) {
 		{
 			dist:     distro.Windows,
 			version:  "471816",
-			expected: "msrc",
+			expected: "msrc:471816",
 		},
 	}
 
