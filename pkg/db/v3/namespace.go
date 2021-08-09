@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	NVDNamespace    = "nvd"
-	MSRCNamespace   = "msrc"
-	VulnDBNamespace = "vulndb"
+	NVDNamespace        = "nvd"
+	MSRCNamespacePrefix = "msrc"
+	VulnDBNamespace     = "vulndb"
 )
 
 func RecordSource(feed, group string) string {
@@ -30,8 +30,8 @@ func NamespaceForFeedGroup(feed, group string) (string, error) {
 		return NVDNamespace, nil
 	case feed == "vulndb" && group == "vulndb:vulnerabilities":
 		return VulnDBNamespace, nil
-	case feed == "microsoft" && strings.HasPrefix(group, "msrc:"):
-		return MSRCNamespace, nil
+	case feed == "microsoft" && strings.HasPrefix(group, MSRCNamespacePrefix+":"):
+		return group, nil
 	}
 	return "", fmt.Errorf("feed=%q group=%q has no namespace mappings", feed, group)
 }
@@ -62,7 +62,7 @@ func NamespaceForDistro(d distro.Distro) string {
 			// XXX this assumes that a major and minor versions will always exist in Segments
 			return fmt.Sprintf("alpine:%d.%d", versionSegments[0], versionSegments[1])
 		case distro.Windows:
-			return MSRCNamespace
+			return fmt.Sprintf("%s:%d", MSRCNamespacePrefix, versionSegments[0])
 		}
 	}
 	return fmt.Sprintf("%s:%s", strings.ToLower(d.Type.String()), d.FullVersion())
