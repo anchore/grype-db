@@ -61,6 +61,8 @@ func NamespaceForDistro(d distro.Distro) string {
 		case distro.Alpine:
 			// XXX this assumes that a major and minor versions will always exist in Segments
 			return fmt.Sprintf("alpine:%d.%d", versionSegments[0], versionSegments[1])
+		case distro.SLES:
+			return fmt.Sprintf("sles:%d.%d", versionSegments[0], versionSegments[1])
 		case distro.Windows:
 			return fmt.Sprintf("%s:%d", MSRCNamespacePrefix, versionSegments[0])
 		}
