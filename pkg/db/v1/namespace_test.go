@@ -23,6 +23,11 @@ func TestNamespaceFromRecordSource(t *testing.T) {
 			Namespace: "alpine:3.9",
 		},
 		{
+			Feed:      "vulnerabilities",
+			Group:     "sles:12.5",
+			Namespace: "sles:12.5",
+		},
+		{
 			Feed:      "nvdv2",
 			Group:     "nvdv2:cves",
 			Namespace: "nvd",

@@ -157,6 +157,11 @@ func Test_NamespaceForDistro(t *testing.T) {
 			expected: "photon:4.0",
 		},
 		{
+			dist:     distro.SLES,
+			version:  "12.5",
+			expected: "sles:12.5",
+		},
+		{
 			dist:     distro.Windows,
 			version:  "471816",
 			expected: "msrc:471816",
