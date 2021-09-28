@@ -85,6 +85,8 @@ func NamespacePackageNamersForLanguage(l syftPkg.Language) map[string]NamerByPac
 		namespaces["github:npm"] = defaultPackageNamer
 	case syftPkg.Python:
 		namespaces["github:python"] = defaultPackageNamer
+	default:
+		namespaces[fmt.Sprintf("github:%s", l)] = defaultPackageNamer
 	}
 	return namespaces
 }

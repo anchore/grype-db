@@ -199,12 +199,30 @@ func Test_NamespacesForLanguage(t *testing.T) {
 		expectedNamespaces []string
 		expectedNames      []string
 	}{
-		// unsupported languages
+		// default languages
 		{
 			language: syftPkg.Rust,
+			namerInput: &grypePkg.Package{
+				Name: "a-name",
+			},
+			expectedNamespaces: []string{
+				"github:rust",
+			},
+			expectedNames: []string{
+				"a-name",
+			},
 		},
 		{
 			language: syftPkg.Go,
+			namerInput: &grypePkg.Package{
+				Name: "a-name",
+			},
+			expectedNamespaces: []string{
+				"github:go",
+			},
+			expectedNames: []string{
+				"a-name",
+			},
 		},
 		// supported languages
 		{
