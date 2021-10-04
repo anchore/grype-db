@@ -100,7 +100,6 @@ You only need to bootstrap once. After the bootstrap process, you can run the te
 
 ```text
 $ make unit
-$ make integration
 ```
 
 ## Document your changes
