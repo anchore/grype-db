@@ -51,7 +51,7 @@ func NamespaceForDistro(d distro.Distro) string {
 	if len(versionSegments) > 0 {
 		switch d.Type {
 		// derived from https://github.com/anchore/anchore-engine/blob/5bbbe6b9744f2fb806198ae5d6f0cfe3b367fd9d/anchore_engine/services/policy_engine/__init__.py#L149-L159
-		case distro.CentOS, distro.RedHat, distro.Fedora:
+		case distro.CentOS, distro.RedHat, distro.Fedora, distro.RockyLinux:
 			// TODO: there is no mapping of fedora version to RHEL latest version (only the name)
 			return fmt.Sprintf("rhel:%d", versionSegments[0])
 		case distro.AmazonLinux:

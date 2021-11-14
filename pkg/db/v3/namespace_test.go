@@ -162,6 +162,11 @@ func Test_NamespaceForDistro(t *testing.T) {
 			expected: "sles:12.5",
 		},
 		{
+			dist:     distro.RockyLinux,
+			version:  "8.4",
+			expected: "rhel:8",
+		},
+		{
 			dist:     distro.Windows,
 			version:  "471816",
 			expected: "msrc:471816",
