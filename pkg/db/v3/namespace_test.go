@@ -166,6 +166,16 @@ func Test_NamespaceForDistro(t *testing.T) {
 			version:  "471816",
 			expected: "msrc:471816",
 		},
+		{
+			dist:     distro.Mariner,
+			version:  "1.0.20211114-1.0",
+			expected: "mariner:1.0.20211114-1.0",
+		},
+		{
+			dist:     distro.RockyLinux,
+			version:  "8.5",
+			expected: "rockylinux:8.5",
+		},
 	}
 
 	observedDistros := strset.New()
@@ -288,6 +298,9 @@ func Test_NamespacesForLanguage(t *testing.T) {
 	for _, l := range syftPkg.AllLanguages {
 		allLanguages.Add(string(l))
 	}
+
+	// remove PHP for coverage as feed has not been updated
+	allLanguages.Remove(string(syftPkg.PHP))
 
 	for _, test := range tests {
 		t.Run(string(test.language), func(t *testing.T) {
