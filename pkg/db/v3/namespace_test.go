@@ -174,7 +174,7 @@ func Test_NamespaceForDistro(t *testing.T) {
 		{
 			dist:     distro.RockyLinux,
 			version:  "8.5",
-			expected: "rockylinux:8.5",
+			expected: "rhel:8",
 		},
 	}
 
