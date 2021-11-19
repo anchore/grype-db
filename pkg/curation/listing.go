@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"github.com/anchore/grype-db/internal/log"
-	"github.com/hashicorp/go-getter"
 	"github.com/spf13/afero"
 )
 
@@ -65,33 +63,6 @@ func NewListingFromFile(fs afero.Fs, path string) (Listing, error) {
 	}
 
 	return l, nil
-}
-
-// NewListingFromURL loads a Listing from a URL.
-func NewListingFromURL(fs afero.Fs, listingURL string) (Listing, error) {
-	tempFile, err := afero.TempFile(fs, "", "grype-db-listing")
-	if err != nil {
-		return Listing{}, fmt.Errorf("unable to create listing temp file: %w", err)
-	}
-	defer func() {
-		err := fs.RemoveAll(tempFile.Name())
-		if err != nil {
-			log.Errorf("failed to remove file (%s): %w", tempFile.Name(), err)
-		}
-	}()
-
-	// download the listing file
-	err = getter.GetFile(tempFile.Name(), listingURL)
-	if err != nil {
-		return Listing{}, fmt.Errorf("unable to download listing: %w", err)
-	}
-
-	// parse the listing file
-	listing, err := NewListingFromFile(fs, tempFile.Name())
-	if err != nil {
-		return Listing{}, err
-	}
-	return listing, nil
 }
 
 // BestUpdate returns the ListingEntry from a Listing that meets the given version constraints.

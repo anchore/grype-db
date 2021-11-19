@@ -8,7 +8,6 @@ require (
 	github.com/anchore/grype v0.24.2-0.20211115221156-a2762bbbf043
 	github.com/anchore/syft v0.30.1
 	github.com/go-test/deep v1.0.7
-	github.com/hashicorp/go-getter v1.4.1
 	github.com/jinzhu/gorm v1.9.14
 	github.com/scylladb/go-set v1.0.2
 	github.com/spf13/afero v1.3.2
