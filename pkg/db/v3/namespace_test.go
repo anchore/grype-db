@@ -171,6 +171,11 @@ func Test_NamespaceForDistro(t *testing.T) {
 			version:  "8.5",
 			expected: "rhel:8",
 		},
+		{
+			dist:     distro.AlmaLinux,
+			version:  "8.5",
+			expected: "rhel:8",
+		},
 	}
 
 	observedDistros := strset.New()
