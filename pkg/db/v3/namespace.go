@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/anchore/grype-db/internal"
+	"github.com/anchore/grype/grype/distro"
 	grypePkg "github.com/anchore/grype/grype/pkg"
-	"github.com/anchore/syft/syft/distro"
 	syftPkg "github.com/anchore/syft/syft/pkg"
 )
 
@@ -42,7 +42,11 @@ func NamespaceForFeedGroup(feed, group string) (string, error) {
 // This is critical to query the database and correlate the distro version with
 // feed contents. Namespaces have to exist in the Feed Service, otherwise,
 // this causes no results to be returned when the database is queried.
-func NamespaceForDistro(d distro.Distro) string {
+func NamespaceForDistro(d *distro.Distro) string {
+	if d == nil {
+		return ""
+	}
+
 	var versionSegments []int
 	if d.Version != nil {
 		versionSegments = d.Version.Segments()

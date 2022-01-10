@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/anchore/grype/grype/distro"
 	grypePkg "github.com/anchore/grype/grype/pkg"
-
 	syftPkg "github.com/anchore/syft/syft/pkg"
-
-	"github.com/anchore/syft/syft/distro"
 	"github.com/scylladb/go-set/strset"
 	"github.com/stretchr/testify/assert"
 )
@@ -193,8 +191,10 @@ func Test_NamespaceForDistro(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			d, err := distro.NewDistro(test.dist, test.version, "")
 			assert.NoError(t, err)
-			observedDistros.Add(d.Type.String())
-			assert.Equal(t, NamespaceForDistro(d), test.expected)
+			if d != nil {
+				observedDistros.Add(d.Type.String())
+			}
+			assert.Equal(t, test.expected, NamespaceForDistro(d))
 		})
 	}
 
