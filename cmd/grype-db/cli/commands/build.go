@@ -2,9 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
 	"os"
 	"time"
+
+	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"

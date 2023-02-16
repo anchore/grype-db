@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -83,7 +82,7 @@ func populate(tarName, dbDir string) error {
 		}
 	}()
 
-	fileInfos, err := ioutil.ReadDir("./")
+	fileInfos, err := os.ReadDir("./")
 	if err != nil {
 		return fmt.Errorf("unable to list db directory: %w", err)
 	}

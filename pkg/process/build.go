@@ -3,8 +3,9 @@ package process
 import (
 	"bytes"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"time"
+
+	"github.com/dustin/go-humanize"
 
 	"github.com/anchore/grype-db/pkg/provider/entry"
 

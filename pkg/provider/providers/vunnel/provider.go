@@ -2,12 +2,13 @@ package vunnel
 
 import (
 	"fmt"
-	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype-db/pkg/provider/providers/external"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/pkg/provider"
+	"github.com/anchore/grype-db/pkg/provider/providers/external"
 )
 
 type Config struct {

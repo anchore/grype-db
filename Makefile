@@ -7,7 +7,7 @@ COVER_REPORT = $(RESULTS_DIR)/cover.report
 COVER_TOTAL = $(RESULTS_DIR)/cover.total
 LICENSES_REPORT = $(RESULTS_DIR)/licenses.json
 
-LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=5m --config .golangci.yaml
+LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
 GRYPE_DB = go run ./cmd/$(BIN)/main.go
@@ -30,7 +30,7 @@ SNAPSHOT_CMD=$(RELEASE_CMD) --skip-publish --snapshot
 DISTDIR=./dist
 SNAPSHOTDIR=./snapshot
 
-GOLANGCILINT_VERSION = v1.50.1
+GOLANGCILINT_VERSION = v1.51.1
 BOUNCER_VERSION = v0.4.0
 CHRONICLE_VERSION = v0.6.0
 GORELEASER_VERSION = v1.13.0

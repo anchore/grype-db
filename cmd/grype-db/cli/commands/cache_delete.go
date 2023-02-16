@@ -2,10 +2,11 @@ package commands
 
 import (
 	"errors"
+	"os"
+
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 
 	"github.com/anchore/grype-db/internal/log"
 

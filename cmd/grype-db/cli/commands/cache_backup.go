@@ -3,10 +3,11 @@ package commands
 import (
 	"archive/tar"
 	"compress/gzip"
-	"github.com/scylladb/go-set/strset"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/scylladb/go-set/strset"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/spf13/pflag"

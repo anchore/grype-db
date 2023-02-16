@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/OneOfOne/xxhash"
@@ -51,7 +51,7 @@ func (i Files) Paths() []string {
 }
 
 func NewFilesFromDir(dir string) (Files, error) {
-	listing, err := ioutil.ReadDir(dir)
+	listing, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

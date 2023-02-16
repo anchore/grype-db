@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 	"github.com/scylladb/go-set/strset"
