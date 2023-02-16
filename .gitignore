@@ -19,6 +19,7 @@
 .tmp/
 coverage.txt
 CHANGELOG.md
+VERSION
 
 # Binaries for programs and plugins
 *.exe

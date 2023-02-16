@@ -1,19 +1,33 @@
 BIN = grype-db
-SOURCE_REPO_URL = https://github.com/anchore/grype-db
 
+SOURCE_REPO_URL = https://github.com/anchore/grype-db
 TEMP_DIR = ./.tmp
 RESULTS_DIR = $(TEMP_DIR)/results
 COVER_REPORT = $(RESULTS_DIR)/cover.report
 COVER_TOTAL = $(RESULTS_DIR)/cover.total
 LICENSES_REPORT = $(RESULTS_DIR)/licenses.json
 
-LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml
-
 DB_ARCHIVE = ./grype-db-cache.tar.gz
 GRYPE_DB = go run ./cmd/$(BIN)/main.go
 GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date +"%y-%m-%d")
 
+# Command templates #################################
+LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml
+RELEASE_CMD := $(TEMP_DIR)/goreleaser release --rm-dist
+SNAPSHOT_CMD := $(RELEASE_CMD) --skip-publish --skip-sign --snapshot
+CHRONICLE_CMD = $(TEMP_DIR)/chronicle
+GLOW_CMD = $(TEMP_DIR)/glow
+
+# Tool versions #################################
+GOLANGCILINT_VERSION = v1.51.1
+BOUNCER_VERSION = v0.4.0
+CHRONICLE_VERSION = v0.6.0
+GORELEASER_VERSION = v1.13.0
+CRANE_VERSION=v0.12.1
+GLOW_VERSION := v1.5.0
+
+# Formatting variables #################################
 BOLD := $(shell tput -T linux bold)
 PURPLE := $(shell tput -T linux setaf 5)
 GREEN := $(shell tput -T linux setaf 2)
@@ -23,18 +37,15 @@ RESET := $(shell tput -T linux sgr0)
 TITLE := $(BOLD)$(PURPLE)
 SUCCESS := $(BOLD)$(GREEN)
 
+# Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
 COVERAGE_THRESHOLD := 55
 RELEASE_CMD=$(TEMP_DIR)/goreleaser release --rm-dist
 SNAPSHOT_CMD=$(RELEASE_CMD) --skip-publish --snapshot
-DISTDIR=./dist
-SNAPSHOTDIR=./snapshot
+DIST_DIR=./dist
+SNAPSHOT_DIR=./snapshot
+CHANGELOG := CHANGELOG.md
 
-GOLANGCILINT_VERSION = v1.51.1
-BOUNCER_VERSION = v0.4.0
-CHRONICLE_VERSION = v0.6.0
-GORELEASER_VERSION = v1.13.0
-CRANE_VERSION=v0.12.1
 
 define safe_rm_rf
 	bash -c 'test -z "$(1)" && false || rm -rf $(1)'
@@ -58,17 +69,19 @@ ifndef RESULTS_DIR
 	$(error RESULTS_DIR is not set)
 endif
 
-ifndef DISTDIR
-	$(error DISTDIR is not set)
+ifndef DIST_DIR
+	$(error DIST_DIR is not set)
 endif
 
-ifndef SNAPSHOTDIR
-	$(error SNAPSHOTDIR is not set)
+ifndef SNAPSHOT_DIR
+	$(error SNAPSHOT_DIR is not set)
 endif
 
 define title
     @printf '$(TITLE)$(1)$(RESET)\n'
 endef
+
+.DEFAULT_GOAL := all
 
 .PHONY: all
 all: static-analysis test ## Run all checks (linting, license checks, unit, and acceptance tests)
@@ -77,9 +90,8 @@ all: static-analysis test ## Run all checks (linting, license checks, unit, and 
 .PHONY: test
 test: unit ## Run all tests (unit)
 
-.PHONY: help
-help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BOLD)$(CYAN)%-25s$(RESET)%s\n", $$1, $$2}'
+
+## Bootstrapping targets #################################
 
 .PHONY: ci-bootstrap
 ci-bootstrap: bootstrap ci-build-libs
@@ -104,7 +116,10 @@ bootstrap: ## Download and install all project dependencies (+ prep tooling in t
 	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
 	.github/scripts/goreleaser-install.sh -b $(TEMP_DIR)/ $(GORELEASER_VERSION)
 	GOBIN="$(abspath $(TEMP_DIR))" go install github.com/google/go-containerregistry/cmd/crane@$(CRANE_VERSION)
+	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
 
+
+## Static analysis targets #################################
 
 .PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
 static-analysis: lint check-licenses
@@ -130,6 +145,9 @@ lint-fix: ## Auto-format all source code + run golangci lint fixers
 check-licenses:
 	$(TEMP_DIR)/bouncer check ./cmd/$(BIN)
 
+
+## Testing targets #################################
+
 .PHONY: unit
 unit: unit-go unit-python ## Run go and python unit tests
 
@@ -151,6 +169,9 @@ acceptance: ## Run acceptance tests (for local use, not CI)
 	$(call title,"Running local acceptance tests (this takes a while... 45 minutes or so)")
 	cd test/acceptance && poetry run python ./grype-ingest.py test-all
 
+
+## Test-fixture-related targets #################################
+
 .PHONY: update-test-fixtures
 update-test-fixtures:
 	docker run \
@@ -164,21 +185,8 @@ update-test-fixtures:
 	dos2unix publish/test-fixtures/centos-8.2.2004.json
 	cd test/acceptance && poetry install && poetry run python grype-ingest.py capture-test-fixtures
 
-CHANGELOG.md:
-	$(TEMP_DIR)/chronicle -vv > CHANGELOG.md
 
-.PHONY: build
-build: $(SNAPSHOTDIR) ## Build release snapshot binaries and packages
-
-$(SNAPSHOTDIR): ## Build snapshot release binaries and packages
-	$(call title,Building snapshot artifacts)
-
-	# create a config with the dist dir overridden
-	echo "dist: $(SNAPSHOTDIR)" > $(TEMP_DIR)/goreleaser.yaml
-	cat .goreleaser.yaml >> $(TEMP_DIR)/goreleaser.yaml
-
-	# build release snapshots
-	$(SNAPSHOT_CMD) --config $(TEMP_DIR)/goreleaser.yaml
+## Data management targets #################################
 
 .PHONY: show-providers
 show-providers:
@@ -209,10 +217,6 @@ aggregate-all-provider-cache:
 	$(call title,Aggregating all of todays provider data cache)
 	.github/scripts/aggregate-all-provider-cache.py
 
-.PHONY: ci-check
-ci-check:
-	@.github/scripts/ci-check.sh
-
 .PHONY: upload-all-provider-cache
 upload-all-provider-cache: ci-check
 	$(call title,Uploading existing provider data cache)
@@ -230,29 +234,60 @@ download-all-provider-cache:
 	@bash -c "oras pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
 
 
-.PHONY: changelog
-changelog: clean-changelog CHANGELOG.md
-	@docker run -it --rm \
-		-v $(shell pwd)/CHANGELOG.md:/CHANGELOG.md \
-		rawkode/mdv \
-			-t 748.5989 \
-			/CHANGELOG.md
+## Build-related targets #################################
 
-# TODO uncomment changelog capabilities after chronicle supports annotated tags: https://github.com/anchore/chronicle/issues/35
+.PHONY: build
+build: $(SNAPSHOT_DIR) ## Build release snapshot binaries and packages
+
+$(SNAPSHOT_DIR): ## Build snapshot release binaries and packages
+	$(call title,Building snapshot artifacts)
+
+	# create a config with the dist dir overridden
+	echo "dist: $(SNAPSHOT_DIR)" > $(TEMP_DIR)/goreleaser.yaml
+	cat .goreleaser.yaml >> $(TEMP_DIR)/goreleaser.yaml
+
+	# build release snapshots
+	$(SNAPSHOT_CMD) --config $(TEMP_DIR)/goreleaser.yaml
+
+.PHONY: changelog
+changelog: clean-changelog  ## Generate and show the changelog for the current unreleased version
+	$(CHRONICLE_CMD) -vvv -n --version-file VERSION > $(CHANGELOG)
+	@$(GLOW_CMD) $(CHANGELOG)
+
+$(CHANGELOG):
+	$(CHRONICLE_CMD) -vvv > $(CHANGELOG)
+
 .PHONY: release
-release: clean-dist # CHANGELOG.md  ## Build and publish final binaries and packages. Intended to be run only on macOS.
+release:
+	@.github/scripts/trigger-release.sh
+
+.PHONY: release
+ci-release: ci-check clean-dist $(CHANGELOG) ## Build and publish final binaries and packages. Intended to be run only on macOS.
 	$(call title,Publishing release artifacts)
 
 	# create a config with the dist dir overridden
-	echo "dist: $(DISTDIR)" > $(TEMP_DIR)/goreleaser.yaml
+	echo "dist: $(DIST_DIR)" > $(TEMP_DIR)/goreleaser.yaml
 	cat .goreleaser.yaml >> $(TEMP_DIR)/goreleaser.yaml
 
-	bash -c "$(RELEASE_CMD) \
-		--config $(TEMP_DIR)/goreleaser.yaml"
-#		--release-notes <(cat CHANGELOG.md)"
+	bash -c "$(RELEASE_CMD) --config $(TEMP_DIR)/goreleaser.yaml --release-notes <(cat $(CHANGELOG))"
+
+.PHONY: ci-check
+ci-check:
+	@.github/scripts/ci-check.sh
+
+
+## Cleanup targets #################################
+
+.PHONY: clean
+clean: clean-dist clean-snapshot clean-changelog  ## Remove previous builds and result reports
+	$(call safe_rm_rf_children,$(RESULTS_DIR))
+
+.PHONY: clean-changelog
+clean-changelog:
+	rm -f $(CHANGELOG) VERSION
 
 .PHONY: clear-test-cache
-clear-test-cache: ## Delete all test cache (built docker image tars)
+clear-test-cache:
 	find . -type f -wholename "**/test-fixtures/tar-cache/*.tar" -delete
 
 .PHONY: clean-db
@@ -260,21 +295,19 @@ clean-db:
 	rm -rf build/
 	rm -f metadata.json listing.json vulnerability-db*.tar.gz vulnerability.db
 
-.PHONY: clean-changelog
-clean-changelog:
-	rm -f CHANGELOG.md
-
 .PHONY: clean-dist
 clean-dist: clean-changelog
-	$(call safe_rm_rf,$(DISTDIR))
+	$(call safe_rm_rf,$(DIST_DIR))
 	rm -f $(TEMP_DIR)/goreleaser.yaml
-
-.PHONY: clean
-clean: clean-dist clean-snapshot  ## Remove previous builds and result reports
-	$(call safe_rm_rf_children,$(RESULTS_DIR))
 
 .PHONY: clean-snapshot
 clean-snapshot:
-	$(call safe_rm_rf,$(SNAPSHOTDIR))
+	$(call safe_rm_rf,$(SNAPSHOT_DIR))
 	rm -f $(TEMP_DIR)/goreleaser.yaml
 
+
+## Halp! #################################
+
+.PHONY: help
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BOLD)$(CYAN)%-25s$(RESET)%s\n", $$1, $$2}'
