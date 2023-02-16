@@ -1,0 +1,29 @@
+release:
+  # If set to auto, will mark the release as not ready for production
+  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
+  # If set to true, will mark the release as not ready for production.
+  prerelease: auto
+
+project_name: grype-db
+
+builds:
+  - binary: grype-db
+    dir: ./cmd/grype-db
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    # Set the modified timestamp on the output binary to the git timestamp (to ensure a reproducible build)
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    ldflags: |
+      -w
+      -X github.com/anchore/grype-db/internal/version.version={{.Version}}
+      -X github.com/anchore/grype-db/internal/version.gitCommit={{.Commit}}
+      -X github.com/anchore/grype-db/internal/version.buildDate={{.Date}}
+      -X github.com/anchore/grype-db/internal/version.gitDescription={{.Summary}}
+archives:
+  - format: tar.gz

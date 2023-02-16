@@ -1,0 +1,10 @@
+# note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
+
+log:
+  slim: true
+  level: debug
+
+providers:
+  ubuntu:
+    # there is a lot of IO when running git log commands in this provider, so some concurrency helps here
+    max_workers: 10

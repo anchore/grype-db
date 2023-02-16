@@ -1,0 +1,125 @@
+name: 'Release'
+on:
+  push:
+    # take no actions on push to any branches...
+    branches-ignore:
+      - '**'
+    # ... only act on release tags
+    tags:
+      - 'v*'
+env:
+  GO_VERSION: "1.20.x"
+  CGO_ENABLED: "0"
+jobs:
+
+  quality-gate:
+    environment: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # we don't want to release commits that have been pushed and tagged, but not necessarily merged onto main
+      - name: Ensure tagged commit is on main
+        run: |
+          echo "Tag: ${GITHUB_REF##*/}"
+          git fetch origin main
+          git merge-base --is-ancestor ${GITHUB_REF##*/} origin/main && echo "${GITHUB_REF##*/} is a commit on main!"
+      - name: Check static analysis results
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        id: static-analysis
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          checkName: "Static analysis"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check unit test results
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        id: unit
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          checkName: "Unit tests"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Quality gate
+        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success'
+        run: |
+          echo "Static Analysis Status: ${{ steps.static-analysis.conclusion }}"
+          echo "Unit Test Status: ${{ steps.unit.outputs.conclusion }}"
+          false
+
+  read-schema-versions:
+    runs-on: ubuntu-20.04
+    outputs:
+      schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Read supported schema versions
+        id: read-schema-versions
+        run: |
+          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          echo "::set-output name=schema-versions::$content"
+
+  quality-gate-acceptance-test:
+    needs: read-schema-versions
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        schema-version: ${{fromJson(needs.read-schema-versions.outputs.schema-versions)}}
+    steps:
+      - name: Check acceptance test results
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        id: acceptance
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          checkName: "Acceptance tests (${{ matrix.schema-version }})"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Quality gate
+        if: steps.acceptance.outputs.conclusion != 'success'
+        run: |
+          echo "Acceptance Test Status: ${{ steps.acceptance.outputs.conclusion }}"
+          false
+
+  release:
+    needs: [ quality-gate ]
+    runs-on: ubuntu-latest
+    steps:
+
+      # TODO: remove me after release
+      - name: Configure git for private modules
+        env:
+          TOKEN: ${{ secrets.ANCHORE_GIT_READ_TOKEN }}
+        run: git config --global url."https://anchore:${TOKEN}@github.com".insteadOf "https://github.com"
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Restore bootstrap cache
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('Makefile') }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('Makefile') }}-
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+      - name: Bootstrap dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: make ci-bootstrap
+
+      - name: Build release artifacts
+        run: make release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
