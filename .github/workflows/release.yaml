@@ -24,7 +24,7 @@ jobs:
           git tag ${{ github.event.inputs.version }}
 
       - name: Check static analysis results
-        uses: fountainhead/action-wait-for-check@v1.0.0
+        uses: fountainhead/action-wait-for-check@v1.1.0
         id: static-analysis
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -33,7 +33,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check unit test results
-        uses: fountainhead/action-wait-for-check@v1.0.0
+        uses: fountainhead/action-wait-for-check@v1.1.0
         id: unit
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -71,7 +71,7 @@ jobs:
     steps:
 
       - name: Check acceptance test results
-        uses: fountainhead/action-wait-for-check@v1.0.0
+        uses: fountainhead/action-wait-for-check@v1.1.0
         id: acceptance
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
