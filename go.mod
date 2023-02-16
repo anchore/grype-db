@@ -36,7 +36,7 @@ require (
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.7.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/gorm v1.23.5
+	gorm.io/gorm v1.24.5
 )
 
 require (
