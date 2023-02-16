@@ -1,5 +1,7 @@
 # grype-db
-Application to create a vulnerability database from upstream vulnerability data sources.
+Application to create a grype vulnerability database from upstream vulnerability data sources.
+
+**Note: this tool is in the process of being open sourced and not all components are available yet.**
 
 ## Usage
 
