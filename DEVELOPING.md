@@ -15,6 +15,12 @@ well as acceptance testing. You will require the following:
    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
    ```
 
+- [Git LFS](https://git-lfs.github.com/) installed for managing test fixtures in the repo, once installed initialze with:
+
+   ```bash
+   git lfs install
+   ```
+
 To download go tooling used for static analysis and dependent go modules run the following:
 
 ```bash
@@ -34,11 +40,13 @@ This will populate the `./data` directory locally with everything needed to run 
 ## Running tests
 
 To unit test the Go code and unit test the publisher python scripts:
+
 ```bash
 make unit
 ```
 
 To verify that all supported schema versions interop with grype run:
+
 ```bash
 make acceptance
 # Note: this may take a while... go make some coffee.
