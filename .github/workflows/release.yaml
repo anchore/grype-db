@@ -1,15 +1,14 @@
-name: 'Release'
+name: "Release"
 on:
-  push:
-    # take no actions on push to any branches...
-    branches-ignore:
-      - '**'
-    # ... only act on release tags
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: tag the latest commit on main with the given version (prefixed with v)
+        required: true
+
 env:
   GO_VERSION: "1.20.x"
-  CGO_ENABLED: "0"
+
 jobs:
 
   quality-gate:
@@ -18,12 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # we don't want to release commits that have been pushed and tagged, but not necessarily merged onto main
-      - name: Ensure tagged commit is on main
+      - name: Check if tag already exists
+        # note: this will fail if the tag already exists
         run: |
-          echo "Tag: ${GITHUB_REF##*/}"
-          git fetch origin main
-          git merge-base --is-ancestor ${GITHUB_REF##*/} origin/main && echo "${GITHUB_REF##*/} is a commit on main!"
+          [[ "${{ github.event.inputs.version }}" == v* ]] || (echo "version '${{ github.event.inputs.version }}' does not have a 'v' prefix" && exit 1)
+          git tag ${{ github.event.inputs.version }}
+
       - name: Check static analysis results
         uses: fountainhead/action-wait-for-check@v1.0.0
         id: static-analysis
@@ -120,6 +119,6 @@ jobs:
         run: make ci-bootstrap
 
       - name: Build release artifacts
-        run: make release
+        run: make ci-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
