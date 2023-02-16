@@ -33,7 +33,7 @@ env:
   VULN_PULL_CACHE_KEY: "5jwqa1w3so2r9"
 
 jobs:
-  pull-vulnerability-data:
+  discover-schema-versions:
     # note about workflow dispatch inputs and booleans:
     # a) booleans come across as string types :(
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
@@ -60,79 +60,6 @@ jobs:
           content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
           echo "::set-output name=schema-versions::$content"
 
-      - name: Setup python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v3.0.0
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v3
-        id: poetry-cache
-        with:
-          path: ~/.virtualenvs
-          key: poetry-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
-
-      - name: Setup Poetry config
-        run: |
-          cd test/acceptance && \
-          poetry config virtualenvs.in-project false && \
-          poetry config virtualenvs.path ~/.virtualenvs
-
-      - name: Restore tool cache
-        id: tool-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/.tmp
-          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
-
-      - name: Restore go cache
-        id: go-cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
-
-      - name: (cache-miss) Bootstrap all project dependencies
-        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
-        run: make bootstrap
-
-      - name: Install dependencies and package
-        run: |
-          # note: pyyaml is needed for downloading all of the vulnerability data
-          cd publish && poetry install && pip install pyyaml
-
-      - name: Login to ghcr.io
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
-
-#      # why use the CI cache if we could just pull directly from docker in all subsequent jobs? This way
-#      # we know the pipeline is using exactly the same data that was pulled in this job.
-#      - name: Restore vulnerability pull cache
-#        id: vulnerability-pull-cache
-#        uses: actions/cache@v3
-#        with:
-#          path: publish/cache
-#          key: vulnerability-pull-${{ steps.timestamp.outputs.date }}-${{ env.VULN_PULL_CACHE_KEY }}
-
-      - name: Pull vulnerability data
-        if: steps.vulnerability-pull-cache.outputs.cache-hit != 'true'
-        run: make download-all-provider-cache
-
-      - uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: workflow,eventName
-          text: Pulling the vulnerability data has failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
 
   generate-and-publish-dbs:
     # note about workflow dispatch inputs and booleans:
@@ -140,11 +67,11 @@ jobs:
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
-    needs: pull-vulnerability-data
+    needs: discover-schema-versions
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        schema-version: ${{fromJson(needs.pull-vulnerability-data.outputs.schema-versions)}}
+        schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
     # set the permissions granted to the github token to read the pull cache from ghcr.io
     permissions:
       contents: read
@@ -155,6 +82,13 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@v3
+        with:
+          # this downloads and initializes LFS, but does not pull the objects
+          lfs: true
+
+      - name: Checkout LFS objects
+        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
+        run: git lfs pull
 
       - name: Setup python
         uses: actions/setup-python@v3
@@ -207,14 +141,8 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
 
-#      # why use the CI cache if we could just pull directly from docker in all subsequent jobs? This way
-#      # we know the pipeline is using exactly the same data that was pulled in this job.
-#      - name: Restore vulnerability pull cache
-#        id: vulnerability-pull-cache
-#        uses: actions/cache@v3
-#        with:
-#          path: publish/cache
-#          key: vulnerability-pull-${{ steps.timestamp.outputs.date }}-${{ env.VULN_PULL_CACHE_KEY }}
+      - name: Pull vulnerability data
+        run: make download-all-provider-cache
 
       - name: Generate DB (schema ${{ matrix.schema-version }})
         run: |
@@ -258,6 +186,13 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@v3
+        with:
+          # this downloads and initializes LFS, but does not pull the objects
+          lfs: true
+
+      - name: Checkout LFS objects
+        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
+        run: git lfs pull
 
       - name: Setup python
         uses: actions/setup-python@v3
