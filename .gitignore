@@ -1,3 +1,10 @@
+/data
+/vunnel
+
+/grype-db
+/build
+/dist
+/snapshot
 /metadata.json
 /listing.json
 .vscode/
@@ -11,6 +18,7 @@
 .images
 .tmp/
 coverage.txt
+CHANGELOG.md
 
 # Binaries for programs and plugins
 *.exe
@@ -24,3 +32,6 @@ coverage.txt
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# macOS Finder metadata
+.DS_STORE

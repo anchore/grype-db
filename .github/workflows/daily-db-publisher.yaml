@@ -1,0 +1,259 @@
+name: 'Daily DB Publisher'
+on:
+  # allow for kicking off DB builds manually
+  workflow_dispatch:
+    inputs:
+      publish-databases:
+        description: "build new databases and upload to S3"
+        type: boolean
+        required: true
+        default: true
+      publish-listing:
+        description: "use S3 state to update and publish listing file"
+        type: boolean
+        required: true
+        default: true
+
+  # run 10 AM (UTC) daily
+# TODO: enable for release
+#  schedule:
+#    - cron:  '0 10 * * *'
+env:
+  GO_VERSION: "1.20.x"
+  CGO_ENABLED: "0"
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.2.1"
+  AWS_BUCKET: toolbox-data.anchore.io
+  AWS_BUCKET_PATH: grype/databases
+  AWS_DEFAULT_REGION: us-west-2
+  SLACK_NOTIFICATIONS: true
+  # note: modify the value as needed to bust any python-related CI caches
+  PYTHON_CACHE_KEY: "510302e7c9b9da"
+  # note: modify the value as needed to bust the vuln pull cache
+  VULN_PULL_CACHE_KEY: "5jwqa1w3so2r9"
+
+jobs:
+  discover-schema-versions:
+    # note about workflow dispatch inputs and booleans:
+    # a) booleans come across as string types :(
+    # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+    if: ${{ github.event.inputs.publish-databases != 'false' }}
+    name: "Pull vulnerability data"
+    runs-on: ubuntu-20.04
+    outputs:
+      schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
+      pull-date: ${{ steps.timestamp.outputs.date }}
+    # set the permissions granted to the github token to read the pull cache from ghcr.io
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v3
+
+      - name: Read supported schema versions
+        id: read-schema-versions
+        run: |
+          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          echo "::set-output name=schema-versions::$content"
+
+
+  generate-and-publish-dbs:
+    # note about workflow dispatch inputs and booleans:
+    # a) booleans come across as string types :(
+    # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+    if: ${{ github.event.inputs.publish-databases != 'false' }}
+    name: "Generate and publish DBs"
+    needs: discover-schema-versions
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
+    # set the permissions granted to the github token to read the pull cache from ghcr.io
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v3
+        with:
+          # this downloads and initializes LFS, but does not pull the objects
+          lfs: true
+
+      - name: Checkout LFS objects
+        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
+        run: git lfs pull
+
+      - name: Setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v3.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        id: poetry-cache
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
+
+      - name: Setup Poetry config
+        run: |
+          cd test/acceptance && \
+          poetry config virtualenvs.in-project false && \
+          poetry config virtualenvs.path ~/.virtualenvs
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Install dependencies and package
+        run: |
+          cd publish && poetry install
+
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Pull vulnerability data
+        run: make download-all-provider-cache
+
+      - name: Generate DB (schema ${{ matrix.schema-version }})
+        run: |
+          cd publish && \
+          poetry run publisher generate --schema-version ${{ matrix.schema-version }}
+
+      - name: Upload DB (schema ${{ matrix.schema-version }})
+        run: publish/upload-dbs.sh ${{ env.AWS_BUCKET }} ${{ env.AWS_BUCKET_PATH }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
+
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: workflow,eventName
+          text: Publishing the DB has failed (schema ${{ matrix.schema-version }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+
+  publish-listing-file:
+    # fun! https://github.com/actions/runner/issues/491#issuecomment-850884422
+    # essentially even if the workflow dispatch job is skipping steps, we still want to run this step.
+    # however, if not running from a workflow dispatch then we want the job ordering to be honored.
+    # also...
+    # note about workflow dispatch inputs and booleans:
+    # a) booleans come across as string types :(
+    # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+    if: |
+      always() &&
+      (needs.generate-and-publish-dbs.result == 'success' || needs.generate-and-publish-dbs.result == 'skipped') &&
+      github.event.inputs.publish-listing != 'false'
+
+    name: "Publish listing file"
+    needs: generate-and-publish-dbs
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v3
+        with:
+          # this downloads and initializes LFS, but does not pull the objects
+          lfs: true
+
+      - name: Checkout LFS objects
+        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
+        run: git lfs pull
+
+      - name: Setup python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v3.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        id: poetry-cache
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
+
+      - name: Setup Poetry config
+        run: |
+          cd test/acceptance && \
+          poetry config virtualenvs.in-project false && \
+          poetry config virtualenvs.path ~/.virtualenvs
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Install dependencies and package
+        run: |
+          cd publish && poetry install
+
+      - name: Publish listing file
+        run: |
+          cd publish && \
+          poetry run publisher upload-listing --s3-bucket ${{ env.AWS_BUCKET }} --s3-path ${{ env.AWS_BUCKET_PATH }}
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
+
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: workflow,eventName
+          text: Publishing the listing file has failed
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}

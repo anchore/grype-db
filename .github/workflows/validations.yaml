@@ -1,0 +1,234 @@
+name: "Validations"
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  GO_VERSION: "1.20.x"
+  CGO_ENABLED: "0"
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.2.0"
+  # note: modify the value as needed to bust the feed pull cache
+  FEED_PULL_CACHE_KEY: "5bd9c073a029f"
+  # note: modify the value as needed to bust any python-related CI caches
+  PYTHON_CACHE_KEY: "510302e7c9b9da"
+  GRYPE_DB_VALIDATE_AGE: "false"
+
+jobs:
+
+  Static-Analysis:
+    name: "Static analysis"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v2
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Bootstrap CI environment dependencies
+        run: make ci-bootstrap
+
+      - name: Run static analysis
+        run: make static-analysis
+
+
+  Unit-Test:
+    name: "Unit tests"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v1
+        id: poetry-cache
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
+
+      - name: Setup Poetry config
+        run: |
+          cd test/acceptance && \
+          poetry config virtualenvs.in-project false && \
+          poetry config virtualenvs.path ~/.virtualenvs
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Bootstrap CI environment dependencies
+        run: make ci-bootstrap
+
+      - name: Install dependencies and package
+        run: |
+          cd publish && poetry install
+
+      - name: Cache Tox
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: publish/.tox
+          key: tox-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
+
+      - name: Run unit tests
+        run: make unit
+
+  Discover-Schema-Versions:
+    name: "Discover supported schema versions"
+    runs-on: ubuntu-20.04
+    outputs:
+      schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v2
+
+      - name: Read supported schema versions
+        id: read-schema-versions
+        run: |
+          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          echo "::set-output name=schema-versions::$content"
+
+  Acceptance-Test:
+    name: "Acceptance tests"
+    needs: Discover-Schema-Versions
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
+    # set the permissions granted to the github token to read the pull cache from ghcr.io
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v2
+        with:
+          # this downloads and initializes LFS, but does not pull the objects
+          lfs: true
+
+      - name: Checkout LFS objects
+        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
+        run: git lfs pull
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v1
+        id: poetry-cache
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('test/acceptance/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
+
+      - name: Setup Poetry config
+        run: |
+          cd test/acceptance && \
+          poetry config virtualenvs.in-project false && \
+          poetry config virtualenvs.path ~/.virtualenvs
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Bootstrap CI environment dependencies
+        run: make ci-bootstrap
+
+      - name: Install dependencies and package
+        run: |
+          cd test/acceptance && poetry install
+
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Pull vulnerability data
+        run: make download-all-provider-cache
+
+      - name: Build DB
+        run: |
+          cd test/acceptance && \
+          poetry run python grype-ingest.py generate --schema-version ${{ matrix.schema-version }}
+
+      - name: Test DB
+        run: |
+          cd test/acceptance && \
+          poetry run python grype-ingest.py test --schema-version ${{ matrix.schema-version }}

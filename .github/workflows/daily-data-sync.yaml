@@ -1,0 +1,142 @@
+name: 'Daily Data Sync'
+on:
+  # allow for kicking off DB builds manually
+  workflow_dispatch:
+
+
+  # run 7 AM (UTC) daily
+  schedule:
+    - cron:  '0 7 * * *'
+env:
+  GO_VERSION: "1.20.x"
+  CGO_ENABLED: "0"
+  GO_CACHE_KEY: d41d8cd98f00
+  SLACK_NOTIFICATIONS: true
+
+jobs:
+  discover-providers:
+    name: "Discover vulnerability providers"
+    runs-on: ubuntu-20.04
+    outputs:
+      providers: ${{ steps.read-providers.outputs.providers }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read configured providers
+        id: read-providers
+        # TODO: honor CI overrides
+        run: |
+          content=`make show-providers`
+          echo "providers=$content" >> $GITHUB_OUTPUT
+
+  update-provider:
+    name: "Update provider"
+    needs: discover-providers
+    runs-on: ubuntu-20.04
+    # set the permissions granted to the github token to publish to ghcr.io
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        provider: ${{fromJson(needs.discover-providers.outputs.providers)}}
+      fail-fast: false
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v3
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}-${{ env.GO_CACHE_KEY }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ env.GO_CACHE_KEY }}-
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}-${{ env.GO_CACHE_KEY }}
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Download the existing provider state
+        run: bash -c "make download-provider-cache provider=${{ matrix.provider }} date=latest || true"
+
+      - name: Update the provider
+        run: make refresh-provider-cache provider=${{ matrix.provider }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload the provider workspace state
+        run: make upload-provider-cache provider=${{ matrix.provider }}
+
+#      - uses: 8398a7/action-slack@v3
+#        with:
+#          status: ${{ job.status }}
+#          fields: workflow,eventName
+#          text: Pulling the feed data has failed
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+#        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+
+  aggregate-cache:
+    name: "Aggregate provider cache"
+    runs-on: ubuntu-20.04
+    needs: update-provider
+    # set the permissions granted to the github token to read the pull cache from ghcr.io
+    permissions:
+      packages: write
+      contents: read
+    steps:
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v3
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}-${{ env.GO_CACHE_KEY }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ env.GO_CACHE_KEY }}-
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}-${{ env.GO_CACHE_KEY }}
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Aggregate vulnerability data
+      # TODO: hook up to matrix override
+        run: make aggregate-all-provider-cache
+
+      - name: Upload vulnerability data cache image
+        run: make upload-all-provider-cache
+
+# TODO: slack on failure

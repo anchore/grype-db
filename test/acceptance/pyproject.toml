@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "publish"
+version = "0.1.0"
+description = "Acceptance test generated DBs against grype"
+authors = ["Alex Goodman <alex.goodman@anchore.com>"]
+license = "Apache 2.0"
+exclude = [
+    "test/**/*"
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+#yardstick = {path = "../../../yardstick", develop = true}
+tabulate = "^0.8.9"
+publisher = {path = "../../publish"}
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.2"
+tox = "^3.23.0"

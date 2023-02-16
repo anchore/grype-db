@@ -1,0 +1,2 @@
+publish/test-fixtures/** filter=lfs diff=lfs merge=lfs -text
+test/acceptance/test-fixtures/result/** filter=lfs diff=lfs merge=lfs -text

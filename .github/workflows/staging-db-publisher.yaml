@@ -1,0 +1,176 @@
+# Only manual kickoff of builds are allowed, with some required inputs. The
+# staging DB builder allows publishing a database to an AWS bucket. This is
+# useful when no official DB with a newer schema has been published. Once the
+# database is published, you can point grype to it:
+#
+#  $ GRYPE_DB_UPDATE_URL=https://toolbox-data.anchore.io/grype/staging-databases/listing.json go run main.go centos:8
+#
+name: 'Staging DB Publisher'
+on:
+  workflow_dispatch:
+    inputs:
+      schema-version:
+        description: 'the schema version to build (e.g. "3", NOT "v3").'
+        required: true
+        default: "5"
+      grype-branch:
+        description: 'the release version or branch of grype to use for verification of the built DB.'
+        required: true
+        default: "main"
+      publish-databases:
+        description: "build new databases and upload to S3"
+        type: boolean
+        required: true
+        default: true
+      publish-listing:
+        description: "use S3 state to update and publish listing file"
+        type: boolean
+        required: true
+      run-tmate:
+        description: "start a tmate session (for debugging)"
+        required: false
+        type: boolean
+        default: false
+      tmate-duration:
+        description: "tmate session duration"
+        required: false
+        default: 20
+
+env:
+  GO_VERSION: "1.20.x"
+  CGO_ENABLED: "0"
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.2.0"
+  AWS_BUCKET: toolbox-data.anchore.io
+  # do NOT change this value
+  AWS_BUCKET_PATH: grype/staging-databases
+  AWS_DEFAULT_REGION: us-west-2
+  GRYPE_TEST_SCHEMA: ${{ github.event.inputs.schema-version }}
+  GRYPE_TEST_BRANCH: ${{ github.event.inputs.grype-branch }}
+
+jobs:
+  publish-staging-db:
+    name: "Generate and publish staging DB"
+    runs-on: ubuntu-20.04
+    # set the permissions granted to the github token to read the pull cache from ghcr.io
+    permissions:
+      packages: read
+      contents: read
+    steps:
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        id: poetry-cache
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('publish/poetry.lock') }}
+
+      - name: Setup Poetry config
+        run: |
+          cd test/acceptance && \
+          poetry config virtualenvs.in-project false && \
+          poetry config virtualenvs.path ~/.virtualenvs
+
+      - name: Restore python cache
+        id: python-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-publish-${{ hashFiles('publish/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-publish-
+
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.tmp
+          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+      - name: Restore go cache
+        id: go-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: (cache-miss) Bootstrap all project dependencies
+        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
+        run: make bootstrap
+
+      - name: Install dependencies and package
+        run: |
+          # note: pyyaml is needed for the one-off python script for pulling the provider cache
+          cd publish && poetry install && pip install pyyaml
+
+      - name: create timestamp for caching
+        id: timestamp
+        run: |
+          echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+        shell: bash
+
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Setup tmate session
+        # note about workflow dispatch inputs and booleans:
+        # a) booleans come across as string types :(
+        # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+        if: github.event.inputs.run-tmate != 'false'
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: ${{ fromJSON(github.event.inputs.tmate-duration) }}
+        with:
+          limit-access-to-actor: true
+
+      - name: Pull vulnerability data
+        # note about workflow dispatch inputs and booleans:
+        # a) booleans come across as string types :(
+        # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+        if: github.event.inputs.publish-databases != 'false'
+        run: make download-all-provider-cache
+
+      - name: Generate DB (schema ${{ github.event.inputs.schema-version }})
+        # note about workflow dispatch inputs and booleans:
+        # a) booleans come across as string types :(
+        # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+        if: github.event.inputs.publish-databases != 'false'
+        run: |
+          cd publish &&
+          poetry run publisher generate --schema-version ${{ github.event.inputs.schema-version }}
+
+      - name: Upload DB (schema ${{ github.event.inputs.schema-version }})
+        run: publish/upload-dbs.sh ${{ env.AWS_BUCKET }} ${{ env.AWS_BUCKET_PATH }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
+
+      - name: Publish listing file
+        # note about workflow dispatch inputs and booleans:
+        # a) booleans come across as string types :(
+        # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
+        if: github.event.inputs.publish-listing != 'false'
+        run: |
+          cd publish &&
+          poetry run publisher upload-listing --s3-bucket ${{ env.AWS_BUCKET }} --s3-path ${{ env.AWS_BUCKET_PATH }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
