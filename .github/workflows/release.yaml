@@ -92,15 +92,11 @@ jobs:
     needs:
       - quality-gate
       - quality-gate-acceptance-test
-
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     steps:
-
-      # TODO: remove me after release
-      - name: Configure git for private modules
-        env:
-          TOKEN: ${{ secrets.ANCHORE_GIT_READ_TOKEN }}
-        run: git config --global url."https://anchore:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - uses: actions/setup-go@v2
         with:
@@ -121,9 +117,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('Makefile') }}-
             ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
       - name: Bootstrap dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: make ci-bootstrap
+
+      - name: Tag release
+        run: |
+          git tag ${{ github.event.inputs.version }}
+          git push origin --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build release artifacts
         run: make ci-release
