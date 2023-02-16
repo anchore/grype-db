@@ -75,7 +75,7 @@ all: static-analysis test ## Run all checks (linting, license checks, unit, and 
 	@printf '$(SUCCESS)All checks pass!$(RESET)\n'
 
 .PHONY: test
-test: unit ## Run all tests (unit & acceptance tests)
+test: unit ## Run all tests (unit)
 
 .PHONY: help
 help:
@@ -106,7 +106,7 @@ bootstrap: ## Download and install all project dependencies (+ prep tooling in t
 	GOBIN="$(abspath $(TEMP_DIR))" go install github.com/google/go-containerregistry/cmd/crane@$(CRANE_VERSION)
 
 
-.PHONY: static-analysis
+.PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
 static-analysis: lint check-licenses
 
 .PHONY: lint
