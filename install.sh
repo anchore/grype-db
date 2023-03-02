@@ -1,17 +1,16 @@
 #!/bin/sh
 # note: we require errors to propagate (don't set -e)
-set -eu
+set -u
 
 PROJECT_NAME="grype-db"
 OWNER=anchore
 REPO="${PROJECT_NAME}"
-GITHUB_DOWNLOAD_PREFIX=https://api.github.com/repos/${OWNER}/${REPO}/releases
+GITHUB_DOWNLOAD_PREFIX=https://github.com/${OWNER}/${REPO}/releases/download
 INSTALL_SH_BASE_URL=https://raw.githubusercontent.com/${OWNER}/${PROJECT_NAME}
 PROGRAM_ARGS=$@
 
 # do not change the name of this parameter (this must always be backwards compatible)
-# This is defaulted to false since older tags do not have an install script to download
-DOWNLOAD_TAG_INSTALL_SCRIPT=${DOWNLOAD_TAG_INSTALL_SCRIPT:-false}
+DOWNLOAD_TAG_INSTALL_SCRIPT=${DOWNLOAD_TAG_INSTALL_SCRIPT:-true}
 
 #
 # usage [script-name]
@@ -19,14 +18,12 @@ DOWNLOAD_TAG_INSTALL_SCRIPT=${DOWNLOAD_TAG_INSTALL_SCRIPT:-false}
 usage() (
   this=$1
   cat <<EOF
-$this: download go binaries for anchore/grype-db
+$this: download go binaries for anchore/syft
 
-Usage: $this [-a] arch [-b] dir [-d] [-o] os [tag]
-  -a the architecture to download
+Usage: $this [-b] dir [-d] [tag]
   -b  the installation directory (dDefaults to ./bin)
   -d  turns on debug logging
   -dd turns on trace logging
-  -o the os to download
   [tag] the specific release to use (if missing, then the latest will be used)
 EOF
   exit 2
@@ -201,22 +198,14 @@ http_download_curl() (
   local_file=$1
   source_url=$2
   header=$3
-  auth_header=$4
 
   log_trace "http_download_curl(local_file=$local_file, source_url=$source_url, header=$header)"
 
-  args="-w '%{http_code}' -sL -o \"$local_file\""
-  header_args=""
-  auth_args=""
-
-  if [ ! -z "$header" ]; then
-    header_args="-H \"$header\""
+  if [ -z "$header" ]; then
+    code=$(curl -w '%{http_code}' -sL -o "$local_file" "$source_url")
+  else
+    code=$(curl -w '%{http_code}' -sL -H "$header" -o "$local_file" "$source_url")
   fi
-  if [ ! -z "$auth_header" ]; then
-    auth_args="-H \"Authorization: token $auth_header\""
-  fi
-
-  code=$(eval "curl $args $header_args $auth_args $source_url")
 
   if [ "$code" != "200" ]; then
     log_err "received HTTP status=$code for url='$source_url'"
@@ -229,22 +218,14 @@ http_download_wget() (
   local_file=$1
   source_url=$2
   header=$3
-  auth_header=$4
 
   log_trace "http_download_wget(local_file=$local_file, source_url=$source_url, header=$header)"
 
-  args="-q -O \"$local_file\""
-  header_args=""
-  auth_args=""
-
-  if [ ! -z "$header" ]; then
-    header_args="--header \"$header\""
+  if [ -z "$header" ]; then
+    wget -q -O "$local_file" "$source_url"
+  else
+    wget -q --header "$header" -O "$local_file" "$source_url"
   fi
-  if [ ! -z "$auth_header" ]; then
-    auth_args="--header \"Authorization: token $auth_header\""
-  fi
-
-  wget $args $header_args $auth_args $source_url
 )
 
 http_download() (
@@ -262,10 +243,10 @@ http_download() (
 
 http_copy() (
   tmp=$(mktemp)
-  http_download "${tmp}" "$@" || return 1
+  http_download "${tmp}" "$1" "$2" || return 1
   body=$(cat "$tmp")
   rm -f "${tmp}"
-  printf "%s" "$body"
+  echo "$body"
 )
 
 hash_sha256() (
@@ -332,21 +313,14 @@ github_release_json() (
   owner=$1
   repo=$2
   version=$3
-  # note: private repos require the API route, not the browser-friendly route
-  if [ -z "$version" ]; then
-    version="latest"
-    giturl="https://api.github.com/repos/${owner}/${repo}/releases/${version}"
-  else
-    giturl="https://api.github.com/repos/${owner}/${repo}/releases/tags/${version}"
-  fi
-  json=$(http_copy "$giturl" "Accept:application/json" "$(github_auth_token)")
+  test -z "$version" && version="latest"
+  giturl="https://github.com/${owner}/${repo}/releases/${version}"
+  json=$(http_copy "$giturl" "Accept:application/json")
 
   log_trace "github_release_json(owner=${owner}, repo=${repo}, version=${version}) returned '${json}'"
 
   test -z "$json" && return 1
-
-  # cannot use echo since we need to preserve escaped characters
-  printf "%s" "${json}"
+  echo "${json}"
 )
 
 # extract_value [key-value-pair]
@@ -368,37 +342,9 @@ EOF
 extract_json_value() (
   json="$1"
   key="$2"
-  key_value=$(printf "%s" "${json}" | grep  -o "\"$key\":[^,]*[,}]" | tr -d '",}')
+  key_value=$(echo "${json}" | grep  -o "\"$key\":[^,]*[,}]" | tr -d '",}')
 
   extract_value "$key_value"
-)
-
-get_checksum_file_url() (
-  release_json="$1"
-
-  # cannot use echo since we need to preserve escaped characters
-  url=$(printf "%s"  "$release_json" | jq -r '.assets[] | select(.name | contains("checksums.txt")) | .url')
-  test -z "$url" && return 1
-  echo "$url"
-)
-
-get_release_tag() (
-  release_json="$1"
-
-  # cannot use echo since we need to preserve escaped characters
-  tag=$(printf "%s" "$release_json" | jq -r '.tag_name')
-  test -z "$tag" && return 1
-  echo "$tag"
-)
-
-get_asset_file_url() (
-  release_json="$1"
-  asset_filename="$2"
-
-  # cannot use echo since we need to preserve escaped characters
-  url=$(printf "%s" "$release_json" | jq -r --arg asset_filename "$asset_filename" '.assets[] | select(.name == $asset_filename) | .url')
-  test -z "$url" && return 1
-  echo "$url"
 )
 
 # github_release_tag [release-json]
@@ -417,17 +363,18 @@ github_release_tag() (
 # outputs path to the downloaded checksums file
 #
 download_github_release_checksums() (
-  checksum_url="$1"
+  download_url="$1"
   name="$2"
   version="$3"
   output_dir="$4"
 
-  log_trace "download_github_release_checksums(url=${checksum_url}, name=${name}, version=${version}, output_dir=${output_dir})"
+  log_trace "download_github_release_checksums(url=${download_url}, name=${name}, version=${version}, output_dir=${output_dir})"
 
   checksum_filename=${name}_${version}_checksums.txt
+  checksum_url=${download_url}/${checksum_filename}
   output_path="${output_dir}/${checksum_filename}"
 
-  http_download "${output_path}" "${checksum_url}" "Accept:application/octet-stream" "$(github_auth_token)"
+  http_download "${output_path}" "${checksum_url}" ""
   asset_file_exists "${output_path}"
 
   log_trace "download_github_release_checksums() returned '${output_path}'"
@@ -461,11 +408,7 @@ search_for_asset() (
 # outputs an adjusted os value
 #
 uname_os() (
-  os="$1"
-
-  if [ -z "$os" ]; then
-    os=$(uname -s | tr '[:upper:]' '[:lower:]')
-  fi
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
   case "$os" in
     cygwin_nt*) os="windows" ;;
     mingw*) os="windows" ;;
@@ -484,11 +427,7 @@ uname_os() (
 # outputs an adjusted architecture value
 #
 uname_arch() (
-  arch="$1"
-
-  if [ -z "$arch" ]; then
-    arch=$(uname -m)
-  fi
+  arch=$(uname -m)
   case $arch in
     x86_64) arch="amd64" ;;
     x86) arch="386" ;;
@@ -511,23 +450,23 @@ uname_arch() (
 #
 # outputs tag string
 #
-#get_release_tag() (
-#  owner="$1"
-#  repo="$2"
-#  tag="$3"
-#
-#  log_trace "get_release_tag(owner=${owner}, repo=${repo}, tag=${tag})"
-#
-#  json=$(github_release_json "${owner}" "${repo}" "${tag}")
-#  real_tag=$(github_release_tag "${json}")
-#  if test -z "${real_tag}"; then
-#    return 1
-#  fi
-#
-#  log_trace "get_release_tag() returned '${real_tag}'"
-#
-#  echo "${real_tag}"
-#)
+get_release_tag() (
+  owner="$1"
+  repo="$2"
+  tag="$3"
+
+  log_trace "get_release_tag(owner=${owner}, repo=${repo}, tag=${tag})"
+
+  json=$(github_release_json "${owner}" "${repo}" "${tag}")
+  real_tag=$(github_release_tag "${json}")
+  if test -z "${real_tag}"; then
+    return 1
+  fi
+
+  log_trace "get_release_tag() returned '${real_tag}'"
+
+  echo "${real_tag}"
+)
 
 # tag_to_version [tag]
 #
@@ -586,7 +525,7 @@ get_format_name() (
 # attempts to download the archive and install it to the given path.
 #
 download_and_install_asset() (
-  release_json="$1"
+  download_url="$1"
   download_path="$2"
   install_path=$3
   name="$4"
@@ -596,7 +535,7 @@ download_and_install_asset() (
   format="$8"
   binary="$9"
 
-  asset_filepath=$(download_asset "${release_json}" "${download_path}" "${name}" "${os}" "${arch}" "${version}" "${format}")
+  asset_filepath=$(download_asset "${download_url}" "${download_path}" "${name}" "${os}" "${arch}" "${version}" "${format}")
 
   # don't continue if we couldn't download an asset
   if [ -z "${asset_filepath}" ]; then
@@ -612,7 +551,7 @@ download_and_install_asset() (
 # outputs the path to the downloaded asset asset_filepath
 #
 download_asset() (
-  release_json="$1"
+  download_url="$1"
   destination="$2"
   name="$3"
   os="$4"
@@ -620,13 +559,9 @@ download_asset() (
   version="$6"
   format="$7"
 
-  log_trace "download_asset(destination=${destination}, name=${name}, os=${os}, arch=${arch}, version=${version}, format=${format})"
+  log_trace "download_asset(url=${download_url}, destination=${destination}, name=${name}, os=${os}, arch=${arch}, version=${version}, format=${format})"
 
-  #get checksum url
-  checksum_file_url=$(get_checksum_file_url "${release_json}")
-
-  #get checksum path asset
-  checksums_filepath=$(download_github_release_checksums "${checksum_file_url}" "${name}" "${version}" "${destination}")
+  checksums_filepath=$(download_github_release_checksums "${download_url}" "${name}" "${version}" "${destination}")
 
   log_trace "checksums content:\n$(cat ${checksums_filepath})"
 
@@ -637,9 +572,9 @@ download_asset() (
       return 1
   fi
 
-  asset_url=$(get_asset_file_url "${release_json}" "${asset_filename}")
+  asset_url="${download_url}/${asset_filename}"
   asset_filepath="${destination}/${asset_filename}"
-  http_download "${asset_filepath}" "${asset_url}" "Accept:application/octet-stream" "$(github_auth_token)"
+  http_download "${asset_filepath}" "${asset_url}" ""
 
   hash_sha256_verify "${asset_filepath}" "${checksums_filepath}"
 
@@ -674,26 +609,15 @@ install_asset() (
   install "${archive_dir}/${binary}" "${destination}/"
 )
 
-# github_auth_token returns the value of GITHUB_TOKEN or an empty string
-#
-github_auth_token() (
-  if [ "${GITHUB_TOKEN:-undefined}" != "undefined" ]; then
-      echo "${GITHUB_TOKEN}"
-  fi
-)
-
 main() (
   # parse arguments
 
   # note: never change default install directory (this must always be backwards compatible)
   install_dir=${install_dir:-./bin}
-  os=""
-  arch=""
 
   # note: never change the program flags or arguments (this must always be backwards compatible)
-  while getopts "a:b:dh?o:x" arg; do
+  while getopts "b:dh?x" arg; do
     case "$arg" in
-      a) arch="$OPTARG" ;;
       b) install_dir="$OPTARG" ;;
       d)
         if [ "$_logp" = "$log_info_priority" ]; then
@@ -705,7 +629,6 @@ main() (
         fi
         ;;
       h | \?) usage "$0" ;;
-      o) os="$OPTARG" ;;
       x) set -x ;;
     esac
   done
@@ -714,17 +637,14 @@ main() (
   tag=$1
 
   if [ -z "${tag}" ]; then
-    log_info "checking github for the current release tag"
+    log_debug "checking github for the current release tag"
     tag=""
   else
-    log_info "checking github for release tag='${tag}'"
+    log_debug "checking github for release tag='${tag}'"
   fi
   set -u
 
-  # get the release json
-  release_json=$(github_release_json "${OWNER}" "${REPO}" "${tag}")
-
-  tag=$(get_release_tag "${release_json}")
+  tag=$(get_release_tag "${OWNER}" "${REPO}" "${tag}")
 
   if [ "$?" != "0" ]; then
       log_err "unable to find tag='${tag}'"
@@ -735,8 +655,8 @@ main() (
   # run the application
 
   version=$(tag_to_version "${tag}")
-  os=$(uname_os "$os")
-  arch=$(uname_arch "$arch")
+  os=$(uname_os)
+  arch=$(uname_arch)
   format=$(get_format_name "${os}" "${arch}" "tar.gz")
   binary=$(get_binary_name "${os}" "${arch}" "${PROJECT_NAME}")
   download_url="${GITHUB_DOWNLOAD_PREFIX}/${tag}"
@@ -747,7 +667,7 @@ main() (
   if [ "${DOWNLOAD_TAG_INSTALL_SCRIPT}" = "true" ]; then
       export DOWNLOAD_TAG_INSTALL_SCRIPT=false
       log_info "fetching release script for tag='${tag}'"
-      http_copy "${INSTALL_SH_BASE_URL}/${tag}/install.sh" "" "$(github_auth_token)" | sh -s -- ${PROGRAM_ARGS}
+      http_copy "${INSTALL_SH_BASE_URL}/${tag}/install.sh" "" | sh -s -- ${PROGRAM_ARGS}
       exit $?
   fi
 
@@ -758,8 +678,7 @@ main() (
 
   log_debug "downloading files into ${download_dir}"
 
-  # pass down json instead of download url?
-  download_and_install_asset "${release_json}" "${download_dir}" "${install_dir}" "${PROJECT_NAME}" "${os}" "${arch}" "${version}" "${format}" "${binary}"
+  download_and_install_asset "${download_url}" "${download_dir}" "${install_dir}" "${PROJECT_NAME}" "${os}" "${arch}" "${version}" "${format}" "${binary}"
 
   # don't continue if we couldn't install the asset
   if [ "$?" != "0" ]; then
