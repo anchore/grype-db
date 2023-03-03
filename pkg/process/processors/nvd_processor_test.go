@@ -1,13 +1,15 @@
 package processors
 
 import (
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/anchore/grype-db/pkg/data"
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func mockNVDProcessorTransform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {

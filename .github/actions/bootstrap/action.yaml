@@ -12,7 +12,7 @@ inputs:
   go-version:
     description: "Go version to install"
     required: true
-    default: "1.19.x"
+    default: "1.20.x"
   python-version:
     description: "Python version to install"
     required: true
@@ -123,7 +123,3 @@ runs:
       shell: bash
       run: |
         DEBIAN_FRONTEND=noninteractive sudo apt update && sudo -E apt install -y ${{ inputs.bootstrap-apt-packages }}
-
-    - name: Create all cache fingerprints
-      shell: bash
-      run: make fingerprints

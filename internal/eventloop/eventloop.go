@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/internal/ui"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/wagoodman/go-partybus"
+
+	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/internal/ui"
 )
 
 func Run(ctx context.Context, workerErrs <-chan error, subscription *partybus.Subscription, cleanupFn func(), uxs ...ui.UI) error {

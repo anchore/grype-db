@@ -5,8 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/OneOfOne/xxhash"
-	"github.com/anchore/grype-db/internal/file"
 	"github.com/spf13/afero"
+
+	"github.com/anchore/grype-db/internal/file"
 )
 
 type File struct {

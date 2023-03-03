@@ -5,15 +5,14 @@ import (
 	"os"
 
 	"github.com/scylladb/go-set/strset"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/anchore/grype-db/internal/log"
-
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/spf13/cobra"
 )
 
 var _ options.Interface = &cacheDeleteConfig{}

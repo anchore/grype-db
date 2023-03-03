@@ -3,12 +3,11 @@ package nvd
 import (
 	"strings"
 
-	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
-
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v2/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v2"
 )
 

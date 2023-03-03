@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anchore/grype/grype/db/v5/namespace"
-
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v5/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
+	"github.com/anchore/grype/grype/db/v5/namespace"
 	syftPkg "github.com/anchore/syft/syft/pkg"
 )
 

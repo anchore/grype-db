@@ -93,14 +93,11 @@ test: unit ## Run all tests (unit)
 ## Bootstrapping targets #################################
 
 .PHONY: bootstrap
-bootstrap: ## Download and install all project dependencies (+ prep tooling in the ./tmp dir)
-	$(call title,Downloading dependencies)
-	# prep temp dirs
-	mkdir -p $(TEMP_DIR)
-	mkdir -p $(RESULTS_DIR)
-	# install go dependencies
-	go mod download
-	# install utilities
+bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools ## Download and install all tooling dependencies (+ prep tooling in the ./tmp dir)
+	$(call title,Bootstrapping dependencies)
+
+.PHONY: bootstrap-tools
+bootstrap-tools: $(TEMP_DIR)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TEMP_DIR)/ $(GOLANGCILINT_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMP_DIR)/ $(BOUNCER_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
@@ -109,6 +106,12 @@ bootstrap: ## Download and install all project dependencies (+ prep tooling in t
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
 
+.PHONY: bootstrap-go
+bootstrap-go:
+	go mod download
+
+$(TEMP_DIR):
+	mkdir -p $(TEMP_DIR)
 
 ## Static analysis targets #################################
 

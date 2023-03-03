@@ -7,11 +7,12 @@ import (
 	"reflect"
 
 	"github.com/adrg/xdg"
-	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
+
+	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 )
 
 var ConfigSearchLocations = []string{

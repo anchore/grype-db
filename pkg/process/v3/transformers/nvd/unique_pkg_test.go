@@ -1,10 +1,11 @@
 package nvd
 
 import (
-	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
+
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
 
 func newUniquePkgTrackerFromSlice(candidates []pkgCandidate) uniquePkgTracker {

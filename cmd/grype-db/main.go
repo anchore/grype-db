@@ -5,9 +5,10 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/gookit/color"
+
 	"github.com/anchore/grype-db/cmd/grype-db/cli"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/gookit/color"
 )
 
 func main() {

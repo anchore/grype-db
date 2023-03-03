@@ -3,7 +3,6 @@ package matchexclusions
 import (
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-
 	grypeDB "github.com/anchore/grype/grype/db/v4"
 )
 

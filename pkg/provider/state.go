@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/OneOfOne/xxhash"
+
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 )

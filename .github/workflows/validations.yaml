@@ -59,6 +59,7 @@ jobs:
           # note: ideally this value should match what is used in release (just to help with build times).
           build-cache-key-prefix: "snapshot"
           bootstrap-apt-packages: ""
+          python: false
 
       - name: Build snapshot artifacts
         run: make snapshot

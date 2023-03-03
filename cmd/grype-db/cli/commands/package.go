@@ -1,12 +1,13 @@
 package commands
 
 import (
-	"github.com/anchore/grype-db/cmd/grype-db/application"
-	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/pkg/process"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/cmd/grype-db/application"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
+	"github.com/anchore/grype-db/pkg/process"
 )
 
 var _ options.Interface = &buildConfig{}

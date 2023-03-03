@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/sqlite"
 )
 
 var readOptions = []string{

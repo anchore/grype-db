@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/anchore/grype-db/internal/log"
-
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
