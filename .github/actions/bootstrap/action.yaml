@@ -1,0 +1,129 @@
+name: "Bootstrap"
+description: "Bootstrap all tools and dependencies"
+inputs:
+  go:
+    description: "Install go"
+    required: true
+    default: "true"
+  python:
+    description: "Install python"
+    required: true
+    default: "true"
+  go-version:
+    description: "Go version to install"
+    required: true
+    default: "1.19.x"
+  python-version:
+    description: "Python version to install"
+    required: true
+    default: "3.10"
+  poetry-version:
+    description: "Poetry version to install"
+    required: true
+    default: "1.2.0"
+  use-go-cache:
+    description: "Restore go cache"
+    required: true
+    default: "true"
+  use-poetry-cache:
+    description: "Restore poetry cache"
+    required: true
+    default: "true"
+  cache-key-prefix:
+    description: "Prefix all cache keys with this value"
+    required: true
+    default: "831180ac25"
+  build-cache-key-prefix:
+    description: "Prefix build cache key with this value"
+    required: true
+    default: "f8b6d31dea"
+  bootstrap-apt-packages:
+    description: "Space delimited list of tools to install via apt"
+    default: "sqlite3 libsqlite3-dev"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-go@v3
+      if: inputs.go == 'true'
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - uses: actions/setup-python@v4
+      if: inputs.python == 'true'
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install poetry
+      if: inputs.python == 'true'
+      uses: abatilo/actions-poetry@v2.2.0
+      with:
+        poetry-version: ${{ inputs.poetry-version }}
+
+    - name: Cache Poetry virtualenv
+      uses: actions/cache@v3
+      if: inputs.python == 'true' && inputs.use-poetry-cache == 'true'
+      id: cache
+      with:
+        path: ~/.virtualenvs
+        key: ${{ inputs.cache-key-prefix }}-python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('poetry.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}-python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}
+
+    - name: Setup Poetry config
+      if: inputs.python == 'true'
+      shell: bash
+      run: |
+        poetry config virtualenvs.in-project false
+        poetry config virtualenvs.path ~/.virtualenvs
+
+    - name: Restore tool cache
+      id: tool-cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ github.workspace }}/.tmp
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+
+    # note: we need to keep restoring the go mod cache before bootstrapping tools since `go install` is used in
+    # some installations of project tools.
+    - name: Restore go module cache
+      id: go-mod-cache
+      if: inputs.go == 'true' && inputs.use-go-cache == 'true'
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/go/pkg/mod
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-go-module-${{ inputs.go-version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}-${{ runner.os }}-go-module-${{ inputs.go-version }}-
+
+    - name: (cache-miss) Bootstrap project tools
+      shell: bash
+      if: steps.tool-cache.outputs.cache-hit != 'true'
+      run: make bootstrap-tools
+
+    - name: Restore go build cache
+      id: go-cache
+      if: inputs.go == 'true' && inputs.use-go-cache == 'true'
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+        key: ${{ inputs.cache-key-prefix }}-${{ inputs.build-cache-key-prefix }}-${{ runner.os }}-go-build-${{ inputs.go-version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}-${{ inputs.build-cache-key-prefix }}-${{ runner.os }}-go-build-${{ inputs.go-version }}-
+
+    - name: (cache-miss) Bootstrap go dependencies
+      shell: bash
+      if: inputs.go == 'true' && steps.go-mod-cache.outputs.cache-hit != 'true' && inputs.use-go-cache == 'true'
+      run: make bootstrap-go
+
+    - name: Install apt packages
+      if: inputs.bootstrap-apt-packages != ''
+      shell: bash
+      run: |
+        DEBIAN_FRONTEND=noninteractive sudo apt update && sudo -E apt install -y ${{ inputs.bootstrap-apt-packages }}
+
+    - name: Create all cache fingerprints
+      shell: bash
+      run: make fingerprints
