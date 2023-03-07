@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/spf13/cobra"
+
+	"github.com/anchore/grype-db/cmd/grype-db/application"
 )
 
 func Version(_ *application.Application) *cobra.Command {

@@ -1,18 +1,19 @@
 package github
 
 import (
-	"github.com/anchore/grype/grype/db/v4/namespace"
-	"github.com/anchore/grype/grype/db/v4/namespace/language"
-	syftPkg "github.com/anchore/syft/syft/pkg"
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v4"
-	"github.com/stretchr/testify/assert"
+	"github.com/anchore/grype/grype/db/v4/namespace"
+	"github.com/anchore/grype/grype/db/v4/namespace/language"
+	syftPkg "github.com/anchore/syft/syft/pkg"
 )
 
 func TestBuildGrypeNamespace(t *testing.T) {

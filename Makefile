@@ -3,9 +3,6 @@ BIN = grype-db
 SOURCE_REPO_URL = https://github.com/anchore/grype-db
 TEMP_DIR = ./.tmp
 RESULTS_DIR = $(TEMP_DIR)/results
-COVER_REPORT = $(RESULTS_DIR)/cover.report
-COVER_TOTAL = $(RESULTS_DIR)/cover.total
-LICENSES_REPORT = $(RESULTS_DIR)/licenses.json
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
 GRYPE_DB = go run ./cmd/$(BIN)/main.go
@@ -14,6 +11,7 @@ date = $(shell date +"%y-%m-%d")
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml
+GOIMPORTS_CMD := $(TEMP_DIR)/gosimports -local github.com/anchore
 RELEASE_CMD := $(TEMP_DIR)/goreleaser release --rm-dist
 SNAPSHOT_CMD := $(RELEASE_CMD) --skip-publish --skip-sign --snapshot
 CHRONICLE_CMD = $(TEMP_DIR)/chronicle
@@ -21,6 +19,7 @@ GLOW_CMD = $(TEMP_DIR)/glow
 
 # Tool versions #################################
 GOLANGCILINT_VERSION = v1.51.1
+GOSIMPORTS_VERSION := v0.3.7
 BOUNCER_VERSION = v0.4.0
 CHRONICLE_VERSION = v0.6.0
 GORELEASER_VERSION = v1.13.0
@@ -93,39 +92,34 @@ test: unit ## Run all tests (unit)
 
 ## Bootstrapping targets #################################
 
-.PHONY: ci-bootstrap
-ci-bootstrap: bootstrap ci-build-libs
-	sudo apt install -y bc
-
-.PHONY: ci-build-libs
-ci-build-libs:
-	sudo DEBIAN_FRONTEND=noninteractive apt-get update
-	sudo DEBIAN_FRONTEND=noninteractive apt-get -yq install -y sqlite3 libsqlite3-dev
-
 .PHONY: bootstrap
-bootstrap: ## Download and install all project dependencies (+ prep tooling in the ./tmp dir)
-	$(call title,Downloading dependencies)
-	# prep temp dirs
-	mkdir -p $(TEMP_DIR)
-	mkdir -p $(RESULTS_DIR)
-	# install go dependencies
-	go mod download
-	# install utilities
+bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools ## Download and install all tooling dependencies (+ prep tooling in the ./tmp dir)
+	$(call title,Bootstrapping dependencies)
+
+.PHONY: bootstrap-tools
+bootstrap-tools: $(TEMP_DIR)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TEMP_DIR)/ $(GOLANGCILINT_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMP_DIR)/ $(BOUNCER_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
 	.github/scripts/goreleaser-install.sh -b $(TEMP_DIR)/ $(GORELEASER_VERSION)
 	GOBIN="$(abspath $(TEMP_DIR))" go install github.com/google/go-containerregistry/cmd/crane@$(CRANE_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
+	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
 
+.PHONY: bootstrap-go
+bootstrap-go:
+	go mod download
+
+$(TEMP_DIR):
+	mkdir -p $(TEMP_DIR)
 
 ## Static analysis targets #################################
 
 .PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
-static-analysis: lint check-licenses
+static-analysis: check-go-mod-tidy lint check-licenses
 
 .PHONY: lint
-lint: ## Run gofmt + golangci lint checks
+lint:  ## Run gofmt + golangci lint checks
 	$(call title,Running linters)
 	# ensure there are no go fmt differences
 	@printf "files with gofmt issues: [$(shell gofmt -l -s .)]\n"
@@ -133,13 +127,18 @@ lint: ## Run gofmt + golangci lint checks
 
 	# run all golangci-lint rules
 	$(LINT_CMD)
+	@[ -z "$(shell $(GOIMPORTS_CMD) -d .)" ] || (echo "goimports needs to be fixed" && false)
 
 .PHONY: lint-fix
-lint-fix: ## Auto-format all source code + run golangci lint fixers
+lint-fix:  ## Auto-format all source code + run golangci lint fixers
 	$(call title,Running lint fixers)
 	gofmt -w -s .
+	$(GOIMPORTS_CMD) -w .
 	$(LINT_CMD) --fix
 	go mod tidy
+
+check-go-mod-tidy:
+	@ .github/scripts/go-mod-tidy-check.sh && echo "go.mod and go.sum are tidy!"
 
 .PHONY: check-licenses
 check-licenses:
@@ -159,10 +158,8 @@ unit-python: ## Run python unit tests
 .PHONY: unit-go
 unit-go: ## Run GO unit tests (with coverage)
 	$(call title,Running Go unit tests)
-	go test -coverprofile $(COVER_REPORT) ./...
-	@go tool cover -func $(COVER_REPORT) | grep total |  awk '{print substr($$3, 1, length($$3)-1)}' > $(COVER_TOTAL)
-	@echo "Coverage: $$(cat $(COVER_TOTAL))"
-	@if [ $$(echo "$$(cat $(COVER_TOTAL)) >= $(COVERAGE_THRESHOLD)" | bc -l) -ne 1 ]; then echo "$(RED)$(BOLD)Failed coverage quality gate (> $(COVERAGE_THRESHOLD)%)$(RESET)" && false; fi
+	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt ./...
+	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: acceptance
 acceptance: ## Run acceptance tests (for local use, not CI)

@@ -37,14 +37,12 @@ on:
         default: 20
 
 env:
-  GO_VERSION: "1.20.x"
   CGO_ENABLED: "0"
-  PYTHON_VERSION: "3.10"
-  POETRY_VERSION: "1.2.0"
   AWS_BUCKET: toolbox-data.anchore.io
   # do NOT change this value
   AWS_BUCKET_PATH: grype/staging-databases
   AWS_DEFAULT_REGION: us-west-2
+  # note: these GRYPE_* env vars are used by the python scripts
   GRYPE_TEST_SCHEMA: ${{ github.event.inputs.schema-version }}
   GRYPE_TEST_BRANCH: ${{ github.event.inputs.grype-branch }}
 
@@ -58,74 +56,15 @@ jobs:
       contents: read
     steps:
 
-      - uses: actions/setup-go@v2
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
       - uses: actions/checkout@v2
 
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2.0.0
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v3
-        id: poetry-cache
-        with:
-          path: ~/.virtualenvs
-          key: poetry-${{ hashFiles('publish/poetry.lock') }}
-
-      - name: Setup Poetry config
-        run: |
-          cd test/acceptance && \
-          poetry config virtualenvs.in-project false && \
-          poetry config virtualenvs.path ~/.virtualenvs
-
-      - name: Restore python cache
-        id: python-cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-publish-${{ hashFiles('publish/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-publish-
-
-      - name: Restore tool cache
-        id: tool-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/.tmp
-          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
-
-      - name: Restore go cache
-        id: go-cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
-
-      - name: (cache-miss) Bootstrap all project dependencies
-        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
-        run: make bootstrap
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
 
       - name: Install dependencies and package
         run: |
           # note: pyyaml is needed for the one-off python script for pulling the provider cache
           cd publish && poetry install && pip install pyyaml
-
-      - name: create timestamp for caching
-        id: timestamp
-        run: |
-          echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
-        shell: bash
 
       - name: Login to ghcr.io
         run: |

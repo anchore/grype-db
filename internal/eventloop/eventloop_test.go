@@ -3,7 +3,6 @@ package eventloop
 import (
 	"context"
 	"fmt"
-	"github.com/anchore/grype-db/internal/ui"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/wagoodman/go-partybus"
 
+	"github.com/anchore/grype-db/internal/ui"
 	"github.com/anchore/grype-db/pkg/event"
 )
 

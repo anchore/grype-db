@@ -11,13 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anchore/go-logger"
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/hashicorp/go-cleanhttp"
-
 	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-getter/helper/url"
 	"github.com/wagoodman/go-progress"
+
+	"github.com/anchore/go-logger"
+	"github.com/anchore/grype-db/internal/log"
 )
 
 var (

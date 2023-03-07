@@ -9,12 +9,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/anchore/grype-db/cmd/grype-db/application"
-	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/cmd/grype-db/application"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
+	"github.com/anchore/grype-db/internal/log"
 )
 
 var _ options.Interface = &cacheRestoreConfig{}

@@ -7,12 +7,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/anchore/grype-db/internal"
-	"github.com/anchore/grype-db/internal/utils"
 	"github.com/gookit/color"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/internal"
+	"github.com/anchore/grype-db/internal/utils"
 )
 
 func Bind(v *viper.Viper, configKey string, flag *pflag.Flag) error {

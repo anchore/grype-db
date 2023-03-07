@@ -1,15 +1,16 @@
 package nvd
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/go-test/deep"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v1"
-	"github.com/go-test/deep"
-	"github.com/stretchr/testify/assert"
 )
 
 const recordSource = "nvdv2:cves"

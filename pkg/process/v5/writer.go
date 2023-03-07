@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anchore/grype-db/internal/log"
+	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/file"
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype/grype/db"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	grypeDBStore "github.com/anchore/grype/grype/db/v5/store"
-	"github.com/spf13/afero"
 )
 
 // TODO: add NVDNamespace const to grype.db package?

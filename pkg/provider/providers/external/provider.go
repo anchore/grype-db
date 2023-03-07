@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/anchore/grype-db/internal/log"
-
-	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/google/shlex"
+
+	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/pkg/provider"
 )
 
 var _ provider.Provider = (*pvdr)(nil)

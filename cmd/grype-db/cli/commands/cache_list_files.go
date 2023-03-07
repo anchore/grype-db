@@ -3,11 +3,12 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
+
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/cobra"
 )
 
 var _ options.Interface = &cacheListFilesConfig{}

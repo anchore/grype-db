@@ -5,7 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
@@ -13,9 +15,7 @@ import (
 	"github.com/anchore/grype-db/pkg/process"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/providers"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
+	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
 )
 
 var _ options.Interface = &buildConfig{}

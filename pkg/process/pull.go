@@ -7,9 +7,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/semaphore"
 
-	"github.com/anchore/grype-db/pkg/provider"
-
 	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/pkg/provider"
 )
 
 type PullConfig struct {
