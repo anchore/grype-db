@@ -1,9 +1,10 @@
 package options
 
 import (
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/internal/log"
 )
 
 var _ Interface = &Vunnel{}

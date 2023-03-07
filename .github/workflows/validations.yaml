@@ -64,6 +64,14 @@ jobs:
       - name: Build snapshot artifacts
         run: make snapshot
 
+      # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
+      # see https://github.com/actions/upload-artifact/issues/199 for more info
+      - name: Upload snapshot artifacts
+        uses: actions/cache/save@v3
+        with:
+          path: snapshot
+          key: snapshot-build-${{ github.run_id }}
+
   Discover-Schema-Versions:
     name: "Discover supported schema versions"
     runs-on: ubuntu-20.04
@@ -125,3 +133,29 @@ jobs:
         run: |
           cd test/acceptance && \
           poetry run python grype-ingest.py test --schema-version ${{ matrix.schema-version }}
+
+  Cli-Linux:
+    # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+    name: "CLI tests (Linux)"
+    needs: [Build-Snapshot-Artifacts]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+
+      - name: Restore CLI test-fixture cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/test/cli/test-fixtures/cache
+          key: ${{ runner.os }}-cli-test-cache-${{ hashFiles('test/cli/test-fixtures/cache.fingerprint') }}
+
+      - name: Download snapshot build
+        uses: actions/cache/restore@v3
+        with:
+          path: snapshot
+          key: snapshot-build-${{ github.run_id }}
+
+      - name: Run CLI Tests (Linux)
+        run: make cli

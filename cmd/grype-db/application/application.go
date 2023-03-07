@@ -92,6 +92,11 @@ func (a *Application) Setup(opts options.Interface) func(cmd *cobra.Command, arg
 		logVersion()
 		logConfiguration(a.Config, opts)
 
+		if a.Config.DryRun {
+			log.Warn("dry-run mode enabled, exiting")
+			os.Exit(0)
+		}
+
 		// setup the event bus (before any publishers in the workers run)...
 		b := partybus.NewBus()
 		bus.SetPublisher(b)
