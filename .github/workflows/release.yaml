@@ -12,7 +12,7 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Check if tag already exists
         # note: this will fail if the tag already exists
@@ -61,7 +61,7 @@ jobs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 

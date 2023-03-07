@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -71,7 +71,7 @@ jobs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -93,7 +93,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # this downloads and initializes LFS, but does not pull the objects
           lfs: true
