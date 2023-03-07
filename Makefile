@@ -42,8 +42,10 @@ COVERAGE_THRESHOLD := 55
 RELEASE_CMD=$(TEMP_DIR)/goreleaser release --rm-dist
 SNAPSHOT_CMD=$(RELEASE_CMD) --skip-publish --snapshot
 DIST_DIR=./dist
-SNAPSHOT_DIR=./snapshot
 CHANGELOG := CHANGELOG.md
+SNAPSHOT_DIR=./snapshot
+OS := $(shell uname | tr '[:upper:]' '[:lower:]')
+SNAPSHOT_BIN := $(realpath $(shell pwd)/$(SNAPSHOT_DIR)/$(OS)-build_$(OS)_amd64_v1/$(BIN))
 
 
 define safe_rm_rf
@@ -158,13 +160,20 @@ unit-python: ## Run python unit tests
 .PHONY: unit-go
 unit-go: ## Run GO unit tests (with coverage)
 	$(call title,Running Go unit tests)
-	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt ./...
+	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: acceptance
 acceptance: ## Run acceptance tests (for local use, not CI)
 	$(call title,"Running local acceptance tests (this takes a while... 45 minutes or so)")
 	cd test/acceptance && poetry run python ./grype-ingest.py test-all
+
+.PHONY: cli
+cli: $(SNAPSHOT_DIR)  ## Run CLI tests
+	chmod 755 "$(SNAPSHOT_BIN)"
+	$(SNAPSHOT_BIN) version
+	GRYPE_DB_BINARY_LOCATION='$(SNAPSHOT_BIN)' \
+		go test -count=1 -timeout=15m -v ./test/cli
 
 
 ## Test-fixture-related targets #################################

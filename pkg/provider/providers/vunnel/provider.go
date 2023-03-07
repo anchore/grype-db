@@ -19,6 +19,16 @@ type Config struct {
 	Env         map[string]string `yaml:"env,omitempty" json:"env,omitempty" mapstructure:"env"`
 }
 
+func (c Config) Redact() {
+	if c.Env == nil {
+		return
+	}
+	for _, v := range c.Env {
+		// note: we don't know which env vars are sensitive, so we assume all are
+		log.Redact(v)
+	}
+}
+
 func NewProvider(root string, id provider.Identifier, cfg Config) provider.Provider {
 	return external.NewProvider(root, id,
 		external.Config{

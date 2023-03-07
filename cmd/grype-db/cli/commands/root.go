@@ -29,6 +29,7 @@ func Root(app *application.Application) *cobra.Command {
 	flags := cmd.PersistentFlags()
 
 	flags.StringVarP(&opts.ConfigPath, "config", "c", "", "path to the application config")
+	flags.BoolVarP(&opts.DryRun, "dry-run", "", false, "parse the application config, CLI flags, and exit.")
 	flags.CountVarP(&opts.Log.Verbosity, "verbose", "v", "increase verbosity (-v = debug, -vv = trace)")
 	flags.BoolVarP(&opts.Log.Quiet, "quiet", "q", false, "suppress all logging output")
 

@@ -6,24 +6,40 @@ release:
 
 project_name: grype-db
 
+env:
+  # required to support multi architecture docker builds
+  - DOCKER_CLI_EXPERIMENTAL=enabled
+  - CGO_ENABLED=0
+
 builds:
-  - binary: grype-db
-    dir: ./cmd/grype-db
-    env:
-      - CGO_ENABLED=0
+
+  - id: linux-build
     goos:
       - linux
-      - darwin
     goarch:
       - amd64
       - arm64
+    binary: &binary grype-db
+    dir: &directory ./cmd/grype-db
     # Set the modified timestamp on the output binary to the git timestamp (to ensure a reproducible build)
-    mod_timestamp: '{{ .CommitTimestamp }}'
-    ldflags: |
+    mod_timestamp: &build-timestamp '{{ .CommitTimestamp }}'
+    ldflags: &build-ldflags |
       -w
       -X github.com/anchore/grype-db/cmd/grype-db/application.version={{.Version}}
       -X github.com/anchore/grype-db/cmd/grype-db/application.gitCommit={{.Commit}}
       -X github.com/anchore/grype-db/cmd/grype-db/application.buildDate={{.Date}}
       -X github.com/anchore/grype-db/cmd/grype-db/application.gitDescription={{.Summary}}
+
+  - id: darwin-build
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: *binary
+    dir: *directory
+    mod_timestamp: *build-timestamp
+    ldflags: *build-ldflags
+
 archives:
   - format: tar.gz

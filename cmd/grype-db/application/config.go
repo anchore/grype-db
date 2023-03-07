@@ -39,10 +39,12 @@ type Config struct {
 	Log Logging     `yaml:"log" json:"log" mapstructure:"log"` // all logging-related options
 
 	DisableLoadFromDisk bool `yaml:"-" json:"-" mapstructure:"-"`
+	DryRun              bool `yaml:"-" json:"-" mapstructure:"dry-run"`
 }
 
 func (cfg *Config) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	options.BindOrExit(v, "config", flags.Lookup("config"))
+	options.BindOrExit(v, "dry-run", flags.Lookup("dry-run"))
 
 	return nil
 }

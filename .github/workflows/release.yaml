@@ -25,7 +25,7 @@ jobs:
         id: static-analysis
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
           checkName: "Static analysis"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -34,25 +34,25 @@ jobs:
         id: unit
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
           checkName: "Unit tests"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Check snapshot build results
+      - name: Check cli test results (linux)
         uses: fountainhead/action-wait-for-check@v1.1.0
-        id: snapshot
+        id: cli-linux
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
-          checkName: "Build snapshot artifacts"
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "CLI tests (Linux)"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Quality gate
-        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success' || steps.snapshot.outputs.conclusion != 'success'
+        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success' || steps.cli-linux.outputs.conclusion != 'success'
         run: |
           echo "Static Analysis Status: ${{ steps.static-analysis.conclusion }}"
           echo "Unit Test Status: ${{ steps.unit.outputs.conclusion }}"
-          echo "Build Snapshot Status: ${{ steps.snapshot.outputs.conclusion }}"
+          echo "CLI Test (Linux) Status: ${{ steps.cli-linux.outputs.conclusion }}"
           false
 
   read-schema-versions:
@@ -82,7 +82,7 @@ jobs:
         id: acceptance
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
           checkName: "Acceptance tests (${{ matrix.schema-version }})"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 

@@ -3,6 +3,8 @@ package options
 import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/internal/log"
 )
 
 var _ Interface = &Vunnel{}
@@ -16,6 +18,15 @@ type Vunnel struct {
 	DockerTag   string            `yaml:"dockerTag" json:"dockerTag" mapstructure:"dockerTag"`
 	DockerImage string            `yaml:"dockerImage" json:"dockerImage" mapstructure:"dockerImage"`
 	Env         map[string]string `yaml:"env" json:"env" mapstructure:"-"` // note: we don't want users to specify run env vars by app config env vars
+}
+
+func (o Vunnel) Redact() {
+	if o.Env == nil {
+		return
+	}
+	for _, v := range o.Env {
+		log.Redact(v)
+	}
 }
 
 func DefaultVunnel() Vunnel {
