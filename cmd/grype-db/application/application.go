@@ -76,6 +76,10 @@ func (a *Application) Setup(opts options.Interface) func(cmd *cobra.Command, arg
 			if err != nil {
 				return fmt.Errorf("unable to unmarshal command configuration for cmd=%q: %w", strings.TrimSpace(cmd.CommandPath()), err)
 			}
+
+			if r, ok := opts.(log.Redactable); ok {
+				r.Redact()
+			}
 		}
 
 		// setup logger...

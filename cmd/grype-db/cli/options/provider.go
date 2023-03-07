@@ -18,6 +18,13 @@ type Provider struct {
 	Configs []provider.Config `yaml:"configs" json:"configs" mapstructure:"configs"`
 }
 
+func (o Provider) Redact() {
+	o.Vunnel.Redact()
+	for _, v := range o.Configs {
+		v.Redact()
+	}
+}
+
 func DefaultProvider() Provider {
 	return Provider{
 		Root:   "./data",
