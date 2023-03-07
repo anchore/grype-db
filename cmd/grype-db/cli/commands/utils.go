@@ -1,10 +1,11 @@
 package commands
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/bus"
-	"github.com/spf13/cobra"
 )
 
 func async(f func() error) <-chan error {

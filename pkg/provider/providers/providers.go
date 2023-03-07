@@ -3,11 +3,11 @@ package providers
 import (
 	"fmt"
 
-	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/providers/external"
-	"github.com/mitchellh/mapstructure"
+	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
 )
 
 func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Providers, error) {

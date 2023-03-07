@@ -21,9 +21,9 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
     ldflags: |
       -w
-      -X github.com/anchore/grype-db/internal/version.version={{.Version}}
-      -X github.com/anchore/grype-db/internal/version.gitCommit={{.Commit}}
-      -X github.com/anchore/grype-db/internal/version.buildDate={{.Date}}
-      -X github.com/anchore/grype-db/internal/version.gitDescription={{.Summary}}
+      -X github.com/anchore/grype-db/cmd/grype-db/application.version={{.Version}}
+      -X github.com/anchore/grype-db/cmd/grype-db/application.gitCommit={{.Commit}}
+      -X github.com/anchore/grype-db/cmd/grype-db/application.buildDate={{.Date}}
+      -X github.com/anchore/grype-db/cmd/grype-db/application.gitDescription={{.Summary}}
 archives:
   - format: tar.gz

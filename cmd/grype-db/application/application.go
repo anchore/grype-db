@@ -7,6 +7,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gookit/color"
+	"github.com/pkg/profile"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/wagoodman/go-partybus"
+	"gopkg.in/yaml.v3"
+
 	"github.com/anchore/go-logger/adapter/logrus"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal"
@@ -15,12 +22,6 @@ import (
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/ui"
 	"github.com/anchore/grype-db/internal/utils"
-	"github.com/gookit/color"
-	"github.com/pkg/profile"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/wagoodman/go-partybus"
-	"gopkg.in/yaml.v3"
 )
 
 const Name = internal.ApplicationName

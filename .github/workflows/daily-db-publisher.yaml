@@ -14,23 +14,16 @@ on:
         required: true
         default: true
 
-  # run 10 AM (UTC) daily
+  # run 4 AM (UTC) daily
 # TODO: enable for release
 #  schedule:
-#    - cron:  '0 10 * * *'
+#    - cron:  '0 4 * * *'
 env:
-  GO_VERSION: "1.20.x"
   CGO_ENABLED: "0"
-  PYTHON_VERSION: "3.10"
-  POETRY_VERSION: "1.2.1"
   AWS_BUCKET: toolbox-data.anchore.io
   AWS_BUCKET_PATH: grype/databases
   AWS_DEFAULT_REGION: us-west-2
   SLACK_NOTIFICATIONS: true
-  # note: modify the value as needed to bust any python-related CI caches
-  PYTHON_CACHE_KEY: "510302e7c9b9da"
-  # note: modify the value as needed to bust the vuln pull cache
-  VULN_PULL_CACHE_KEY: "5jwqa1w3so2r9"
 
 jobs:
   discover-schema-versions:
@@ -48,9 +41,6 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@v3
 
@@ -59,7 +49,6 @@ jobs:
         run: |
           content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
           echo "::set-output name=schema-versions::$content"
-
 
   generate-and-publish-dbs:
     # note about workflow dispatch inputs and booleans:
@@ -77,9 +66,6 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@v3
         with:
@@ -90,48 +76,8 @@ jobs:
         # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
         run: git lfs pull
 
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v3.0.0
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v3
-        id: poetry-cache
-        with:
-          path: ~/.virtualenvs
-          key: poetry-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
-
-      - name: Setup Poetry config
-        run: |
-          cd test/acceptance && \
-          poetry config virtualenvs.in-project false && \
-          poetry config virtualenvs.path ~/.virtualenvs
-
-      - name: Restore tool cache
-        id: tool-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/.tmp
-          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
-
-      - name: Restore go cache
-        id: go-cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
-
-      - name: (cache-miss) Bootstrap all project dependencies
-        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
-        run: make bootstrap
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
 
       - name: Install dependencies and package
         run: |
@@ -159,7 +105,7 @@ jobs:
         with:
           status: ${{ job.status }}
           fields: workflow,eventName
-          text: Publishing the DB has failed (schema ${{ matrix.schema-version }})
+          text: Publishing the Grype DB has failed (schema ${{ matrix.schema-version }})
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
         if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
@@ -181,9 +127,6 @@ jobs:
     needs: generate-and-publish-dbs
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@v3
         with:
@@ -194,48 +137,8 @@ jobs:
         # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
         run: git lfs pull
 
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v3.0.0
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v3
-        id: poetry-cache
-        with:
-          path: ~/.virtualenvs
-          key: poetry-${{ hashFiles('publish/poetry.lock') }}-${{ env.PYTHON_CACHE_KEY }}
-
-      - name: Setup Poetry config
-        run: |
-          cd test/acceptance && \
-          poetry config virtualenvs.in-project false && \
-          poetry config virtualenvs.path ~/.virtualenvs
-
-      - name: Restore tool cache
-        id: tool-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/.tmp
-          key: ${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
-
-      - name: Restore go cache
-        id: go-cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
-
-      - name: (cache-miss) Bootstrap all project dependencies
-        if: steps.tool-cache.outputs.cache-hit != 'true' || steps.go-cache.outputs.cache-hit != 'true'
-        run: make bootstrap
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
 
       - name: Install dependencies and package
         run: |
@@ -253,7 +156,7 @@ jobs:
         with:
           status: ${{ job.status }}
           fields: workflow,eventName
-          text: Publishing the listing file has failed
+          text: Publishing the Grype DB listing file has failed
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
         if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}

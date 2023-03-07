@@ -1,8 +1,9 @@
 package commands
 
 import (
-	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/spf13/cobra"
+
+	"github.com/anchore/grype-db/cmd/grype-db/application"
 )
 
 func Cache(_ *application.Application) *cobra.Command {

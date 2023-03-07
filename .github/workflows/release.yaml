@@ -6,9 +6,6 @@ on:
         description: tag the latest commit on main with the given version (prefixed with v)
         required: true
 
-env:
-  GO_VERSION: "1.20.x"
-
 jobs:
 
   quality-gate:
@@ -41,11 +38,21 @@ jobs:
           checkName: "Unit tests"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
+      - name: Check snapshot build results
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: snapshot
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validation.yaml)
+          checkName: "Build snapshot artifacts"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Quality gate
-        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success'
+        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success' || steps.snapshot.outputs.conclusion != 'success'
         run: |
           echo "Static Analysis Status: ${{ steps.static-analysis.conclusion }}"
           echo "Unit Test Status: ${{ steps.unit.outputs.conclusion }}"
+          echo "Build Snapshot Status: ${{ steps.snapshot.outputs.conclusion }}"
           false
 
   read-schema-versions:
@@ -95,29 +102,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/setup-go@v2
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Restore bootstrap cache
-        id: cache
-        uses: actions/cache@v2
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
         with:
-          path: |
-            ~/go/pkg/mod
-            ${{ github.workspace }}/.tmp
-          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('Makefile') }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('Makefile') }}-
-            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
-
-      - name: Bootstrap dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: make ci-bootstrap
+          # use the same cache we used for building snapshots
+          build-cache-key-prefix: "snapshot"
+          python: false
 
       - name: Tag release
         run: |

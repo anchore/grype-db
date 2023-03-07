@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
+	"github.com/umisama/go-cpe"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/process/common"
-	"github.com/umisama/go-cpe"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
 
 const (

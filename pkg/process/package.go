@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/afero"
+
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/tar"
 	"github.com/anchore/grype/grype/db"
-	"github.com/spf13/afero"
 )
 
 func randomString() (string, error) {

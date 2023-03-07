@@ -1,9 +1,10 @@
 package options
 
 import (
-	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/pkg/provider"
 )
 
 var _ Interface = &Provider{}

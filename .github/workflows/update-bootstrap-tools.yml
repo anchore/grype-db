@@ -23,21 +23,24 @@ jobs:
 
       - run: |
           GOLANGCILINT_LATEST_VERSION=$(go list -m -json github.com/golangci/golangci-lint@latest 2>/dev/null | jq -r '.Version')
+          GOSIMPORTS_LATEST_VERSION=$(go list -m -json github.com/rinchsan/gosimports@latest 2>/dev/null | jq -r '.Version')
           BOUNCER_LATEST_VERSION=$(go list -m -json github.com/wagoodman/go-bouncer@latest 2>/dev/null | jq -r '.Version')
           CHRONICLE_LATEST_VERSION=$(go list -m -json github.com/anchore/chronicle@latest 2>/dev/null | jq -r '.Version')
           GORELEASER_LATEST_VERSION=$(go list -m -json github.com/goreleaser/goreleaser@latest 2>/dev/null | jq -r '.Version')
           
           # update version variables in the Makefile
           sed -r -i -e 's/^(GOLANGCILINT_VERSION = ).*/\1'${GOLANGCILINT_LATEST_VERSION}'/' Makefile
+          sed -r -i -e 's/^(GOSIMPORTS_VERSION := ).*/\1'${GOSIMPORTS_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(BOUNCER_VERSION = ).*/\1'${BOUNCER_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(CHRONICLE_VERSION = ).*/\1'${CHRONICLE_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(GORELEASER_VERSION = ).*/\1'${GORELEASER_LATEST_VERSION}'/' Makefile
           
           # export the versions for use with create-pull-request
-          echo "::set-output name=GOLANGCILINT::$GOLANGCILINT_LATEST_VERSION"
-          echo "::set-output name=BOUNCER::$BOUNCER_LATEST_VERSION"
-          echo "::set-output name=CHRONICLE::$CHRONICLE_LATEST_VERSION"
-          echo "::set-output name=GORELEASER::$GORELEASER_LATEST_VERSION"
+          echo "GOLANGCILINT=$GOLANGCILINT_LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "GOSIMPORTS=$GOSIMPORTS_LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "BOUNCER=$BOUNCER_LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "CHRONICLE=$CHRONICLE_LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "GORELEASER=$GORELEASER_LATEST_VERSION" >> $GITHUB_OUTPUT
         id: latest-versions
 
       - uses: tibdex/github-app-token@v1
@@ -56,6 +59,7 @@ jobs:
           title: 'Update grype-db bootstrap tools to latest versions.'
           body: |
             - [golangci-lint ${{ steps.latest-versions.outputs.GOLANGCILINT }}](https://github.com/golangci/golangci-lint/releases/tag/${{ steps.latest-versions.outputs.GOLANGCILINT }})
+            - [gosimports ${{ steps.latest-versions.outputs.GOSIMPORTS }}](https://github.com/rinchsan/gosimports/releases/tag/${{ steps.latest-versions.outputs.GOSIMPORTS }})
             - [bouncer ${{ steps.latest-versions.outputs.BOUNCER }}](https://github.com/wagoodman/go-bouncer/releases/tag/${{ steps.latest-versions.outputs.BOUNCER }})
             - [chronicle ${{ steps.latest-versions.outputs.CHRONICLE }}](https://github.com/anchore/chronicle/releases/tag/${{ steps.latest-versions.outputs.CHRONICLE }})
             - [goreleaser ${{ steps.latest-versions.outputs.GORELEASER }}](https://github.com/goreleaser/goreleaser/releases/tag/${{ steps.latest-versions.outputs.GORELEASER }})

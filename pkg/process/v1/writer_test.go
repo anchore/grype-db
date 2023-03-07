@@ -2,10 +2,12 @@ package v1
 
 import (
 	"errors"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/anchore/grype-db/pkg/data"
 	grypeDB "github.com/anchore/grype/grype/db/v1"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var _ grypeDB.VulnerabilityMetadataStoreReader = (*mockReader)(nil)

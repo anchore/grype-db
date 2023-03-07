@@ -1,14 +1,15 @@
 package msrc
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshalMsrcVulnerabilities(t *testing.T) {

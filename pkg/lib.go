@@ -1,10 +1,11 @@
 package pkg
 
 import (
+	"github.com/wagoodman/go-partybus"
+
 	"github.com/anchore/go-logger"
 	"github.com/anchore/grype-db/internal/bus"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/wagoodman/go-partybus"
 )
 
 func SetLogger(l logger.Logger) {

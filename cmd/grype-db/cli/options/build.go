@@ -1,9 +1,10 @@
 package options
 
 import (
-	"github.com/anchore/grype-db/pkg/process"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/anchore/grype-db/pkg/process"
 )
 
 var _ Interface = &Build{}
