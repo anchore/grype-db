@@ -5,7 +5,7 @@ provider:
   root: ./data
   vunnel:
     executor: docker
-    dockerTag: v0.3.4
+    dockerTag: latest
     env:
       GITHUB_TOKEN: $GITHUB_TOKEN
       NVD_API_KEY: $NVD_API_KEY
