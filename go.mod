@@ -37,7 +37,7 @@ require (
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.8.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/gorm v1.23.10
+	gorm.io/gorm v1.24.6
 )
 
 require (
@@ -96,7 +96,7 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
