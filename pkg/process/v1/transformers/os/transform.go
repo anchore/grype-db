@@ -28,16 +28,11 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	// separate vulnerability entries (one for each name|namespace combo) while merging
 	// constraint ranges as they are found.
 	for _, advisory := range vulnerability.Vulnerability.FixedIn {
-		constraint, err := enforceConstraint(advisory.Version, advisory.VersionFormat)
-		if err != nil {
-			return nil, err
-		}
-
 		// create vulnerability entry
 		vuln := grypeDB.Vulnerability{
 			ID:                   vulnerability.Vulnerability.Name,
 			RecordSource:         recordSource,
-			VersionConstraint:    constraint,
+			VersionConstraint:    enforceConstraint(advisory.Version, advisory.VersionFormat),
 			VersionFormat:        advisory.VersionFormat,
 			PackageName:          advisory.Name,
 			Namespace:            advisory.NamespaceName,
@@ -87,17 +82,16 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	return transformers.NewEntries(allVulns, metadata), nil
 }
 
-func enforceConstraint(constraint, format string) (string, error) {
+func enforceConstraint(constraint, format string) string {
 	constraint = common.CleanConstraint(constraint)
 	if len(constraint) == 0 {
-		return "", nil
+		return ""
 	}
 	switch strings.ToLower(format) {
-	case "dpkg", "rpm", "apk":
-		// the passed constraint is a fixed version
-		return fmt.Sprintf("< %s", constraint), nil
 	case "semver":
-		return common.EnforceSemVerConstraint(constraint), nil
+		return common.EnforceSemVerConstraint(constraint)
+	default:
+		// the passed constraint is a fixed version
+		return fmt.Sprintf("< %s", constraint)
 	}
-	return "", fmt.Errorf("unable to enforce constraint='%s' format='%s'", constraint, format)
 }
