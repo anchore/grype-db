@@ -85,7 +85,7 @@ jobs:
         id: read-schema-versions
         run: |
           content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
-          echo "::set-output name=schema-versions::$content"
+          echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Acceptance-Test:

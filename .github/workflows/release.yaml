@@ -67,7 +67,7 @@ jobs:
         id: read-schema-versions
         run: |
           content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
-          echo "::set-output name=schema-versions::$content"
+          echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   quality-gate-acceptance-test:
     needs: read-schema-versions
