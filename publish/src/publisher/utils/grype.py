@@ -81,8 +81,12 @@ class Report:
             report_path = os.path.join(ERROR_DIR, "grype-error.json")
             with open(report_path, "w") as f:
                 f.write(self.report_contents)
+
+            preview = self.report_contents
+            if len(preview) > 100:
+                preview = preview[:100] + "..."
             logging.error(
-                f"json decode failed for written to: {report_path}", exc_info=exc
+                f"json decode failed, full contents written to: {report_path}\npreview: {preview}", exc_info=exc
             )
             raise
 
