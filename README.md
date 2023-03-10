@@ -1,7 +1,22 @@
 # grype-db
 Application to create a grype vulnerability database from upstream vulnerability data sources.
 
-**Note: this tool is in the process of being open sourced and not all components are available yet.**
+
+## Installation
+
+**Note**: Currently, Grype-DB is built only for Linux and macOS.
+
+### Recommended
+```bash
+curl -sSfL https://raw.githubusercontent.com/anchore/grype-db/main/install.sh | sh -s -- -b /usr/local/bin
+```
+
+... or, you can specify a release version and destination directory for the installation:
+
+```
+curl -sSfL https://raw.githubusercontent.com/anchore/grype-db/main/install.sh | sh -s -- -b <DESTINATION_DIR> <RELEASE_VERSION>
+```
+
 
 ## Usage
 
