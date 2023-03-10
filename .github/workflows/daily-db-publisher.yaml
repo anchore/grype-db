@@ -15,9 +15,9 @@ on:
         default: true
 
   # run 4 AM (UTC) daily
-# TODO: enable for release
-#  schedule:
-#    - cron:  '0 4 * * *'
+  schedule:
+    - cron:  '0 4 * * *'
+
 env:
   CGO_ENABLED: "0"
   AWS_BUCKET: toolbox-data.anchore.io
