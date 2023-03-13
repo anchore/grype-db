@@ -6,8 +6,6 @@ import (
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
@@ -18,16 +16,7 @@ import (
 var _ options.Interface = &cacheDeleteConfig{}
 
 type cacheDeleteConfig struct {
-	options.FilterProviders `yaml:",inline" json:",inline" mapstructure:",squash"`
-	options.Provider        `yaml:"provider" json:"provider" mapstructure:"provider"`
-}
-
-func (o *cacheDeleteConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.Provider, &o.FilterProviders)
-}
-
-func (o *cacheDeleteConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
-	return options.BindAllFlags(flags, v, &o.Provider, &o.FilterProviders)
+	options.Provider `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 
 func CacheDelete(app *application.Application) *cobra.Command {
@@ -53,7 +42,7 @@ func CacheDelete(app *application.Application) *cobra.Command {
 }
 
 func cacheDelete(cfg cacheDeleteConfig) error {
-	allowableProviders := strset.New(cfg.FilterProviders.ProviderNames...)
+	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
 	for _, p := range cfg.Provider.Configs {
 		if allowableProviders.Size() > 0 && !allowableProviders.Has(p.Name) {

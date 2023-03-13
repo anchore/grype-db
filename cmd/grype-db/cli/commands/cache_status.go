@@ -5,8 +5,6 @@ import (
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
@@ -18,22 +16,12 @@ import (
 var _ options.Interface = &cacheStatusConfig{}
 
 type cacheStatusConfig struct {
-	options.FilterProviders `yaml:",inline" json:",inline" mapstructure:",squash"`
-	options.Provider        `yaml:"provider" json:"provider" mapstructure:"provider"`
-}
-
-func (o *cacheStatusConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.Provider, &o.FilterProviders)
-}
-
-func (o *cacheStatusConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
-	return options.BindAllFlags(flags, v, &o.Provider, &o.FilterProviders)
+	options.Provider `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 
 func CacheStatus(app *application.Application) *cobra.Command {
 	cfg := cacheStatusConfig{
-		FilterProviders: options.DefaultFilterProviders(),
-		Provider:        options.DefaultProvider(),
+		Provider: options.DefaultProvider(),
 	}
 
 	cmd := &cobra.Command{
@@ -62,7 +50,7 @@ func cacheStatus(cfg cacheStatusConfig) error {
 	var sds []*provider.State
 	var errs []error
 
-	allowableProviders := strset.New(cfg.FilterProviders.ProviderNames...)
+	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
 	for _, p := range cfg.Provider.Configs {
 		if allowableProviders.Size() > 0 && !allowableProviders.Has(p.Name) {

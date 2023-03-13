@@ -11,7 +11,7 @@ var _ Interface = &Provider{}
 
 type Provider struct {
 	// bound options
-	// (none)
+	IncludeFilter []string `yaml:"include-filter" json:"include-filter" mapstructure:"include-filter"`
 
 	// unbound options
 	Root    string            `yaml:"root" json:"root" mapstructure:"root"`
@@ -28,77 +28,36 @@ func (o Provider) Redact() {
 
 func DefaultProvider() Provider {
 	return Provider{
-		Root:   "./data",
-		Vunnel: DefaultVunnel(),
-		Configs: []provider.Config{
-			{
-				Identifier: provider.Identifier{
-					Name: "alpine",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "amazon",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "debian",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "github",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "nvd",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "rhel",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "sles",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "ubuntu",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "wolfi",
-					Kind: provider.VunnelKind,
-				},
-			},
-		},
+		Root:    "./data",
+		Vunnel:  DefaultVunnel(),
+		Configs: nil,
 	}
 }
 
 func (o *Provider) AddFlags(flags *pflag.FlagSet) {
+	// bound options
+	flags.StringArrayVarP(
+		&o.IncludeFilter,
+		"provider-name", "p", o.IncludeFilter,
+		"one or more provider names to filter building a DB for (default: empty = all)",
+	)
+
+	// unbound options
+
+	// nested options
+	o.Vunnel.AddFlags(flags)
 }
 
 func (o *Provider) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	// set default values for bound struct items
-	// (none)
+	if err := Bind(v, "provider.include-filter", flags.Lookup("provider-name")); err != nil {
+		return err
+	}
 
 	// set default values for non-bound struct items
 	v.SetDefault("provider.root", o.Root)
 	v.SetDefault("provider.configs", o.Configs)
 
-	return nil
+	// nested options
+	return o.Vunnel.BindFlags(flags, v)
 }

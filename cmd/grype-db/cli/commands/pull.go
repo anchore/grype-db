@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -42,7 +44,7 @@ func Pull(app *application.Application) *cobra.Command {
 		PreRunE: app.Setup(&cfg),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return app.Run(cmd.Context(), async(func() error {
-				return pull(cfg)
+				return runPull(cfg)
 			}))
 		},
 	}
@@ -52,20 +54,25 @@ func Pull(app *application.Application) *cobra.Command {
 	return cmd
 }
 
-func pull(cfg pullConfig) error {
+func runPull(cfg pullConfig) error {
 	ps, err := providers.New(cfg.Root, vunnel.Config{
-		Executor:    cfg.Vunnel.Executor,
-		DockerTag:   cfg.Vunnel.DockerTag,
-		DockerImage: cfg.Vunnel.DockerImage,
-		Env:         cfg.Vunnel.Env,
+		Executor:         cfg.Vunnel.Executor,
+		DockerTag:        cfg.Vunnel.DockerTag,
+		DockerImage:      cfg.Vunnel.DockerImage,
+		GenerateConfigs:  cfg.Vunnel.GenerateConfigs,
+		ExcludeProviders: cfg.Vunnel.ExcludeProviders,
+		Env:              cfg.Vunnel.Env,
 	}, cfg.Provider.Configs...)
 	if err != nil {
+		if errors.Is(err, providers.ErrNoProviders) {
+			log.Error("configure a provider via the application config or use -g to generate a list of configs from vunnel")
+		}
 		return err
 	}
 
-	if len(cfg.FilterProviders.ProviderNames) > 0 {
-		log.WithFields("keep-only", cfg.FilterProviders.ProviderNames).Debug("filtering providers by name")
-		ps = ps.Filter(cfg.FilterProviders.ProviderNames...)
+	if len(cfg.Provider.IncludeFilter) > 0 {
+		log.WithFields("keep-only", cfg.Provider.IncludeFilter).Debug("filtering providers by name")
+		ps = ps.Filter(cfg.Provider.IncludeFilter...)
 	}
 
 	c := process.PullConfig{

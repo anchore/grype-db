@@ -21,17 +21,16 @@ import (
 var _ options.Interface = &cacheBackupConfig{}
 
 type cacheBackupConfig struct {
-	options.FilterProviders `yaml:",inline" json:",inline" mapstructure:",squash"`
-	options.CacheArchive    `yaml:"cache" json:"cache" mapstructure:"cache"`
-	options.Provider        `yaml:"provider" json:"provider" mapstructure:"provider"`
+	options.CacheArchive `yaml:"cache" json:"cache" mapstructure:"cache"`
+	options.Provider     `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 
 func (o *cacheBackupConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider, &o.FilterProviders)
+	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider)
 }
 
 func (o *cacheBackupConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
-	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider, &o.FilterProviders)
+	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider)
 }
 
 func CacheBackup(app *application.Application) *cobra.Command {
@@ -78,7 +77,7 @@ func cacheBackup(cfg cacheBackupConfig) error {
 		}
 	}(tw)
 
-	allowableProviders := strset.New(cfg.FilterProviders.ProviderNames...)
+	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
 	for _, p := range cfg.Provider.Configs {
 		if allowableProviders.Size() > 0 && !allowableProviders.Has(p.Name) {

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
@@ -12,26 +13,72 @@ import (
 	"github.com/anchore/grype-db/internal/utils"
 )
 
+var _ options.Interface = &rootConfig{}
+
+type rootConfig struct {
+	options.Provider `yaml:"provider" json:"provider" mapstructure:"provider"`
+	options.Pull     `yaml:"pull" json:"pull" mapstructure:"pull"`
+	options.Build    `yaml:"build" json:"build" mapstructure:"build"`
+	options.Package  `yaml:"package" json:"package" mapstructure:"package"`
+}
+
+func (o *rootConfig) AddFlags(flags *pflag.FlagSet) {
+	options.AddAllFlags(flags, &o.Provider, &o.Build, &o.Pull, &o.Package)
+}
+
+func (o *rootConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
+	return options.BindAllFlags(flags, v, &o.Provider, &o.Build, &o.Pull, &o.Package)
+}
+
 func Root(app *application.Application) *cobra.Command {
-	opts := app.Config
+	cfg := rootConfig{
+		Provider: options.DefaultProvider(),
+		Pull:     options.DefaultPull(),
+		Build:    options.DefaultBuild(),
+		Package:  options.DefaultPackage(),
+	}
+	appCfg := app.Config
 
 	cmd := &cobra.Command{
 		Use:     "",
+		Short:   "pull all vulnerability data, build the database, and package it for distribution",
 		Version: application.ReadBuildInfo().Version,
-		PreRunE: app.Setup(nil),
+		PreRunE: app.Setup(&cfg),
 		Example: formatRootExamples(),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return app.Run(cmd.Context(), async(func() error {
+				if err := runPull(pullConfig{
+					Pull:     cfg.Pull,
+					Provider: cfg.Provider,
+				}); err != nil {
+					return err
+				}
+
+				if err := runBuild(buildConfig{
+					Build:    cfg.Build,
+					Provider: cfg.Provider,
+				}); err != nil {
+					return err
+				}
+
+				return runPackage(packageConfig{
+					DBLocation: cfg.Build.DBLocation,
+					Package:    cfg.Package,
+				})
+			}))
+		},
 	}
 
-	commonConfiguration(nil, cmd, nil)
+	commonConfiguration(app, cmd, &cfg)
 
 	cmd.SetVersionTemplate(fmt.Sprintf("%s {{.Version}}\n", application.Name))
 
 	flags := cmd.PersistentFlags()
 
-	flags.StringVarP(&opts.ConfigPath, "config", "c", "", "path to the application config")
-	flags.BoolVarP(&opts.DryRun, "dry-run", "", false, "parse the application config, CLI flags, and exit.")
-	flags.CountVarP(&opts.Log.Verbosity, "verbose", "v", "increase verbosity (-v = debug, -vv = trace)")
-	flags.BoolVarP(&opts.Log.Quiet, "quiet", "q", false, "suppress all logging output")
+	flags.StringVarP(&appCfg.ConfigPath, "config", "c", "", "path to the application config")
+	flags.BoolVarP(&appCfg.DryRun, "dry-run", "", false, "parse the application config, CLI flags, and exit.")
+	flags.CountVarP(&appCfg.Log.Verbosity, "verbose", "v", "increase verbosity (-v = debug, -vv = trace)")
+	flags.BoolVarP(&appCfg.Log.Quiet, "quiet", "q", false, "suppress all logging output")
 
 	return cmd
 }

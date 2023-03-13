@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -46,7 +47,7 @@ func Build(app *application.Application) *cobra.Command {
 		PreRunE: app.Setup(&cfg),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return app.Run(cmd.Context(), async(func() error {
-				return build(cfg)
+				return runBuild(cfg)
 			}))
 		},
 	}
@@ -56,7 +57,7 @@ func Build(app *application.Application) *cobra.Command {
 	return cmd
 }
 
-func build(cfg buildConfig) error {
+func runBuild(cfg buildConfig) error {
 	// make the db dir if it does not already exist
 	if _, err := os.Stat(cfg.Build.Directory); os.IsNotExist(err) {
 		if err := os.MkdirAll(cfg.Build.Directory, 0755); err != nil {
@@ -65,13 +66,23 @@ func build(cfg buildConfig) error {
 	}
 
 	pvdrs, err := providers.New(cfg.Provider.Root, vunnel.Config{
-		Executor:    cfg.Vunnel.Executor,
-		DockerTag:   cfg.Vunnel.DockerTag,
-		DockerImage: cfg.Vunnel.DockerImage,
-		Env:         cfg.Vunnel.Env,
+		Executor:         cfg.Vunnel.Executor,
+		DockerTag:        cfg.Vunnel.DockerTag,
+		DockerImage:      cfg.Vunnel.DockerImage,
+		GenerateConfigs:  cfg.Vunnel.GenerateConfigs,
+		ExcludeProviders: cfg.Vunnel.ExcludeProviders,
+		Env:              cfg.Vunnel.Env,
 	}, cfg.Provider.Configs...)
 	if err != nil {
+		if errors.Is(err, providers.ErrNoProviders) {
+			log.Error("configure a provider via the application config or use -g to generate a list of configs from vunnel")
+		}
 		return fmt.Errorf("unable to create providers: %w", err)
+	}
+
+	if len(cfg.Provider.IncludeFilter) > 0 {
+		log.WithFields("keep-only", cfg.Provider.IncludeFilter).Debug("filtering providers by name")
+		pvdrs = pvdrs.Filter(cfg.Provider.IncludeFilter...)
 	}
 
 	var states []provider.State

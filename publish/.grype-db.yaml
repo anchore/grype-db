@@ -1,0 +1,26 @@
+# note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
+pull:
+  parallelism: 4
+provider:
+  root: ./data
+  vunnel:
+    executor: docker
+    dockerTag: latest
+    generateConfigs: true
+    excludeProviders:
+      # rhel will cover centos data within grype via namespace-distro remapping
+      - centos
+    env:
+      GITHUB_TOKEN: $GITHUB_TOKEN
+      NVD_API_KEY: $NVD_API_KEY
+#  configs:
+#    - name: alpine
+#    - name: amazon
+#    - name: debian
+#    - name: github
+#    - name: nvd
+#    - name: oracle
+#    - name: rhel
+#    - name: sles
+#    - name: ubuntu
+#    - name: wolfi

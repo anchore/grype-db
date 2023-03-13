@@ -38,7 +38,7 @@ func Package(app *application.Application) *cobra.Command {
 		PreRunE: app.Setup(&cfg),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return app.Run(cmd.Context(), async(func() error {
-				return doPackage(cfg)
+				return runPackage(cfg)
 			}))
 		},
 	}
@@ -48,6 +48,6 @@ func Package(app *application.Application) *cobra.Command {
 	return cmd
 }
 
-func doPackage(cfg packageConfig) error {
+func runPackage(cfg packageConfig) error {
 	return process.Package(cfg.DBLocation.Directory, cfg.PublishBaseURL)
 }
