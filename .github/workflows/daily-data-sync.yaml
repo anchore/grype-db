@@ -99,4 +99,11 @@ jobs:
       - name: Upload vulnerability data cache image
         run: make upload-all-provider-cache
 
-# TODO: slack on failure
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: workflow,eventName
+          text: Daily Data Sync aggregation failed
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
