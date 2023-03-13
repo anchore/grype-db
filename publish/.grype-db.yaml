@@ -1,26 +1,29 @@
 # note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
-pull:
-  parallelism: 4
+
 provider:
+  # this is relative to where grype-db will be executed from, which in the case of the publish scripts is the root of the repo
   root: ./data
   vunnel:
     executor: docker
     dockerTag: latest
     generateConfigs: true
-    excludeProviders:
-      # rhel will cover centos data within grype via namespace-distro remapping
-      - centos
     env:
       GITHUB_TOKEN: $GITHUB_TOKEN
       NVD_API_KEY: $NVD_API_KEY
-#  configs:
-#    - name: alpine
-#    - name: amazon
-#    - name: debian
-#    - name: github
-#    - name: nvd
-#    - name: oracle
-#    - name: rhel
-#    - name: sles
-#    - name: ubuntu
-#    - name: wolfi
+    # No manual configs are provided since 'provider.vunnel.generateConfigs' is set to true
+    # this means that well run vunnel to get the list of supported providers. All supported providers
+    # will be included in the database build. This prevents the need from manually updating this file
+    # for every new provider that is added.
+    #
+    # Any providers that should be excluded from processing should be added to the 'provider.vunnel.excludeProviders' list.
+    configs: []
+
+pull:
+  parallelism: 4
+
+build:
+  # this is relative to where grype-db will be executed from, which in the case of the publish scripts is the root of the repo
+  dir: ./build
+
+package:
+  publish-base-url: https://toolbox-data.anchore.io/grype/databases
