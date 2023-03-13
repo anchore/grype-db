@@ -21,12 +21,18 @@ curl -sSfL https://raw.githubusercontent.com/anchore/grype-db/main/install.sh | 
 ## Usage
 
 To pull the vulnerability source data, build the `vulnerability.db` file, and package the database into a `tar.gz` run the following:
+
+```bash
+grype-db [-g] [--dir=DIR] [--schema=SCHEMA] [--skip-validation] [--publish-base-url=URL] [-p PROVIDER ...]
+```
+
+Or you can choose to run these steps individually:
 ```bash
 # Pull all upstream vulnerability data sources to local cache
-grype-db pull
+grype-db pull [-g] [-p PROVIDER ...]
 
 # Build a SQLite DB from the vulnerability data for a particular schema version
-grype-db build [--dir=DIR] [--schema=SCHEMA] [--skip-validation]
+grype-db build [-g] [--dir=DIR] [--schema=SCHEMA] [--skip-validation] [-p PROVIDER ...]
 
 # Package the already built DB file into an archive ready for upload and serving
 grype-db package [--dir=DIR] [--publish-base-url=URL]
@@ -35,12 +41,13 @@ grype-db package [--dir=DIR] [--publish-base-url=URL]
 The `pull` command downloads and caches vulnerability data from upstream sources (e.g. NIST, redhat, github, canonical, etc.) into
 a cache directory. The cache location is a platform dependent XDG directory, however, the location can be overridden with the `cache.dir`
 configuration option. The default configuration is to use [vunnel](https://github.com/anchore/vunnel) to fetch and 
-process the vulnerability data.
+process the vulnerability data. Use `-g` to generate the list of providers to pull based on the output of "vunnel list".
 
 **note: you can skip the `pull` step if you already have a local cache of vulnerability data (with `make download-all-provider-cache`).**
 
 The `build` command processes the cached vuln data generate a `vulnerability.db` sqlite3 file. Additionally, a `metadata.json`
 is created that is used in packaging and curation of the database file by this application and downstream consuming applications.
+Use `-g` to generate the list of providers to pull based on the output of "vunnel list".
 
 The `package` command archives the `vulnerability.db` and `metadata.json` files into a `tar.gz` file. Additionally, a `listing.json`
 is generated to aid in serving one or more database archives for downstream consumption, where the consuming application should
@@ -104,62 +111,63 @@ log:
   # same as GRYPE_DB_LOG_FILE env var
   file: ""
 
-cache:
-  # where the root cache directory is
-  # same as GRYPE_DB_CACHE_DIR env var
-  dir: "$XDG_CACHE/grype-db"
+provider:
+  # where to read and write all provider data. The state must be oriented as described 
+  # in https://github.com/anchore/vunnel/tree/main/schema/provider-workspace-state .
+  # Note: all location references under `providers` should be relative to this directory
+  # same as GRYPE_DB_PROVIDER_ROOT env var
+  root: ./data
+
+  # names of providers to filter down to while running
+  # same as -p
+  include-filter: []
+  
+  vunnel:
+    # how to execute vunnel. Options are:
+    #  - "docker" (default): execute vunnel in a docker container
+    #  - "local": execute vunnel on the host from what is in your $PATH
+    executor: docker
+    
+    # the docker image to use when executing vunnel with executor=docker
+    docker-tag: latest
+    docker-image: ghcr.io/anchore/vunnel
+    
+    # generate additional provider configuration files based on the "vunnel list" command
+    # same as -g ; GRYPE_DB_GENERATE_CONFIGS env var
+    generate-configs: true
+    
+    # providers to exclude from the "vunnel list" command (only applies when generate-configs=true)
+    exclude-providers:
+      - centos
+    
+    # environment variables to set when executing vunnel
+    env: {}
+    
+  # manually crafted provider configurations. (advanced use only)
+  configs: []
 
 pull:
   # the number of concurrent workers to use when pulling and processing data
   parallelism: 1
-  
-  # the location where all provider state is stored. The state must be oriented as described 
-  # in https://github.com/anchore/vunnel/tree/main/schema/provider-workspace-state .
-  # Note: all location references under `providers` should be relative to this directory
-  root: ./data
-  
-  # a list of provider configurations, for example:
-  #
-  #     providers:
-  #       - name: nvd
-  #       - name: alpine
-  #       - name: amazon
-  #
-  # this will populate the `.root` directory with the results.
-  # You can also manually craft a similar configuration with the "external" provider:
-  #
-  #     providers:
-  #       - name: nvd
-  #         type: external
-  #         config:
-  #           cmd: vunnel -vv run nvd
-  #           path: nvd/metadata.json
-  #
-  #       - name: alpine
-  #         type: external
-  #         config:
-  #           cmd: vunnel -vv run alpine
-  #           path: alpine/metadata.json
-  #
-  #       - name: amazon
-  #         type: external
-  #         config:
-  #           cmd: vunnel -vv run amazon
-  #           path: amazon/metadata.json
-  #
-  providers: []
 
 build:
   # where to place the built SQLite DB that is built from the "build" command
-  # same as GRYPE_DB_BUILD_DIR env var
+  # same as --dir; GRYPE_DB_BUILD_DIR env var
   dir: "./build"
 
   # the DB schema version to build
-  # same as GRYPE_DB_BUILD_SCHEMA_VERSION env var
+  # same as --schema-version; GRYPE_DB_BUILD_SCHEMA_VERSION env var
   schema-version: 5
+
+  # skip validation of the provider state
+  skip-validation: false
 
 package:
   # this is the base URL that is referenced in the listing file created during the "package" command
   # same as GRYPE_DB_PACKAGE_PUBLISH_BASE_URL env var
-  publish-base-url: "https://toolbox-data.anchore.io/grype/databases"
+  publish-base-url: "https://localhost:8080/grype/databases"
+
+  # limit the providers to pull based off of this list. (empty list means pull all providers)
+  provider-names: []
+
 ```

@@ -20,6 +20,8 @@
 coverage.txt
 CHANGELOG.md
 VERSION
+TODO
+/.grype-db.yaml
 
 # Binaries for programs and plugins
 *.exe
