@@ -12,11 +12,13 @@ import (
 )
 
 type Config struct {
-	Config      string            `yaml:"config" json:"config" mapstructure:"config"`
-	Executor    string            `yaml:"executor" json:"executor" mapstructure:"executor"`
-	DockerImage string            `yaml:"dockerImage" json:"dockerImage" mapstructure:"dockerImage"`
-	DockerTag   string            `yaml:"dockerTag" json:"dockerTag" mapstructure:"dockerTag"`
-	Env         map[string]string `yaml:"env,omitempty" json:"env,omitempty" mapstructure:"env"`
+	Config           string            `yaml:"config" json:"config" mapstructure:"config"`
+	Executor         string            `yaml:"executor" json:"executor" mapstructure:"executor"`
+	DockerImage      string            `yaml:"docker-image" json:"docker-image" mapstructure:"docker-image"`
+	DockerTag        string            `yaml:"docker-tag" json:"docker-tag" mapstructure:"docker-tag"`
+	GenerateConfigs  bool              `yaml:"generate-configs" json:"generate-configs" mapstructure:"generate-configs"`
+	ExcludeProviders []string          `yaml:"exclude-providers" json:"exclude-providers" mapstructure:"exclude-providers"`
+	Env              map[string]string `yaml:"env,omitempty" json:"env,omitempty" mapstructure:"env"`
 }
 
 func (c Config) Redact() {
