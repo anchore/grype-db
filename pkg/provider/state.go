@@ -39,12 +39,12 @@ type States []State
 func ReadState(location string) (*State, error) {
 	by, err := os.ReadFile(location)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read state file %q: %w", location, err)
+		return nil, err
 	}
 
 	var sd State
 	if err := json.Unmarshal(by, &sd); err != nil {
-		return nil, fmt.Errorf("unable to parse state file %q: %w", location, err)
+		return nil, err
 	}
 
 	root := filepath.Dir(location)

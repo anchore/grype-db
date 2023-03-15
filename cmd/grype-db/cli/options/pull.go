@@ -9,8 +9,7 @@ var _ Interface = &Pull{}
 
 type Pull struct {
 	// bound options
-	Parallelism     int `yaml:"parallelism" json:"parallelism" mapstructure:"parallelism"`
-	FilterProviders `yaml:",inline" json:",inline" mapstructure:",squash"`
+	Parallelism int `yaml:"parallelism" json:"parallelism" mapstructure:"parallelism"`
 
 	// unbound options
 	// (none)
@@ -28,8 +27,6 @@ func (o *Pull) AddFlags(flags *pflag.FlagSet) {
 		"parallelism", "", o.Parallelism,
 		"number of vulnerability providers to update concurrently",
 	)
-
-	o.FilterProviders.AddFlags(flags)
 }
 
 func (o *Pull) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
@@ -41,5 +38,5 @@ func (o *Pull) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	// set default values for non-bound struct items
 	// (none)
 
-	return o.FilterProviders.BindFlags(flags, v)
+	return nil
 }

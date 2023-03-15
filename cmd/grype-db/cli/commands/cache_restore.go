@@ -21,8 +21,8 @@ import (
 var _ options.Interface = &cacheRestoreConfig{}
 
 type cacheRestoreConfig struct {
-	Cache            cacheRestoreCache `yaml:"cache" json:"cache" mapstructure:"cache"`
-	options.Provider `yaml:"provider" json:"provider" mapstructure:"provider"`
+	Cache         cacheRestoreCache `yaml:"cache" json:"cache" mapstructure:"cache"`
+	options.Store `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 
 type cacheRestoreCache struct {
@@ -31,14 +31,14 @@ type cacheRestoreCache struct {
 }
 
 func (o *cacheRestoreConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.Cache.CacheRestore, &o.Cache.CacheArchive, &o.Provider)
+	options.AddAllFlags(flags, &o.Cache.CacheRestore, &o.Cache.CacheArchive, &o.Store)
 }
 
 func (o *cacheRestoreConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	if err := options.Bind(v, "cache.delete-existing", flags.Lookup("delete-existing")); err != nil {
 		return err
 	}
-	return options.BindAllFlags(flags, v, &o.Cache.CacheRestore, &o.Cache.CacheArchive, &o.Provider)
+	return options.BindAllFlags(flags, v, &o.Cache.CacheRestore, &o.Cache.CacheArchive, &o.Store)
 }
 
 func CacheRestore(app *application.Application) *cobra.Command {
@@ -47,7 +47,7 @@ func CacheRestore(app *application.Application) *cobra.Command {
 			CacheArchive: options.DefaultCacheArchive(),
 			CacheRestore: options.DefaultCacheRestore(),
 		},
-		Provider: options.DefaultProvider(),
+		Store: options.DefaultStore(),
 	}
 
 	cmd := &cobra.Command{
@@ -68,27 +68,32 @@ func CacheRestore(app *application.Application) *cobra.Command {
 }
 
 func cacheRestore(cfg cacheRestoreConfig) error {
-	if err := os.MkdirAll(cfg.Provider.Root, 0755); err != nil {
+	if err := os.MkdirAll(cfg.Store.Root, 0755); err != nil {
 		return fmt.Errorf("failed to create provider root directory: %w", err)
 	}
 
+	providerNames, err := readProviderNamesFromRoot(cfg.Store.Root)
+	if err != nil {
+		return err
+	}
+
 	if cfg.Cache.DeleteExisting {
-		log.Info("deleting existing provider cache")
-		for _, p := range cfg.Provider.Configs {
-			if err := deleteProviderCache(cfg.Provider.Root, p); err != nil {
+		log.Info("deleting existing provider data")
+		for _, name := range providerNames {
+			if err := deleteProviderCache(cfg.Store.Root, name); err != nil {
 				return fmt.Errorf("failed to delete provider cache: %w", err)
 			}
 		}
 	} else {
-		for _, p := range cfg.Provider.Configs {
-			dir := filepath.Join(cfg.Provider.Root, p.Name)
+		for _, name := range providerNames {
+			dir := filepath.Join(cfg.Store.Root, name)
 			if _, err := os.Stat(dir); !errors.Is(err, os.ErrNotExist) {
-				log.WithFields("dir", dir).Debug("note: there is pre-existing provider cache, but it will not be deleted")
+				log.WithFields("dir", dir).Debug("note: there is pre-existing provider data which could be overwritten by the restore operation")
 			}
 		}
 	}
 
-	log.WithFields("archive", cfg.Cache.CacheArchive.Path).Info("restoring provider cache from backup")
+	log.WithFields("archive", cfg.Cache.CacheArchive.Path).Info("restoring provider data from backup")
 
 	f, err := os.Open(cfg.Cache.CacheArchive.Path)
 	if err != nil {
@@ -99,7 +104,7 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chdir(cfg.Provider.Root)
+	err = os.Chdir(cfg.Store.Root)
 	if err != nil {
 		return err
 	}
@@ -113,7 +118,7 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 		return fmt.Errorf("failed to extract cache archive: %w", err)
 	}
 
-	log.WithFields("path", cfg.Cache.CacheArchive.Path).Info("provider cache restored")
+	log.WithFields("path", cfg.Cache.CacheArchive.Path).Info("provider data restored")
 
 	return nil
 }
@@ -136,6 +141,8 @@ func extractTarGz(reader io.Reader) error {
 		if err != nil {
 			return fmt.Errorf("failed to read tar header: %w", err)
 		}
+
+		log.WithFields("path", header.Name).Trace("extracting file")
 
 		switch header.Typeflag {
 		case tar.TypeDir:

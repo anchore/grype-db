@@ -10,8 +10,23 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
 )
 
+var ErrNoProviders = fmt.Errorf("no providers configured")
+
 func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Providers, error) {
 	var providers []provider.Provider
+
+	if vCfg.GenerateConfigs {
+		generatedCfgs, err := vunnel.GenerateConfigs(root, vCfg)
+		if err != nil {
+			return nil, fmt.Errorf("unable to generate vunnel providers: %w", err)
+		}
+		cfgs = append(cfgs, generatedCfgs...)
+	}
+
+	if len(cfgs) == 0 {
+		return nil, ErrNoProviders
+	}
+
 	for _, cfg := range cfgs {
 		p, err := newProvider(root, vCfg, cfg)
 		if err != nil {
@@ -24,6 +39,7 @@ func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Pro
 			providers = append(providers, p)
 		}
 	}
+
 	return providers, nil
 }
 

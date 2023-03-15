@@ -11,10 +11,10 @@ var _ Interface = &Provider{}
 
 type Provider struct {
 	// bound options
-	// (none)
+	Selection `yaml:",inline" mapstructure:",squash"`
 
 	// unbound options
-	Root    string            `yaml:"root" json:"root" mapstructure:"root"`
+	Store   `yaml:",inline" mapstructure:",squash"`
 	Vunnel  Vunnel            `yaml:"vunnel" json:"vunnel" mapstructure:"vunnel"`
 	Configs []provider.Config `yaml:"configs" json:"configs" mapstructure:"configs"`
 }
@@ -28,68 +28,24 @@ func (o Provider) Redact() {
 
 func DefaultProvider() Provider {
 	return Provider{
-		Root:   "./data",
-		Vunnel: DefaultVunnel(),
-		Configs: []provider.Config{
-			{
-				Identifier: provider.Identifier{
-					Name: "alpine",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "amazon",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "debian",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "github",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "nvd",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "rhel",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "sles",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "ubuntu",
-					Kind: provider.VunnelKind,
-				},
-			},
-			{
-				Identifier: provider.Identifier{
-					Name: "wolfi",
-					Kind: provider.VunnelKind,
-				},
-			},
-		},
+		Store:     DefaultStore(),
+		Vunnel:    DefaultVunnel(),
+		Selection: DefaultSelection(),
+		Configs:   nil,
 	}
 }
 
 func (o *Provider) AddFlags(flags *pflag.FlagSet) {
+	// bound options
+	// (none)
+
+	// unbound options
+	// (none)
+
+	// nested options
+	o.Vunnel.AddFlags(flags)
+	o.Store.AddFlags(flags)
+	o.Selection.AddFlags(flags)
 }
 
 func (o *Provider) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
@@ -97,8 +53,14 @@ func (o *Provider) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	// (none)
 
 	// set default values for non-bound struct items
-	v.SetDefault("provider.root", o.Root)
 	v.SetDefault("provider.configs", o.Configs)
 
-	return nil
+	// nested options
+	if err := o.Vunnel.BindFlags(flags, v); err != nil {
+		return err
+	}
+	if err := o.Selection.BindFlags(flags, v); err != nil {
+		return err
+	}
+	return o.Store.BindFlags(flags, v)
 }

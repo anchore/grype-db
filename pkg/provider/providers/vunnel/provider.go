@@ -3,8 +3,12 @@ package vunnel
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/google/shlex"
+	"github.com/scylladb/go-set/strset"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider"
@@ -12,11 +16,13 @@ import (
 )
 
 type Config struct {
-	Config      string            `yaml:"config" json:"config" mapstructure:"config"`
-	Executor    string            `yaml:"executor" json:"executor" mapstructure:"executor"`
-	DockerImage string            `yaml:"dockerImage" json:"dockerImage" mapstructure:"dockerImage"`
-	DockerTag   string            `yaml:"dockerTag" json:"dockerTag" mapstructure:"dockerTag"`
-	Env         map[string]string `yaml:"env,omitempty" json:"env,omitempty" mapstructure:"env"`
+	Config           string            `yaml:"config" json:"config" mapstructure:"config"`
+	Executor         string            `yaml:"executor" json:"executor" mapstructure:"executor"`
+	DockerImage      string            `yaml:"docker-image" json:"docker-image" mapstructure:"docker-image"`
+	DockerTag        string            `yaml:"docker-tag" json:"docker-tag" mapstructure:"docker-tag"`
+	GenerateConfigs  bool              `yaml:"generate-configs" json:"generate-configs" mapstructure:"generate-configs"`
+	ExcludeProviders []string          `yaml:"exclude-providers" json:"exclude-providers" mapstructure:"exclude-providers"`
+	Env              map[string]string `yaml:"env,omitempty" json:"env,omitempty" mapstructure:"env"`
 }
 
 func (c Config) Redact() {
@@ -32,14 +38,14 @@ func (c Config) Redact() {
 func NewProvider(root string, id provider.Identifier, cfg Config) provider.Provider {
 	return external.NewProvider(root, id,
 		external.Config{
-			Cmd:   getCommand(root, id, cfg),
+			Cmd:   getRunCommand(root, id, cfg),
 			State: fmt.Sprintf("%s/metadata.json", id.Name),
 			Env:   cfg.Env,
 		},
 	)
 }
 
-func getCommand(root string, id provider.Identifier, cfg Config) string {
+func getRunCommand(root string, id provider.Identifier, cfg Config) string {
 	switch cfg.Executor {
 	case "docker", "podman":
 		dataRootCtr := root
@@ -84,4 +90,93 @@ func getCommand(root string, id provider.Identifier, cfg Config) string {
 	}
 
 	return fmt.Sprintf("vunnel %s run %s", cfgSection, id.Name)
+}
+
+func getListCommand(root string, cfg Config) string {
+	switch cfg.Executor {
+	case "docker", "podman":
+		dataRootCtr := root
+		if !strings.HasPrefix(root, "/") {
+			dataRootCtr = strings.TrimPrefix(root, "./")
+		}
+
+		dataRootHost, err := filepath.Abs(root)
+		if err != nil {
+			log.WithFields("error", err).Warn("unable to get absolute path for provider root directory, using relative path")
+			dataRootHost = root
+		}
+
+		var cfgVol string
+		if _, err := os.Stat(".vunnel.yaml"); !os.IsNotExist(err) {
+			cwd, err := os.Getwd()
+			if err != nil {
+				log.WithFields("error", err).Warn("unable to get current working directory, ignoring vunnel config")
+			} else {
+				cfgVol = fmt.Sprintf("-v %s/.vunnel.yaml:/.vunnel.yaml", cwd)
+			}
+		}
+
+		var envStr string
+		if cfg.Env != nil {
+			for k, v := range cfg.Env {
+				if strings.HasPrefix(v, "$") {
+					v = os.Getenv(v[1:])
+					// for safety, assume that all values from environment variables are sensitive
+					log.Redact(v)
+				}
+				envStr += fmt.Sprintf("-e %s=%s ", k, v)
+			}
+		}
+
+		return fmt.Sprintf("%s run --rm -t -v %s:/%s %s %s %s:%s list", cfg.Executor, dataRootHost, dataRootCtr, cfgVol, envStr, cfg.DockerImage, cfg.DockerTag)
+	}
+
+	var cfgSection string
+	if cfg.Config != "" {
+		cfgSection = fmt.Sprintf("-c %s", cfg.Config)
+	}
+
+	return fmt.Sprintf("vunnel %s list", cfgSection)
+}
+
+func GenerateConfigs(root string, cfg Config) ([]provider.Config, error) {
+	cmdStr := getListCommand(root, cfg)
+	cmdList, err := shlex.Split(cmdStr)
+	if err != nil {
+		return nil, err
+	}
+	cmd, args := cmdList[0], cmdList[1:]
+	out, err := exec.Command(cmd, args...).Output()
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute vunnel list: %w", err)
+	}
+
+	lines := strings.Split(string(out), "\n")
+	excludeSet := strset.New(cfg.ExcludeProviders...)
+
+	var cfgs []provider.Config
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if strings.Contains(line, " ") || strings.Contains(line, ":") || strings.Contains(line, "[") {
+			log.WithFields("value", line).Trace("provider name appears to be invalid, skipping")
+			continue
+		}
+
+		if excludeSet.Has(line) {
+			log.WithFields("provider", line).Trace("skipping config")
+			continue
+		}
+		log.WithFields("provider", line).Trace("including config")
+		cfgs = append(cfgs, provider.Config{
+			Identifier: provider.Identifier{
+				Name: line,
+				Kind: provider.VunnelKind,
+			},
+		})
+	}
+
+	return cfgs, nil
 }

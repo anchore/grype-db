@@ -17,7 +17,7 @@ type Package struct {
 
 func DefaultPackage() Package {
 	return Package{
-		PublishBaseURL: "https://toolbox-data.anchore.io/grype/databases",
+		PublishBaseURL: "https://localhost:8080/grype/databases",
 	}
 }
 

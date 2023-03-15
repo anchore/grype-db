@@ -93,8 +93,14 @@ func (w writer) Close() error {
 	}
 
 	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
+	if err = metadata.Write(metadataPath); err != nil {
+		return err
+	}
 
-	return metadata.Write(metadataPath)
+	log.WithFields("path", w.dbPath).Info("database created")
+	log.WithFields("path", metadataPath).Debug("database metadata created")
+
+	return nil
 }
 
 func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.VulnerabilityMetadataStoreReader) {

@@ -7,7 +7,7 @@ RESULTS_DIR = $(TEMP_DIR)/results
 DB_ARCHIVE = ./grype-db-cache.tar.gz
 GRYPE_DB = go run ./cmd/$(BIN)/main.go
 GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
-date = $(shell date +"%y-%m-%d")
+date = $(shell date -u +"%y-%m-%d")
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml

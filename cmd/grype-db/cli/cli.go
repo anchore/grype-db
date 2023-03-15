@@ -30,7 +30,6 @@ func New(opts ...Option) *cobra.Command {
 	app := cfg.app
 
 	cache := commands.Cache(app)
-	cache.AddCommand(commands.CacheListFiles(app))
 	cache.AddCommand(commands.CacheStatus(app))
 	cache.AddCommand(commands.CacheDelete(app))
 	cache.AddCommand(commands.CacheBackup(app))

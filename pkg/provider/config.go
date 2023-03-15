@@ -8,7 +8,7 @@ type Collection struct {
 }
 
 type Config struct {
-	Identifier `json:",inline" yaml:",inline" mapstructure:",squash"`
+	Identifier `yaml:",inline" mapstructure:",squash"`
 	Config     interface{} `yaml:"config,omitempty" json:"config" mapstructure:"config"`
 }
 

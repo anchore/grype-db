@@ -7,7 +7,7 @@ from typing import Dict
 
 
 from publisher.utils.repo_root import repo_root
-from publisher.utils.constants import CACHE_DIR
+from publisher.utils.constants import CACHE_DIR, GRYPE_DB_CONFIG, MAX_ALLOWABLE_DB_MB_SIZE
 
 
 class GrypeDbBuilder:
@@ -39,6 +39,14 @@ class GrypeDbBuilder:
             raise RuntimeError("failed to build db")
         logging.info(f"db archive created: {matches[0]}")
 
+        # check if the DB is above the max allowable size. This is an arbitrary threshold and a bit of a sanity check.
+        # If this fails someone should take a look to see if the DB is growing too large or if the threshold is too low.
+        db_size = os.path.getsize(matches[0])
+        if db_size > MAX_ALLOWABLE_DB_MB_SIZE:
+            raise RuntimeError(
+                f"DB size ({db_size} bytes) is above the max allowable size ({MAX_ALLOWABLE_DB_MB_SIZE} bytes)"
+            )
+
         # move the build db archive to the staging dir
         dest = os.path.join(stage_dir, os.path.basename(matches[0]))
         logging.info(f"copying db archive to {dest}")
@@ -50,7 +58,7 @@ class GrypeDbBuilder:
         return self.dbs[scheme_version]
 
     @classmethod
-    def run(cls, *args, cache_dir=CACHE_DIR, caller=subprocess.check_call):
+    def run(cls, *args, cache_dir=CACHE_DIR, config=GRYPE_DB_CONFIG, caller=subprocess.check_call):
         cmd = " ".join(["go run ./cmd/grype-db/main.go", *args])
         print(f"running {cmd!r}")
 
@@ -58,6 +66,7 @@ class GrypeDbBuilder:
             **os.environ.copy(),
             **{
                 "GRYPE_DB_PROVIDER_ROOT": cache_dir,
+                "GRYPE_DB_CONFIG": config,
             },
         )
 
