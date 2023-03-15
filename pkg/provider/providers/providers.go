@@ -2,13 +2,9 @@ package providers
 
 import (
 	"fmt"
-	"os/exec"
-	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/scylladb/go-set/strset"
 
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/providers/external"
 	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
@@ -20,7 +16,7 @@ func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Pro
 	var providers []provider.Provider
 
 	if vCfg.GenerateConfigs {
-		generatedCfgs, err := generateConfigs(vCfg.ExcludeProviders)
+		generatedCfgs, err := vunnel.GenerateConfigs(root, vCfg)
 		if err != nil {
 			return nil, fmt.Errorf("unable to generate vunnel providers: %w", err)
 		}
@@ -45,37 +41,6 @@ func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Pro
 	}
 
 	return providers, nil
-}
-
-func generateConfigs(exclude []string) ([]provider.Config, error) {
-	out, err := exec.Command("vunnel", "list").Output()
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute vunnel list: %w", err)
-	}
-
-	lines := strings.Split(string(out), "\n")
-	excludeSet := strset.New(exclude...)
-
-	var cfgs []provider.Config
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if excludeSet.Has(line) {
-			log.WithFields("provider", line).Trace("skipping config")
-			continue
-		}
-		log.WithFields("provider", line).Trace("including config")
-		cfgs = append(cfgs, provider.Config{
-			Identifier: provider.Identifier{
-				Name: line,
-				Kind: provider.VunnelKind,
-			},
-		})
-	}
-
-	return cfgs, nil
 }
 
 func newProvider(root string, vCfg vunnel.Config, cfg provider.Config) (provider.Provider, error) {

@@ -105,7 +105,7 @@ func (w writer) Close() error {
 		return err
 	}
 
-	log.WithFields("path", w.dbPath).Debug("database created")
+	log.WithFields("path", w.dbPath).Info("database created")
 	log.WithFields("path", metadataPath).Debug("database metadata created")
 
 	return nil

@@ -17,7 +17,11 @@ type PullConfig struct {
 }
 
 func Pull(cfg PullConfig) error {
-	logProviders(cfg)
+	var names []string
+	for _, p := range cfg.Collection.Providers {
+		names = append(names, p.ID().Name)
+	}
+	log.WithFields("providers", names).Info("aggregating vulnerability data")
 
 	// TODO: validate config
 
@@ -62,21 +66,4 @@ func Pull(cfg PullConfig) error {
 	wg.Wait()
 
 	return errs
-}
-
-func logProviders(cfg PullConfig) {
-	log.WithFields("providers", len(cfg.Collection.Providers), "parallelism", cfg.Parallelism).Info("configured providers")
-
-	var keys []string
-	for _, p := range cfg.Collection.Providers {
-		keys = append(keys, p.ID().Name)
-	}
-
-	for idx, key := range keys {
-		branch := "├──"
-		if idx == len(keys)-1 {
-			branch = "└──"
-		}
-		log.Debugf("  %s %s", branch, key)
-	}
 }

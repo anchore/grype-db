@@ -24,7 +24,7 @@ func randomString() (string, error) {
 }
 
 func Package(dbDir, publishBaseURL string) error {
-	log.Infof("packaging database from=%q for=%q", dbDir, publishBaseURL)
+	log.WithFields("from", dbDir, "url", publishBaseURL).Info("packaging database")
 
 	fs := afero.NewOsFs()
 	metadata, err := db.NewMetadataFromDir(fs, dbDir)
@@ -55,7 +55,7 @@ func Package(dbDir, publishBaseURL string) error {
 		return err
 	}
 
-	log.WithFields("path", tarPath).Debug("created database archive")
+	log.WithFields("path", tarPath).Info("created database archive")
 
 	entry, err := db.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
 	if err != nil {

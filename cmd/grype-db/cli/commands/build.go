@@ -87,7 +87,7 @@ func runBuild(cfg buildConfig) error {
 
 	var states []provider.State
 	stateTimestamp := time.Now()
-	log.Info("reading all provider state")
+	log.Debug("reading all provider state")
 	for _, p := range pvdrs {
 		log.WithFields("provider", p.ID().Name).Debug("reading state")
 

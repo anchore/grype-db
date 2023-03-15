@@ -32,7 +32,11 @@ type BuildConfig struct {
 }
 
 func Build(cfg BuildConfig) error {
-	log.WithFields("schema", cfg.SchemaVersion, "build-directory", cfg.Directory, "providers", cfg.States.Names()).Info("building DB")
+	log.WithFields(
+		"schema", cfg.SchemaVersion,
+		"build-directory", cfg.Directory,
+		"providers", cfg.States.Names()).
+		Info("building database")
 
 	processors, err := getProcessors(cfg.SchemaVersion)
 	if err != nil {
