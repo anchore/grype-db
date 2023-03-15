@@ -69,7 +69,7 @@ func Root(app *application.Application) *cobra.Command {
 		},
 	}
 
-	commonConfiguration(app, cmd, &cfg)
+	commonConfiguration(nil, cmd, &cfg)
 
 	cmd.SetVersionTemplate(fmt.Sprintf("%s {{.Version}}\n", application.Name))
 

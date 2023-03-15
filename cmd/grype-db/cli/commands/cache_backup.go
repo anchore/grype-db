@@ -3,6 +3,7 @@ package commands
 import (
 	"archive/tar"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -22,22 +23,26 @@ var _ options.Interface = &cacheBackupConfig{}
 
 type cacheBackupConfig struct {
 	options.CacheArchive `yaml:"cache" json:"cache" mapstructure:"cache"`
-	options.Provider     `yaml:"provider" json:"provider" mapstructure:"provider"`
+	Provider             struct {
+		options.Store     `yaml:",inline" json:",inline" mapstructure:",squash"`
+		options.Selection `yaml:",inline" json:",inline" mapstructure:",squash"`
+	} `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 
 func (o *cacheBackupConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider)
+	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection)
 }
 
 func (o *cacheBackupConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
-	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider)
+	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection)
 }
 
 func CacheBackup(app *application.Application) *cobra.Command {
 	cfg := cacheBackupConfig{
 		CacheArchive: options.DefaultCacheArchive(),
-		Provider:     options.DefaultProvider(),
 	}
+	cfg.Provider.Store = options.DefaultStore()
+	cfg.Provider.Selection = options.DefaultSelection()
 
 	cmd := &cobra.Command{
 		Use:     "backup",
@@ -57,7 +62,11 @@ func CacheBackup(app *application.Application) *cobra.Command {
 }
 
 func cacheBackup(cfg cacheBackupConfig) error {
-	log.WithFields("archive", cfg.CacheArchive.Path).Info("backing up provider cache")
+	providers := "all"
+	if len(cfg.Provider.Selection.IncludeFilter) > 0 {
+		providers = fmt.Sprintf("%s", cfg.Provider.Selection.IncludeFilter)
+	}
+	log.WithFields("providers", providers).Info("backing up provider state")
 
 	archive, err := os.Create(cfg.CacheArchive.Path)
 	if err != nil {
@@ -79,23 +88,40 @@ func cacheBackup(cfg cacheBackupConfig) error {
 
 	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
-	for _, p := range cfg.Provider.Configs {
-		if allowableProviders.Size() > 0 && !allowableProviders.Has(p.Name) {
-			log.WithFields("provider", p.Name).Trace("skipping...")
+	providerNames, err := readProviderNamesFromRoot(cfg.Provider.Root)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range providerNames {
+		if allowableProviders.Size() > 0 && !allowableProviders.Has(name) {
+			log.WithFields("provider", name).Trace("skipping...")
 			continue
 		}
-		log.WithFields("provider", p.Name).Debug("backing up cache")
-		if err := archiveProvider(cfg.Provider.Root, p, tw); err != nil {
+
+		log.WithFields("provider", name).Trace("validating provider")
+		workspace := provider.NewWorkspace(cfg.Provider.Root, name)
+		sd, err := workspace.ReadState()
+		if err != nil {
+			return fmt.Errorf("unable to read provider %q state: %w", name, err)
+		}
+
+		if err := sd.Verify(workspace.Path()); err != nil {
+			return fmt.Errorf("provider %q state is invalid: %w", name, err)
+		}
+
+		log.WithFields("provider", name).Debug("archiving data")
+		if err := archiveProvider(cfg.Provider.Root, name, tw); err != nil {
 			return err
 		}
 	}
 
-	log.WithFields("path", cfg.CacheArchive.Path).Info("provider cache archived")
+	log.WithFields("path", cfg.CacheArchive.Path).Info("provider state archived")
 
 	return nil
 }
 
-func archiveProvider(root string, p provider.Config, writer *tar.Writer) error {
+func archiveProvider(root string, name string, writer *tar.Writer) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -110,7 +136,7 @@ func archiveProvider(root string, p provider.Config, writer *tar.Writer) error {
 		}
 	}(wd)
 
-	return filepath.Walk(p.Name,
+	return filepath.Walk(name,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -126,6 +152,8 @@ func archiveProvider(root string, p provider.Config, writer *tar.Writer) error {
 }
 
 func addToArchive(writer *tar.Writer, filename string) error {
+	log.WithFields("path", filename).Trace("adding to archive")
+
 	file, err := os.Open(filename)
 	if err != nil {
 		return err

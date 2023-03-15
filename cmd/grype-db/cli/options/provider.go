@@ -11,10 +11,10 @@ var _ Interface = &Provider{}
 
 type Provider struct {
 	// bound options
-	IncludeFilter []string `yaml:"include-filter" json:"include-filter" mapstructure:"include-filter"`
+	Selection `yaml:",inline" json:",inline" mapstructure:",squash"`
 
 	// unbound options
-	Root    string            `yaml:"root" json:"root" mapstructure:"root"`
+	Store   `yaml:",inline" json:",inline" mapstructure:",squash"`
 	Vunnel  Vunnel            `yaml:"vunnel" json:"vunnel" mapstructure:"vunnel"`
 	Configs []provider.Config `yaml:"configs" json:"configs" mapstructure:"configs"`
 }
@@ -28,36 +28,39 @@ func (o Provider) Redact() {
 
 func DefaultProvider() Provider {
 	return Provider{
-		Root:    "./data",
-		Vunnel:  DefaultVunnel(),
-		Configs: nil,
+		Store:     DefaultStore(),
+		Vunnel:    DefaultVunnel(),
+		Selection: DefaultSelection(),
+		Configs:   nil,
 	}
 }
 
 func (o *Provider) AddFlags(flags *pflag.FlagSet) {
 	// bound options
-	flags.StringArrayVarP(
-		&o.IncludeFilter,
-		"provider-name", "p", o.IncludeFilter,
-		"one or more provider names to filter building a DB for (default: empty = all)",
-	)
+	// (none)
 
 	// unbound options
+	// (none)
 
 	// nested options
 	o.Vunnel.AddFlags(flags)
+	o.Store.AddFlags(flags)
+	o.Selection.AddFlags(flags)
 }
 
 func (o *Provider) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	// set default values for bound struct items
-	if err := Bind(v, "provider.include-filter", flags.Lookup("provider-name")); err != nil {
-		return err
-	}
+	// (none)
 
 	// set default values for non-bound struct items
-	v.SetDefault("provider.root", o.Root)
 	v.SetDefault("provider.configs", o.Configs)
 
 	// nested options
-	return o.Vunnel.BindFlags(flags, v)
+	if err := o.Vunnel.BindFlags(flags, v); err != nil {
+		return err
+	}
+	if err := o.Selection.BindFlags(flags, v); err != nil {
+		return err
+	}
+	return o.Store.BindFlags(flags, v)
 }

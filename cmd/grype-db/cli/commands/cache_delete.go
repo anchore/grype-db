@@ -6,6 +6,8 @@ import (
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
@@ -16,13 +18,24 @@ import (
 var _ options.Interface = &cacheDeleteConfig{}
 
 type cacheDeleteConfig struct {
-	options.Provider `yaml:"provider" json:"provider" mapstructure:"provider"`
+	Provider struct {
+		options.Store     `yaml:",inline" json:",inline" mapstructure:",squash"`
+		options.Selection `yaml:",inline" json:",inline" mapstructure:",squash"`
+	} `yaml:"provider" json:"provider" mapstructure:"provider"`
+}
+
+func (o *cacheDeleteConfig) AddFlags(flags *pflag.FlagSet) {
+	options.AddAllFlags(flags, &o.Provider.Store, &o.Provider.Selection)
+}
+
+func (o *cacheDeleteConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
+	return options.BindAllFlags(flags, v, &o.Provider.Store, &o.Provider.Selection)
 }
 
 func CacheDelete(app *application.Application) *cobra.Command {
-	cfg := cacheDeleteConfig{
-		Provider: options.DefaultProvider(),
-	}
+	cfg := cacheDeleteConfig{}
+	cfg.Provider.Store = options.DefaultStore()
+	cfg.Provider.Selection = options.DefaultSelection()
 
 	cmd := &cobra.Command{
 		Use:     "delete",
@@ -44,26 +57,36 @@ func CacheDelete(app *application.Application) *cobra.Command {
 func cacheDelete(cfg cacheDeleteConfig) error {
 	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
-	for _, p := range cfg.Provider.Configs {
-		if allowableProviders.Size() > 0 && !allowableProviders.Has(p.Name) {
-			log.WithFields("provider", p.Name).Trace("skipping...")
+	providerNames, err := readProviderNamesFromRoot(cfg.Provider.Root)
+	if err != nil {
+		return err
+	}
+
+	if len(providerNames) == 0 {
+		log.Info("no provider data found to delete")
+		return nil
+	}
+
+	for _, name := range providerNames {
+		if allowableProviders.Size() > 0 && !allowableProviders.Has(name) {
+			log.WithFields("provider", name).Trace("skipping...")
 			continue
 		}
 
-		if err := deleteProviderCache(cfg.Provider.Root, p); err != nil {
+		if err := deleteProviderCache(cfg.Provider.Root, name); err != nil {
 			return err
 		}
 	}
 
 	if allowableProviders.Size() == 0 {
-		log.Info("all provider cache deleted")
+		log.Info("all provider data deleted")
 	}
 
 	return nil
 }
 
-func deleteProviderCache(root string, p provider.Config) error {
-	workspace := provider.NewWorkspace(root, p.Name)
+func deleteProviderCache(root string, name string) error {
+	workspace := provider.NewWorkspace(root, name)
 	dir := workspace.Path()
 
 	if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
@@ -71,6 +94,6 @@ func deleteProviderCache(root string, p provider.Config) error {
 		return nil
 	}
 
-	log.WithFields("dir", dir).Info("deleting provider cache")
+	log.WithFields("dir", dir).Info("deleting provider data")
 	return os.RemoveAll(dir)
 }

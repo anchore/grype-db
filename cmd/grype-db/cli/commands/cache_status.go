@@ -2,13 +2,14 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"time"
 
-	"github.com/scylladb/go-set/strset"
+	"github.com/gookit/color"
 	"github.com/spf13/cobra"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 )
@@ -16,12 +17,12 @@ import (
 var _ options.Interface = &cacheStatusConfig{}
 
 type cacheStatusConfig struct {
-	options.Provider `yaml:"provider" json:"provider" mapstructure:"provider"`
+	options.Store `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 
 func CacheStatus(app *application.Application) *cobra.Command {
 	cfg := cacheStatusConfig{
-		Provider: options.DefaultProvider(),
+		Store: options.DefaultStore(),
 	}
 
 	cmd := &cobra.Command{
@@ -42,7 +43,12 @@ func CacheStatus(app *application.Application) *cobra.Command {
 }
 
 func cacheStatus(cfg cacheStatusConfig) error {
-	if len(cfg.Provider.Configs) == 0 {
+	providerNames, err := readProviderNamesFromRoot(cfg.Store.Root)
+	if err != nil {
+		return err
+	}
+
+	if len(providerNames) == 0 {
 		fmt.Println("no provider state cache found")
 		return nil
 	}
@@ -50,15 +56,8 @@ func cacheStatus(cfg cacheStatusConfig) error {
 	var sds []*provider.State
 	var errs []error
 
-	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
-
-	for _, p := range cfg.Provider.Configs {
-		if allowableProviders.Size() > 0 && !allowableProviders.Has(p.Name) {
-			log.WithFields("provider", p.Name).Trace("skipping...")
-			continue
-		}
-
-		workspace := provider.NewWorkspace(cfg.Provider.Root, p.Name)
+	for _, name := range providerNames {
+		workspace := provider.NewWorkspace(cfg.Store.Root, name)
 		sd, err := workspace.ReadState()
 		if err != nil {
 			sds = append(sds, nil)
@@ -76,34 +75,55 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		sds = append(sds, sd)
 	}
 
-	if allowableProviders.Size() == 0 {
-		fmt.Printf("providers: %d\n", len(sds))
-	}
-
 	for idx, sd := range sds {
 		validMsg := "valid"
+		isValid := true
 		if errs[idx] != nil {
-			validMsg = fmt.Sprintf("INVALID: %s", errs[idx].Error())
+			validMsg = fmt.Sprintf("INVALID (%s)", errs[idx].Error())
+			isValid = false
 		} else if sd == nil {
-			validMsg = "INVALID: no state description found"
+			validMsg = "INVALID (no state description found)"
+			isValid = false
 		}
 
-		providerIndex := idx + 1
+		var count int64
+		name := providerNames[idx]
 
-		if sd == nil {
-			fmt.Printf("  • provider (%d): %s\n", providerIndex, validMsg)
-			continue
+		if sd != nil {
+			name = sd.Provider
+			count, err = entry.Count(sd.Store, sd.ResultPaths())
+			if err != nil {
+				isValid = false
+				validMsg = fmt.Sprintf("INVALID (unable to count entries: %s)", err.Error())
+			}
 		}
 
-		count, err := entry.Count(sd.Store, sd.ResultPaths())
-		if err != nil {
-			log.WithFields("provider", sd.Provider, "error", err).Error("unable to count entries")
+		fmt.Printf("  • %s\n", name)
+		statusFmt := color.HiRed
+		if isValid {
+			fmt.Printf("    ├── results: %d\n", count)
+			fmt.Printf("    ├── created: %s\n", sd.Timestamp.Format(time.RFC3339))
+			statusFmt = color.HiGreen
 		}
 
-		fmt.Printf("  • %s\n", sd.Provider)
-		fmt.Printf("    ├── is valid?     %s\n", validMsg)
-		fmt.Printf("    ├── timestamp:    %s\n", sd.Timestamp)
-		fmt.Printf("    └── result files: %d\n", count)
+		fmt.Printf("    └── status:  %s\n", statusFmt.Sprint(validMsg))
 	}
 	return nil
+}
+
+func readProviderNamesFromRoot(root string) ([]string, error) {
+	// list all the directories in "root"
+	listing, err := os.ReadDir(root)
+	if err != nil {
+		return nil, err
+	}
+
+	var providers []string
+	for _, f := range listing {
+		if !f.IsDir() {
+			continue
+		}
+		providers = append(providers, f.Name())
+	}
+	return providers, nil
 }

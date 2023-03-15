@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
@@ -27,7 +29,8 @@ func commonConfiguration(app *application.Application, cmd *cobra.Command, opts 
 
 		if app != nil {
 			// we want to be able to attach config binding information to the help output
-			cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+			cmd.SetHelpFunc(func(passCmd *cobra.Command, args []string) {
+				fmt.Println(">>> help func", cmd.Use, passCmd.Use)
 				_ = app.Setup(opts)(cmd, args)
 				cmd.Parent().HelpFunc()(cmd, args)
 			})
