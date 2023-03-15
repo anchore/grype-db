@@ -62,7 +62,7 @@ func Pull(cfg PullConfig) error {
 		}(p)
 	}
 
-	log.Debug("all providers started, waiting for graceful completion...")
+	log.Trace("all providers started, waiting for graceful completion...")
 	wg.Wait()
 
 	return errs

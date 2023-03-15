@@ -24,8 +24,8 @@ var _ options.Interface = &cacheBackupConfig{}
 type cacheBackupConfig struct {
 	options.CacheArchive `yaml:"cache" json:"cache" mapstructure:"cache"`
 	Provider             struct {
-		options.Store     `yaml:",inline" json:",inline" mapstructure:",squash"`
-		options.Selection `yaml:",inline" json:",inline" mapstructure:",squash"`
+		options.Store     `yaml:",inline" mapstructure:",squash"`
+		options.Selection `yaml:",inline" mapstructure:",squash"`
 	} `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 

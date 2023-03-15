@@ -19,8 +19,8 @@ var _ options.Interface = &cacheDeleteConfig{}
 
 type cacheDeleteConfig struct {
 	Provider struct {
-		options.Store     `yaml:",inline" json:",inline" mapstructure:",squash"`
-		options.Selection `yaml:",inline" json:",inline" mapstructure:",squash"`
+		options.Store     `yaml:",inline" mapstructure:",squash"`
+		options.Selection `yaml:",inline" mapstructure:",squash"`
 	} `yaml:"provider" json:"provider" mapstructure:"provider"`
 }
 

@@ -11,10 +11,10 @@ var _ Interface = &Provider{}
 
 type Provider struct {
 	// bound options
-	Selection `yaml:",inline" json:",inline" mapstructure:",squash"`
+	Selection `yaml:",inline" mapstructure:",squash"`
 
 	// unbound options
-	Store   `yaml:",inline" json:",inline" mapstructure:",squash"`
+	Store   `yaml:",inline" mapstructure:",squash"`
 	Vunnel  Vunnel            `yaml:"vunnel" json:"vunnel" mapstructure:"vunnel"`
 	Configs []provider.Config `yaml:"configs" json:"configs" mapstructure:"configs"`
 }

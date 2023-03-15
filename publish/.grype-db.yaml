@@ -1,8 +1,6 @@
 # note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
 
 provider:
-  # this is relative to where grype-db will be executed from, which in the case of the publish scripts is the root of the repo
-  root: ./data
   vunnel:
     executor: docker
     docker-tag: latest
@@ -20,10 +18,6 @@ provider:
 
 pull:
   parallelism: 4
-
-build:
-  # this is relative to where grype-db will be executed from, which in the case of the publish scripts is the root of the repo
-  dir: ./build
 
 package:
   publish-base-url: https://toolbox-data.anchore.io/grype/databases
