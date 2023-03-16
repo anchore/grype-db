@@ -74,7 +74,9 @@ jobs:
   aggregate-cache:
     name: "Aggregate provider cache"
     runs-on: ubuntu-20.04
-    needs: update-provider
+    needs:
+      - update-provider
+      - discover-providers
     # set the permissions granted to the github token to read the pull cache from ghcr.io
     permissions:
       packages: write
