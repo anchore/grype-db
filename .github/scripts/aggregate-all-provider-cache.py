@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import yaml
+import json
 import sys
 import subprocess
 
-with open(".grype-db.yaml") as f:
-    providers = [x["name"] for x in yaml.safe_load(f.read()).get("provider", {}).get("configs", [])]
+output = subprocess.run("make show-providers", shell=True, check=True, stdout=subprocess.PIPE, stderr=sys.stderr).stdout
+providers = json.loads(output)
 
 print(f"providers: {providers}")
 for provider in providers:
