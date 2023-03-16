@@ -19,6 +19,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+        with:
+          python: false
+
+      - name: Login to ghcr.io
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+
       - name: Read configured providers
         id: read-providers
         # TODO: honor CI overrides

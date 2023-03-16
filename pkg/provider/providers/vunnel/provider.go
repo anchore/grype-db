@@ -146,8 +146,15 @@ func GenerateConfigs(root string, cfg Config) ([]provider.Config, error) {
 		return nil, err
 	}
 	cmd, args := cmdList[0], cmdList[1:]
-	out, err := exec.Command(cmd, args...).Output()
+
+	cmdObj := exec.Command(cmd, args...)
+	sb := strings.Builder{}
+	cmdObj.Stderr = &sb
+	out, err := cmdObj.Output()
 	if err != nil {
+		if sb.Len() > 0 {
+			log.Errorf("vunnel list failed: %s", sb.String())
+		}
 		return nil, fmt.Errorf("unable to execute vunnel list: %w", err)
 	}
 

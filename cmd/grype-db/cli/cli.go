@@ -40,6 +40,7 @@ func New(opts ...Option) *cobra.Command {
 	root.AddCommand(commands.Pull(app))
 	root.AddCommand(commands.Build(app))
 	root.AddCommand(commands.Package(app))
+	root.AddCommand(commands.ListProviders(app))
 	root.AddCommand(cache)
 
 	return root

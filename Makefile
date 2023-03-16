@@ -197,7 +197,7 @@ update-test-fixtures:
 .PHONY: show-providers
 show-providers:
 	@# this is used in CI to generate a job matrix, pulling data for each provider concurrently
-	@cat .grype-db.yaml | python -c 'import yaml; import json; import sys; print(json.dumps([x["name"] for x in yaml.safe_load(sys.stdin).get("provider",{}).get("configs",[])]));'
+	@go run ./cmd/grype-db list-providers -c publish/.grype-db.yaml -q -o json
 
 .PHONY: download-provider-cache
 download-provider-cache:
