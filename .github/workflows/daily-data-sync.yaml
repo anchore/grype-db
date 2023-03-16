@@ -93,17 +93,9 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Aggregate vulnerability data
-      # TODO: hook up to matrix override
         run: make aggregate-all-provider-cache
+        env:
+          PROVIDERS_USED: ${{ needs.discover-providers.outputs.providers }}
 
       - name: Upload vulnerability data cache image
         run: make upload-all-provider-cache
-
-      - uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: workflow,eventName
-          text: Daily Data Sync aggregation failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
