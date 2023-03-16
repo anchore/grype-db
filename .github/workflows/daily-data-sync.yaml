@@ -71,15 +71,6 @@ jobs:
       - name: Upload the provider workspace state
         run: make upload-provider-cache provider=${{ matrix.provider }}
 
-      - uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: workflow,eventName
-          text: Daily Data Sync for ${{ matrix.provider }} failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
-
   aggregate-cache:
     name: "Aggregate provider cache"
     runs-on: ubuntu-20.04
