@@ -6,10 +6,14 @@ import (
 	"time"
 
 	"github.com/gookit/color"
+	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 )
@@ -17,13 +21,24 @@ import (
 var _ options.Interface = &cacheStatusConfig{}
 
 type cacheStatusConfig struct {
-	options.Store `yaml:"provider" json:"provider" mapstructure:"provider"`
+	Provider struct {
+		options.Store     `yaml:",inline" mapstructure:",squash"`
+		options.Selection `yaml:",inline" mapstructure:",squash"`
+	} `yaml:"provider" json:"provider" mapstructure:"provider"`
+}
+
+func (o *cacheStatusConfig) AddFlags(flags *pflag.FlagSet) {
+	options.AddAllFlags(flags, &o.Provider.Store, &o.Provider.Selection)
+}
+
+func (o *cacheStatusConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
+	return options.BindAllFlags(flags, v, &o.Provider.Store, &o.Provider.Selection)
 }
 
 func CacheStatus(app *application.Application) *cobra.Command {
-	cfg := cacheStatusConfig{
-		Store: options.DefaultStore(),
-	}
+	cfg := cacheStatusConfig{}
+	cfg.Provider.Store = options.DefaultStore()
+	cfg.Provider.Selection = options.DefaultSelection()
 
 	cmd := &cobra.Command{
 		Use:     "status",
@@ -43,7 +58,7 @@ func CacheStatus(app *application.Application) *cobra.Command {
 }
 
 func cacheStatus(cfg cacheStatusConfig) error {
-	providerNames, err := readProviderNamesFromRoot(cfg.Store.Root)
+	providerNames, err := readProviderNamesFromRoot(cfg.Provider.Root)
 	if err != nil {
 		return err
 	}
@@ -56,8 +71,15 @@ func cacheStatus(cfg cacheStatusConfig) error {
 	var sds []*provider.State
 	var errs []error
 
+	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
+
 	for _, name := range providerNames {
-		workspace := provider.NewWorkspace(cfg.Store.Root, name)
+		if allowableProviders.Size() > 0 && !allowableProviders.Has(name) {
+			log.WithFields("provider", name).Trace("skipping...")
+			continue
+		}
+
+		workspace := provider.NewWorkspace(cfg.Provider.Root, name)
 		sd, err := workspace.ReadState()
 		if err != nil {
 			sds = append(sds, nil)
@@ -74,6 +96,8 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		errs = append(errs, nil)
 		sds = append(sds, sd)
 	}
+
+	success := true
 
 	for idx, sd := range sds {
 		validMsg := "valid"
@@ -98,6 +122,8 @@ func cacheStatus(cfg cacheStatusConfig) error {
 			}
 		}
 
+		success = success && isValid
+
 		fmt.Printf("  • %s\n", name)
 		statusFmt := color.HiRed
 		if isValid {
@@ -108,6 +134,11 @@ func cacheStatus(cfg cacheStatusConfig) error {
 
 		fmt.Printf("    └── status:  %s\n", statusFmt.Sprint(validMsg))
 	}
+
+	if !success {
+		os.Exit(1)
+	}
+
 	return nil
 }
 

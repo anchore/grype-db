@@ -214,6 +214,7 @@ upload-provider-cache: ci-check
 	$(call title,Uploading "$(provider)" existing provider data cache)
 
 	@rm -f $(DB_ARCHIVE)
+	$(GRYPE_DB) cache status -p $(provider)
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
 	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
@@ -228,6 +229,7 @@ upload-all-provider-cache: ci-check
 	$(call title,Uploading existing provider data cache)
 
 	@rm -f $(DB_ARCHIVE)
+	$(GRYPE_DB) cache status
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
 	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest

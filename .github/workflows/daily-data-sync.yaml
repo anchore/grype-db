@@ -68,12 +68,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: workflow,eventName
+          text: Daily Data Sync for ${{ matrix.provider }} failed
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+
       - name: Upload the provider workspace state
+        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
+        if: ${{ always() }}
         run: make upload-provider-cache provider=${{ matrix.provider }}
 
   aggregate-cache:
     name: "Aggregate provider cache"
     runs-on: ubuntu-20.04
+    if: ${{ always() }}
     needs:
       - update-provider
       - discover-providers
