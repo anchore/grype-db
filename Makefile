@@ -5,7 +5,7 @@ TEMP_DIR = ./.tmp
 RESULTS_DIR = $(TEMP_DIR)/results
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
-GRYPE_DB = go run ./cmd/$(BIN)/main.go
+GRYPE_DB = go run ./cmd/$(BIN)/main.go -c publish/.grype-db.yaml
 GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date -u +"%y-%m-%d")
 
@@ -197,7 +197,7 @@ update-test-fixtures:
 .PHONY: show-providers
 show-providers:
 	@# this is used in CI to generate a job matrix, pulling data for each provider concurrently
-	@cat .grype-db.yaml | python -c 'import yaml; import json; import sys; print(json.dumps([x["name"] for x in yaml.safe_load(sys.stdin).get("provider",{}).get("configs",[])]));'
+	@$(GRYPE_DB) list-providers -q -o json
 
 .PHONY: download-provider-cache
 download-provider-cache:
@@ -214,6 +214,7 @@ upload-provider-cache: ci-check
 	$(call title,Uploading "$(provider)" existing provider data cache)
 
 	@rm -f $(DB_ARCHIVE)
+	$(GRYPE_DB) cache status -p $(provider)
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
 	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
@@ -228,6 +229,7 @@ upload-all-provider-cache: ci-check
 	$(call title,Uploading existing provider data cache)
 
 	@rm -f $(DB_ARCHIVE)
+	$(GRYPE_DB) cache status
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
 	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
