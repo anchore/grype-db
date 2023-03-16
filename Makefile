@@ -5,7 +5,7 @@ TEMP_DIR = ./.tmp
 RESULTS_DIR = $(TEMP_DIR)/results
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
-GRYPE_DB = go run ./cmd/$(BIN)/main.go
+GRYPE_DB = go run ./cmd/$(BIN)/main.go -c publish/.grype-db.yaml
 GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date -u +"%y-%m-%d")
 
@@ -197,7 +197,7 @@ update-test-fixtures:
 .PHONY: show-providers
 show-providers:
 	@# this is used in CI to generate a job matrix, pulling data for each provider concurrently
-	@go run ./cmd/grype-db list-providers -c publish/.grype-db.yaml -q -o json
+	@$(GRYPE_DB) list-providers -q -o json
 
 .PHONY: download-provider-cache
 download-provider-cache:
