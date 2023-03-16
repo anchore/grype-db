@@ -169,11 +169,14 @@ def upload_listing(s3_bucket: str, s3_path: str, dry_run: bool):
         logging.warning(f"DRY-RUN! skipping upload...")
         return
 
+    # 5 minutes
+    ttl_seconds = 60 * 5
+
     # upload the listing
     s3utils.upload(bucket=s3_bucket,
                    key=the_listing.url(s3_path),
                    contents=the_listing.to_json(),
-                   CacheControl="public,max-age=2700")  # type: ignore
+                   CacheControl=f"public,max-age={ttl_seconds}")  # type: ignore
 
     # TODO: for a future PR: add deletion of pruned objects...
     # delete all objects in the bucket that were pruned from the listing
