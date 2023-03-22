@@ -66,6 +66,7 @@ func runBuild(cfg buildConfig) error {
 	}
 
 	pvdrs, err := providers.New(cfg.Provider.Root, vunnel.Config{
+		Config:           cfg.Vunnel.Config,
 		Executor:         cfg.Vunnel.Executor,
 		DockerTag:        cfg.Vunnel.DockerTag,
 		DockerImage:      cfg.Vunnel.DockerImage,
