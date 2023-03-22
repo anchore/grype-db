@@ -14,6 +14,7 @@ type Vunnel struct {
 	// (none)
 
 	// unbound options
+	Config           string            `yaml:"config" json:"config" mapstructure:"config"`
 	Executor         string            `yaml:"executor" json:"executor" mapstructure:"executor"`
 	DockerTag        string            `yaml:"docker-tag" json:"docker-tag" mapstructure:"docker-tag"`
 	DockerImage      string            `yaml:"docker-image" json:"docker-image" mapstructure:"docker-image"`
@@ -59,6 +60,7 @@ func (o *Vunnel) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	}
 
 	// set default values for non-bound struct items
+	v.SetDefault("vunnel.config", o.Config)
 	v.SetDefault("vunnel.executor", o.Executor)
 	v.SetDefault("vunnel.docker-tag", o.DockerTag)
 	v.SetDefault("vunnel.docker-image", o.DockerImage)

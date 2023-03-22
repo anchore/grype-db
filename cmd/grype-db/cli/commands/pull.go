@@ -56,6 +56,7 @@ func Pull(app *application.Application) *cobra.Command {
 
 func runPull(cfg pullConfig) error {
 	ps, err := providers.New(cfg.Root, vunnel.Config{
+		Config:           cfg.Vunnel.Config,
 		Executor:         cfg.Vunnel.Executor,
 		DockerTag:        cfg.Vunnel.DockerTag,
 		DockerImage:      cfg.Vunnel.DockerImage,
