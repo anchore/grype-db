@@ -1,7 +1,7 @@
 name: "Validations"
 on:
   workflow_dispatch:
-  push:
+  pull_request:
 
 env:
   CGO_ENABLED: "0"
