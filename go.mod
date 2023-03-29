@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.4.0
 	github.com/anchore/go-logger v0.0.0-20230120230012-47be9bb822a2
-	github.com/anchore/grype v0.59.2-0.20230328145233-45c5f8c9c709
+	github.com/anchore/grype v0.60.0
 	github.com/anchore/sqlite v1.4.6-0.20220607210448-bcc6ee5c4963
 	github.com/anchore/syft v0.75.0
 	github.com/dustin/go-humanize v1.0.1
