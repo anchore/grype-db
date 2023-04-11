@@ -17,7 +17,6 @@ exclude = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-#yardstick = {path = "../../../yardstick", develop = true}
 click = "^8"
 boto3 = "^1.18.0"
 requests = "^2.26.0"
@@ -25,8 +24,12 @@ semver = "^2.13.0"
 dataclasses-json = "^0.5.4"
 iso8601 = "^0.1.14"
 zstandard = "^0.18.0"
-yardstick = {git = "https://github.com/anchore/yardstick.git", rev = "028b7723cd1133dd649ac5f5db90ea743767f2b8"}
+yardstick = {git = "https://github.com/anchore/yardstick", rev = "fb6823e480dcc7cd1fe3b4818258301313d80d25"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
 tox = "^3.23.0"
+
+[build-system]
+requires = ["poetry-core>=1.4.0"]
+build-backend = "poetry.core.masonry.api"
