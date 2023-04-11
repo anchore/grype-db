@@ -20,7 +20,7 @@ inputs:
   poetry-version:
     description: "Poetry version to install"
     required: true
-    default: "1.2.0"
+    default: "1.4.0"
   use-go-cache:
     description: "Restore go cache"
     required: true
