@@ -131,13 +131,17 @@ lint:  ## Run gofmt + golangci lint checks
 	$(LINT_CMD)
 	@[ -z "$(shell $(GOIMPORTS_CMD) -d .)" ] || (echo "goimports needs to be fixed" && false)
 
-.PHONY: lint-fix
-lint-fix:  ## Auto-format all source code + run golangci lint fixers
-	$(call title,Running lint fixers)
+.PHONY: format
+format: ## Auto-format all source code
+	$(call title,Running formatters)
 	gofmt -w -s .
 	$(GOIMPORTS_CMD) -w .
-	$(LINT_CMD) --fix
 	go mod tidy
+
+.PHONY: lint-fix
+lint-fix: format  ## Auto-format all source code + run golangci lint fixers
+	$(call title,Running lint fixers)
+	$(LINT_CMD) --fix
 
 check-go-mod-tidy:
 	@ .github/scripts/go-mod-tidy-check.sh && echo "go.mod and go.sum are tidy!"
