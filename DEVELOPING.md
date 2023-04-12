@@ -52,6 +52,10 @@ make acceptance
 # Note: this may take a while... go make some coffee.
 ```
 
+The main make tasks for common static analysis functions are `lint`, `format`, and `lint-fix`.
+
+See `make help` for all the current make tasks.
+
 
 ## Create a new DB schema
 
