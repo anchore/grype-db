@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 // Populate creates a gzipped tar from the given paths.
@@ -16,10 +19,24 @@ func Populate(tarPath string, filePaths ...string) error {
 	}
 	defer f.Close()
 
-	gzipWriter := gzip.NewWriter(f)
-	defer gzipWriter.Close()
+	var compressionWriter io.WriteCloser
+	switch {
+	case strings.HasSuffix(tarPath, ".tar.gz"):
+		compressionWriter = gzip.NewWriter(f)
+	case strings.HasSuffix(tarPath, ".tar.zst"):
+		// adding zstd.WithWindowSize(zstd.MaxWindowSize), zstd.WithAllLitEntropyCompression(true)
+		// will have slightly better results, but use a lot more memory
+		compressionWriter, err = zstd.NewWriter(f, zstd.WithEncoderLevel(zstd.SpeedBestCompression))
+		if err != nil {
+			return fmt.Errorf("unable to get compression stream: %w", err)
+		}
+	default:
+		return fmt.Errorf("archive name has an unsupported suffix: %q", tarPath)
+	}
 
-	tarWriter := tar.NewWriter(gzipWriter)
+	defer compressionWriter.Close()
+
+	tarWriter := tar.NewWriter(compressionWriter)
 	defer tarWriter.Close()
 
 	for _, filePath := range filePaths {

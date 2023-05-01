@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"fmt"
+
+	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -37,6 +40,12 @@ func Package(app *application.Application) *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cfg.OverrideArchiveExtension != "" {
+				if !strset.New("tar.gz", "tar.zst").Has(cfg.OverrideArchiveExtension) {
+					return fmt.Errorf("archive-extension must be 'tar.gz' or 'tar.zst'")
+				}
+			}
+
 			return app.Run(cmd.Context(), async(func() error {
 				return runPackage(cfg)
 			}))
@@ -49,5 +58,5 @@ func Package(app *application.Application) *cobra.Command {
 }
 
 func runPackage(cfg packageConfig) error {
-	return process.Package(cfg.DBLocation.Directory, cfg.PublishBaseURL)
+	return process.Package(cfg.DBLocation.Directory, cfg.PublishBaseURL, cfg.OverrideArchiveExtension)
 }

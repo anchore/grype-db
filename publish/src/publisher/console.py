@@ -19,8 +19,6 @@ import publisher.utils.s3utils as s3utils
 from publisher.utils.constants import (
     DB_DIR,
     DB_SUFFIXES,
-    LEGACY_DB_SUFFIXES,
-    NEW_DB_SUFFIXES,
     GOLDEN_REPORT_LOCATION,
     TEST_IMAGE,
     STAGE_DIR,
@@ -125,7 +123,7 @@ def upload_listing(s3_bucket: str, s3_path: str, dry_run: bool):
 
     # look for existing DBs in S3
     existing_paths_by_basename = existing_dbs_in_s3(
-        s3_bucket=s3_bucket, s3_path=s3_path, suffixes=LEGACY_DB_SUFFIXES,
+        s3_bucket=s3_bucket, s3_path=s3_path, suffixes=DB_SUFFIXES,
     )
 
     # determine what basenames are new relative to the listing file and the current S3 state
@@ -147,7 +145,7 @@ def upload_listing(s3_bucket: str, s3_path: str, dry_run: bool):
             paths_by_basename=existing_paths_by_basename,
             s3_bucket=s3_bucket,
             s3_path=s3_path,
-            suffixes=LEGACY_DB_SUFFIXES,
+            suffixes=DB_SUFFIXES,
             max_age=MAX_DB_AGE,
     ):
         the_listing.add(entry)

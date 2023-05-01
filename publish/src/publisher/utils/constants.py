@@ -16,9 +16,8 @@ GRYPE_DB_CONFIG = os.path.join(root, "publish", ".grype-db.yaml")
 
 # BUCKET = os.environ["AWS_BUCKET"]         # e.g. "toolbox-data.anchore.io"
 # DBS_PATH = os.environ["AWS_BUCKET_PATH"]  # e.g. "grype/databases"
-LEGACY_DB_SUFFIXES = {".tar.gz"}
-NEW_DB_SUFFIXES = {".tar.zst"}
-DB_SUFFIXES = {*LEGACY_DB_SUFFIXES, *NEW_DB_SUFFIXES}
+
+DB_SUFFIXES = {".tar.gz", ".tar.zst"}
 GOLDEN_REPORT_LOCATION = os.path.join(root, "publish", "test-fixtures")
 
 

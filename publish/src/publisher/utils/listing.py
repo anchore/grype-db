@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from publisher.utils.constants import (
     DB_SUFFIXES,
-    LEGACY_DB_SUFFIXES,
 )
 
 import iso8601  # type: ignore

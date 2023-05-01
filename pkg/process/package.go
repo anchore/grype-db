@@ -23,8 +23,8 @@ func randomString() (string, error) {
 	return hex.EncodeToString(b), err
 }
 
-func Package(dbDir, publishBaseURL string) error {
-	log.WithFields("from", dbDir, "url", publishBaseURL).Info("packaging database")
+func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
+	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
 
 	fs := afero.NewOsFs()
 	metadata, err := db.NewMetadataFromDir(fs, dbDir)
@@ -46,9 +46,35 @@ func Package(dbDir, publishBaseURL string) error {
 		return fmt.Errorf("unable to create random archive trailer: %w", err)
 	}
 
+	// default to zstandard, which can be used on v4 schema and above (see github.com/anchore/grype-db-builder/pull/176)
+	var extension = "tar.zst"
+	if overrideArchiveExtension != "" {
+		extension = strings.TrimLeft(overrideArchiveExtension, ".")
+	} else if metadata.Version < 5 {
+		extension = "tar.gz"
+	}
+
+	var found bool
+	for _, valid := range []string{"tar.zst", "tar.gz"} {
+		if valid == extension {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("invalid archive extension %q", extension)
+	}
+
 	// we attach a random value at the end of the file name to prevent from overwriting DBs in S3 that are already
 	// cached in the CDN. Ideally this would be based off of the archive checksum but a random string is simpler.
-	tarName := fmt.Sprintf("vulnerability-db_v%d_%s_%s.tar.gz", metadata.Version, metadata.Built.Format(time.RFC3339), trailer)
+	tarName := fmt.Sprintf(
+		"vulnerability-db_v%d_%s_%s.%s",
+		metadata.Version,
+		metadata.Built.Format(time.RFC3339),
+		trailer,
+		extension,
+	)
 	tarPath := path.Join(dbDir, tarName)
 
 	if err := populate(tarName, dbDir); err != nil {
@@ -96,7 +122,7 @@ func populate(tarName, dbDir string) error {
 
 	var files []string
 	for _, fi := range fileInfos {
-		if fi.Name() != "listing.json" && !strings.Contains(fi.Name(), ".tar.gz") {
+		if fi.Name() != "listing.json" && !strings.Contains(fi.Name(), ".tar.") {
 			files = append(files, fi.Name())
 		}
 	}
