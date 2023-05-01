@@ -4,9 +4,6 @@ import json
 import pytest
 
 from publisher.utils import listing
-from publisher.utils.constants import (
-    LEGACY_DB_SUFFIXES,
-)
 
 
 def test_listing_add_sorts_by_date():
