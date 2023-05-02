@@ -46,13 +46,17 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 		return fmt.Errorf("unable to create random archive trailer: %w", err)
 	}
 
-	// default to zstandard, which can be used on v4 schema and above (see github.com/anchore/grype-db-builder/pull/176)
-	var extension = "tar.zst"
+	// TODO (alex): supporting tar.zst
+	// var extension = "tar.zst"
+	var extension = "tar.gz"
+
 	if overrideArchiveExtension != "" {
 		extension = strings.TrimLeft(overrideArchiveExtension, ".")
-	} else if metadata.Version < 5 {
-		extension = "tar.gz"
 	}
+	// TODO (alex): supporting tar.zst
+	// else if metadata.Version < 5 {
+	// 	extension = "tar.gz"
+	// }
 
 	var found bool
 	for _, valid := range []string{"tar.zst", "tar.gz"} {
