@@ -20,13 +20,18 @@ type pkgCandidate struct {
 	Product        string
 	Vendor         string
 	TargetSoftware string
+	PlatformCPE    *string
 }
 
 func (p pkgCandidate) String() string {
-	return fmt.Sprintf("%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware)
+	if p.PlatformCPE == nil {
+		return fmt.Sprintf("%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware)
+	}
+
+	return fmt.Sprintf("%s|%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware, *p.PlatformCPE)
 }
 
-func newPkgCandidate(match nvd.CpeMatch) (*pkgCandidate, error) {
+func newPkgCandidate(match nvd.CpeMatch, platformCPE *string) (*pkgCandidate, error) {
 	// we are only interested in packages that are vulnerable (not related to secondary match conditioning)
 	if !match.Vulnerable {
 		return nil, nil
@@ -46,24 +51,43 @@ func newPkgCandidate(match nvd.CpeMatch) (*pkgCandidate, error) {
 		Product:        c.Product().String(),
 		Vendor:         c.Vendor().String(),
 		TargetSoftware: c.TargetSw().String(),
+		PlatformCPE:    platformCPE,
 	}, nil
 }
 
 func findUniquePkgs(cfgs ...nvd.Configuration) uniquePkgTracker {
 	set := newUniquePkgTracker()
 	for _, c := range cfgs {
-		_findUniquePkgs(set, c.Nodes...)
+		_findUniquePkgs(set, c)
 	}
 	return set
 }
 
-func _findUniquePkgs(set uniquePkgTracker, ns ...nvd.Node) {
-	if len(ns) == 0 {
+func determinePlatformCPEAndNodes(c nvd.Configuration) (*string, []nvd.Node) {
+	var platformCPE *string
+	nodes := c.Nodes
+
+	// Only retrieve a platform CPE in very specific cases
+	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
+		if len(nodes[1].CpeMatch) == 1 && !nodes[1].CpeMatch[0].Vulnerable {
+			platformCPE = &nodes[1].CpeMatch[0].Criteria
+			nodes = []nvd.Node{nodes[0]}
+		}
+	}
+
+	return platformCPE, nodes
+}
+
+func _findUniquePkgs(set uniquePkgTracker, c nvd.Configuration) {
+	if len(c.Nodes) == 0 {
 		return
 	}
-	for _, node := range ns {
+
+	platformCPE, nodes := determinePlatformCPEAndNodes(c)
+
+	for _, node := range nodes {
 		for _, match := range node.CpeMatch {
-			candidate, err := newPkgCandidate(match)
+			candidate, err := newPkgCandidate(match, platformCPE)
 			if err != nil {
 				// Do not halt all execution because of being unable to create
 				// a PkgCandidate. This can happen when a CPE is invalid which
