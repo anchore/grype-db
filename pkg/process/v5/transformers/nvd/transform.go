@@ -1,6 +1,8 @@
 package nvd
 
 import (
+	"sort"
+
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v5/transformers"
@@ -8,6 +10,8 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	"github.com/anchore/grype/grype/db/v5/namespace"
+	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
+	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
@@ -35,20 +39,32 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	// duplicate the vulnerabilities based on the set of unique packages the vulnerability is for
 	var allVulns []grypeDB.Vulnerability
 	for _, p := range uniquePkgs.All() {
+		var qualifiers []qualifier.Qualifier
 		matches := uniquePkgs.Matches(p)
 		cpes := internal.NewStringSet()
 		for _, m := range matches {
 			cpes.Add(grypeNamespace.Resolver().Normalize(m.Criteria))
 		}
 
+		if p.PlatformCPE != nil {
+			qualifiers = []qualifier.Qualifier{platformcpe.Qualifier{
+				Kind: "platform-cpe",
+				CPE:  *p.PlatformCPE,
+			}}
+		}
+
+		orderedCPEs := cpes.ToSlice()
+		sort.Strings(orderedCPEs)
+
 		// create vulnerability entry
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                vulnerability.ID,
+			PackageQualifiers: qualifiers,
 			VersionConstraint: buildConstraints(uniquePkgs.Matches(p)),
 			VersionFormat:     "unknown",
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
-			CPEs:              cpes.ToSlice(),
+			CPEs:              orderedCPEs,
 			Fix: grypeDB.Fix{
 				State: grypeDB.UnknownFixState,
 			},

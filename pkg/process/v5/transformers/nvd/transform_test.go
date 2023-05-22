@@ -12,6 +12,8 @@ import (
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
+	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
+	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
 )
 
 func TestUnmarshalNVDVulnerabilitiesEntries(t *testing.T) {
@@ -39,8 +41,12 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 			fixture:    "test-fixtures/version-range.json",
 			vulns: []grypeDB.Vulnerability{
 				{
-					ID:                "CVE-2018-5487",
-					PackageName:       "oncommand_unified_manager",
+					ID:          "CVE-2018-5487",
+					PackageName: "oncommand_unified_manager",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:linux:linux_kernel:-:*:*:*:*:*:*:*",
+					}},
 					VersionConstraint: ">= 7.2, <= 7.3",
 					VersionFormat:     "unknown", // TODO: this should reference a format, yes? (not a string)
 					Namespace:         "nvd:cpe",
@@ -214,7 +220,92 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "With Platform CPE",
+			numEntries: 1,
+			fixture:    "test-fixtures/platform-cpe.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:                "CVE-2022-26488",
+					PackageName:       "active_iq_unified_manager",
+					VersionConstraint: "",
+					VersionFormat:     "unknown",
+					Namespace:         "nvd:cpe",
+					CPEs:              []string{"cpe:2.3:a:netapp:active_iq_unified_manager:-:*:*:*:*:windows:*:*"},
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+				},
+				{
+					ID:                "CVE-2022-26488",
+					PackageName:       "ontap_select_deploy_administration_utility",
+					VersionConstraint: "",
+					VersionFormat:     "unknown",
+					Namespace:         "nvd:cpe",
+					CPEs:              []string{"cpe:2.3:a:netapp:ontap_select_deploy_administration_utility:-:*:*:*:*:*:*:*"},
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+				},
+				{
+					ID:          "CVE-2022-26488",
+					PackageName: "python",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint: "<= 3.7.12 || >= 3.8.0, <= 3.8.12 || >= 3.9.0, <= 3.9.10 || >= 3.10.0, <= 3.10.2 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0",
+					VersionFormat:     "unknown",
+					Namespace:         "nvd:cpe",
+					CPEs: []string{
+						"cpe:2.3:a:python:python:*:*:*:*:*:*:*:*",
+						"cpe:2.3:a:python:python:3.11.0:alpha1:*:*:*:*:*:*",
+						"cpe:2.3:a:python:python:3.11.0:alpha2:*:*:*:*:*:*",
+						"cpe:2.3:a:python:python:3.11.0:alpha3:*:*:*:*:*:*",
+						"cpe:2.3:a:python:python:3.11.0:alpha4:*:*:*:*:*:*",
+						"cpe:2.3:a:python:python:3.11.0:alpha5:*:*:*:*:*:*",
+						"cpe:2.3:a:python:python:3.11.0:alpha6:*:*:*:*:*:*",
+					},
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2022-26488",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2022-26488",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"https://mail.python.org/archives/list/security-announce@python.org/thread/657Z4XULWZNIY5FRP3OWXHYKUSIH6DMN/",
+					"https://security.netapp.com/advisory/ntap-20220419-0005/",
+				},
+				Description: "In Python before 3.10.3 on Windows, local users can gain privileges because the search path is inadequately secured. The installer may allow a local attacker to add user-writable directories to the system search path. To exploit, an administrator must have installed Python for all users and enabled PATH entries. A non-administrative user can trigger a repair that incorrectly adds user-writable paths into PATH, enabling search-path hijacking of other users and system services. This affects Python (CPython) through 3.7.12, 3.8.x through 3.8.12, 3.9.x through 3.9.10, and 3.10.x through 3.10.2.",
+				Cvss: []grypeDB.Cvss{
+					{
+						Metrics: grypeDB.NewCvssMetrics(
+							4.4,
+							3.4,
+							6.4,
+						),
+						Vector:  "AV:L/AC:M/Au:N/C:P/I:P/A:P",
+						Version: "2.0",
+					},
+					{
+						Metrics: grypeDB.NewCvssMetrics(
+							7,
+							1,
+							5.9,
+						),
+						Vector:  "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
+						Version: "3.1",
+					},
+				},
+			},
+		},
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			f, err := os.Open(test.fixture)
