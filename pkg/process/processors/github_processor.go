@@ -51,7 +51,7 @@ func (p githubProcessor) IsSupported(schemaURL string) bool {
 		return false
 	}
 
-	if !strings.HasSuffix(schemaURL, "schema-1.0.0.json") {
+	if !strings.HasSuffix(schemaURL, "schema-1.0.0.json") && !strings.HasSuffix(schemaURL, "schema-1.0.1.json") {
 		log.WithFields("schema", schemaURL).Trace("unsupported GHSA schema version")
 		return false
 	}

@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
+	"github.com/anchore/grype-db/pkg/process/v5/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
+	v5 "github.com/anchore/grype/grype/db/v5"
 	"github.com/anchore/grype/grype/db/v5/namespace"
 	"github.com/anchore/grype/grype/db/v5/namespace/language"
 	syftPkg "github.com/anchore/syft/syft/pkg"
@@ -194,9 +196,20 @@ func TestDefaultVersionFormatNpmGitHubEntry(t *testing.T) {
 		Namespace:    "github:language:javascript",
 		RecordSource: "github:github:npm",
 		DataSource:   "https://github.com/advisories/GHSA-vc9j-fhvv-8vrf",
-		Severity:     "High",
+		Severity:     "Critical",
 		URLs:         []string{"https://github.com/advisories/GHSA-vc9j-fhvv-8vrf"},
 		Description:  "Remote Code Execution in scratch-vm",
+		Cvss: []grypeDB.Cvss{
+			{
+				VendorMetadata: transformers.VendorBaseMetrics{
+					BaseSeverity: "Critical",
+					Status:       "N/A",
+				},
+				Metrics: v5.NewCvssMetrics(9.8, 3.9, 5.9),
+				Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+				Version: "3.1",
+			},
+		},
 	}
 
 	f, err := os.Open("test-fixtures/github-github-npm-0.json")

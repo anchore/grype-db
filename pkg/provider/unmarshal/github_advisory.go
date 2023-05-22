@@ -6,7 +6,19 @@ import (
 
 type GitHubAdvisory struct {
 	Advisory struct {
-		CVE     []string `json:"CVE"`
+		Classification string
+		CVE            []string `json:"CVE"`
+		CVSS           *struct {
+			BaseMetrics struct {
+				BaseScore           float64 `json:"base_score"`
+				BaseSeverity        string  `json:"base_severity"`
+				ExploitabilityScore float64 `json:"exploitability_score"`
+				ImpactScore         float64 `json:"impact_score"`
+			} `json:"base_metrics"`
+			Status       string `json:"status"`
+			VectorString string `json:"vector_string"`
+			Version      string `json:"version"`
+		} `json:"CVSS"`
 		FixedIn []struct {
 			Ecosystem  string `json:"ecosystem"`
 			Identifier string `json:"identifier"`
@@ -22,6 +34,8 @@ type GitHubAdvisory struct {
 		GhsaID    string      `json:"ghsaId"`
 		Namespace string      `json:"namespace"`
 		URL       string      `json:"url"`
+		Published interface{} `json:"published"`
+		Updated   interface{} `json:"updated"`
 		Withdrawn interface{} `json:"withdrawn"`
 	} `json:"Advisory"`
 }

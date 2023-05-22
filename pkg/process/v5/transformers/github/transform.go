@@ -94,6 +94,7 @@ func Transform(vulnerability unmarshal.GitHubAdvisory) ([]data.Entry, error) {
 		Severity:     vulnerability.Advisory.Severity,
 		URLs:         []string{vulnerability.Advisory.URL},
 		Description:  vulnerability.Advisory.Summary,
+		Cvss:         getCvss(vulnerability),
 	}
 
 	return transformers.NewEntries(allVulns, metadata), nil
@@ -128,4 +129,26 @@ func getRelatedVulnerabilities(entry unmarshal.GitHubAdvisory) []grypeDB.Vulnera
 		}
 	}
 	return vulns
+}
+
+func getCvss(entry unmarshal.GitHubAdvisory) (cvss []grypeDB.Cvss) {
+	if entry.Advisory.CVSS == nil {
+		return cvss
+	}
+
+	cvss = append(cvss, grypeDB.Cvss{
+		Version: entry.Advisory.CVSS.Version,
+		Vector:  entry.Advisory.CVSS.VectorString,
+		Metrics: grypeDB.NewCvssMetrics(
+			entry.Advisory.CVSS.BaseMetrics.BaseScore,
+			entry.Advisory.CVSS.BaseMetrics.ExploitabilityScore,
+			entry.Advisory.CVSS.BaseMetrics.ImpactScore,
+		),
+		VendorMetadata: transformers.VendorBaseMetrics{
+			BaseSeverity: entry.Advisory.CVSS.BaseMetrics.BaseSeverity,
+			Status:       entry.Advisory.CVSS.Status,
+		},
+	})
+
+	return cvss
 }
