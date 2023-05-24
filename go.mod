@@ -8,9 +8,9 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.4.0
 	github.com/anchore/go-logger v0.0.0-20230120230012-47be9bb822a2
-	github.com/anchore/grype v0.62.0
+	github.com/anchore/grype v0.62.1
 	github.com/anchore/sqlite v1.4.6-0.20220607210448-bcc6ee5c4963
-	github.com/anchore/syft v0.81.0
+	github.com/anchore/syft v0.82.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-test/deep v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -60,7 +60,7 @@ require (
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
 	github.com/anchore/packageurl-go v0.1.1-0.20230104203445-02e0a6721501 // indirect
-	github.com/anchore/stereoscope v0.0.0-20230508133058-5543439b749f // indirect
+	github.com/anchore/stereoscope v0.0.0-20230522170632-e14bc4437b2e // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/aws/aws-sdk-go v1.44.180 // indirect
 	github.com/becheran/wildmatch-go v1.0.0 // indirect
@@ -74,7 +74,7 @@ require (
 	github.com/deitch/magic v0.0.0-20230404182410-1ff89d7342da // indirect
 	github.com/docker/cli v23.0.5+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.0+incompatible // indirect
+	github.com/docker/docker v24.0.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
