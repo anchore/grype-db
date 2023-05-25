@@ -91,6 +91,8 @@ func getCvss(cvss ...nvd.CvssSummary) []grypeDB.Cvss {
 	var results []grypeDB.Cvss
 	for _, c := range cvss {
 		results = append(results, grypeDB.Cvss{
+			Source:  c.Source,
+			Type:    string(c.Type),
 			Version: c.Version,
 			Vector:  c.Vector,
 			Metrics: grypeDB.CvssMetrics{

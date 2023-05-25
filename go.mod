@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.4.0
 	github.com/anchore/go-logger v0.0.0-20230120230012-47be9bb822a2
-	github.com/anchore/grype v0.62.1
+	github.com/anchore/grype v0.62.2
 	github.com/anchore/sqlite v1.4.6-0.20220607210448-bcc6ee5c4963
 	github.com/anchore/syft v0.82.0
 	github.com/dustin/go-humanize v1.0.1
@@ -74,7 +74,7 @@ require (
 	github.com/deitch/magic v0.0.0-20230404182410-1ff89d7342da // indirect
 	github.com/docker/cli v23.0.5+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.1+incompatible // indirect
+	github.com/docker/docker v24.0.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
