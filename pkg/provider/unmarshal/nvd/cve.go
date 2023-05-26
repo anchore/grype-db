@@ -50,13 +50,13 @@ type CveItem struct {
 	// EvaluatorComment      *string         `json:"evaluatorComment,omitempty"`
 	// EvaluatorImpact       *string         `json:"evaluatorImpact,omitempty"`
 	// EvaluatorSolution     *string         `json:"evaluatorSolution,omitempty"`
-	// LastModified          string          `json:"lastModified"`
-	Metrics *Metrics `json:"metrics,omitempty"`
-	// Published             string          `json:"published"`
-	References []Reference `json:"references"`
+	LastModified string      `json:"lastModified"`
+	Metrics      *Metrics    `json:"metrics,omitempty"`
+	Published    string      `json:"published"`
+	References   []Reference `json:"references"`
 	// SourceIdentifier      *string         `json:"sourceIdentifier,omitempty"`
 	// VendorComments        []VendorComment `json:"vendorComments,omitempty"`
-	// VulnStatus            *string         `json:"vulnStatus,omitempty"`
+	VulnStatus *string `json:"vulnStatus,omitempty"`
 	// Weaknesses            []Weakness      `json:"weaknesses,omitempty"`
 }
 
@@ -103,8 +103,8 @@ type CvssV2 struct {
 	// ObtainAllPrivilege      *bool         `json:"obtainAllPrivilege,omitempty"`
 	// ObtainOtherPrivilege    *bool         `json:"obtainOtherPrivilege,omitempty"`
 	// ObtainUserPrivilege     *bool         `json:"obtainUserPrivilege,omitempty"`
-	// Source                  string        `json:"source"`
-	Type CvssType `json:"type"`
+	Source string   `json:"source"`
+	Type   CvssType `json:"type"`
 	// UserInteractionRequired *bool         `json:"userInteractionRequired,omitempty"`
 }
 
@@ -112,16 +112,16 @@ type CvssV30 struct {
 	CvssData            cvss30.Cvss30 `json:"cvssData"`
 	ExploitabilityScore *float64      `json:"exploitabilityScore,omitempty"`
 	ImpactScore         *float64      `json:"impactScore,omitempty"`
-	// Source              string        `json:"source"`
-	Type CvssType `json:"type"`
+	Source              string        `json:"source"`
+	Type                CvssType      `json:"type"`
 }
 
 type CvssV31 struct {
 	CvssData            cvss31.Cvss31 `json:"cvssData"`
 	ExploitabilityScore *float64      `json:"exploitabilityScore,omitempty"`
 	ImpactScore         *float64      `json:"impactScore,omitempty"`
-	// Source              string        `json:"source"`
-	Type CvssType `json:"type"`
+	Source              string        `json:"source"`
+	Type                CvssType      `json:"type"`
 }
 
 // "type identifies whether the organization is a primary or secondary source. Primary sources
@@ -163,6 +163,7 @@ func (o CveItem) Description() string {
 }
 
 type CvssSummary struct {
+	Source              string
 	Type                CvssType
 	Version             string
 	Vector              string
@@ -242,6 +243,7 @@ func (o CveItem) CVSS() []CvssSummary {
 	for _, c := range o.Metrics.CvssMetricV2 {
 		results = append(results,
 			CvssSummary{
+				Source:              c.Source,
 				Type:                c.Type,
 				Version:             c.CvssData.Version,
 				Vector:              c.CvssData.VectorString,
@@ -256,6 +258,7 @@ func (o CveItem) CVSS() []CvssSummary {
 		sev := string(c.CvssData.BaseSeverity)
 		results = append(results,
 			CvssSummary{
+				Source:              c.Source,
 				Type:                c.Type,
 				Version:             c.CvssData.Version,
 				Vector:              c.CvssData.VectorString,
@@ -270,6 +273,7 @@ func (o CveItem) CVSS() []CvssSummary {
 		sev := string(c.CvssData.BaseSeverity)
 		results = append(results,
 			CvssSummary{
+				Source:              c.Source,
 				Type:                c.Type,
 				Version:             c.CvssData.Version,
 				Vector:              c.CvssData.VectorString,

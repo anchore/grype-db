@@ -73,6 +73,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "AV:N/AC:L/Au:N/C:P/I:P/A:P",
 						Version: "2.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 					{
 						Metrics: grypeDB.NewCvssMetrics(
@@ -82,6 +84,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 						Version: "3.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 				},
 			},
@@ -121,6 +125,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "AV:N/AC:M/Au:N/C:P/I:P/A:P",
 						Version: "2.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 					{
 						Metrics: grypeDB.NewCvssMetrics(
@@ -130,6 +136,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
 						Version: "3.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 				},
 			},
@@ -168,6 +176,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "AV:N/AC:L/Au:N/C:P/I:N/A:N",
 						Version: "2.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 					{
 						Metrics: grypeDB.NewCvssMetrics(
@@ -177,6 +187,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
 						Version: "3.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 				},
 			},
@@ -207,6 +219,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "AV:N/AC:L/Au:N/C:N/I:N/A:P",
 						Version: "2.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 					{
 						Metrics: grypeDB.NewCvssMetrics(
@@ -216,6 +230,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
 						Version: "3.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 				},
 			},
@@ -291,6 +307,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "AV:L/AC:M/Au:N/C:P/I:P/A:P",
 						Version: "2.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 					{
 						Metrics: grypeDB.NewCvssMetrics(
@@ -300,6 +318,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						),
 						Vector:  "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
 						Version: "3.1",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
 					},
 				},
 			},
