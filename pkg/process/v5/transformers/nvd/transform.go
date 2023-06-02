@@ -65,9 +65,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
 			CPEs:              orderedCPEs,
-			Fix: grypeDB.Fix{
-				State: grypeDB.UnknownFixState,
-			},
+			Fix:               getFix(uniquePkgs.Matches((p))),
 		})
 	}
 
@@ -85,6 +83,26 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	}
 
 	return transformers.NewEntries(allVulns, metadata), nil
+}
+
+func getFix(matches []nvd.CpeMatch) grypeDB.Fix {
+	var fixedInVersions []string
+
+	for _, match := range matches {
+		if match.VersionEndExcluding != nil {
+			fixedInVersions = append(fixedInVersions, *match.VersionEndExcluding)
+		}
+	}
+
+	fixState := grypeDB.UnknownFixState
+	if len(fixedInVersions) > 0 {
+		fixState = grypeDB.FixedState
+	}
+
+	return grypeDB.Fix{
+		Versions: fixedInVersions,
+		State:    fixState,
+	}
 }
 
 func getCvss(cvss ...nvd.CvssSummary) []grypeDB.Cvss {

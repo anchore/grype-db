@@ -155,7 +155,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					Namespace:         "nvd:cpe",
 					CPEs:              []string{"cpe:2.3:a:mautic:mautic:*:*:*:*:*:*:*:*"}, // note: entry was dedupicated
 					Fix: grypeDB.Fix{
-						State: "unknown",
+						Versions: []string{"2.13.0"},
+						State:    "fixed",
 					},
 				},
 			},
