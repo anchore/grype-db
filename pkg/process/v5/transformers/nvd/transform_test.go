@@ -270,7 +270,7 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						Kind: "platform-cpe",
 						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
 					}},
-					VersionConstraint: "<= 3.7.12 || >= 3.8.0, <= 3.8.12 || >= 3.9.0, <= 3.9.10 || >= 3.10.0, <= 3.10.2 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0",
+					VersionConstraint: "<= 3.7.12 || >= 3.8.0, <= 3.8.12 || >= 3.9.0, <= 3.9.10 || >= 3.10.0, <= 3.10.2 || = 3.11.0",
 					VersionFormat:     "unknown",
 					Namespace:         "nvd:cpe",
 					CPEs: []string{

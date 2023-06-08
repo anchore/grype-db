@@ -107,7 +107,8 @@ func buildConstraints(matches []nvd.CpeMatch) string {
 	for _, match := range matches {
 		constraints = append(constraints, buildConstraint(match))
 	}
-	return common.OrConstraints(constraints...)
+
+	return common.OrConstraints(removeDuplicateConstraints(&constraints)...)
 }
 
 func buildConstraint(match nvd.CpeMatch) string {
@@ -136,4 +137,16 @@ func buildConstraint(match nvd.CpeMatch) string {
 	}
 
 	return strings.Join(constraints, ", ")
+}
+
+func removeDuplicateConstraints(constraints *[]string) []string {
+	constraintMap := make(map[string]bool)
+	uniqueConstraints := make([]string, 0)
+	for _, constraint := range *constraints {
+		if _, exists := constraintMap[constraint]; !exists {
+			constraintMap[constraint] = true
+			uniqueConstraints = append(uniqueConstraints, constraint)
+		}
+	}
+	return uniqueConstraints
 }
