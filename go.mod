@@ -8,9 +8,9 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.4.0
 	github.com/anchore/go-logger v0.0.0-20230120230012-47be9bb822a2
-	github.com/anchore/grype v0.63.0
+	github.com/anchore/grype v0.63.1
 	github.com/anchore/sqlite v1.4.6-0.20220607210448-bcc6ee5c4963
-	github.com/anchore/syft v0.84.0
+	github.com/anchore/syft v0.84.1
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-test/deep v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -60,7 +60,7 @@ require (
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
 	github.com/anchore/packageurl-go v0.1.1-0.20230104203445-02e0a6721501 // indirect
-	github.com/anchore/stereoscope v0.0.0-20230609190519-5b5049bf4d3a // indirect
+	github.com/anchore/stereoscope v0.0.0-20230627195312-cd49355d934e // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/aws/aws-sdk-go v1.44.180 // indirect
 	github.com/becheran/wildmatch-go v1.0.0 // indirect
@@ -177,7 +177,6 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools/v3 v3.1.0 // indirect
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.40.0 // indirect
