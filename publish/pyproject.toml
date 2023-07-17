@@ -24,7 +24,7 @@ semver = "^2.13.0"
 dataclasses-json = "^0.5.4"
 iso8601 = "^0.1.14"
 zstandard = "^0.18.0"
-yardstick = {git = "https://github.com/anchore/yardstick", rev = "fb6823e480dcc7cd1fe3b4818258301313d80d25"}
+yardstick = {git = "https://github.com/anchore/yardstick", rev = "dcd3ec4683dd6b4bd3e1a972fa5b09008f683be1"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
