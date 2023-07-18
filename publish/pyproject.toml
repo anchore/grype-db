@@ -27,6 +27,8 @@ zstandard = "^0.18.0"
 yardstick = {git = "https://github.com/anchore/yardstick", rev = "dcd3ec4683dd6b4bd3e1a972fa5b09008f683be1"}
 
 [tool.poetry.dev-dependencies]
+# We have to restrict cython currently due to https://github.com/yaml/pyyaml/issues/601.  PyYAML >= 6.0.1 does address this; however, enterprise currently can't upgrade to 6.x
+Cython = "< 3.0"
 pytest = "^6.2.2"
 tox = "^3.23.0"
 

@@ -7,9 +7,11 @@ readme = "README.md"
 packages = [{include = "grype_db"}]
 
 [tool.poetry.dependencies]
+# We have to restrict cython currently due to https://github.com/yaml/pyyaml/issues/601.  PyYAML >= 6.0.1 does address this; however, enterprise currently can't upgrade to 6.x
+Cython = "< 3.0"
 python = "^3.10"
 
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.4.0"]
 build-backend = "poetry.core.masonry.api"
