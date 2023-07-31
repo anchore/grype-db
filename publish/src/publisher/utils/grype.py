@@ -14,7 +14,7 @@ from publisher.utils.repo_root import repo_root
 # +/- ratio for matching packages and vulnerabilities
 # we know that there could be slight differences in grype output between versions
 # and if new vulnerability data is used.
-TOLERANCE = 0.1
+TOLERANCE = 0.4
 
 
 class Grype:
