@@ -1,0 +1,1 @@
+This is a grype-db-manager state directory with 2 DBs, schema versions 4 & 5. The DBs themselves are not present but the surrounding metadata is.

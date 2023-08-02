@@ -1,4 +1,5 @@
 # note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
+root: data/vunnel
 
 log:
   slim: true
