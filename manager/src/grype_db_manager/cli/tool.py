@@ -6,7 +6,7 @@ import click
 from tabulate import tabulate
 
 from grype_db_manager.cli import config
-from grype_db_manager.grypedb import GrypeDB, TOOLS_DIR
+from grype_db_manager.grypedb import TOOLS_DIR, GrypeDB
 
 
 @click.group(name="tool", help="manage local grype-db installations")

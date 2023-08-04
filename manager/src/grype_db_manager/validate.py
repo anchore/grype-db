@@ -1,10 +1,10 @@
 
 import json
-from importlib.resources import files
 from functools import lru_cache
+from importlib.resources import files
 
-from yardstick.cli import config as ycfg
 from yardstick import capture
+from yardstick.cli import config as ycfg
 
 from grype_db_manager import grypedb, sbom
 
@@ -27,7 +27,7 @@ def validate(cfg: ycfg.Application, db_uuid: str, root_dir: str):
 
 @lru_cache
 def _get_schema_mapping() -> dict[str, str]:
-    content = files('grype_db_manager.data').joinpath('grype-schema-version-mapping.json').read_text()
+    content = files("grype_db_manager.data").joinpath("grype-schema-version-mapping.json").read_text()
     return json.loads(content)
 
 

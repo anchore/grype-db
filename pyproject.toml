@@ -130,6 +130,7 @@ ignore = [
   "PLR2004", # a little too agressive, not allowing any magic numbers
   "PLW2901", # "Outer for loop variable X overwritten by inner assignment target", not useful in most cases
   "RUF100", # no blanket "noqa" usage, can be improved over time, but not now
+  "RUF009", # "Do not perform function call `os.environ.get` in dataclass defaults", not useful for us since we use this for 12-factor configuration
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)` -- not compatible with python 3.9 (even with __future__ import)
 ]
 

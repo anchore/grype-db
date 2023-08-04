@@ -1,10 +1,11 @@
 import os
+import shutil
 
 import pytest
 
 
 @pytest.fixture
-def manager_root():
+def top_level_fixture():
     def fn(case: str) -> str:
         path = os.path.join(os.path.dirname(__file__), "fixtures", case)
         if not os.path.exists(path):
@@ -12,6 +13,19 @@ def manager_root():
         return path
     return fn
 
+
+@pytest.fixture
+def top_level_fixture_copy(top_level_fixture, tmp_path):
+    def fn(case: str) -> str:
+        path = top_level_fixture(case=case)
+
+        # recursively copy the directory to a temporary location
+        tmp_case_path = os.path.join(tmp_path, case)
+        shutil.copytree(path, tmp_case_path)
+
+        return tmp_case_path
+
+    return fn
 
 @pytest.fixture
 def test_dir(request):

@@ -1,0 +1,123 @@
+{
+ "source": {
+  "id": "496871deae21a7a46d2789ac0743b9d0cb0244f1e38ca605b38ddbc1532eec27",
+  "type": "image",
+  "target": {
+   "userInput": "docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+   "imageID": "sha256:d2e4e1f511320dfb2d0baff2468fcf0526998b73fe10c8890b4684bb7ef8290f",
+   "manifestDigest": "sha256:496871deae21a7a46d2789ac0743b9d0cb0244f1e38ca605b38ddbc1532eec27",
+   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+   "tags": [],
+   "imageSize": 77810455,
+   "layers": [
+    {
+     "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+     "digest": "sha256:e59fc94956120a6c7629f085027578e6357b48061d45714107e79f04a81a6f0c",
+     "size": 77810455
+    }
+   ],
+   "manifest": "eyJzY2hlbWFWZXJzaW9uIjoyLCJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQuZG9ja2VyLmRpc3RyaWJ1dGlvbi5tYW5pZmVzdC52Mitqc29uIiwiY29uZmlnIjp7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuY29udGFpbmVyLmltYWdlLnYxK2pzb24iLCJzaXplIjoxNDYzLCJkaWdlc3QiOiJzaGEyNTY6ZDJlNGUxZjUxMTMyMGRmYjJkMGJhZmYyNDY4ZmNmMDUyNjk5OGI3M2ZlMTBjODg5MGI0Njg0YmI3ZWY4MjkwZiJ9LCJsYXllcnMiOlt7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjo4MDMzNTg3MiwiZGlnZXN0Ijoic2hhMjU2OmU1OWZjOTQ5NTYxMjBhNmM3NjI5ZjA4NTAyNzU3OGU2MzU3YjQ4MDYxZDQ1NzE0MTA3ZTc5ZjA0YTgxYTZmMGMifV19",
+   "config": "eyJhcmNoaXRlY3R1cmUiOiJhbWQ2NCIsImNvbmZpZyI6eyJIb3N0bmFtZSI6IiIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiIiwiQXR0YWNoU3RkaW4iOmZhbHNlLCJBdHRhY2hTdGRvdXQiOmZhbHNlLCJBdHRhY2hTdGRlcnIiOmZhbHNlLCJUdHkiOmZhbHNlLCJPcGVuU3RkaW4iOmZhbHNlLCJTdGRpbk9uY2UiOmZhbHNlLCJFbnYiOlsiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iXSwiQ21kIjpbImJhc2giXSwiSW1hZ2UiOiJzaGEyNTY6MzE5NjQ0ZjIxZmJlNGI0NzhmYmVmOWU0ZTEyMWMxMTE0ZDQ5ZjIyODgzZmYxNDk5NDBmNzhmNjQxOWMwMGM3MCIsIlZvbHVtZXMiOm51bGwsIldvcmtpbmdEaXIiOiIiLCJFbnRyeXBvaW50IjpudWxsLCJPbkJ1aWxkIjpudWxsLCJMYWJlbHMiOm51bGx9LCJjb250YWluZXIiOiJlYjdjYjgwNmU2OTBmYWIwNzg0M2QyNGMxZWNmYTE4ZTI0YjAxYjcyMTgzMGU3YTNiYjhiNzNiMDg1MTQ4NmY5IiwiY29udGFpbmVyX2NvbmZpZyI6eyJIb3N0bmFtZSI6ImViN2NiODA2ZTY5MCIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiIiwiQXR0YWNoU3RkaW4iOmZhbHNlLCJBdHRhY2hTdGRvdXQiOmZhbHNlLCJBdHRhY2hTdGRlcnIiOmZhbHNlLCJUdHkiOmZhbHNlLCJPcGVuU3RkaW4iOmZhbHNlLCJTdGRpbk9uY2UiOmZhbHNlLCJFbnYiOlsiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iXSwiQ21kIjpbIi9iaW4vc2giLCItYyIsIiMobm9wKSAiLCJDTUQgW1wiYmFzaFwiXSJdLCJJbWFnZSI6InNoYTI1NjozMTk2NDRmMjFmYmU0YjQ3OGZiZWY5ZTRlMTIxYzExMTRkNDlmMjI4ODNmZjE0OTk0MGY3OGY2NDE5YzAwYzcwIiwiVm9sdW1lcyI6bnVsbCwiV29ya2luZ0RpciI6IiIsIkVudHJ5cG9pbnQiOm51bGwsIk9uQnVpbGQiOm51bGwsIkxhYmVscyI6e319LCJjcmVhdGVkIjoiMjAyMi0wNC0yOVQyMzoyMToxNS43MDgyMDk0NzVaIiwiZG9ja2VyX3ZlcnNpb24iOiIyMC4xMC4xMiIsImhpc3RvcnkiOlt7ImNyZWF0ZWQiOiIyMDIyLTA0LTI5VDIzOjIxOjE1LjI5MDQ4NjI4MloiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgQUREIGZpbGU6Mzc3NDQ2Mzk4MzZiMjQ4Yzg4ZjZlMTI2NjE5ODI5MjkwYjQ1YzIzMzMwOTUzODMxMGU4ZmZmYjgyZTk4ZWFmOCBpbiAvICJ9LHsiY3JlYXRlZCI6IjIwMjItMDQtMjlUMjM6MjE6MTUuNzA4MjA5NDc1WiIsImNyZWF0ZWRfYnkiOiIvYmluL3NoIC1jICMobm9wKSAgQ01EIFtcImJhc2hcIl0iLCJlbXB0eV9sYXllciI6dHJ1ZX1dLCJvcyI6ImxpbnV4Iiwicm9vdGZzIjp7InR5cGUiOiJsYXllcnMiLCJkaWZmX2lkcyI6WyJzaGEyNTY6ZTU5ZmM5NDk1NjEyMGE2Yzc2MjlmMDg1MDI3NTc4ZTYzNTdiNDgwNjFkNDU3MTQxMDdlNzlmMDRhODFhNmYwYyJdfX0=",
+   "repoDigests": [
+    "ubuntu@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d"
+   ],
+   "architecture": "amd64",
+   "os": "linux"
+  }
+ },
+ "distro": {
+  "prettyName": "Ubuntu 22.04 LTS",
+  "name": "Ubuntu",
+  "id": "ubuntu",
+  "idLike": [
+   "debian"
+  ],
+  "version": "22.04 LTS (Jammy Jellyfish)",
+  "versionID": "22.04",
+  "versionCodename": "jammy",
+  "homeURL": "https://www.ubuntu.com/",
+  "supportURL": "https://help.ubuntu.com/",
+  "bugReportURL": "https://bugs.launchpad.net/ubuntu/",
+  "privacyPolicyURL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+ },
+ "descriptor": {
+  "name": "syft",
+  "version": "0.74.1",
+  "configuration": {
+   "configPath": "",
+   "verbosity": 0,
+   "quiet": false,
+   "output": [
+    "json"
+   ],
+   "output-template-path": "",
+   "file": "",
+   "check-for-app-update": false,
+   "dev": {
+    "profile-cpu": false,
+    "profile-mem": false
+   },
+   "log": {
+    "structured": false,
+    "level": "warn",
+    "file-location": ""
+   },
+   "catalogers": null,
+   "package": {
+    "cataloger": {
+     "enabled": true,
+     "scope": "Squashed"
+    },
+    "search-unindexed-archives": false,
+    "search-indexed-archives": true
+   },
+   "attest": {},
+   "file-metadata": {
+    "cataloger": {
+     "enabled": false,
+     "scope": "Squashed"
+    },
+    "digests": [
+     "sha256"
+    ]
+   },
+   "file-classification": {
+    "cataloger": {
+     "enabled": false,
+     "scope": "Squashed"
+    }
+   },
+   "file-contents": {
+    "cataloger": {
+     "enabled": false,
+     "scope": "Squashed"
+    },
+    "skip-files-above-size": 1048576,
+    "globs": []
+   },
+   "secrets": {
+    "cataloger": {
+     "enabled": false,
+     "scope": "AllLayers"
+    },
+    "additional-patterns": {},
+    "exclude-pattern-names": [],
+    "reveal-values": false,
+    "skip-files-above-size": 1048576
+   },
+   "registry": {
+    "insecure-skip-tls-verify": false,
+    "insecure-use-http": false,
+    "auth": []
+   },
+   "exclude": [],
+   "platform": "",
+   "name": "",
+   "parallelism": 1
+  }
+ },
+ "schema": {
+  "version": "7.0.1",
+  "url": "https://raw.githubusercontent.com/anchore/syft/main/schema/json/schema-7.0.1.json"
+ }
+}

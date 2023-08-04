@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import dataclasses
-import glob
-import logging
 import datetime
+import glob
+import json
+import logging
 import os
 import re
-import json
 import shlex
 import shutil
 import subprocess
@@ -37,10 +37,10 @@ class DBInvalidException(Exception):
     pass
 
 class DBManager:
-    
+
     def __init__(self, root_dir: str):
         self.db_dir = os.path.join(root_dir, DB_DIR)
-    
+
     def db_paths(self, session_id: str) -> tuple[str, str]:
 
         session_dir = os.path.join(self.db_dir, session_id)
@@ -74,7 +74,7 @@ class DBManager:
         if os.path.exists(timestamp_path):
             with open(timestamp_path) as f:
                 db_created_timestamp = datetime.datetime.fromisoformat(f.read())
-        
+
         # read info from the metadata file in build/metadata.json
         metadata_path = os.path.join(session_dir, "build", "metadata.json")
         if not os.path.exists(metadata_path):
@@ -82,10 +82,10 @@ class DBManager:
 
         with open(metadata_path) as f:
             metadata = json.load(f)
-        
+
         stage_dir, _ = self.db_paths(session_id=session_id)
         db_pattern = os.path.join(
-            stage_dir, f"vulnerability-db*.tar.*"
+            stage_dir, "vulnerability-db*.tar.*",
         )
 
         matches = glob.glob(db_pattern)
@@ -108,7 +108,7 @@ class DBManager:
     def list_dbs(self) -> list[DBInfo]:
         if not os.path.exists(self.db_dir):
             return []
-        
+
         session_ids = os.listdir(self.db_dir)
         sessions = []
         for session_id in session_ids:
@@ -130,13 +130,13 @@ class GrypeDB:
         self.config_path = config_path
 
     @classmethod
-    def list_installed(cls, root_dir: str) -> list["GrypeDB"]:
+    def list_installed(cls, root_dir: str) -> list[GrypeDB]:
         bin_dir = os.path.join(root_dir, BIN_DIR)
         os.makedirs(bin_dir, exist_ok=True)
 
         if not os.path.exists(bin_dir):
             return []
-        
+
         bins = []
         for bin_name in sorted(os.listdir(bin_dir)):
             if bin_name.startswith("grype-db-"):
@@ -144,7 +144,7 @@ class GrypeDB:
         return bins
 
     @classmethod
-    def install(cls, version: str, config_path: str, root_dir: str) -> "GrypeDB":
+    def install(cls, version: str, config_path: str, root_dir: str) -> GrypeDB:
         bin_path = _install_grype_db(
             input_version=version,
             bin_dir=os.path.join(root_dir, BIN_DIR),
@@ -165,7 +165,7 @@ class GrypeDB:
         self.package_db(build_dir=build_dir, provider_root_dir=provider_root_dir)
 
         db_pattern = os.path.join(
-            build_dir, f"*_v{schema_version}_*.tar.*"
+            build_dir, f"*_v{schema_version}_*.tar.*",
         )
 
         matches = glob.glob(db_pattern)
@@ -192,7 +192,7 @@ class GrypeDB:
     def package_db(self, build_dir: str, provider_root_dir: str):
         self.run("package", "--dir", build_dir,
                  provider_root_dir=provider_root_dir,
-                 config=self.config_path
+                 config=self.config_path,
                  )
 
     def run(self, *args, provider_root_dir: str, config: str):
@@ -201,7 +201,7 @@ class GrypeDB:
         if level == "TRACE":
             # trace is not supported in grype-db yet
             level = "DEBUG"
-        
+
         logging.info(f"running (log-level={level}) {cmd!r}")
         print_annotation("[begin grype-db output]")
 
@@ -215,7 +215,7 @@ class GrypeDB:
         )
 
         ret = subprocess.check_call(cmd, env=env, shell=True)
-        
+
         print_annotation("[end grype-db output]")
         return ret
 
@@ -273,7 +273,7 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
                     logging.info(f"grype-db already installed at version {install_version!r}, but was from dirty git state. Rebuilding...")
                 else:
                     logging.info(f"grype-db already installed at version {install_version!r}")
-                    return
+                    return None
             else:
                 logging.warning(f"found existing grype-db installation with mismatched version: existing={existing_version!r} vs installed={install_version!r}")
         else:
@@ -281,12 +281,12 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
 
     if using_local_file:
         return _install_from_user_source(bin_dir=bin_dir, clone_dir=clone_dir)
-    
+
     return _install_from_clone(
-        bin_dir=bin_dir, 
-        checkout=version, 
-        clone_dir=clone_dir, 
-        repo_url=repo_url, 
+        bin_dir=bin_dir,
+        checkout=version,
+        clone_dir=clone_dir,
+        repo_url=repo_url,
         repo_user_and_name=repo_user_and_name,
     )
 

@@ -3,14 +3,13 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import enum
-import logging
 from typing import Any
 
 import click
 import yaml
 
 from grype_db_manager import __name__ as package_name
-from grype_db_manager.cli import config, tool, db
+from grype_db_manager.cli import config, db, tool
 
 
 @click.option("--verbose", "-v", default=False, help="show more verbose logging", count=True)
@@ -20,13 +19,14 @@ from grype_db_manager.cli import config, tool, db
 @click.pass_context
 def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None:
     import logging.config
+
     import colorlog
 
     ctx.obj = config.load(path=config_path)
 
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
-        def format(self, record):
-            duration = datetime.datetime.utcfromtimestamp(record.relativeCreated / 1000)
+        def format(self, record): # noqa: A003
+            duration = datetime.datetime.fromtimestamp(record.relativeCreated / 1000, tz=datetime.timezone.utc)
             record.delta = f"[{duration.second:04d}]"
             return super().format(record)
 
@@ -41,7 +41,7 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
             "version": 1,
             "formatters": {
                 "standard": {
-                    "()": DeltaTimeFormatter, 
+                    "()": DeltaTimeFormatter,
                     "format": "%(delta)s %(log_color)s%(levelname)5s %(message)s",
                     "datefmt": "%Y-%m-%d %H:%M:%S",
                     "log_colors": {

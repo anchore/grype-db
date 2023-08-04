@@ -1,20 +1,18 @@
-import click
-
+import logging
 import os
 import shutil
-import logging
-import time
 
+import click
 import yardstick
 from tabulate import tabulate
+from yardstick import store
 from yardstick.cli import config as ycfg
-from yardstick import store, artifact
-from yardstick.tool.syft import Syft
 from yardstick.tool.grype import Grype
+from yardstick.tool.syft import Syft
 
 from grype_db_manager.cli import config
-from grype_db_manager.grypedb import GrypeDB, DBManager, DB_DIR
-from grype_db_manager.validate import validate, RESULT_SET
+from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
+from grype_db_manager.validate import RESULT_SET, validate
 
 
 @click.group(name="db", help="manage local grype database builds")
@@ -33,7 +31,7 @@ def list_dbs(cfg: config.Application):
     if not dbs:
         click.echo("no databases found")
         return
-    
+
     rows = []
     for info in dbs:
         row = [info.session_id, info.schema_version, info.db_created]
@@ -89,11 +87,11 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str]) -> 
 
     db_manager = DBManager(root_dir=cfg.root)
     db_info = db_manager.get_db_info(session_id=session_id)
-    
+
     if not db_info:
         click.echo(f"no database found with session id {session_id}")
         return
-    
+
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.yardstick_root)
 
@@ -125,11 +123,11 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str]) -> 
                             version=grype.version_detail,
                         ),
                     ],
-                )
-            )
-        }
+                ),
+            ),
+        },
     )
 
     validate(cfg=yardstick_cfg, db_uuid=session_id, root_dir=cfg.root)
 
-    
+

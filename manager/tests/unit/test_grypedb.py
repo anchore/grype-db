@@ -7,8 +7,8 @@ from grype_db_manager import grypedb
 
 class TestDBManager:
 
-    def test_list_dbs(self, manager_root):
-        root = manager_root(case="dbs-case-1")
+    def test_list_dbs(self, top_level_fixture):
+        root = top_level_fixture(case="dbs-case-1")
         dbm = grypedb.DBManager(root_dir=root)
 
         def path_to_archive(session_id: str, name: str):
@@ -68,8 +68,8 @@ class TestDBManager:
 
 class TestGrypeDB:
 
-    def test_list_installed(self, manager_root):
-        root = manager_root(case="tools-case-1")
+    def test_list_installed(self, top_level_fixture):
+        root = top_level_fixture(case="tools-case-1")
         
         expected_bin_path_root = os.path.join(root, "tools", "grype-db", "bin")
         installed = grypedb.GrypeDB.list_installed(root_dir=root)
@@ -90,8 +90,8 @@ class TestGrypeDB:
             assert g.bin_path.endswith("grype-db-"+g.version)
             assert os.path.exists(g.bin_path)
 
-    def test_run(self, manager_root, mocker):
-        root = manager_root(case="tools-case-1")
+    def test_run(self, top_level_fixture, mocker):
+        root = top_level_fixture(case="tools-case-1")
         bin_path = os.path.join(root, "tools", "grype-db", "bin", "grype-db-v0.19.0")
         gdb = grypedb.GrypeDB(bin_path)
         
@@ -118,8 +118,8 @@ class TestGrypeDB:
         assert args[0] == f"{bin_path} version"
 
 
-    def test_package_db(self, manager_root, mocker):
-        root = manager_root(case="tools-case-1")
+    def test_package_db(self, top_level_fixture, mocker):
+        root = top_level_fixture(case="tools-case-1")
         bin_path = os.path.join(root, "tools", "grype-db", "bin", "grype-db-v0.19.0")
         gdb = grypedb.GrypeDB(bin_path, config_path="config_path")
 
@@ -140,8 +140,8 @@ class TestGrypeDB:
         assert args == ("package", "--dir", "build_path")
 
 
-    def test_build_db(self, manager_root, mocker):
-        root = manager_root(case="tools-case-1")
+    def test_build_db(self, top_level_fixture, mocker):
+        root = top_level_fixture(case="tools-case-1")
         bin_path = os.path.join(root, "tools", "grype-db", "bin", "grype-db-v0.19.0")
         gdb = grypedb.GrypeDB(bin_path, config_path="config_path")
 
