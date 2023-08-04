@@ -1,0 +1,12 @@
+{
+    "available": {
+     "4": [
+      {
+       "built": "2023-07-31T03:45:08Z",
+       "version": 4,
+       "url": "https://toolbox-data.anchore.io/grype/databases/vulnerability-db_v5_2023-07-31T03:45:08Z_36d351433b2adff2a5d8.tar.gz",
+       "checksum": "sha256:e942590f2f6e45dcdc078d237e575a30345c57e4d5dea08a95af4cb787c5ad04"
+      }
+     ]
+    }
+   }

@@ -10,15 +10,13 @@ import logging
 
 import yardstick
 from yardstick import store
+from yardstick.cli import config as ycfg
 
 SBOM_IMAGE_PREFIX = "ghcr.io/anchore/vml-sbom"
-DEFAULT_RESULT_SET = "sboms"
 TIMESTAMP_OCI_ANNOTATION_KEY = "io.anchore.yardstick.timestamp"
-SOURCE_REPO = "https://github.com/anchore/vulnerability-match-labels"
-DATA_LICENSE = "CC0-1.0"
 
 
-def download(cfg: yardstick.cli.config.Application, result_set: str):
+def download(cfg: ycfg.Application, result_set: str):
     # 1. derive a set of all images to operate on from the "sbom" result set
     result_set_config = cfg.result_sets.get(result_set, None)
     if not result_set_config:
@@ -108,17 +106,8 @@ class Oras:
         return cls.run("pull", target, **kwargs, cd=destination)
 
     @classmethod
-    def push(cls, target: str, files: list[str], annotations: dict[str, str], **kwargs) -> subprocess.CompletedProcess:
-        an = []
-        for k, v in annotations.items():
-            an.append("--annotation")
-            an.append(f"{k}={v}")
-        return cls.run("push", target, *files, *an, **kwargs)
-
-    @classmethod
     def manifest_fetch(cls, target: str, **kwargs) -> subprocess.CompletedProcess:
         return cls.run("manifest", "fetch", target, **kwargs)
-
 
     @classmethod
     def run(cls, *args, cd: str | None = None, fail_on_error: bool = True, **kwargs) -> subprocess.CompletedProcess:

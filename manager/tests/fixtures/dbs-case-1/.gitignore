@@ -1,0 +1,4 @@
+# these test fixtures have no binary data contained in them
+!/**/*.tar.gz
+# this is not a real build dir
+!/**/build

@@ -11,6 +11,9 @@ class TestDBManager:
         root = manager_root(case="dbs-case-1")
         dbm = grypedb.DBManager(root_dir=root)
 
+        def path_to_archive(session_id: str, name: str):
+            return os.path.join(root, grypedb.DB_DIR, session_id, "stage", name)
+
         expected = [
             grypedb.DBInfo(
                 session_id='9d1fce98-9c10-4887-949e-8296a259daf5',
@@ -18,6 +21,10 @@ class TestDBManager:
                 db_checksum='sha256:0f2f6e45dcde94259c078d237e575a30787c5ad04345c57e4d5dea08a95af4cb',
                 db_created=None,
                 data_created='2023-07-31T03:45:08Z',
+                archive_path=path_to_archive(
+                    '9d1fce98-9c10-4887-949e-8296a259daf5',
+                    "vulnerability-db_v4_2023-08-03T01:34:34Z_54b7b6a76b058f1fa587.tar.gz",
+                ),
             ),
             grypedb.DBInfo(
                 session_id='41e4c9e7-73c7-4106-bfb3-82e58ce15d9a',
@@ -25,6 +32,10 @@ class TestDBManager:
                 db_checksum='sha256:c996a4c459a2fca9283c4fd8cdb53e3b050650d76e6ce517b91e34430f6db854',
                 db_created=None,
                 data_created='2023-07-31T01:34:05Z',
+                archive_path=path_to_archive(
+                    '41e4c9e7-73c7-4106-bfb3-82e58ce15d9a',
+                    "vulnerability-db_v5_2023-08-03T01:34:34Z_54b7b6a76b058f1fa587.tar.gz",
+                ),
             ),
         ]
         dbs = dbm.list_dbs()

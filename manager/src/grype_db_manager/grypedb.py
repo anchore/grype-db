@@ -63,7 +63,7 @@ class DBManager:
 
         return session_id
 
-    def get_db_info(self, session_id: str) -> DBInfo | None:
+    def get_db_info(self, session_id: str, allow_missing_archive: bool = False) -> DBInfo | None:
         session_dir = os.path.join(self.db_dir, session_id)
         if not os.path.exists(session_dir):
             raise DBInvalidException(f"path does not exist: {session_dir!r}")
@@ -89,10 +89,12 @@ class DBManager:
         )
 
         matches = glob.glob(db_pattern)
-        if len(matches) != 1:
+        if not matches:
             raise DBInvalidException(f"db archive not found for {session_id!r}")
-
-        abs_archive_path = os.path.abspath(matches[0])
+        elif len(matches) > 1:
+            raise DBInvalidException(f"multiple db archives found for {session_id!r}")
+        else:
+            abs_archive_path = os.path.abspath(matches[0])
 
         return DBInfo(
             session_id=session_id,
@@ -206,7 +208,7 @@ class GrypeDB:
         env = dict(
             **os.environ.copy(),
             **{
-                "GRYPE_DB_PROVIDER_ROOT": provider_root_dir,
+                "GRYPE_DB_VUNNEL_ROOT": provider_root_dir,
                 "GRYPE_DB_CONFIG": config,
                 "GRYPE_DB_LOG_LEVEL": level,
             },
