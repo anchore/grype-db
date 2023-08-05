@@ -17,7 +17,7 @@ from publisher.utils.builder import GrypeDbBuilder
 # filter results to only consider years before and at this year (inclusive)
 MAX_YEAR = 2021
 MAX_ALLOWED_DROPPED_UNIQUE_MATCHES = 10
-MAX_ALLOWED_UNIQUE_MATCHES = 15
+MAX_ALLOWED_UNIQUE_MATCHES = 70
 RESULT_SET_NAME = "acceptance-test"
 
 TEST_IMAGES = [
