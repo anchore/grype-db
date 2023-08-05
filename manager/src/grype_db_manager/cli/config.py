@@ -26,19 +26,20 @@ class GrypeDB:
 
 @dataclass
 class Grype:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_GRYPE_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_GRYPE_CONFIG", default="")
+    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_GRYPE_VERSION", default="latest")
+    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_GRYPE_CONFIG", default="")
 
 @dataclass
 class Syft:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_SYFT_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_SYFT_CONFIG", default="")
+    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_SYFT_VERSION", default="latest")
+    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_SYFT_CONFIG", default="")
 
 @dataclass()
 class Validate:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
     syft: Syft = field(default_factory=Syft)
+    default_max_year: int = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DEFAULT_MAX_YEAR", default=2021)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)

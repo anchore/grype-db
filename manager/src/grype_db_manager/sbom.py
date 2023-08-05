@@ -31,7 +31,7 @@ def download(cfg: ycfg.Application, result_set: str, store_root: str | None = No
     idx = 0
     sbom_scan_requests = [r for r in scan_requests if r.tool.lower().startswith("syft")]
 
-    logging.info(f"found {len(sbom_scan_requests)} configurations for SBOMs")
+    logging.debug(f"found {len(sbom_scan_requests)} configurations for SBOMs")
     for idx, r in enumerate(sbom_scan_requests):
         exists = store.scan_result.find(by_tool=r.tool, by_image=r.image)
         if exists:

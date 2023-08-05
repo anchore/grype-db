@@ -27,7 +27,7 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
         def format(self, record): # noqa: A003
             duration = datetime.datetime.fromtimestamp(record.relativeCreated / 1000, tz=datetime.timezone.utc)
-            record.delta = f"[{duration.second:04d}]"
+            record.delta = f"{duration.second:04d}"
             return super().format(record)
 
     log_level = ctx.obj.log.level
@@ -36,18 +36,24 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
     elif verbose >= 2:
         log_level = "TRACE"
 
+    ansi_grey = "\x1b[38;5;8m"
+    ansi_reset = "\x1b[0m"
+
     logging.config.dictConfig(
         {
             "version": 1,
             "formatters": {
                 "standard": {
                     "()": DeltaTimeFormatter,
-                    "format": "%(delta)s %(log_color)s%(levelname)5s %(message)s",
+                    # "format": "%(log_color)s[%(delta)s] %(levelname)5s %(message)s",
+                    # "format": f"{ansi_grey}%(levelname)-5s{ansi_reset} %(log_color)s%(message)s",
+                    "format": f"{ansi_grey}%(delta)s{ansi_reset} %(log_color)s%(message)s",
                     "datefmt": "%Y-%m-%d %H:%M:%S",
                     "log_colors": {
                         "TRACE": "purple",
                         "DEBUG": "cyan",
                         "INFO": "reset",
+                        "BANNER": "blue",
                         "WARNING": "yellow",
                         "ERROR": "red",
                         "CRITICAL": "red,bg_white",

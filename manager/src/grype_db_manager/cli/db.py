@@ -12,7 +12,7 @@ from yardstick.tool.syft import Syft
 
 from grype_db_manager.cli import config
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
-from grype_db_manager.validate import RESULT_SET, validate
+from grype_db_manager.validate import validate
 
 
 @click.group(name="db", help="manage local grype database builds")
@@ -77,9 +77,11 @@ def show_db(cfg: config.Application, session_id: str) -> None:
 
 @group.command(name="validate", help="validate a grype database")
 @click.option("--image", "-i", "images", multiple=True, help="the image (or images) to validate with (default is to use all configured images)")
+@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
+@click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
 @click.argument("session-id")
 @click.pass_obj
-def validate_db(cfg: config.Application, session_id: str, images: list[str]) -> None:
+def validate_db(cfg: config.Application, session_id: str, images: list[str], verbosity: int, recapture: bool) -> None:
     logging.info(f"validate DB (session id {session_id})")
 
     if not images:
@@ -95,13 +97,17 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str]) -> 
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.yardstick_root)
 
+    # we do this to resolve to a specific version of each tool in the request configuation
     syft = Syft.install(version=cfg.validate.syft.version, within_path=store.tool.install_base(name="syft"))
     grype = Grype.install(version=cfg.validate.grype.version, within_path=store.tool.install_base(name="grype"))
 
+    result_set = "db-validation"
+
     yardstick_cfg = ycfg.Application(
         store_root=cfg.yardstick_root,
+        default_max_year=cfg.validate.default_max_year,
         result_sets={
-            RESULT_SET: ycfg.ResultSet(
+            result_set: ycfg.ResultSet(
                 description="compare the latest published OSS DB with the latest (local) built DB",
                 matrix=ycfg.ScanMatrix(
                     images=images,
@@ -113,6 +119,7 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str]) -> 
                             version=syft.version_detail,
                         ),
                         ycfg.Tool(
+                            label="custom-db",
                             name="grype",
                             takes="SBOM",
                             version=grype.version_detail + f"+import-db={db_info.archive_path}",
@@ -128,6 +135,13 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str]) -> 
         },
     )
 
-    validate(cfg=yardstick_cfg, db_uuid=session_id, root_dir=cfg.root)
+    validate(
+        cfg=yardstick_cfg,
+        result_set=result_set,
+        db_uuid=session_id,
+        verbosity=verbosity,
+        recapture=recapture,
+        root_dir=cfg.root,
+    )
 
 
