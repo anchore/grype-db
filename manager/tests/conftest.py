@@ -11,6 +11,7 @@ def top_level_fixture():
         if not os.path.exists(path):
             raise ValueError(f"invalid case {case}")
         return path
+
     return fn
 
 
@@ -26,6 +27,7 @@ def top_level_fixture_copy(top_level_fixture, tmp_path):
         return tmp_case_path
 
     return fn
+
 
 @pytest.fixture
 def test_dir(request):
@@ -50,7 +52,6 @@ def test_dir(request):
 @pytest.fixture
 def test_dir_path(request):
     def fn(path: str) -> str:
-
         """
         Returns the path of a file relative to the current test file.
 
@@ -68,5 +69,5 @@ def test_dir_path(request):
         current_test_filepath = os.path.realpath(request.module.__file__)
         parent = os.path.realpath(os.path.dirname(current_test_filepath))
         return os.path.join(parent, path)
-    
+
     return fn

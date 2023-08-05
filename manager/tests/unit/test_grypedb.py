@@ -6,7 +6,6 @@ from grype_db_manager import grypedb
 
 
 class TestDBManager:
-
     def test_list_dbs(self, top_level_fixture):
         root = top_level_fixture(case="dbs-case-1")
         dbm = grypedb.DBManager(root_dir=root)
@@ -16,24 +15,24 @@ class TestDBManager:
 
         expected = [
             grypedb.DBInfo(
-                session_id='9d1fce98-9c10-4887-949e-8296a259daf5',
+                session_id="9d1fce98-9c10-4887-949e-8296a259daf5",
                 schema_version=4,
-                db_checksum='sha256:0f2f6e45dcde94259c078d237e575a30787c5ad04345c57e4d5dea08a95af4cb',
+                db_checksum="sha256:0f2f6e45dcde94259c078d237e575a30787c5ad04345c57e4d5dea08a95af4cb",
                 db_created=None,
-                data_created='2023-07-31T03:45:08Z',
+                data_created="2023-07-31T03:45:08Z",
                 archive_path=path_to_archive(
-                    '9d1fce98-9c10-4887-949e-8296a259daf5',
+                    "9d1fce98-9c10-4887-949e-8296a259daf5",
                     "vulnerability-db_v4_2023-08-03T01:34:34Z_54b7b6a76b058f1fa587.tar.gz",
                 ),
             ),
             grypedb.DBInfo(
-                session_id='41e4c9e7-73c7-4106-bfb3-82e58ce15d9a',
+                session_id="41e4c9e7-73c7-4106-bfb3-82e58ce15d9a",
                 schema_version=5,
-                db_checksum='sha256:c996a4c459a2fca9283c4fd8cdb53e3b050650d76e6ce517b91e34430f6db854',
+                db_checksum="sha256:c996a4c459a2fca9283c4fd8cdb53e3b050650d76e6ce517b91e34430f6db854",
                 db_created=None,
-                data_created='2023-07-31T01:34:05Z',
+                data_created="2023-07-31T01:34:05Z",
                 archive_path=path_to_archive(
-                    '41e4c9e7-73c7-4106-bfb3-82e58ce15d9a',
+                    "41e4c9e7-73c7-4106-bfb3-82e58ce15d9a",
                     "vulnerability-db_v5_2023-08-03T01:34:34Z_54b7b6a76b058f1fa587.tar.gz",
                 ),
             ),
@@ -44,9 +43,9 @@ class TestDBManager:
     def test_new_session(self, tmp_path: pathlib.Path):
         dbm = grypedb.DBManager(root_dir=tmp_path.as_posix())
         session_id = dbm.new_session()
-        
+
         assert session_id is not None
-        
+
         session_dir = os.path.join(tmp_path.as_posix(), grypedb.DB_DIR, session_id)
 
         session_build_dir = os.path.join(session_dir, "build")
@@ -65,12 +64,10 @@ class TestDBManager:
             assert v.year == datetime.datetime.now().year
 
 
-
 class TestGrypeDB:
-
     def test_list_installed(self, top_level_fixture):
         root = top_level_fixture(case="tools-case-1")
-        
+
         expected_bin_path_root = os.path.join(root, "tools", "grype-db", "bin")
         installed = grypedb.GrypeDB.list_installed(root_dir=root)
 
@@ -87,17 +84,17 @@ class TestGrypeDB:
 
         for g in installed:
             assert g.bin_path.startswith(expected_bin_path_root)
-            assert g.bin_path.endswith("grype-db-"+g.version)
+            assert g.bin_path.endswith("grype-db-" + g.version)
             assert os.path.exists(g.bin_path)
 
     def test_run(self, top_level_fixture, mocker):
         root = top_level_fixture(case="tools-case-1")
         bin_path = os.path.join(root, "tools", "grype-db", "bin", "grype-db-v0.19.0")
         gdb = grypedb.GrypeDB(bin_path)
-        
+
         # patch grypedb.subprocess.check_call to return a mock
         mock_check_call = mocker.patch("grype_db_manager.grypedb.subprocess.check_call")
-        
+
         # patch logging.getLevelName to return a mock
         mock_logger = mocker.patch("grype_db_manager.grypedb.logging.getLevelName")
         mock_logger.return_value = "DEBUG"
@@ -117,7 +114,6 @@ class TestGrypeDB:
         assert kwargs["env"]["GRYPE_DB_LOG_LEVEL"] == "DEBUG"
         assert args[0] == f"{bin_path} version"
 
-
     def test_package_db(self, top_level_fixture, mocker):
         root = top_level_fixture(case="tools-case-1")
         bin_path = os.path.join(root, "tools", "grype-db", "bin", "grype-db-v0.19.0")
@@ -135,10 +131,9 @@ class TestGrypeDB:
 
         mock_run.assert_called_once()
         args, kwargs = mock_run.call_args
-        assert kwargs["provider_root_dir"] == "provider_root_path"  
+        assert kwargs["provider_root_dir"] == "provider_root_path"
         assert kwargs["config"] == "config_path"
         assert args == ("package", "--dir", "build_path")
-
 
     def test_build_db(self, top_level_fixture, mocker):
         root = top_level_fixture(case="tools-case-1")
@@ -157,10 +152,9 @@ class TestGrypeDB:
 
         mock_run.assert_called_once()
         args, kwargs = mock_run.call_args
-        assert kwargs["provider_root_dir"] == "provider_root_path"  
+        assert kwargs["provider_root_dir"] == "provider_root_path"
         assert kwargs["config"] == "config_path"
         assert args == ("build", "--schema", "5", "--dir", "build_path")
-
 
     def test_build_and_package(self, tmp_path: pathlib.Path, mocker):
         bin_dir_path = tmp_path / "tools/grype-db/bin/grype-db-v0.19.0"
@@ -176,15 +170,15 @@ class TestGrypeDB:
 
         # when mock_package_db is called then call a function that creates an empty tar.gz file in the build_dir
         package_db_call_state = {}
+
         def package_db(build_dir: str, provider_root_dir: str):
             package_db_call_state["build_dir"] = build_dir
             open(os.path.join(build_dir, "something_v5_else.tar.gz"), "w").close()
-            
+
         mock_package_db.side_effect = package_db
 
         # mock gdb.build_db
         mock_build_db = mocker.patch("grype_db_manager.grypedb.GrypeDB.build_db")
-       
 
         gdb.build_and_package(schema_version=5, provider_root_dir="provider_root_path", root_dir=tmp_path.as_posix())
 
@@ -210,7 +204,6 @@ class TestGrypeDB:
         args, kwargs = mock_package_db.call_args
         assert kwargs["provider_root_dir"] == "provider_root_path"
         assert kwargs["build_dir"] == captured_build_dir
-
 
         # make certain the stage dir contains a tar.gz file
         # the stage dir is a sibling of the build dir (in captured_build_dir)

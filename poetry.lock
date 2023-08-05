@@ -416,6 +416,19 @@ typing-inspect = ">=0.4.0"
 dev = ["flake8", "hypothesis", "ipython", "mypy (>=0.710)", "portray", "pytest (>=7.2.0)", "setuptools", "simplejson", "twine", "types-dataclasses", "wheel"]
 
 [[package]]
+name = "dict"
+version = "2020.12.3"
+description = "dict replacement"
+optional = false
+python-versions = "*"
+files = [
+    {file = "dict-2020.12.3.tar.gz", hash = "sha256:8a14ff62e2a9dff5ef751a2e5eee07715c79ddab6b9ca06c59e73622f80761b5"},
+]
+
+[package.dependencies]
+values = "*"
+
+[[package]]
 name = "exceptiongroup"
 version = "1.1.2"
 description = "Backport of PEP 654 (exception groups)"
@@ -470,6 +483,17 @@ files = [
 
 [package.dependencies]
 gitdb = ">=4.0.1,<5"
+
+[[package]]
+name = "has-flag"
+version = "0.1.1"
+description = "Check if argv has a specific flag"
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "has-flag-0.1.1.tar.gz", hash = "sha256:2ade83150630ce9058d4ab07c57f65c10e6d894e8c90a2275b14a9185a3bc533"},
+    {file = "has_flag-0.1.1-py3-none-any.whl", hash = "sha256:7db35c8fff4d58c9e483868dc1271387e1e838d545ab9734eddeeb8b5378f2ac"},
+]
 
 [[package]]
 name = "idna"
@@ -535,30 +559,6 @@ files = [
 ]
 
 [[package]]
-name = "markdown-it-py"
-version = "3.0.0"
-description = "Python port of markdown-it. Markdown parsing, done right!"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
-    {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
-]
-
-[package.dependencies]
-mdurl = ">=0.1,<1.0"
-
-[package.extras]
-benchmarking = ["psutil", "pytest", "pytest-benchmark"]
-code-style = ["pre-commit (>=3.0,<4.0)"]
-compare = ["commonmark (>=0.9,<1.0)", "markdown (>=3.4,<4.0)", "mistletoe (>=1.0,<2.0)", "mistune (>=2.0,<3.0)", "panflute (>=2.3,<3.0)"]
-linkify = ["linkify-it-py (>=1,<3)"]
-plugins = ["mdit-py-plugins"]
-profiling = ["gprof2dot"]
-rtd = ["jupyter_sphinx", "mdit-py-plugins", "myst-parser", "pyyaml", "sphinx", "sphinx-copybutton", "sphinx-design", "sphinx_book_theme"]
-testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions"]
-
-[[package]]
 name = "marshmallow"
 version = "3.20.1"
 description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
@@ -591,17 +591,6 @@ files = [
 
 [package.dependencies]
 marshmallow = ">=2.0.0"
-
-[[package]]
-name = "mdurl"
-version = "0.1.2"
-description = "Markdown URL utilities"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
-    {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
-]
 
 [[package]]
 name = "mergedeep"
@@ -981,24 +970,6 @@ files = [
 ]
 
 [[package]]
-name = "rich"
-version = "13.5.2"
-description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-optional = false
-python-versions = ">=3.7.0"
-files = [
-    {file = "rich-13.5.2-py3-none-any.whl", hash = "sha256:146a90b3b6b47cac4a73c12866a499e9817426423f57c5a66949c086191a8808"},
-    {file = "rich-13.5.2.tar.gz", hash = "sha256:fb9d6c0a0f643c99eed3875b5377a184132ba9be4d61516a55273d3554d75a39"},
-]
-
-[package.dependencies]
-markdown-it-py = ">=2.2.0"
-pygments = ">=2.13.0,<3.0.0"
-
-[package.extras]
-jupyter = ["ipywidgets (>=7.5.1,<9)"]
-
-[[package]]
 name = "ruff"
 version = "0.0.282"
 description = "An extremely fast Python linter, written in Rust."
@@ -1073,6 +1044,21 @@ files = [
     {file = "smmap-5.0.0-py3-none-any.whl", hash = "sha256:2aba19d6a040e78d8b09de5c57e96207b09ed71d8e55ce0959eeee6c8e190d94"},
     {file = "smmap-5.0.0.tar.gz", hash = "sha256:c840e62059cd3be204b0c9c9f74be2c09d5648eddd4580d9314c3ecde0b30936"},
 ]
+
+[[package]]
+name = "supports-color"
+version = "0.1.2"
+description = "Detect whether a terminal supports color"
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "supports-color-0.1.2.tar.gz", hash = "sha256:37f03ce1a46b2f12b50e1a75c3597ba7f27915b5b91e21099c554242468eaddf"},
+    {file = "supports_color-0.1.2-py3-none-any.whl", hash = "sha256:43403dd59a40583d3da13330cbcfcd41711748881671598c27f260441d2cb3d1"},
+]
+
+[package.dependencies]
+dict = ">=2020.12.3,<2021.0.0"
+has-flag = ">=0.1.1,<0.2.0"
 
 [[package]]
 name = "tabulate"
@@ -1179,6 +1165,16 @@ files = [
 brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotlipy (>=0.6.0)"]
 secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "pyOpenSSL (>=0.14)", "urllib3-secure-extra"]
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
+
+[[package]]
+name = "values"
+version = "2020.12.3"
+description = "values.get(input) - create list from input"
+optional = false
+python-versions = "*"
+files = [
+    {file = "values-2020.12.3.tar.gz", hash = "sha256:30b1b74674b546188b77d8398de17ea49f3692191114da43c703bda5b54402f5"},
+]
 
 [[package]]
 name = "wcwidth"
@@ -1296,4 +1292,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<=3.13"
-content-hash = "8e381c5b7cbc573ce4fc5623dd47c8b972fae36182c9868efdffa5480292d605"
+content-hash = "a6387b0cede6aaa27d030cdb84f76b75b88b0fac44bbee8de6e0a264b87c6b26"

@@ -12,7 +12,6 @@ from grype_db_manager import sbom
 
 
 class TestOras:
-
     def test_run(self):
         result = sbom.Oras.run("version", stdout=subprocess.DEVNULL)
         assert result.returncode == 0
@@ -99,7 +98,9 @@ def test_download(top_level_fixture_copy, mocker):
     # assert that we can get the downloaded SBOMs from the result set (via scan configs)
     result_set_obj = yardstick.store.result_set.load(name=result_set, store_root=root)
 
-    result = result_set_obj.get("syft@v0.74.1", "docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d")
+    result = result_set_obj.get(
+        "syft@v0.74.1", "docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d"
+    )
     assert result
     assert result.config == scan_config
 
@@ -109,7 +110,9 @@ def test_download_sbom_results(top_level_fixture_copy, mocker):
 
     mock_oras_manifest_fetch = mocker.patch("grype_db_manager.sbom.Oras.manifest_fetch")
     mock_oras_manifest_fetch.return_value = subprocess.CompletedProcess(
-        args=[], returncode=0, stdout=b'{"schemaVersion":2,"mediaType":"application/vnd.oci.image.manifest.v1+json","config":{"mediaType":"application/vnd.unknown.config.v1+json","digest":"sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a","size":2},"layers":[{"mediaType":"application/vnd.oci.image.layer.v1.tar","digest":"sha256:b5c4364b060edc3cc9b244597cd1694153d5609d362e24e354b2fd6de91640b6","size":510,"annotations":{"org.opencontainers.image.title":"metadata.json"}},{"mediaType":"application/vnd.oci.image.layer.v1.tar","digest":"sha256:597573c9bca53681b8c2a7b36072baf2d31aec35688c936c6527c5ab883a4447","size":1479471,"annotations":{"org.opencontainers.image.title":"data.json"}}],"annotations":{"io.anchore.yardstick.timestamp":"2023-06-30T12:57:59.354289+00:00","org.opencontainers.image.created":"2023-08-04T12:08:07Z","org.opencontainers.image.description":"sbom for docker.io/ubuntu@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d captured with yardstick","org.opencontainers.image.licenses":"CC0-1.0","org.opencontainers.image.source":"https://github.com/anchore/vulnerability-match-labels"}}'
+        args=[],
+        returncode=0,
+        stdout=b'{"schemaVersion":2,"mediaType":"application/vnd.oci.image.manifest.v1+json","config":{"mediaType":"application/vnd.unknown.config.v1+json","digest":"sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a","size":2},"layers":[{"mediaType":"application/vnd.oci.image.layer.v1.tar","digest":"sha256:b5c4364b060edc3cc9b244597cd1694153d5609d362e24e354b2fd6de91640b6","size":510,"annotations":{"org.opencontainers.image.title":"metadata.json"}},{"mediaType":"application/vnd.oci.image.layer.v1.tar","digest":"sha256:597573c9bca53681b8c2a7b36072baf2d31aec35688c936c6527c5ab883a4447","size":1479471,"annotations":{"org.opencontainers.image.title":"data.json"}}],"annotations":{"io.anchore.yardstick.timestamp":"2023-06-30T12:57:59.354289+00:00","org.opencontainers.image.created":"2023-08-04T12:08:07Z","org.opencontainers.image.description":"sbom for docker.io/ubuntu@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d captured with yardstick","org.opencontainers.image.licenses":"CC0-1.0","org.opencontainers.image.source":"https://github.com/anchore/vulnerability-match-labels"}}',
     )
 
     mock_pull = mocker.patch("grype_db_manager.sbom.Oras.pull")
@@ -140,7 +143,10 @@ def test_download_sbom_results(top_level_fixture_copy, mocker):
 
     oci_ref, scan_config = sbom._download_sbom_results(request, store_root=root)
 
-    assert oci_ref == "ghcr.io/anchore/vml-sbom/docker.io/ubuntu:sha256-aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d"
+    assert (
+        oci_ref
+        == "ghcr.io/anchore/vml-sbom/docker.io/ubuntu:sha256-aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d"
+    )
     assert scan_config == artifact.ScanConfiguration(
         ID="3ae4d03d-f04b-43eb-982c-8c2e1f966bad",
         image_repo="docker.io/ubuntu",
@@ -150,4 +156,3 @@ def test_download_sbom_results(top_level_fixture_copy, mocker):
         tool_version="v0.74.1",
         timestamp=datetime.datetime.fromisoformat("2023-06-30T12:57:59.354289+00:00"),
     )
-

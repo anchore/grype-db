@@ -12,6 +12,7 @@ DEFAULT_CONFIGS = (
     "grype-db-manager.yaml",
 )
 
+
 @dataclass
 class Log:
     level: str = os.environ.get("GRYPE_DB_MANAGER_LOG_LEVEL", default="INFO")
@@ -19,20 +20,24 @@ class Log:
     def __post_init__(self) -> None:
         self.level = self.level.upper()
 
+
 @dataclass
 class GrypeDB:
     version: str = os.environ.get("GRYPE_DB_MANAGER_GRYPE_DB_VERSION", default="latest")
     config: str = os.environ.get("GRYPE_DB_MANAGER_GRYPE_DB_CONFIG", default="")
+
 
 @dataclass
 class Grype:
     version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_GRYPE_VERSION", default="latest")
     config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_GRYPE_CONFIG", default="")
 
+
 @dataclass
 class Syft:
     version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_SYFT_VERSION", default="latest")
     config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_SYFT_CONFIG", default="")
+
 
 @dataclass()
 class Validate:
@@ -53,6 +58,7 @@ class Validate:
             else:
                 images += [image]
         self.images = images
+
 
 @dataclass
 class Application:
@@ -92,8 +98,8 @@ def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Applica
     if not cfg:
         raise FileNotFoundError("no config found")
 
-
     return cfg
+
 
 def _load(path: str) -> Application:
     try:

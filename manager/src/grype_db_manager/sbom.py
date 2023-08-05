@@ -102,7 +102,6 @@ def oci_sbom_reference_from_image(image: str) -> str:
 # why not use the python oras client?
 # The python oras client is not efficient with detecting existing large files (unlike the oras CLI)
 class Oras:
-
     @classmethod
     def pull(cls, target: str, destination: str, **kwargs) -> subprocess.CompletedProcess:
         return cls.run("pull", target, **kwargs, cd=destination)
@@ -135,4 +134,3 @@ def set_directory(path: pathlib.Path):
         yield
     finally:
         os.chdir(origin)
-

@@ -1,4 +1,3 @@
-
 import os
 import shutil
 
@@ -47,5 +46,3 @@ def clear(cfg: config.Application):
         click.echo("tools deleted")
     else:
         click.echo("no tools to clear")
-
-

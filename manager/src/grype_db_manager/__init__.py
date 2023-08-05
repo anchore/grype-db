@@ -54,4 +54,3 @@ def _addLoggingLevel(levelName: str, levelNum: int, methodName: str | None = Non
 
 # note: this needs to be made available to the rest of the application and tests
 _addLoggingLevel("TRACE", logging.DEBUG - 5)
-_addLoggingLevel("BANNER", logging.INFO + 5)

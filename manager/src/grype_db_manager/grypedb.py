@@ -23,6 +23,7 @@ DB_DIR = "dbs"
 # TODO:
 # - add tests for GrypeDB.install*
 
+
 @dataclasses.dataclass
 class DBInfo:
     session_id: str
@@ -36,13 +37,12 @@ class DBInfo:
 class DBInvalidException(Exception):
     pass
 
-class DBManager:
 
+class DBManager:
     def __init__(self, root_dir: str):
         self.db_dir = os.path.join(root_dir, DB_DIR)
 
     def db_paths(self, session_id: str) -> tuple[str, str]:
-
         session_dir = os.path.join(self.db_dir, session_id)
         stage_dir = os.path.join(session_dir, "stage")
         build_dir = os.path.join(session_dir, "build")
@@ -85,7 +85,8 @@ class DBManager:
 
         stage_dir, _ = self.db_paths(session_id=session_id)
         db_pattern = os.path.join(
-            stage_dir, "vulnerability-db*.tar.*",
+            stage_dir,
+            "vulnerability-db*.tar.*",
         )
 
         matches = glob.glob(db_pattern)
@@ -120,7 +121,6 @@ class DBManager:
                 logging.debug(f"failed to get info for session {session_id!r}: {e}")
 
         return sessions
-
 
 
 class GrypeDB:
@@ -165,7 +165,8 @@ class GrypeDB:
         self.package_db(build_dir=build_dir, provider_root_dir=provider_root_dir)
 
         db_pattern = os.path.join(
-            build_dir, f"*_v{schema_version}_*.tar.*",
+            build_dir,
+            f"*_v{schema_version}_*.tar.*",
         )
 
         matches = glob.glob(db_pattern)
@@ -182,18 +183,25 @@ class GrypeDB:
 
         return session_id
 
-
     def build_db(self, build_dir: str, schema_version: int, provider_root_dir: str):
-        self.run("build", "--schema", str(schema_version), "--dir", build_dir,
-                 provider_root_dir=provider_root_dir,
-                 config=self.config_path,
-                )
+        self.run(
+            "build",
+            "--schema",
+            str(schema_version),
+            "--dir",
+            build_dir,
+            provider_root_dir=provider_root_dir,
+            config=self.config_path,
+        )
 
     def package_db(self, build_dir: str, provider_root_dir: str):
-        self.run("package", "--dir", build_dir,
-                 provider_root_dir=provider_root_dir,
-                 config=self.config_path,
-                 )
+        self.run(
+            "package",
+            "--dir",
+            build_dir,
+            provider_root_dir=provider_root_dir,
+            config=self.config_path,
+        )
 
     def run(self, *args, provider_root_dir: str, config: str):
         cmd = " ".join([self.bin_path, *args])
@@ -228,7 +236,7 @@ def print_annotation(s: str, italic: bool = True, grey: bool = True):
         prefix += "\033[90m"
     if prefix and sys.stderr.isatty():
         s = f"{prefix}{s}\033[0m"
-    return sys.stderr.write(s+"\n")
+    return sys.stderr.write(s + "\n")
 
 
 def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
@@ -265,17 +273,19 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
         install_version = version
         bin_path = os.path.join(bin_dir, _grype_db_bin_name(install_version))
         if os.path.exists(bin_path):
-            existing_version = (
-                subprocess.check_output([bin_path, "--version"]).decode("utf-8").strip().split(" ")[-1]
-            )
+            existing_version = subprocess.check_output([bin_path, "--version"]).decode("utf-8").strip().split(" ")[-1]
             if existing_version == install_version:
                 if "dirty" in install_version:
-                    logging.info(f"grype-db already installed at version {install_version!r}, but was from dirty git state. Rebuilding...")
+                    logging.info(
+                        f"grype-db already installed at version {install_version!r}, but was from dirty git state. Rebuilding..."
+                    )
                 else:
                     logging.info(f"grype-db already installed at version {install_version!r}")
                     return None
             else:
-                logging.warning(f"found existing grype-db installation with mismatched version: existing={existing_version!r} vs installed={install_version!r}")
+                logging.warning(
+                    f"found existing grype-db installation with mismatched version: existing={existing_version!r} vs installed={install_version!r}"
+                )
         else:
             logging.debug(f"cannot find existing grype-db installation at version {install_version!r}")
 
@@ -307,7 +317,9 @@ def _install_from_clone(bin_dir: str, checkout: str, clone_dir: str, repo_url: s
 
     subprocess.run(["git", "checkout", checkout], env={"GIT_LFS_SKIP_SMUDGE": "1"}, cwd=clone_dir, check=True)
 
-    install_version = subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=clone_dir).decode("utf-8").strip()
+    install_version = (
+        subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=clone_dir).decode("utf-8").strip()
+    )
 
     return _build_grype_db(bin_dir=bin_dir, install_version=install_version, clone_dir=clone_dir)
 
@@ -315,7 +327,9 @@ def _install_from_clone(bin_dir: str, checkout: str, clone_dir: str, repo_url: s
 def _install_from_user_source(bin_dir: str, clone_dir: str) -> str:
     abs_clone_path = os.path.abspath(clone_dir)
     logging.info(f"using user grype-db repo at {clone_dir!r} ({abs_clone_path!r})")
-    install_version = subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=abs_clone_path).decode("utf-8").strip()
+    install_version = (
+        subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=abs_clone_path).decode("utf-8").strip()
+    )
     return _build_grype_db(bin_dir=bin_dir, install_version=install_version, clone_dir=abs_clone_path)
 
 
@@ -338,6 +352,7 @@ def _build_grype_db(bin_dir: str, install_version: str, clone_dir: str) -> str:
     subprocess.run(shlex.split(cmd), cwd=clone_dir, env=os.environ, check=True)
 
     return bin_path
+
 
 def _grype_db_bin_name(install_version: str) -> str:
     return f"grype-db-{install_version}"

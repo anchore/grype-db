@@ -10,6 +10,7 @@ import yaml
 
 from grype_db_manager import __name__ as package_name
 from grype_db_manager.cli import config, db, tool
+from grype_db_manager.format import Format
 
 
 @click.option("--verbose", "-v", default=False, help="show more verbose logging", count=True)
@@ -25,7 +26,7 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
     ctx.obj = config.load(path=config_path)
 
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
-        def format(self, record): # noqa: A003
+        def format(self, record):  # noqa: A003
             duration = datetime.datetime.fromtimestamp(record.relativeCreated / 1000, tz=datetime.timezone.utc)
             record.delta = f"{duration.second:04d}"
             return super().format(record)
@@ -36,9 +37,6 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
     elif verbose >= 2:
         log_level = "TRACE"
 
-    ansi_grey = "\x1b[38;5;8m"
-    ansi_reset = "\x1b[0m"
-
     logging.config.dictConfig(
         {
             "version": 1,
@@ -47,7 +45,7 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
                     "()": DeltaTimeFormatter,
                     # "format": "%(log_color)s[%(delta)s] %(levelname)5s %(message)s",
                     # "format": f"{ansi_grey}%(levelname)-5s{ansi_reset} %(log_color)s%(message)s",
-                    "format": f"{ansi_grey}%(delta)s{ansi_reset} %(log_color)s%(message)s",
+                    "format": f"{Format.GREY}%(delta)s{Format.RESET} %(log_color)s%(message)s",
                     "datefmt": "%Y-%m-%d %H:%M:%S",
                     "log_colors": {
                         "TRACE": "purple",
@@ -76,7 +74,6 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
             },
         },
     )
-
 
 
 @cli.command(name="config", help="show the application config")
@@ -133,7 +130,6 @@ def show_config(cfg: config.Application):
 
     cfg_dict = dataclasses.asdict(cfg, dict_factory=enum_asdict_factory)
     print(yaml.dump(cfg_dict, Dumper=IndentDumper, default_flow_style=False))
-
 
 
 cli.add_command(db.group)

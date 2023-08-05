@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import sys
 
 import click
 import yardstick
@@ -11,6 +12,7 @@ from yardstick.tool.grype import Grype
 from yardstick.tool.syft import Syft
 
 from grype_db_manager.cli import config
+from grype_db_manager.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
 from grype_db_manager.validate import validate
 
@@ -76,7 +78,13 @@ def show_db(cfg: config.Application, session_id: str) -> None:
 
 
 @group.command(name="validate", help="validate a grype database")
-@click.option("--image", "-i", "images", multiple=True, help="the image (or images) to validate with (default is to use all configured images)")
+@click.option(
+    "--image",
+    "-i",
+    "images",
+    multiple=True,
+    help="the image (or images) to validate with (default is to use all configured images)",
+)
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
 @click.argument("session-id")
@@ -135,7 +143,7 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str], ver
         },
     )
 
-    validate(
+    gates = validate(
         cfg=yardstick_cfg,
         result_set=result_set,
         db_uuid=session_id,
@@ -144,4 +152,15 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str], ver
         root_dir=cfg.root,
     )
 
+    failure = not all(gate.passed() for gate in gates)
+    if failure:
+        click.echo(f"{Format.BOLD}{Format.FAIL}Validation failed{Format.RESET}")
+        click.echo("Reasons for quality gate failure:")
 
+        for gate in gates:
+            for reason in gate.reasons:
+                click.echo(f"   - {reason}")
+
+        sys.exit(1)
+
+    click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")

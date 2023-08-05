@@ -1,4 +1,3 @@
-
 from grype_db_manager.validate import grype_version
 
 
