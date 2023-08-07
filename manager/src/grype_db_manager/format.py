@@ -22,6 +22,7 @@ class Format(enum.Enum):
     FAIL = "\033[91m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
+    ITALIC = "\033[3m"
     RESET = "\033[0m"
 
     def __init__(self, value: str):

@@ -10,7 +10,7 @@ import subprocess
 from typing import TYPE_CHECKING
 
 import yardstick
-from yardstick import store
+from yardstick import artifact, store
 
 if TYPE_CHECKING:
     from yardstick.cli import config as ycfg
@@ -20,44 +20,63 @@ TIMESTAMP_OCI_ANNOTATION_KEY = "io.anchore.yardstick.timestamp"
 
 
 def download(cfg: ycfg.Application, result_set: str, store_root: str | None = None):
-    # 1. derive a set of all images to operate on from the "sbom" result set
+    # derive a set of all images to operate on from the "sbom" result set. This should always be based on the
+    # input configuration, no past results.
     result_set_config = cfg.result_sets.get(result_set, None)
     if not result_set_config:
         raise RuntimeError(f"no result set found for {result_set}")
 
-    # 2. download all SBOM blobs from the OCI registry
     scan_requests = result_set_config.scan_requests()
-    scan_config_by_oci_ref = {}
-    idx = 0
     sbom_scan_requests = [r for r in scan_requests if r.tool.lower().startswith("syft")]
 
-    logging.debug(f"found {len(sbom_scan_requests)} configurations for SBOMs")
+    existing_result_set = _get_or_create_result_set(cfg, result_set, store_root=store_root)
+
+    logging.info(f"found {len(sbom_scan_requests)} configurations for SBOMs")
     for idx, r in enumerate(sbom_scan_requests):
+        # check to see if we already have the SBOM, if not download it
         exists = store.scan_result.find(by_tool=r.tool, by_image=r.image)
         if exists:
-            logging.info(f"skipping SBOM {idx+1} (already exists): {r.image} ")
-            continue
-        oci_ref, scan_config = _download_sbom_results(r, store_root=store_root)
-        if oci_ref and scan_config:
-            logging.info(f"downloading SBOM {idx+1}: {r.image}")
-            scan_config_by_oci_ref[oci_ref] = scan_config
+            if len(exists) > 1:
+                print(exists)
+                raise RuntimeError(f"multiple results found for {r.image} with tool {r.tool}")
+            scan_config = exists[0]
+            logging.info(f"skipping SBOM {idx+1}/{len(sbom_scan_requests)} (already exists): {r.image} ")
         else:
-            logging.warning(f"failed to download SBOM {idx+1}: {r.image}")
+            logging.info(f"downloading SBOM {idx+1}/{len(sbom_scan_requests)}: {r.image}")
 
-    # 3. update the existing result set with the new downloaded references
+            oci_ref, scan_config = _download_sbom_results(r, store_root=store_root)
+            if not oci_ref or not scan_config:
+                logging.warning(f"failed to download SBOM {idx+1}: {r.image}")
+                continue
+
+        # make certain that the latest scan config is in place for the result set (update it if not)
+        _update_sbom_scan_config(existing_result_set=existing_result_set, sbom_scan_config=scan_config, sbom_scan_request=r)
+
+    yardstick.store.result_set.save(results=existing_result_set, store_root=store_root)
+
+
+def _update_sbom_scan_config(existing_result_set: artifact.ResultSet, sbom_scan_config: artifact.ScanConfiguration, sbom_scan_request: artifact.ScanRequest):
+    for state in existing_result_set.state:
+        if state.request and not state.request.tool.lower().startswith("syft"):
+            continue
+
+        if state.request.image == sbom_scan_config.full_image:
+            # update an existing scan config
+            state.config = sbom_scan_config
+            return
+
+    # this did not exist already... add the request and config
+    existing_result_set.add(request=sbom_scan_request, scan_config=sbom_scan_config)
+
+
+def _get_or_create_result_set(cfg: ycfg.Application, result_set: str, store_root: str | None = None) -> artifact.ResultSet:
     if yardstick.store.result_set.exists(name=result_set, store_root=store_root):
         existing_result_set = yardstick.store.result_set.load(result_set, store_root=store_root)
     else:
         existing_result_set = yardstick.artifact.ResultSet(name=result_set)
         for r in cfg.result_sets[result_set].scan_requests():
             existing_result_set.add(request=r, scan_config=None)
-
-    for state in existing_result_set.state:
-        oci_ref = oci_sbom_reference_from_image(state.request.image)
-        if oci_ref in scan_config_by_oci_ref:
-            state.config = scan_config_by_oci_ref[oci_ref]
-
-    yardstick.store.result_set.save(results=existing_result_set, store_root=store_root)
+    return existing_result_set
 
 
 def _download_sbom_results(request: yardstick.artifact.ScanRequest, store_root: str | None = None):

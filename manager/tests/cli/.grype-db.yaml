@@ -1,0 +1,21 @@
+# note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
+
+provider:
+  root: cli-test-data/vunnel
+
+  configs:
+    # let's use a single provider that we can show in isolation the setup is generally working. We don't
+    # need all providers / an entire database to test the workflow.
+    - name: oracle
+      kind: vunnel
+
+  vunnel:
+    executor: docker
+    docker-tag: latest
+    generate-configs: false
+
+pull:
+  parallelism: 4
+
+package:
+  publish-base-url: https://toolbox-data.anchore.io/grype/databases

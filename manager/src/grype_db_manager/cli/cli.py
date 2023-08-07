@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import enum
+import time
 from typing import Any
 
 import click
@@ -25,10 +26,16 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
 
     ctx.obj = config.load(path=config_path)
 
+
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
+        def __init__(self, *args: Any, **kwargs: Any):
+            self.start_time = time.time()
+            super().__init__(*args, **kwargs)
+
         def format(self, record):  # noqa: A003
-            duration = datetime.datetime.fromtimestamp(record.relativeCreated / 1000, tz=datetime.timezone.utc)
-            record.delta = f"{duration.second:04d}"
+            elapsed_seconds = record.created - self.start_time
+            elapsed = datetime.timedelta(seconds=elapsed_seconds)
+            record.delta = f"{int(elapsed.total_seconds()):04d}"
             return super().format(record)
 
     log_level = ctx.obj.log.level

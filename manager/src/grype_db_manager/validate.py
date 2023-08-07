@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import json
 import logging
 from dataclasses import InitVar, dataclass, field
@@ -86,9 +87,10 @@ def validate(
     root_dir: str,
     verbosity: int = 0,
     recapture: bool = False,
-    always_run_label_comparison: bool = False,
 ) -> list[Gate]:
+
     # get new grype scans and SBOMs (or use any existing ones)
+
     capture_results(
         cfg=cfg,
         db_uuid=db_uuid,
@@ -108,19 +110,19 @@ def validate(
     logging.info(banner)
 
     ret = []
-    for image, result_states in result_set_obj.result_state_by_image.items():
+    states = result_set_obj.result_state_by_image.items()
+    for idx, (image, result_states) in enumerate(states):
         if images and image not in images:
             logging.debug(f"skipping image={image}")
             continue
 
         lines = [f"{state.config.ID} : {state.config.tool}" for state in result_states]
-        image_banner = f"{Format.HEADER}testing image={image}{Format.RESET} with\n{format.treeify(lines)}"
+        image_banner = f"{Format.HEADER}comparing image results {idx+1} of {len(states)} image={image}{Format.RESET} with\n{format.treeify(lines)}"
         logging.info(image_banner)
 
         gate = validate_image(
             cfg,
             descriptions=[s.config.path for s in result_states],
-            always_run_label_comparison=always_run_label_comparison,
             verbosity=verbosity,
             label_entries=label_entries,
         )
@@ -140,17 +142,8 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
 
     sbom.download(cfg=cfg, result_set=result_set)
 
-    result_set_object = yardstick.store.result_set.load(result_set)
-
     request_images = cfg.result_sets[result_set].images()
-    config_images = {s.config.image for s in result_set_object.state}
-    mismatched_images = len(request_images) != len(config_images)
-
-    # TODO: detect tool differences (is that possible in all cases?)
-
-    requests_with_no_configs = [s.request for s in result_set_object.state if not s.config]
-
-    is_stale = any(requests_with_no_configs) or mismatched_images
+    is_stale = _is_result_set_stale(request_images=request_images, result_set=result_set, yardstick_root_dir=cfg.store_root)
 
     if is_stale or recapture:
         capture.result_set(result_set=result_set, scan_requests=cfg.result_sets[result_set].scan_requests())
@@ -158,10 +151,60 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
         logging.info(f"skipping grype capture for result-set={result_set} (already exists)")
 
 
+def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_root_dir: str) -> bool:
+    try:
+        result_set_object = yardstick.store.result_set.load(result_set, store_root=yardstick_root_dir)
+    except FileNotFoundError as e:
+        logging.info(f"result-set does not exist: {e}")
+        return True
+
+    if not result_set_object:
+        logging.info("result-set does is empty")
+        return True
+
+    syft_config_images = {s.config.full_image for s in result_set_object.state if s.config and "syft" in s.config.tool_name}
+    grype_config_images = {s.config.full_image for s in result_set_object.state if s.config and "grype" in s.config.tool_name}
+    mismatched_images = set(request_images) != set(syft_config_images) or set(request_images) != set(grype_config_images)
+
+    if mismatched_images:
+        logging.info("result-set has mismatched image sets")
+        return True
+
+    requests_with_no_configs = [s.request for s in result_set_object.state if not s.config]
+
+    if requests_with_no_configs:
+        logging.info(f"result-set has unfulfilled requests ({len(requests_with_no_configs)} missing results)")
+        return True
+
+    # make certain that all images have 1 syft request and 2 grype requests
+    syft_requests_by_image = collections.defaultdict(list)
+    for s in result_set_object.state:
+        if s.config and "syft" in s.config.tool:
+            syft_requests_by_image[s.config.full_image].append(s.request)
+
+    missing_syft_requests = [image for image in request_images if image not in syft_requests_by_image]
+
+    if missing_syft_requests:
+        logging.info(f"result-set has missing syft requests: {missing_syft_requests}")
+        return True
+
+    grype_requests_by_image = collections.defaultdict(list)
+    for s in result_set_object.state:
+        if s.config and "grype" in s.config.tool:
+            grype_requests_by_image[s.config.full_image].append(s.request)
+
+    missing_grype_requests = [image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2]
+
+    if missing_grype_requests:
+        logging.info(f"result-set has missing grype requests: {missing_grype_requests}")
+        return True
+
+    return False
+
+
 def validate_image(
     cfg: ycfg.Application,
     descriptions: list[str],
-    always_run_label_comparison: bool = False,
     verbosity: int = 0,
     label_entries: list[artifact.LabelEntry] | None = None,
 ):

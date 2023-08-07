@@ -15,6 +15,8 @@ import uuid
 
 import requests
 
+from grype_db_manager.format import Format
+
 TOOLS_DIR = "tools"
 BIN_DIR = f"{TOOLS_DIR}/grype-db/bin"
 CLONE_DIR = f"{TOOLS_DIR}/grype-db/src"
@@ -231,11 +233,11 @@ class GrypeDB:
 def print_annotation(s: str, italic: bool = True, grey: bool = True):
     prefix = ""
     if italic:
-        prefix += "\033[3m"
+        prefix += str(Format.ITALIC)
     if grey:
-        prefix += "\033[90m"
+        prefix += str(Format.GREY)
     if prefix and sys.stderr.isatty():
-        s = f"{prefix}{s}\033[0m"
+        s = f"{prefix}{s}{Format.RESET}"
     return sys.stderr.write(s + "\n")
 
 
@@ -277,14 +279,14 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
             if existing_version == install_version:
                 if "dirty" in install_version:
                     logging.info(
-                        f"grype-db already installed at version {install_version!r}, but was from dirty git state. Rebuilding..."
+                        f"grype-db already installed at version {install_version!r}, but was from dirty git state. Rebuilding...",
                     )
                 else:
                     logging.info(f"grype-db already installed at version {install_version!r}")
                     return None
             else:
                 logging.warning(
-                    f"found existing grype-db installation with mismatched version: existing={existing_version!r} vs installed={install_version!r}"
+                    f"found existing grype-db installation with mismatched version: existing={existing_version!r} vs installed={install_version!r}",
                 )
         else:
             logging.debug(f"cannot find existing grype-db installation at version {install_version!r}")

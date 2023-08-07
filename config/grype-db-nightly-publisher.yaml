@@ -2,25 +2,22 @@
 
 provider:
   root: data/vunnel
-  configs: # [] 
-    # TODO: temp, remove me
-    - name: wolfi
-      kind: vunnel
-      
+
+  # No manual configs are provided since 'provider.vunnel.generateConfigs' is set to true
+  # this means that well run vunnel to get the list of supported providers. All supported providers
+  # will be included in the database build. This prevents the need from manually updating this file
+  # for every new provider that is added.
+  #
+  # Any providers that should be excluded from processing should be added to the 'provider.vunnel.excludeProviders' list.
+  configs: []
+
   vunnel:
     executor: docker
     docker-tag: latest
-    # TODO: temp, put me back in
-    # generate-configs: true
+    generate-configs: true
     env:
       GITHUB_TOKEN: $GITHUB_TOKEN
       NVD_API_KEY: $NVD_API_KEY
-    # No manual configs are provided since 'provider.vunnel.generateConfigs' is set to true
-    # this means that well run vunnel to get the list of supported providers. All supported providers
-    # will be included in the database build. This prevents the need from manually updating this file
-    # for every new provider that is added.
-    #
-    # Any providers that should be excluded from processing should be added to the 'provider.vunnel.excludeProviders' list.
 
 pull:
   parallelism: 4
