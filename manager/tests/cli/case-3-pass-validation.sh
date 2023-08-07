@@ -2,6 +2,7 @@
 
 . utils.sh
 
+title "Starting case 3: pass DB validation"
 make prep-data
 make prep-labels
 
@@ -29,4 +30,4 @@ assert_last_output_contains "Validation passed"
 
 ### End of testing...
 
-end_testing()
+end_testing

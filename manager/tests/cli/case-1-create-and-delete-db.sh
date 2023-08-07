@@ -2,6 +2,7 @@
 
 . utils.sh
 
+title "Starting case 1: create and delete DB"
 make prep-data
 
 ### Start of testing...
@@ -30,4 +31,4 @@ assert_last_output_does_not_contain $DB_ID
 
 ### End of testing...
 
-end_testing()
+end_testing

@@ -2,6 +2,7 @@
 
 . utils.sh
 
+title "Starting case 2: fail DB validation due to missing labels"
 make prep-data
 
 ### Start of testing...
@@ -25,4 +26,4 @@ run_expect_fail grype-db-manager db validate $DB_ID
 
 ### End of testing...
 
-end_testing()
+end_testing

@@ -6,7 +6,7 @@ CYAN := $(shell tput -T linux setaf 6)
 RESET := $(shell tput -T linux sgr0)
 
 test: venv ## Run CLI tests
-	$(ACTIVATE_VENV) ./case-*.sh
+	$(ACTIVATE_VENV) ./run.sh
 
 venv: venv/touchfile ## Create a python virtual environment
 

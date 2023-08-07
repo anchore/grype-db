@@ -34,7 +34,7 @@ function run_expect_fail() {
         echo -e "${ERROR}Failed: expected non-zero return code but got $rc${RESET}"
         exit 1
     else
-        echo -e "${SUCCESS}Success: exited with non-zero return code: $rc)${RESET}"
+        echo -e "${SUCCESS}Success: exited with non-zero return code: $rc${RESET}"
         exit 1
     fi
     ((i++))
@@ -85,6 +85,10 @@ function assert_last_output_does_not_contain() {
         echo -e "${ERROR}...contents:\n$(last_output)${RESET}"
         exit 1
     fi
+}
+
+function title() {
+    echo -e "${TITLE}$@${RESET}"
 }
 
 function end_testing() {
