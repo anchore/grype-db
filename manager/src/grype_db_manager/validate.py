@@ -45,13 +45,14 @@ class Gate:
         }
         current_comparisons_by_image = {comp.config.image: comp for comp in label_comparisons if comp.config.tool == current_tool}
 
-        # this doesn't make sense in all cases, especially if we aren't failing any other gates against the current changes
-        # we might want this in the future to protect against no labels for images in an edge case, but that reason is not
-        # currently apparent
+        # # this doesn't make sense in all cases, especially if we aren't failing any other gates against the current changes
+        # # we might want this in the future to protect against no labels for images in an edge case, but that reason is not
+        # # currently apparent
         # for image, comp in latest_release_comparisons_by_image.items():
         #     if comp.summary.indeterminate_percent > 10:
         #         reasons.append(
-        #             f"latest indeterminate matches % is greater than 10%: {Format.BOLD}{Format.UNDERLINE}current={comp.summary.indeterminate_percent:0.2f}%{Format.RESET} image={image}",
+        #             f"latest indeterminate matches % is greater than 10%: {Format.BOLD}{Format.UNDERLINE}" +
+        #             f"current={comp.summary.indeterminate_percent:0.2f}%{Format.RESET} image={image}",
         #         )
 
         for image, comp in current_comparisons_by_image.items():
@@ -59,19 +60,22 @@ class Gate:
             current_f1_score = comp.summary.f1_score
             if current_f1_score < latest_f1_score:
                 reasons.append(
-                    f"current F1 score is lower than the latest release F1 score: {Format.BOLD}{Format.UNDERLINE}current={current_f1_score:0.2f} latest={latest_f1_score:0.2f}{Format.RESET} image={image}",
+                    f"current F1 score is lower than the latest release F1 score: {Format.BOLD}{Format.UNDERLINE}"
+                    f"current={current_f1_score:0.2f} latest={latest_f1_score:0.2f}{Format.RESET} image={image}",
                 )
 
             if comp.summary.indeterminate_percent > 10:
                 reasons.append(
-                    f"current indeterminate matches % is greater than 10%: {Format.BOLD}{Format.UNDERLINE}current={comp.summary.indeterminate_percent:0.2f}%{Format.RESET} image={image}",
+                    f"current indeterminate matches % is greater than 10%: {Format.BOLD}{Format.UNDERLINE}"
+                    f"current={comp.summary.indeterminate_percent:0.2f}%{Format.RESET} image={image}",
                 )
 
             latest_fns = latest_release_comparisons_by_image[image].summary.false_negatives
             current_fns = comp.summary.false_negatives
             if current_fns > latest_fns:
                 reasons.append(
-                    f"current false negatives is greater than the latest release false negatives: {Format.BOLD}{Format.UNDERLINE}current={current_fns} latest={latest_fns}{Format.RESET} image={image}",
+                    f"current false negatives is greater than the latest release false negatives: {Format.BOLD}{Format.UNDERLINE}"
+                    f"current={current_fns} latest={latest_fns}{Format.RESET} image={image}",
                 )
 
         self.reasons = reasons
@@ -80,7 +84,7 @@ class Gate:
         return len(self.reasons) == 0
 
 
-def validate(
+def validate(  # noqa: PLR0913
     cfg: ycfg.Application,
     result_set: str,
     db_uuid: str,
@@ -88,7 +92,6 @@ def validate(
     verbosity: int = 0,
     recapture: bool = False,
 ) -> list[Gate]:
-
     # get new grype scans and SBOMs (or use any existing ones)
 
     capture_results(
@@ -151,7 +154,7 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
         logging.info(f"skipping grype capture for result-set={result_set} (already exists)")
 
 
-def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_root_dir: str) -> bool:
+def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_root_dir: str) -> bool:  # noqa: C901, PLR0911
     try:
         result_set_object = yardstick.store.result_set.load(result_set, store_root=yardstick_root_dir)
     except FileNotFoundError as e:
@@ -193,7 +196,9 @@ def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_r
         if s.config and "grype" in s.config.tool:
             grype_requests_by_image[s.config.full_image].append(s.request)
 
-    missing_grype_requests = [image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2]
+    missing_grype_requests = [
+        image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2
+    ]
 
     if missing_grype_requests:
         logging.info(f"result-set has missing grype requests: {missing_grype_requests}")
@@ -256,13 +261,8 @@ def log_validation_results(
         tools = sorted(stats_by_image_tool_pair.true_positives[image].keys())
         table = format.stats_table_by_tool(
             tools,
-            stats_by_image_tool_pair.true_positives[image],
-            stats_by_image_tool_pair.false_positives[image],
-            stats_by_image_tool_pair.false_negatives[image],
-            stats_by_image_tool_pair.indeterminate[image],
-            stats_by_image_tool_pair.indeterminate_percent[image],
-            stats_by_image_tool_pair.f1_scores[image],
-            stats_by_image_tool_pair.f1_score_ranges[image],
+            image,
+            stats_by_image_tool_pair,
         )
 
         logging.info(table)
@@ -273,8 +273,8 @@ def log_validation_results(
             comp = comparisons_by_result_id[result.ID]
             fns = comp.false_negative_label_entries
             ret = f"false negative matches found in result={result.ID}: {len(fns)}\n"
-            for l in fns:
-                ret += f"{format.space}    {l.summarize()}\n"
+            for label in fns:
+                ret += f"{format.space}    {label.summarize()}\n"
             logging.info(ret.rstrip())
 
     latest_release_tool, current_tool = guess_tool_orientation([r.config.tool_name for r in results])
@@ -287,7 +287,7 @@ def log_validation_results(
 
     if not diffs:
         logging.info("no differences found between tooling")
-    else:
+    else:  # noqa: PLR5501
         if verbosity > 0:
             logging.info(f"match differences found between tooling:\n{table}")
         else:

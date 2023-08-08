@@ -45,7 +45,7 @@ def list_dbs(cfg: config.Application):
 
 @group.command(name="clear", help="delete all databases")
 @click.pass_obj
-def list_dbs(cfg: config.Application):
+def clear_dbs(cfg: config.Application):
     db_dir = os.path.join(cfg.root, DB_DIR)
     if os.path.exists(db_dir):
         shutil.rmtree(db_dir)

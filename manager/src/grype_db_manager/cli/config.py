@@ -74,24 +74,7 @@ class Application:
 def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Application:
     cfg: Application | None = None
     try:
-        if not path:
-            path = DEFAULT_CONFIGS
-        elif isinstance(path, str):
-            if path == "":
-                path = DEFAULT_CONFIGS
-            else:
-                cfg = _load(path)
-
-        if not cfg:
-            if isinstance(path, (list, tuple)):
-                for p in path:
-                    try:
-                        cfg = _load(p)
-                        break
-                    except FileNotFoundError:
-                        pass
-            else:
-                raise ValueError(f"invalid path type {type(path)}")
+        cfg = _load_paths(path)
     except FileNotFoundError:
         cfg = Application()
 
@@ -99,6 +82,24 @@ def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Applica
         raise FileNotFoundError("no config found")
 
     return cfg
+
+
+def _load_paths(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Application | None:
+    if not path:
+        path = DEFAULT_CONFIGS
+    elif isinstance(path, str):
+        if path == "":
+            path = DEFAULT_CONFIGS
+        else:
+            return _load(path)
+
+    if isinstance(path, (list, tuple)):
+        for p in path:
+            try:
+                return _load(p)
+            except FileNotFoundError:
+                return None
+    raise ValueError(f"invalid path type {type(path)}")
 
 
 def _load(path: str) -> Application:

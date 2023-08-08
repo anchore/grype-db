@@ -55,7 +55,11 @@ def download(cfg: ycfg.Application, result_set: str, store_root: str | None = No
     yardstick.store.result_set.save(results=existing_result_set, store_root=store_root)
 
 
-def _update_sbom_scan_config(existing_result_set: artifact.ResultSet, sbom_scan_config: artifact.ScanConfiguration, sbom_scan_request: artifact.ScanRequest):
+def _update_sbom_scan_config(
+    existing_result_set: artifact.ResultSet,
+    sbom_scan_config: artifact.ScanConfiguration,
+    sbom_scan_request: artifact.ScanRequest,
+):
     for state in existing_result_set.state:
         if state.request and not state.request.tool.lower().startswith("syft"):
             continue
@@ -132,7 +136,7 @@ class Oras:
     @classmethod
     def run(cls, *args, cd: str | None = None, fail_on_error: bool = True, **kwargs) -> subprocess.CompletedProcess:
         def call():
-            proc = subprocess.run(["oras", *args], env=os.environ.copy(), **kwargs)
+            proc = subprocess.run(["oras", *args], env=os.environ.copy(), **kwargs)  # noqa: S603, S607
 
             if fail_on_error and proc.returncode != 0:
                 raise RuntimeError(f"return code: {proc.returncode}")

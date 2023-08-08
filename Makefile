@@ -159,7 +159,7 @@ unit: unit-go unit-python ## Run go and python unit tests
 .PHONY: unit-python
 unit-python: ## Run python unit tests
 	$(call title,Running Python unit tests)
-	cd publish && poetry install && poetry run pytest -v tests
+	cd manager && poetry run make unit
 
 .PHONY: unit-go
 unit-go: ## Run GO unit tests (with coverage)

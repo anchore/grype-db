@@ -60,7 +60,7 @@ class DBManager:
 
         session_dir = os.path.join(self.db_dir, session_id)
         with open(os.path.join(session_dir, "timestamp"), "w") as f:
-            now = datetime.datetime.now()
+            now = datetime.datetime.now(tz=datetime.timezone.utc)
             f.write(now.isoformat())
 
         return session_id
@@ -94,10 +94,10 @@ class DBManager:
         matches = glob.glob(db_pattern)
         if not matches:
             raise DBInvalidException(f"db archive not found for {session_id!r}")
-        elif len(matches) > 1:
+        if len(matches) > 1:
             raise DBInvalidException(f"multiple db archives found for {session_id!r}")
-        else:
-            abs_archive_path = os.path.abspath(matches[0])
+
+        abs_archive_path = os.path.abspath(matches[0])
 
         return DBInfo(
             session_id=session_id,
@@ -215,7 +215,7 @@ class GrypeDB:
         logging.info(f"running (log-level={level}) {cmd!r}")
         print_annotation("[begin grype-db output]")
 
-        env = dict(
+        env = dict(  # noqa: PIE804
             **os.environ.copy(),
             **{
                 "GRYPE_DB_VUNNEL_ROOT": provider_root_dir,
@@ -224,7 +224,7 @@ class GrypeDB:
             },
         )
 
-        ret = subprocess.check_call(cmd, env=env, shell=True)
+        ret = subprocess.check_call(cmd, env=env, shell=True)  # noqa: S602
 
         print_annotation("[end grype-db output]")
         return ret
@@ -241,7 +241,7 @@ def print_annotation(s: str, italic: bool = True, grey: bool = True):
     return sys.stderr.write(s + "\n")
 
 
-def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
+def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912
     os.makedirs(bin_dir, exist_ok=True)
 
     version = input_version
@@ -251,7 +251,7 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
 
     if using_local_file:
         clone_dir = os.path.expanduser(input_version.replace("file://", ""))
-    else:
+    else:  # noqa: PLR5501
         if "/" in input_version:
             # this is a fork...
             if "@" in input_version:
@@ -265,7 +265,11 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
 
     if input_version == "latest":
         version = (
-            requests.get("https://github.com/anchore/grype-db/releases/latest", headers={"Accept": "application/json"})
+            requests.get(
+                "https://github.com/anchore/grype-db/releases/latest",
+                headers={"Accept": "application/json"},
+                timeout=10,
+            )
             .json()
             .get("tag_name", "")
         )
@@ -275,7 +279,9 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:
         install_version = version
         bin_path = os.path.join(bin_dir, _grype_db_bin_name(install_version))
         if os.path.exists(bin_path):
-            existing_version = subprocess.check_output([bin_path, "--version"]).decode("utf-8").strip().split(" ")[-1]
+            existing_version = (
+                subprocess.check_output([bin_path, "--version"]).decode("utf-8").strip().split(" ")[-1]  # noqa: S603
+            )
             if existing_version == install_version:
                 if "dirty" in install_version:
                     logging.info(
@@ -307,20 +313,24 @@ def _install_from_clone(bin_dir: str, checkout: str, clone_dir: str, repo_url: s
     logging.info(f"creating grype-db repo at {clone_dir!r}")
 
     if os.path.exists(clone_dir):
-        remote_url = subprocess.check_output(["git", "remote", "get-url", "origin"], cwd=clone_dir).decode().strip()
+        remote_url = (
+            subprocess.check_output(["git", "remote", "get-url", "origin"], cwd=clone_dir).decode().strip()  # noqa: S603, S607
+        )
         if not remote_url.endswith(repo_user_and_name) or remote_url.endswith(repo_user_and_name + ".git"):
             logging.info(f"removing grype-db clone at {clone_dir!r} because remote url does not match {repo_url!r}")
             shutil.rmtree(clone_dir)
 
     if not os.path.exists(clone_dir):
-        subprocess.run(["git", "clone", repo_url, clone_dir], env={"GIT_LFS_SKIP_SMUDGE": "1"}, check=True)
+        subprocess.run(["git", "clone", repo_url, clone_dir], env={"GIT_LFS_SKIP_SMUDGE": "1"}, check=True)  # noqa: S603, S607
     else:
-        subprocess.run(["git", "fetch", "--all"], env={"GIT_LFS_SKIP_SMUDGE": "1"}, cwd=clone_dir, check=True)
+        subprocess.run(["git", "fetch", "--all"], env={"GIT_LFS_SKIP_SMUDGE": "1"}, cwd=clone_dir, check=True)  # noqa: S603, S607
 
-    subprocess.run(["git", "checkout", checkout], env={"GIT_LFS_SKIP_SMUDGE": "1"}, cwd=clone_dir, check=True)
+    subprocess.run(["git", "checkout", checkout], env={"GIT_LFS_SKIP_SMUDGE": "1"}, cwd=clone_dir, check=True)  # noqa: S603, S607
 
     install_version = (
-        subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=clone_dir).decode("utf-8").strip()
+        subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=clone_dir)  # noqa: S603, S607
+        .decode("utf-8")
+        .strip()
     )
 
     return _build_grype_db(bin_dir=bin_dir, install_version=install_version, clone_dir=clone_dir)
@@ -330,7 +340,9 @@ def _install_from_user_source(bin_dir: str, clone_dir: str) -> str:
     abs_clone_path = os.path.abspath(clone_dir)
     logging.info(f"using user grype-db repo at {clone_dir!r} ({abs_clone_path!r})")
     install_version = (
-        subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=abs_clone_path).decode("utf-8").strip()
+        subprocess.check_output(["git", "describe", "--always", "--tags", "--dirty"], cwd=abs_clone_path)  # noqa: S603, S607
+        .decode("utf-8")
+        .strip()
     )
     return _build_grype_db(bin_dir=bin_dir, install_version=install_version, clone_dir=abs_clone_path)
 
@@ -351,7 +363,7 @@ def _build_grype_db(bin_dir: str, install_version: str, clone_dir: str) -> str:
 
     logging.info(f"building grype-db: {cmd}")
 
-    subprocess.run(shlex.split(cmd), cwd=clone_dir, env=os.environ, check=True)
+    subprocess.run(shlex.split(cmd), cwd=clone_dir, env=os.environ, check=True)  # noqa: S603, S607
 
     return bin_path
 

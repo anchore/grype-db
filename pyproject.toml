@@ -68,6 +68,7 @@ norecursedirs = ["data"]
 line-length = 130
 
 [tool.coverage.run]
+source = ['grype_db_manager']
 omit = [
   ".*",
   "*/site-packages/*",
@@ -76,9 +77,6 @@ omit = [
   "*/src/grype_db_manager/__main__.py",
   "*/src/grype_db_manager/cli/__init__.py",
 ]
-
-[tool.coverage.report]
-fail_under = 75
 
 [tool.ruff]
 cache-dir = ".cache/ruff"

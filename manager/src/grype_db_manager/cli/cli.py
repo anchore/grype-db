@@ -26,7 +26,6 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
 
     ctx.obj = config.load(path=config_path)
 
-
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
         def __init__(self, *args: Any, **kwargs: Any):
             self.start_time = time.time()

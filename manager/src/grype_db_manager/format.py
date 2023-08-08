@@ -13,14 +13,14 @@ space = " " * 6
 
 
 class Format(enum.Enum):
-    HEADER = "\033[1m"  # "\033[95m"
+    HEADER = "\033[1m"  # noqa: PIE796
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
     OKGREEN = "\033[92m"
     WARNING = "\033[93m"
     GREY = "\033[90m"
     FAIL = "\033[91m"
-    BOLD = "\033[1m"
+    BOLD = "\033[1m"  # noqa: PIE796
     UNDERLINE = "\033[4m"
     ITALIC = "\033[3m"
     RESET = "\033[0m"
@@ -84,15 +84,18 @@ def format_value_red_green_spectrum(value, min_value=0, max_value=1, sections=10
 
 
 def stats_table_by_tool(
-    tools,
-    tp,
-    fp,
-    fn,
-    indeterminate,
-    indeterminate_percent,
-    f1,
-    f1_ranges,
-) -> str:  # pylint: disable=too-many-arguments
+    tools: list[str],
+    image: str,
+    stats_by_image_tool_pair: comparison.ImageToolLabelStats,
+) -> str:
+    tp = stats_by_image_tool_pair.true_positives[image]
+    fp = stats_by_image_tool_pair.false_positives[image]
+    fn = stats_by_image_tool_pair.false_negatives[image]
+    indeterminate = stats_by_image_tool_pair.indeterminate[image]
+    indeterminate_percent = stats_by_image_tool_pair.indeterminate_percent[image]
+    f1 = stats_by_image_tool_pair.f1_scores[image]
+    f1_ranges = stats_by_image_tool_pair.f1_score_ranges[image]
+
     header = [g("TOOL"), g("TP"), g("FP"), g("FN"), g("Indeterminate"), g("F1 Score")]
     all_rows = []
     for tool in sorted(tools):
@@ -118,7 +121,7 @@ def stats_table_by_tool(
     return "label statistics per-tool:\n" + indent_block(table, space + "    ")
 
 
-def match_differences_table(
+def match_differences_table(  # noqa: C901
     latest_release_tool: str,
     relative_comparison: comparison.ByPreservedMatch,
     comparisons_by_result_id: dict[str, list[comparison.AgainstLabels]],
@@ -132,7 +135,7 @@ def match_differences_table(
             if not labels:
                 label = "(unknown)"
             elif len(set(labels)) > 1:
-                label = ", ".join([l.name for l in labels])
+                label = ", ".join([label.name for label in labels])
             else:
                 label = labels[0].name
 
@@ -148,7 +151,7 @@ def match_differences_table(
                     # we got rid of a FP! ["hip!", "hip!"]
                     color = Format.OKBLUE
                     commentary = "(got rid of a former FP 🙌)"
-            else:
+            else:  # noqa: PLR5501
                 # the tool which found the unique result is the current tool...
                 if label == artifact.Label.TruePositive.name:
                     # highest of fives! we found a new TP that the previous tool release missed!
