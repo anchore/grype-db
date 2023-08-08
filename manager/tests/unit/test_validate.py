@@ -1,5 +1,8 @@
 import pytest
 
+from yardstick import store
+from yardstick.cli import config as ycfg
+
 from grype_db_manager import validate
 
 
@@ -47,7 +50,90 @@ def test_is_result_set_stale(test_dir_path, test_case, expected):
     assert is_stale == expected
 
 
-class TestValidate:
+@pytest.mark.parametrize(
+    "result_set, label_set, expected_reasons",
+    [
+        pytest.param(
+            "go-case", "all-tp", [],
+            id="pass-when-no-differences",
+        ),
 
-    def __init__(self):
-        pass
+        pytest.param(
+            "new-db-run-missing-half", "all-tp",
+            [
+                'current F1 score is lower than the latest release F1 score: current=0.53 latest=1.00 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495',
+                'current false negatives is greater than the latest release false negatives: current=9 latest=0 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495',
+            ],
+            id="fail-when-introduced-fns",
+        ),
+
+        pytest.param(
+            "old-db-run-missing-half", "all-tp", [],
+            id="pass-when-introduced-tps",
+        ),
+
+        pytest.param(
+            "new-db-run-missing-half", "first-half-fp", [],
+            id="pass-when-eliminated-fps",
+        ),
+
+        pytest.param(
+            "old-db-run-missing-half", "first-half-fp",
+            [
+                'current F1 score is lower than the latest release F1 score: current=0.53 latest=1.00 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495'
+            ],
+            id="fail-when-introduced-fps",
+        ),
+    ]
+
+)
+def test_validate_image(test_dir_path, result_set, label_set, expected_reasons):
+    yardstick_root = test_dir_path(f"fixtures/validate-image/yardstick")
+    expected_pass = len(expected_reasons) == 0
+
+    result_set_obj = store.result_set.load(result_set, store_root=yardstick_root)
+    images = sorted({s.config.image for s in result_set_obj.state})
+
+    assert len(images) == 1
+
+    image = images[0]
+
+    tools = [
+        ycfg.Tool(
+            label=s.request.label,
+            name=s.request.tool.split("@")[0],
+            takes=s.request.takes,
+            version=s.request.tool.split("@")[1],
+        )
+        for s in result_set_obj.state
+    ]
+
+    assert len(tools) == 2
+
+    yardstick_cfg = ycfg.Application(
+        store_root=yardstick_root,
+        default_max_year=2022,
+        result_sets={
+            result_set: ycfg.ResultSet(
+                description="test",
+                matrix=ycfg.ScanMatrix(
+                    images=[image],
+                    tools=tools,
+                ),
+            ),
+        },
+    )
+
+    label_set_root = test_dir_path(f"fixtures/validate-image/label-sets/{label_set}")
+    label_entries = store.labels.load_for_image(images, year_max_limit=yardstick_cfg.default_max_year, store_root=label_set_root)
+
+    gate = validate.validate_image(
+        cfg=yardstick_cfg,
+        descriptions=result_set_obj.descriptions,
+        label_entries=label_entries,
+        store_root=yardstick_root,
+    )
+
+    assert gate
+    assert gate.passed() == expected_pass
+    assert gate.reasons == expected_reasons

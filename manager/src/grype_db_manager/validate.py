@@ -207,11 +207,13 @@ def validate_image(
     descriptions: list[str],
     verbosity: int = 0,
     label_entries: list[artifact.LabelEntry] | None = None,
+    store_root: str | None = None,
 ):
     # compare each grype result against one another, looking for matching differences
     relative_comparison = yardstick.compare_results(
         descriptions=descriptions,
         year_max_limit=cfg.default_max_year,
+        store_root=store_root,
     )
 
     # apply labels to all results
@@ -219,6 +221,7 @@ def validate_image(
         descriptions=descriptions,
         year_max_limit=cfg.default_max_year,
         label_entries=label_entries,
+        store_root=store_root,
     )
 
     # show the label stats for each image/tool pair
