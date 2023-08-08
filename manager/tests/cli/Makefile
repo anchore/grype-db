@@ -15,20 +15,27 @@ venv/touchfile: ../../../pyproject.toml
 	$(ACTIVATE_VENV) pip install -e ../../../
 	touch venv/touchfile
 
-prep-data: clean-data ## Prepare data for CLI tests
+cli-test-data/vunnel/oracle: ## Prepare data for CLI tests
 	mkdir -p cli-test-data/vunnel
 	oras pull ghcr.io/anchore/grype-db/data/oracle:latest && go run ../../../cmd/grype-db cache restore --path ./grype-db-cache.tar.gz
-
-prep-labels: ## Copy the label fixtures into the yardstick directory
-	rm -rf ./cli-test-data/yardstick/labels
-	mkdir -p ./cli-test-data/yardstick/labels
-	cp -a ./fixtures/yardstick/labels ./cli-test-data/yardstick/labels
 
 .PHONY: clean
 clean: clean-data clean-env ## Clear all existing yardstick results and delete python environment
 
-clean-data:
-	rm -rf cli-test-data
+clean-data: clean-vunnel clean-yardstick clean-manager
+
+clean-vunnel:
+	rm -rf cli-test-data/vunnel
+
+clean-yardstick:
+	rm -rf cli-test-data/yardstick
+
+clean-yardstick-labels:
+	rm -rf cli-test-data/yardstick/labels
+	mkdir -p cli-test-data/yardstick/labels
+
+clean-manager:
+	rm -rf cli-test-data/manager
 
 clean-env:
 	rm -rf venv
