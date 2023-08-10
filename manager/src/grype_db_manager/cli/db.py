@@ -36,7 +36,7 @@ def list_dbs(cfg: config.Application):
 
     rows = []
     for info in dbs:
-        row = [info.session_id, info.schema_version, info.db_created]
+        row = [info.uuid, info.schema_version, info.db_created]
         rows.append(row)
 
     headers = ["DB Session ID", "Schema", "Created"]
@@ -58,19 +58,19 @@ def clear_dbs(cfg: config.Application):
 @click.option("--schema-version", "-s", required=True, help="the DB schema version to build")
 @click.pass_obj
 def build_db(cfg: config.Application, schema_version: int) -> None:
-    logging.info(f"build DB (schema v{schema_version})")
+    logging.info(f"building DB (schema v{schema_version})")
 
     grypedb = GrypeDB.install(version=cfg.grype_db.version, root_dir=cfg.root, config_path=cfg.grype_db.config)
-    db_session_id = grypedb.build_and_package(schema_version=schema_version, provider_root_dir=cfg.vunnel_root, root_dir=cfg.root)
-    print(db_session_id)
+    db_uuid = grypedb.build_and_package(schema_version=schema_version, provider_root_dir=cfg.vunnel_root, root_dir=cfg.root)
+    print(db_uuid)
 
 
 @group.command(name="show", help="show info about a specific grype database")
-@click.argument("session-id")
+@click.argument("db-uuid")
 @click.pass_obj
-def show_db(cfg: config.Application, session_id: str) -> None:
+def show_db(cfg: config.Application, db_uuid: str) -> None:
     db_manager = DBManager(root_dir=cfg.root)
-    db_info = db_manager.get_db_info(session_id=session_id)
+    db_info = db_manager.get_db_info(db_uuid=db_uuid)
 
     d = db_info.__dict__
     for k, v in sorted(d.items()):
@@ -87,19 +87,19 @@ def show_db(cfg: config.Application, session_id: str) -> None:
 )
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
-@click.argument("session-id")
+@click.argument("db-uuid")
 @click.pass_obj
-def validate_db(cfg: config.Application, session_id: str, images: list[str], verbosity: int, recapture: bool) -> None:
-    logging.info(f"validate DB (session id {session_id})")
+def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbosity: int, recapture: bool) -> None:
+    logging.info(f"validating DB {db_uuid}")
 
     if not images:
         images = cfg.validate.images
 
     db_manager = DBManager(root_dir=cfg.root)
-    db_info = db_manager.get_db_info(session_id=session_id)
+    db_info = db_manager.get_db_info(db_uuid=db_uuid)
 
     if not db_info:
-        click.echo(f"no database found with session id {session_id}")
+        click.echo(f"no database found with session id {db_uuid}")
         return
 
     # resolve tool versions and install them
@@ -146,7 +146,7 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str], ver
     gates = validate(
         cfg=yardstick_cfg,
         result_set=result_set,
-        db_uuid=session_id,
+        db_uuid=db_uuid,
         verbosity=verbosity,
         recapture=recapture,
         root_dir=cfg.root,
@@ -164,3 +164,15 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str], ver
         sys.exit(1)
 
     click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
+
+
+@group.command(name="upload", help="upload a grype database")
+@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
+@click.argument("db-uuid")
+@click.pass_obj
+def upload_db(cfg: config.Application, db_uuid: str) -> None:
+    logging.info(f"uploading DB {db_uuid}")
+
+    raise NotImplementedError()
+
+

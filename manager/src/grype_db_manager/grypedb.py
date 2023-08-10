@@ -28,7 +28,7 @@ DB_DIR = "dbs"
 
 @dataclasses.dataclass
 class DBInfo:
-    session_id: str
+    uuid: str
     schema_version: int
     db_checksum: str
     db_created: datetime.datetime
@@ -44,29 +44,29 @@ class DBManager:
     def __init__(self, root_dir: str):
         self.db_dir = os.path.join(root_dir, DB_DIR)
 
-    def db_paths(self, session_id: str) -> tuple[str, str]:
-        session_dir = os.path.join(self.db_dir, session_id)
+    def db_paths(self, db_uuid: str) -> tuple[str, str]:
+        session_dir = os.path.join(self.db_dir, db_uuid)
         stage_dir = os.path.join(session_dir, "stage")
         build_dir = os.path.join(session_dir, "build")
         return stage_dir, build_dir
 
     def new_session(self) -> str:
-        session_id = str(uuid.uuid4())
+        db_uuid = str(uuid.uuid4())
 
-        stage_dir, build_dir = self.db_paths(session_id)
+        stage_dir, build_dir = self.db_paths(db_uuid)
 
         os.makedirs(stage_dir)
         os.makedirs(build_dir)
 
-        session_dir = os.path.join(self.db_dir, session_id)
+        session_dir = os.path.join(self.db_dir, db_uuid)
         with open(os.path.join(session_dir, "timestamp"), "w") as f:
             now = datetime.datetime.now(tz=datetime.timezone.utc)
             f.write(now.isoformat())
 
-        return session_id
+        return db_uuid
 
-    def get_db_info(self, session_id: str, allow_missing_archive: bool = False) -> DBInfo | None:
-        session_dir = os.path.join(self.db_dir, session_id)
+    def get_db_info(self, db_uuid: str, allow_missing_archive: bool = False) -> DBInfo | None:
+        session_dir = os.path.join(self.db_dir, db_uuid)
         if not os.path.exists(session_dir):
             raise DBInvalidException(f"path does not exist: {session_dir!r}")
 
@@ -80,12 +80,12 @@ class DBManager:
         # read info from the metadata file in build/metadata.json
         metadata_path = os.path.join(session_dir, "build", "metadata.json")
         if not os.path.exists(metadata_path):
-            raise DBInvalidException(f"missing metadata.json for session {session_id!r}")
+            raise DBInvalidException(f"missing metadata.json for DB {db_uuid!r}")
 
         with open(metadata_path) as f:
             metadata = json.load(f)
 
-        stage_dir, _ = self.db_paths(session_id=session_id)
+        stage_dir, _ = self.db_paths(db_uuid=db_uuid)
         db_pattern = os.path.join(
             stage_dir,
             "vulnerability-db*.tar.*",
@@ -93,14 +93,14 @@ class DBManager:
 
         matches = glob.glob(db_pattern)
         if not matches:
-            raise DBInvalidException(f"db archive not found for {session_id!r}")
+            raise DBInvalidException(f"db archive not found for {db_uuid!r}")
         if len(matches) > 1:
-            raise DBInvalidException(f"multiple db archives found for {session_id!r}")
+            raise DBInvalidException(f"multiple db archives found for {db_uuid!r}")
 
         abs_archive_path = os.path.abspath(matches[0])
 
         return DBInfo(
-            session_id=session_id,
+            uuid=db_uuid,
             schema_version=metadata["version"],
             db_checksum=metadata["checksum"],
             db_created=db_created_timestamp,
@@ -112,15 +112,15 @@ class DBManager:
         if not os.path.exists(self.db_dir):
             return []
 
-        session_ids = os.listdir(self.db_dir)
+        db_uuids = os.listdir(self.db_dir)
         sessions = []
-        for session_id in session_ids:
+        for db_uuid in db_uuids:
             try:
-                info = self.get_db_info(session_id=session_id)
+                info = self.get_db_info(db_uuid=db_uuid)
                 if info:
                     sessions.append(info)
             except DBInvalidException as e:
-                logging.debug(f"failed to get info for session {session_id!r}: {e}")
+                logging.debug(f"failed to get info for session {db_uuid!r}: {e}")
 
         return sessions
 
@@ -156,11 +156,11 @@ class GrypeDB:
 
     def build_and_package(self, schema_version: int, provider_root_dir: str, root_dir: str) -> str:
         db_manager = DBManager(root_dir=root_dir)
-        session_id = db_manager.new_session()
+        db_uuid = db_manager.new_session()
 
-        logging.info(f"building DB schema={schema_version} db-session={session_id!r}")
+        logging.info(f"building DB schema={schema_version} db-session={db_uuid!r}")
 
-        stage_dir, build_dir = db_manager.db_paths(session_id=session_id)
+        stage_dir, build_dir = db_manager.db_paths(db_uuid=db_uuid)
 
         # generate a new DB archive
         self.build_db(build_dir=build_dir, schema_version=schema_version, provider_root_dir=provider_root_dir)
@@ -183,7 +183,7 @@ class GrypeDB:
         logging.info(f"promoting db archive to {dest}")
         shutil.move(matches[0], dest)
 
-        return session_id
+        return db_uuid
 
     def build_db(self, build_dir: str, schema_version: int, provider_root_dir: str):
         self.run(
