@@ -45,7 +45,7 @@ DIST_DIR=./dist
 CHANGELOG := CHANGELOG.md
 SNAPSHOT_DIR=./snapshot
 OS := $(shell uname | tr '[:upper:]' '[:lower:]')
-SNAPSHOT_BIN := $(realpath $(shell pwd)/$(SNAPSHOT_DIR)/$(OS)-build_$(OS)_amd64_v1/$(BIN))
+SNAPSHOT_BIN := $(abspath $(shell pwd)/$(SNAPSHOT_DIR)/$(OS)-build_$(OS)_amd64_v1/$(BIN))
 
 
 define safe_rm_rf
@@ -88,15 +88,23 @@ endef
 all: static-analysis test ## Run all checks (linting, license checks, unit, and acceptance tests)
 	@printf '$(SUCCESS)All checks pass!$(RESET)\n'
 
+.PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
+static-analysis: check-go-mod-tidy lint check-licenses
+	cd manager && poetry run make static-analysis
+
 .PHONY: test
-test: unit ## Run all tests (unit)
+test: unit cli ## Run all tests
+	cd manager && poetry run make test
 
 
 ## Bootstrapping targets #################################
 
 .PHONY: bootstrap
-bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools ## Download and install all tooling dependencies (+ prep tooling in the ./tmp dir)
-	$(call title,Bootstrapping dependencies)
+bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools bootstrap-python  ## Download and install all tooling dependencies (+ prep tooling in the ./tmp dir)
+
+.PHONY: bootstrap-python
+bootstrap-python: ## Install python dependencies
+	cd manager && make bootstrap
 
 .PHONY: bootstrap-tools
 bootstrap-tools: $(TEMP_DIR)
@@ -115,10 +123,8 @@ bootstrap-go:
 $(TEMP_DIR):
 	mkdir -p $(TEMP_DIR)
 
-## Static analysis targets #################################
 
-.PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
-static-analysis: check-go-mod-tidy lint check-licenses
+## Static analysis targets #################################
 
 .PHONY: lint
 lint:  ## Run gofmt + golangci lint checks
@@ -154,26 +160,25 @@ check-licenses:
 ## Testing targets #################################
 
 .PHONY: unit
-unit: unit-go unit-python ## Run go and python unit tests
-
-.PHONY: unit-python
-unit-python: ## Run python unit tests
-	$(call title,Running Python unit tests)
-	cd manager && poetry run make unit
-
-.PHONY: unit-go
-unit-go: ## Run GO unit tests (with coverage)
+unit: ## Run GO unit tests (with coverage)
 	$(call title,Running Go unit tests)
 	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
-.PHONY: acceptance
-acceptance: ## Run acceptance tests (for local use, not CI)
-	$(call title,"Running local acceptance tests (this takes a while... 45 minutes or so)")
-	cd test/acceptance && poetry run python ./grype-ingest.py test-all
+.PHONY: db-acceptance
+db-acceptance: ## Run acceptance tests (for local use, not CI)
+	$(call title,"Running DB acceptance tests (schema=$(schema))")
+	./test/db/acceptance.sh $(schema)
 
 .PHONY: cli
-cli: $(SNAPSHOT_DIR)  ## Run CLI tests
+cli: cli-go cli-python ## Run all CLI tests
+
+.PHONY: cli-python
+cli-python:  ## Run python CLI tests
+	cd manager && poetry run make cli
+
+.PHONY: cli-go
+cli-go: $(SNAPSHOT_DIR)  ## Run go CLI tests
 	chmod 755 "$(SNAPSHOT_BIN)"
 	$(SNAPSHOT_BIN) version
 	GRYPE_DB_BINARY_LOCATION='$(SNAPSHOT_BIN)' \

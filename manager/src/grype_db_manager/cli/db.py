@@ -105,7 +105,7 @@ def validate_db(cfg: config.Application, session_id: str, images: list[str], ver
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.yardstick_root)
 
-    # we do this to resolve to a specific version of each tool in the request configuation
+    # we do this to resolve to a specific version of each tool in the request configuration
     syft = Syft.install(version=cfg.validate.syft.version, within_path=store.tool.install_base(name="syft"))
     grype = Grype.install(version=cfg.validate.grype.version, within_path=store.tool.install_base(name="grype"))
 

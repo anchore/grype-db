@@ -133,20 +133,21 @@ def validate(  # noqa: PLR0913
 
         failure = not gate.passed()
         if failure:
-            logging.error(f"failed quality gate for image={image}")
-            logging.info(format.treeify(gate.reasons))
+            logging.info(f"{Format.FAIL}failed quality gate{Format.RESET} for image={image}\n{format.treeify(gate.reasons)}")
 
     return ret
 
 
 def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_dir: str, recapture: bool = False):
     dbm = grypedb.DBManager(root_dir=root_dir)
-    dbm.get_db_info(db_uuid)
+    db_info = dbm.get_db_info(db_uuid)
 
     sbom.download(cfg=cfg, result_set=result_set)
 
     request_images = cfg.result_sets[result_set].images()
-    is_stale = _is_result_set_stale(request_images=request_images, result_set=result_set, yardstick_root_dir=cfg.store_root)
+    is_stale = _is_result_set_stale(
+        request_images=request_images, result_set=result_set, db_info=db_info, yardstick_root_dir=cfg.store_root,
+    )
 
     if is_stale or recapture:
         capture.result_set(result_set=result_set, scan_requests=cfg.result_sets[result_set].scan_requests())
@@ -154,32 +155,58 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
         logging.info(f"skipping grype capture for result-set={result_set} (already exists)")
 
 
-def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_root_dir: str) -> bool:  # noqa: C901, PLR0911
+def _is_result_set_stale(  # noqa: C901, PLR0911, PLR0912
+    request_images: list[str],
+    result_set: str,
+    db_info: grypedb.DBInfo,
+    yardstick_root_dir: str,
+) -> bool:
     try:
         result_set_object = yardstick.store.result_set.load(result_set, store_root=yardstick_root_dir)
     except FileNotFoundError as e:
-        logging.info(f"result-set does not exist: {e}")
+        logging.warning(f"result-set does not exist: {e}")
+        return True
+
+    # all existing requests should be for the same db we are validating...
+    db_checksums = {
+        s.config.detail.get("db", {}).get("checksum", "")
+        for s in result_set_object.state
+        if s.config and s.request.tool.startswith("grype") and s.request.label == "custom-db"
+    }
+
+    if len(db_checksums) > 1:
+        logging.warning("result-set has multiple db checksums")
+        return True
+
+    if not db_checksums:
+        logging.warning("result-set has no db checksums")
+        return True
+
+    if db_info.db_checksum not in db_checksums:
+        logging.warning(
+            f"result-set was captured for a different db: expected={db_info.db_checksum} actual={next(iter(db_checksums))}",
+        )
         return True
 
     if not result_set_object:
-        logging.info("result-set does is empty")
+        logging.warning("result-set does is empty")
         return True
 
+    # all images in each config for syft and grype should match all images referenced in requests
     syft_config_images = {s.config.full_image for s in result_set_object.state if s.config and "syft" in s.config.tool_name}
     grype_config_images = {s.config.full_image for s in result_set_object.state if s.config and "grype" in s.config.tool_name}
     mismatched_images = set(request_images) != set(syft_config_images) or set(request_images) != set(grype_config_images)
-
     if mismatched_images:
-        logging.info("result-set has mismatched image sets")
+        logging.warning("result-set has mismatched image sets")
         return True
 
+    # all requests should have configs...
     requests_with_no_configs = [s.request for s in result_set_object.state if not s.config]
-
     if requests_with_no_configs:
-        logging.info(f"result-set has unfulfilled requests ({len(requests_with_no_configs)} missing results)")
+        logging.warning(f"result-set has unfulfilled requests ({len(requests_with_no_configs)} missing results)")
         return True
 
-    # make certain that all images have 1 syft request and 2 grype requests
+    # make certain that all images have 1 syft request and 2 grype requests...
     syft_requests_by_image = collections.defaultdict(list)
     for s in result_set_object.state:
         if s.config and "syft" in s.config.tool:
@@ -188,7 +215,7 @@ def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_r
     missing_syft_requests = [image for image in request_images if image not in syft_requests_by_image]
 
     if missing_syft_requests:
-        logging.info(f"result-set has missing syft requests: {missing_syft_requests}")
+        logging.warning(f"result-set has missing syft requests: {missing_syft_requests}")
         return True
 
     grype_requests_by_image = collections.defaultdict(list)
@@ -201,7 +228,7 @@ def _is_result_set_stale(request_images: list[str], result_set: str, yardstick_r
     ]
 
     if missing_grype_requests:
-        logging.info(f"result-set has missing grype requests: {missing_grype_requests}")
+        logging.warning(f"result-set has missing grype requests: {missing_grype_requests}")
         return True
 
     return False
@@ -277,7 +304,7 @@ def log_validation_results(
                 ret += f"{format.space}    {label.summarize()}\n"
             logging.info(ret.rstrip())
 
-    latest_release_tool, current_tool = guess_tool_orientation([r.config.tool_name for r in results])
+    latest_release_tool, current_tool = guess_tool_orientation([r.config.tool for r in results])
 
     table, diffs = format.match_differences_table(
         latest_release_tool=latest_release_tool,
@@ -291,7 +318,7 @@ def log_validation_results(
         if verbosity > 0:
             logging.info(f"match differences found between tooling:\n{table}")
         else:
-            logging.info(f"match differences between tooling: {diffs}")
+            logging.info(f"match differences found between tooling: {diffs}")
 
 
 def guess_tool_orientation(tools: list[str]):
@@ -301,6 +328,8 @@ def guess_tool_orientation(tools: list[str]):
     current_tool = None
     latest_release_tool = None
     for _idx, tool_name_version in enumerate(tools):
+        if "@" not in tool_name_version:
+            raise ValueError(f"tool is missing a version: {tool_name_version}")
         if "custom-db" not in tool_name_version:
             latest_release_tool = tool_name_version
             continue

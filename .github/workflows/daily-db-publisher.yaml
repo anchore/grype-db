@@ -47,7 +47,7 @@ jobs:
       - name: Read supported schema versions
         id: read-schema-versions
         run: |
-          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          content=`cat manager/src/grype_db_manager/data/grype-schema-version-mapping.json | jq -c 'keys'`
           echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   generate-and-publish-dbs:

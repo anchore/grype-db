@@ -26,7 +26,7 @@ class Format(enum.Enum):
     RESET = "\033[0m"
 
     def __init__(self, value: str):
-        if not supportsColor.stdout or os.environ.get("NO_COLOR", None):
+        if not supportsColor.stderr or os.environ.get("NO_COLOR", None):
             self._value = ""
         else:
             self._value = value
@@ -211,4 +211,4 @@ def indent_block(text, prefix=" ") -> str:
 
 
 def g(text: str) -> str:
-    return f"{Format.GREY}{text}{Format.RESET}"
+    return f"{Format.ITALIC}{Format.UNDERLINE}{text}{Format.RESET}"

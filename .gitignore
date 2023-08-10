@@ -1,4 +1,6 @@
 /data
+!/data/yardstick/labels
+!/data/vulnerability-match-labels
 /vunnel
 /bin
 .yardstick

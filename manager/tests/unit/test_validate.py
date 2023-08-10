@@ -1,9 +1,11 @@
+import datetime
+
 import pytest
 
 from yardstick import store
 from yardstick.cli import config as ycfg
 
-from grype_db_manager import validate
+from grype_db_manager import validate, grypedb
 
 
 def test_grype_version():
@@ -23,19 +25,79 @@ def test_guess_tool_orientation():
     with pytest.raises(ValueError):
         validate.guess_tool_orientation(["grype@latest", "grype@latest"])
 
+    with pytest.raises(ValueError):
+        validate.guess_tool_orientation(["grype@latest", "grype[custom-db]"])
+
+
+def _partial_db_info(checksum: str):
+    return grypedb.DBInfo(
+        session_id="session-id",
+        schema_version=5,
+        db_checksum=checksum,
+        db_created=datetime.datetime.now(tz=datetime.timezone.utc),
+        data_created=datetime.datetime.now(tz=datetime.timezone.utc),
+        archive_path="archive-path",
+    )
+
+
+expected_db_info = _partial_db_info("sha256:d594a820353c99d1fcc29904ef0e4c0bace8ed7a0e21c4112325b6f57e4f9ad3")
+bad_db_info = _partial_db_info("bad-checksum")
+
 
 @pytest.mark.parametrize(
-    "test_case, expected",
+    "test_case, db_info, expected",
     [
-        ("good", False),
-        ("missing-grype-request", True),
-        ("missing-syft-request", True),
-        ("unfulfilled-request", True),
-        ("different-image-set", True),
-        ("missing-result-set", True),
+        pytest.param(
+            "good",
+            expected_db_info,
+            False,
+            id="go-case",
+        ),
+        pytest.param(
+            "inconsistent-db-checksum",
+            expected_db_info,
+            True,
+            id="inconsistent-db-checksum",
+        ),
+        pytest.param(
+            "missing-grype-request",
+            expected_db_info,
+            True,
+            id="missing-grype-request",
+        ),
+        pytest.param(
+            "missing-syft-request",
+            expected_db_info,
+            True,
+            id="missing-syft-request",
+        ),
+        pytest.param(
+            "unfulfilled-request",
+            expected_db_info,
+            True,
+            id="unfulfilled-request",
+        ),
+        pytest.param(
+            "different-image-set",
+            expected_db_info,
+            True,
+            id="different-image-set",
+        ),
+        pytest.param(
+            "missing-result-set",
+            expected_db_info,
+            True,
+            id="missing-result-set",
+        ),
+        pytest.param(
+            "good",
+            bad_db_info,
+            True,
+            id="mismatched-db-checksum",
+        ),
     ],
 )
-def test_is_result_set_stale(test_dir_path, test_case, expected):
+def test_is_result_set_stale(test_dir_path, test_case, db_info, expected):
     root = test_dir_path(f"fixtures/result-set-stale-detection/{test_case}")
 
     request_images = [
@@ -44,7 +106,9 @@ def test_is_result_set_stale(test_dir_path, test_case, expected):
         "docker.io/anchore/test_images:vulnerabilities-alpine-3.14-d5be50d@sha256:fe242a3a63699425317fba0a749253bceb700fb3d63e7a0f6497f53a587e38c5",
     ]
 
-    is_stale = validate._is_result_set_stale(request_images=request_images, result_set="result-set", yardstick_root_dir=root)
+    is_stale = validate._is_result_set_stale(
+        request_images=request_images, result_set="result-set", db_info=db_info, yardstick_root_dir=root
+    )
 
     assert is_stale == expected
 
