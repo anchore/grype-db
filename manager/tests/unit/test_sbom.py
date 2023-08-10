@@ -93,7 +93,7 @@ def test_download(top_level_fixture_copy, mocker):
         },
     )
 
-    sbom.download(cfg=yardstick_cfg, result_set=result_set)
+    sbom.download(cfg=yardstick_cfg, result_set=result_set, store_root=root)
 
     # assert that we can get the downloaded SBOMs from the result set (via scan configs)
     result_set_obj = yardstick.store.result_set.load(name=result_set, store_root=root)
