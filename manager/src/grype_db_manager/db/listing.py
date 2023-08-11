@@ -14,7 +14,8 @@ from dataclasses import dataclass
 import iso8601
 from dataclass_wizard import fromdict, asdict
 
-from grype_db_manager import schema, grype, s3utils, distribution
+from grype_db_manager import grype, s3utils, distribution
+from grype_db_manager.db import schema
 
 LISTING_FILENAME = "listing.json"
 
@@ -196,7 +197,7 @@ def fetch(bucket: str, path: str, create_if_missing: bool = False) -> Listing:
 
 
 @contextlib.contextmanager
-def http_server(directory: str):
+def _http_server(directory: str):
     server_address = ("127.0.0.1", 5555)
     url = f"http://{server_address[0]}:{server_address[1]}"
     listing_url = f"{url}/{LISTING_FILENAME}"
@@ -216,12 +217,49 @@ def http_server(directory: str):
         pass
 
 
-def acceptance_test(test_listing: Listing, image: str, store_root: str, override_schema_release: tuple[str, str] | None = None):
+def _smoke_test(
+    schema_version: str,
+    listing_url: str,
+    image: str,
+    minimum_packages: int,
+    minimum_vulnerabilities: int,
+    store_root: str,
+):
+    logging.info(f"testing grype schema-version={schema_version!r}")
+    tool_obj = grype.Grype(
+        schema_version=schema_version,
+        store_root=store_root,
+        update_url=listing_url,
+    )
+
+    output = tool_obj.run(user_input=image)
+    packages, vulnerabilities = grype.Report(report_contents=output).parse()
+    logging.info(f"scan result with downloaded DB: packages={len(packages)} vulnerabilities={len(vulnerabilities)}")
+    if not packages or not vulnerabilities:
+        raise ValueError("validation failed: missing packages and/or vulnerabilities")
+
+    if len(packages) < minimum_packages:
+        raise ValueError(f"validation failed: expected at least {minimum_packages} packages, got {len(packages)}")
+
+    if len(vulnerabilities) < minimum_vulnerabilities:
+        raise ValueError(f"validation failed: expected at least {minimum_vulnerabilities} vulnerabilities, got {len(vulnerabilities)}")
+
+
+def smoke_test(
+    test_listing: Listing,
+    image: str,
+    minimum_packages: int,
+    minimum_vulnerabilities: int,
+    override_schema_release: tuple[str, str] | None = None,
+):
     # write the listing to a temp dir that is served up locally on an HTTP server. This is used by grype to locally
     # download the listing file and check that it works against S3 (since the listing entries have DB urls that
     # reside in S3).
-    with tempfile.TemporaryDirectory(prefix="grype-db-acceptance") as tempdir:
+    with tempfile.TemporaryDirectory(prefix="grype-db-smoke-test") as tempdir:
         listing_contents = test_listing.to_json()
+
+        installation_path = os.path.join(tempdir, "grype-install")
+
         # way too verbose!
         # logging.info(listing_contents)
         with open(os.path.join(tempdir, LISTING_FILENAME), "w") as f:
@@ -231,28 +269,28 @@ def acceptance_test(test_listing: Listing, image: str, store_root: str, override
         # listing entry for the DB is usable (the download succeeds and grype and the update process, which does
         # checksum verifications, passes). This test does NOT check the integrity of the DB since that has already
         # been tested in the build steps.
-        with http_server(directory=tempdir) as listing_url:
+        with _http_server(directory=tempdir) as listing_url:
             if override_schema_release:
                 override_schema, override_release = override_schema_release
                 logging.warning(f"overriding schema={override_schema!r} with release={override_release!r}")
-                logging.info(f"testing grype schema-version={override_schema!r}")
-                tool_obj = grype.Grype(
+                _smoke_test(
                     schema_version=override_schema,
-                    store_root=store_root,
-                    update_url=listing_url,
-                    release=override_release
+                    listing_url=listing_url,
+                    image=image,
+                    minimum_packages=minimum_packages,
+                    minimum_vulnerabilities=minimum_vulnerabilities,
+                    store_root=installation_path,
                 )
-            else:
-                for schema_version in schema.supported_schema_versions():
-                    logging.info(f"testing grype schema-version={schema_version!r}")
-                    tool_obj = grype.Grype(
-                        schema_version=schema_version,
-                        store_root=store_root,
-                        update_url=listing_url,
-                    )
 
-            output = tool_obj.run(user_input=image)
-            packages, vulnerabilities = grype.Report(report_contents=output).parse()
-            logging.info(f"scan result with downloaded DB: packages={len(packages)} vulnerabilities={len(vulnerabilities)}")
-            if not packages or not vulnerabilities:
-                raise RuntimeError("validation failed: missing packages and/or vulnerabilities")
+            else:
+                schema_versions = schema.supported_schema_versions()
+                logging.info(f"testing all supported schema-versions={schema_versions}")
+                for schema_version in schema_versions:
+                    _smoke_test(
+                        schema_version=schema_version,
+                        listing_url=listing_url,
+                        image=image,
+                        minimum_packages=minimum_packages,
+                        minimum_vulnerabilities=minimum_vulnerabilities,
+                        store_root=installation_path,
+                    )

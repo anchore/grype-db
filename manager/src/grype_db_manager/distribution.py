@@ -9,8 +9,8 @@ import tempfile
 from urllib.parse import urlparse, urlunparse
 from typing import Generator
 
-from grype_db_manager import listing, s3utils, metadata
-
+from grype_db_manager import s3utils
+from grype_db_manager.db import listing, metadata
 
 DB_SUFFIXES = {".tar.gz", ".tar.zst"}
 MAX_DB_AGE = 120  # ~4 months in days

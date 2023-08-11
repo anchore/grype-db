@@ -5,20 +5,21 @@ import pytest
 from yardstick import store
 from yardstick.cli import config as ycfg
 
-from grype_db_manager import validate, grypedb
+from grype_db_manager import grypedb
+from grype_db_manager.db import validation
 
 
 def test_guess_tool_orientation():
-    latest_release_tool, current_tool = validate.guess_tool_orientation(["grype@latest", "grype[custom-db]@latest"])
+    latest_release_tool, current_tool = validation.guess_tool_orientation(["grype@latest", "grype[custom-db]@latest"])
 
     assert latest_release_tool == "grype@latest"
     assert current_tool == "grype[custom-db]@latest"
 
     with pytest.raises(ValueError):
-        validate.guess_tool_orientation(["grype@latest", "grype@latest"])
+        validation.guess_tool_orientation(["grype@latest", "grype@latest"])
 
     with pytest.raises(ValueError):
-        validate.guess_tool_orientation(["grype@latest", "grype[custom-db]"])
+        validation.guess_tool_orientation(["grype@latest", "grype[custom-db]"])
 
 
 def _partial_db_info(checksum: str):
@@ -98,7 +99,7 @@ def test_is_result_set_stale(test_dir_path, test_case, db_info, expected):
         "docker.io/anchore/test_images:vulnerabilities-alpine-3.14-d5be50d@sha256:fe242a3a63699425317fba0a749253bceb700fb3d63e7a0f6497f53a587e38c5",
     ]
 
-    is_stale = validate._is_result_set_stale(
+    is_stale = validation._is_result_set_stale(
         request_images=request_images, result_set="result-set", db_info=db_info, yardstick_root_dir=root
     )
 
@@ -185,7 +186,7 @@ def test_validate_image(test_dir_path, result_set, label_set, expected_reasons):
     label_set_root = test_dir_path(f"fixtures/validate-image/label-sets/{label_set}")
     label_entries = store.labels.load_for_image(images, year_max_limit=yardstick_cfg.default_max_year, store_root=label_set_root)
 
-    gate = validate.validate_image(
+    gate = validation.validate_image(
         cfg=yardstick_cfg,
         descriptions=result_set_obj.descriptions,
         label_entries=label_entries,
@@ -202,56 +203,56 @@ def test_validate_image(test_dir_path, result_set, label_set, expected_reasons):
     [
         pytest.param(
             0.5, 0.5,
-            validate.GateConfig(),
+            validation.GateConfig(),
             False,
             id="default-config-pass-when-no-difference",
         ),
         pytest.param(
             0.5, 0.55,
-            validate.GateConfig(),
+            validation.GateConfig(),
             False,
             id="default-config-pass-when-there-is-better-performance",
         ),
         pytest.param(
             0.5, 0.49,
-            validate.GateConfig(),
+            validation.GateConfig(),
             True,
             id="default-config-fail-when-below-0-threshold",
         ),
         pytest.param(
             0.5, 0.5,
-            validate.GateConfig(f1_score_threshold=0.1),
+            validation.GateConfig(f1_score_threshold=0.1),
             False,
             id="custom-config-pass-when-no-difference",
         ),
         pytest.param(
             0.5, 0.55,
-            validate.GateConfig(f1_score_threshold=0.1),
+            validation.GateConfig(f1_score_threshold=0.1),
             False,
             id="custom-config-pass-when-there-is-better-performance",
         ),
         pytest.param(
             0.5, 0.49,
-            validate.GateConfig(f1_score_threshold=0.1),
+            validation.GateConfig(f1_score_threshold=0.1),
             False,
             id="custom-config-pass-when-within-margin",
         ),
         pytest.param(
             0.5, 0.4,
-            validate.GateConfig(f1_score_threshold=0.1),
+            validation.GateConfig(f1_score_threshold=0.1),
             False,
             id="custom-config-pass-when-at-margin",
         ),
         pytest.param(
             0.5, 0.39,
-            validate.GateConfig(f1_score_threshold=0.1),
+            validation.GateConfig(f1_score_threshold=0.1),
             True,
             id="custom-config-fail-when-below-margin",
         )
     ]
 )
 def test_gate_evaluate_f1_score(last, current, config, expect_fail):
-    gate = validate.Gate(None, None, config=config)
+    gate = validation.Gate(None, None, config=config)
     reason = gate._evaluate_f1_score(
         last_f1_score=last,
         current_f1_score=current,
@@ -268,56 +269,56 @@ def test_gate_evaluate_f1_score(last, current, config, expect_fail):
     [
         pytest.param(
             5, 5,
-            validate.GateConfig(),
+            validation.GateConfig(),
             False,
             id="default-config-pass-when-no-difference",
         ),
         pytest.param(
             5, 4,
-            validate.GateConfig(),
+            validation.GateConfig(),
             False,
             id="default-config-pass-when-there-is-better-performance",
         ),
         pytest.param(
             5, 6,
-            validate.GateConfig(),
+            validation.GateConfig(),
             True,
             id="default-config-fail-when-below-0-threshold",
         ),
         pytest.param(
             5, 5,
-            validate.GateConfig(introduced_fns_threshold=2),
+            validation.GateConfig(introduced_fns_threshold=2),
             False,
             id="custom-config-pass-when-no-difference",
         ),
         pytest.param(
             5, 4,
-            validate.GateConfig(introduced_fns_threshold=2),
+            validation.GateConfig(introduced_fns_threshold=2),
             False,
             id="custom-config-pass-when-there-is-better-performance",
         ),
         pytest.param(
             5, 6,
-            validate.GateConfig(introduced_fns_threshold=2),
+            validation.GateConfig(introduced_fns_threshold=2),
             False,
             id="custom-config-pass-when-within-margin",
         ),
         pytest.param(
             5, 7,
-            validate.GateConfig(introduced_fns_threshold=2),
+            validation.GateConfig(introduced_fns_threshold=2),
             False,
             id="custom-config-pass-when-at-margin",
         ),
         pytest.param(
             5, 8,
-            validate.GateConfig(introduced_fns_threshold=2),
+            validation.GateConfig(introduced_fns_threshold=2),
             True,
             id="custom-config-fail-when-below-margin",
         )
     ]
 )
 def test_gate_evaluate_fns(last, current, config, expect_fail):
-    gate = validate.Gate(None, None, config=config)
+    gate = validation.Gate(None, None, config=config)
     reason = gate._evaluate_fns(
         last_fns=last,
         current_fns=current,
@@ -334,50 +335,50 @@ def test_gate_evaluate_fns(last, current, config, expect_fail):
     [
         pytest.param(
             9,
-            validate.GateConfig(),
+            validation.GateConfig(),
             False,
             id="default-config-pass-when-below-threshold",
         ),
         pytest.param(
             10,
-            validate.GateConfig(),
+            validation.GateConfig(),
             False,
             id="default-config-pass-when-at-threshold",
         ),
         pytest.param(
             11,
-            validate.GateConfig(),
+            validation.GateConfig(),
             True,
             id="default-config-fail-when-above-threshold",
         ),
         pytest.param(
             9,
-            validate.GateConfig(unlabeled_matches_threshold=20),
+            validation.GateConfig(unlabeled_matches_threshold=20),
             False,
             id="custom-config-pass-when-below-margin",
         ),
         pytest.param(
             20,
-            validate.GateConfig(unlabeled_matches_threshold=20),
+            validation.GateConfig(unlabeled_matches_threshold=20),
             False,
             id="custom-config-pass-when-at-margin",
         ),
         pytest.param(
             19,
-            validate.GateConfig(unlabeled_matches_threshold=20),
+            validation.GateConfig(unlabeled_matches_threshold=20),
             False,
             id="custom-config-pass-when-within-margin",
         ),
         pytest.param(
             21,
-            validate.GateConfig(unlabeled_matches_threshold=20),
+            validation.GateConfig(unlabeled_matches_threshold=20),
             True,
             id="custom-config-fail-when-above-margin",
         )
     ]
 )
 def test_evaluate_indeterminate_percent(indeterminate_percent, config, expect_fail):
-    gate = validate.Gate(None, None, config=config)
+    gate = validation.Gate(None, None, config=config)
     reason = gate._evaluate_indeterminate_percent(
         indeterminate_percent=indeterminate_percent,
         context="test",

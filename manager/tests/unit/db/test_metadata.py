@@ -1,4 +1,4 @@
-from grype_db_manager import metadata
+from grype_db_manager.db import metadata
 
 
 def test_to_and_from_json():

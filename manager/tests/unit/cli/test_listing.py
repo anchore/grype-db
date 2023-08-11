@@ -6,7 +6,8 @@ import pytest
 from click.testing import CliRunner
 from moto import mock_s3
 
-from grype_db_manager import cli, utils, listing, metadata
+from grype_db_manager import cli, utils
+from grype_db_manager import db
 from grype_db_manager.cli import config
 
 
@@ -17,7 +18,7 @@ from grype_db_manager.cli import config
 #     with open(path) as f:
 #         listing_json = f.read()
 #
-#     lst = listing.Listing.from_json(listing_json)
+#     lst = db.Listing.from_json(listing_json)
 #     lst.prune(3, 3)
 #
 #     content = lst.to_json(indent=2)
@@ -59,7 +60,7 @@ def listing_s3_mock(redact_aws_credentials):
         s3.put_object(Bucket=bucket, Key=listing_path, Body=contents)
 
         # parse the listing file
-        lst = listing.Listing.from_json(contents)
+        lst = db.Listing.from_json(contents)
 
         # create a DB entry for each artifact
         url_prefix = "https://toolbox-data.anchore.io/"
@@ -87,7 +88,7 @@ def listing_s3_mock(redact_aws_credentials):
 def create_tar_gz(built: str, version: int):
     tar_fileobj = io.BytesIO()
     with tarfile.open(fileobj=tar_fileobj, mode="w|") as tar:
-        content = metadata.Metadata(built=built, version=version).to_json().encode('utf-8')
+        content = db.Metadata(built=built, version=version).to_json().encode('utf-8')
         tf = tarfile.TarInfo("metadata.json")
         tf.size = len(content)
         tar.addfile(tf, io.BytesIO(content))
@@ -136,7 +137,7 @@ def test_create_listing(test_dir_path, listing_s3_mock, case_dir, expected_exit_
     with utils.set_directory(config_dir_path):
 
         with open("expected-listing.json") as f:
-            expected_object = listing.Listing.from_json(f.read())
+            expected_object = db.Listing.from_json(f.read())
 
         runner = CliRunner()
         result = runner.invoke(cli.cli, "listing create".split())
@@ -148,7 +149,7 @@ def test_create_listing(test_dir_path, listing_s3_mock, case_dir, expected_exit_
 
         if expected_exit_code == 0:
             with open("listing.json") as f:
-                actual_object = listing.Listing.from_json(f.read())
+                actual_object = db.Listing.from_json(f.read())
 
     for item in contains:
         assert item in result.output

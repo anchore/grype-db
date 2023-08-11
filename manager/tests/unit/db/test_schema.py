@@ -1,4 +1,4 @@
-from grype_db_manager import schema
+from grype_db_manager.db import schema
 
 
 def test_grype_version():

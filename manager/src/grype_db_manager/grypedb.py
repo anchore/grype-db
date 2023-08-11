@@ -15,7 +15,7 @@ import uuid
 
 import requests
 
-from grype_db_manager.format import Format
+from grype_db_manager.db.format import Format
 
 TOOLS_DIR = "tools"
 BIN_DIR = f"{TOOLS_DIR}/grype-db/bin"

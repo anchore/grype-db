@@ -7,7 +7,7 @@ import mergedeep
 import yaml
 from dataclass_wizard import asdict, fromdict
 
-from grype_db_manager import validate
+from grype_db_manager import db
 
 DEFAULT_CONFIGS = (
     ".grype-db-manager.yaml",
@@ -31,23 +31,23 @@ class GrypeDB:
 
 @dataclass
 class Grype:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_GRYPE_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_GRYPE_CONFIG", default="")
+    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_VERSION", default="latest")
+    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_CONFIG", default="")
 
 
 @dataclass
 class Syft:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_SYFT_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_SYFT_CONFIG", default="")
+    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_VERSION", default="latest")
+    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_CONFIG", default="")
 
 
-@dataclass()
-class Validate:
+@dataclass
+class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
     syft: Syft = field(default_factory=Syft)
-    default_max_year: int = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DEFAULT_MAX_YEAR", default=2021)
-    gate: validate.GateConfig = field(default_factory=validate.GateConfig)
+    default_max_year: int = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_DEFAULT_MAX_YEAR", default=2021)
+    gate: db.validation.GateConfig = field(default_factory=db.validation.GateConfig)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)
@@ -61,6 +61,21 @@ class Validate:
             else:
                 images += [image]
         self.images = images
+
+
+@dataclass
+class ValidateListing:
+    image: str | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_IMAGE", default=None)
+    minimum_packages: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_PACKAGES", default=None)
+    minimum_vulnerabilities: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_VULNERABILITIES", default=None)
+    override_grype_version: str | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION", default=None)
+    override_db_schema_version: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION", default=None)
+
+
+@dataclass()
+class Validate:
+    db: ValidateDB = field(default_factory=ValidateDB)
+    listing: ValidateListing = field(default_factory=ValidateListing)
 
 
 @dataclass()
@@ -136,9 +151,9 @@ def _load(path: str) -> Application:
         cfg = Application()
 
     # wire up the gate configuration so any gates created will use values from the application config
-    validate.Gate.set_default_config(cfg.validate.gate)
-    gate_instance = validate.Gate(None, None)
-    if gate_instance.config != cfg.validate.gate:
+    db.validation.Gate.set_default_config(cfg.validate.db.gate)
+    gate_instance = db.validation.Gate(None, None)
+    if gate_instance.config != cfg.validate.db.gate:
         raise ValueError("failed to set default gate config")
 
     return cfg

@@ -12,9 +12,9 @@ from yardstick.tool.grype import Grype
 from yardstick.tool.syft import Syft
 
 from grype_db_manager.cli import config
-from grype_db_manager.format import Format
+from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
-from grype_db_manager.validate import validate
+from grype_db_manager import db
 
 
 @click.group(name="db", help="manage local grype database builds")
@@ -93,7 +93,7 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
     logging.info(f"validating DB {db_uuid}")
 
     if not images:
-        images = cfg.validate.images
+        images = cfg.validate.db.images
 
     db_manager = DBManager(root_dir=cfg.root)
     db_info = db_manager.get_db_info(db_uuid=db_uuid)
@@ -106,14 +106,14 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
     yardstick.store.config.set_values(store_root=cfg.yardstick_root)
 
     # we do this to resolve to a specific version of each tool in the request configuration
-    syft = Syft.install(version=cfg.validate.syft.version, within_path=store.tool.install_base(name="syft"))
-    grype = Grype.install(version=cfg.validate.grype.version, within_path=store.tool.install_base(name="grype"))
+    syft = Syft.install(version=cfg.validate.db.syft.version, within_path=store.tool.install_base(name="syft"))
+    grype = Grype.install(version=cfg.validate.db.grype.version, within_path=store.tool.install_base(name="grype"))
 
     result_set = "db-validation"
 
     yardstick_cfg = ycfg.Application(
         store_root=cfg.yardstick_root,
-        default_max_year=cfg.validate.default_max_year,
+        default_max_year=cfg.validate.db.default_max_year,
         result_sets={
             result_set: ycfg.ResultSet(
                 description="compare the latest published OSS DB with the latest (local) built DB",
@@ -143,7 +143,7 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
         },
     )
 
-    gates = validate(
+    gates = db.validate(
         cfg=yardstick_cfg,
         result_set=result_set,
         db_uuid=db_uuid,

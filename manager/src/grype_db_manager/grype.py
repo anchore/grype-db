@@ -5,10 +5,9 @@ import logging
 import collections
 from typing import Tuple, Set, Optional
 
-from yardstick import store
 from yardstick.tool import grype
 
-from grype_db_manager import schema
+from grype_db_manager.db import schema
 from grype_db_manager.utils import repo_root
 
 Package = collections.namedtuple("Package", "name type version")

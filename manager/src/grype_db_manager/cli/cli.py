@@ -11,7 +11,7 @@ import yaml
 
 from grype_db_manager import __name__ as package_name
 from grype_db_manager.cli import config, db, tool, listing
-from grype_db_manager.format import Format
+from grype_db_manager.db.format import Format
 
 
 @click.option("--verbose", "-v", default=False, help="show more verbose logging", count=True)

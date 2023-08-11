@@ -3,14 +3,14 @@ import json
 
 import pytest
 
-from grype_db_manager import listing
+from grype_db_manager import db
 
 
 def test_listing_add_sorts_by_date():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -21,7 +21,7 @@ def test_listing_add_sorts_by_date():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -32,7 +32,7 @@ def test_listing_add_sorts_by_date():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -43,7 +43,7 @@ def test_listing_add_sorts_by_date():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -54,7 +54,7 @@ def test_listing_add_sorts_by_date():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -65,7 +65,7 @@ def test_listing_add_sorts_by_date():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -97,14 +97,14 @@ def test_listing_add_sorts_by_date():
     ),
 )
 def test_listing_url(s3_path, expected):
-    assert expected == listing.Listing.url(s3_path)
+    assert expected == db.Listing.url(s3_path)
 
 
 def test_listing_basenames():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -115,7 +115,7 @@ def test_listing_basenames():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -126,7 +126,7 @@ def test_listing_basenames():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -137,7 +137,7 @@ def test_listing_basenames():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -148,7 +148,7 @@ def test_listing_basenames():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -159,7 +159,7 @@ def test_listing_basenames():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -173,10 +173,10 @@ def test_listing_basenames():
 
 
 def test_listing_latest():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -187,7 +187,7 @@ def test_listing_latest():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -198,7 +198,7 @@ def test_listing_latest():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -209,7 +209,7 @@ def test_listing_latest():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -220,7 +220,7 @@ def test_listing_latest():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -231,7 +231,7 @@ def test_listing_latest():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -246,10 +246,10 @@ def test_listing_latest():
 
 
 def test_listing_basename_difference():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -260,7 +260,7 @@ def test_listing_basename_difference():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -271,7 +271,7 @@ def test_listing_basename_difference():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -292,9 +292,9 @@ def test_listing_basename_difference():
 
 
 def test_filtering_listing_basename_difference():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
-    something1 = listing.Entry(
+    something1 = db.listing.Entry(
         built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
             "%Y-%m-%dT%H:%M:%S.%f%z"
         ),
@@ -303,7 +303,7 @@ def test_filtering_listing_basename_difference():
         checksum="123456789",
     )
 
-    something2 = listing.Entry(
+    something2 = db.listing.Entry(
         built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
             "%Y-%m-%dT%H:%M:%S.%f%z"
         ),
@@ -312,7 +312,7 @@ def test_filtering_listing_basename_difference():
         checksum="123456789",
     )
 
-    something3 = listing.Entry(
+    something3 = db.listing.Entry(
         built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
             "%Y-%m-%dT%H:%M:%S.%f%z"
         ),
@@ -325,7 +325,7 @@ def test_filtering_listing_basename_difference():
     subject.add(something2)
     subject.add(something3)
 
-    expected = listing.empty_listing()
+    expected = db.listing.empty_listing()
     expected.add(something3)
 
     basenames_from_s3 = {"something-3.tar.gz", "something-4.tar.gz"}
@@ -343,10 +343,10 @@ def test_filtering_listing_basename_difference():
 
 
 def listing_over_years():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -357,7 +357,7 @@ def listing_over_years():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -368,7 +368,7 @@ def listing_over_years():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -379,7 +379,7 @@ def listing_over_years():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -390,7 +390,7 @@ def listing_over_years():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -401,7 +401,7 @@ def listing_over_years():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -415,10 +415,10 @@ def listing_over_years():
 
 
 def listing_day_by_day():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 26, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -429,7 +429,7 @@ def listing_day_by_day():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 27, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -440,7 +440,7 @@ def listing_day_by_day():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -451,7 +451,7 @@ def listing_day_by_day():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 26, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -462,7 +462,7 @@ def listing_day_by_day():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 27, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -473,7 +473,7 @@ def listing_day_by_day():
     )
 
     subject.add(
-        listing.Entry(
+        db.listing.Entry(
             built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc).strftime(
                 "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
@@ -602,9 +602,9 @@ def test_prune(subject, now, max_age, min_elements, urls):
 
 
 def test_to_and_from_json():
-    subject = listing.empty_listing()
+    subject = db.listing.empty_listing()
 
-    something1 = listing.Entry(
+    something1 = db.listing.Entry(
         built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
             "%Y-%m-%dT%H:%M:%S.%f%z"
         ),
@@ -613,7 +613,7 @@ def test_to_and_from_json():
         checksum="123456789",
     )
 
-    something2 = listing.Entry(
+    something2 = db.listing.Entry(
         built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
             "%Y-%m-%dT%H:%M:%S.%f%z"
         ),
@@ -622,7 +622,7 @@ def test_to_and_from_json():
         checksum="123456789",
     )
 
-    something3 = listing.Entry(
+    something3 = db.listing.Entry(
         built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
             "%Y-%m-%dT%H:%M:%S.%f%z"
         ),
@@ -641,6 +641,6 @@ def test_to_and_from_json():
 
     assert expected_to == got_to
 
-    got_from = listing.Listing.from_json(got_to)
+    got_from = db.Listing.from_json(got_to)
 
     assert subject == got_from
