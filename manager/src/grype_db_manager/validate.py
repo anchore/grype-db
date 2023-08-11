@@ -16,11 +16,31 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class GateConfig:
+    # between 0 and 1, the maximum allowable difference below the OSS F1 score before the gate fails (default 0,
+    # meaning the test F1 score must be equal to or greater than the OSS F1 score to pass the gate)
+    f1_score_threshold: float = 0.0
+
+    # between 0 and 100, the maximum % of unlabeled matches for a scan result before the gate fails (default 10%,
+    # meaning the test scan must have less than 10% unlabeled matches to pass the gate)
+    unlabeled_matches_threshold: float = 10.0
+
+    # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
+    # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
+    introduced_fns_threshold: int = 0
+
+
+@dataclass
 class Gate:
     label_comparisons: InitVar[list[comparison.AgainstLabels] | None]
     label_comparison_stats: InitVar[comparison.ImageToolLabelStats | None]
 
     reasons: list[str] = field(default_factory=list)
+    config: GateConfig = field(default_factory=GateConfig)
+
+    @classmethod
+    def set_default_config(cls, config: GateConfig):
+        cls.config = config
 
     def __post_init__(
         self,
@@ -30,11 +50,11 @@ class Gate:
         if not label_comparisons and not label_comparison_stats:
             return
 
+        if not self.config:
+            raise RuntimeError("default GateConfig must be specified before creating a Gate instance")
+
         reasons = []
 
-        # - fail when current F1 score drops below last release F1 score (or F1 score is indeterminate)
-        # - fail when indeterminate % > 10%
-        # - fail when there is a rise in FNs
         latest_release_tool, current_tool = guess_tool_orientation(label_comparison_stats.tools)
 
         latest_release_comparisons_by_image = {
@@ -42,43 +62,55 @@ class Gate:
         }
         current_comparisons_by_image = {comp.config.image: comp for comp in label_comparisons if comp.config.tool == current_tool}
 
-        # # this doesn't make sense in all cases, especially if we aren't failing any other gates against the current changes
-        # # we might want this in the future to protect against no labels for images in an edge case, but that reason is not
-        # # currently apparent
-        # for image, comp in latest_release_comparisons_by_image.items():
-        #     if comp.summary.indeterminate_percent > 10:
-        #         reasons.append(
-        #             f"latest indeterminate matches % is greater than 10%: {Format.BOLD}{Format.UNDERLINE}" +
-        #             f"current={comp.summary.indeterminate_percent:0.2f}%{Format.RESET} image={image}",
-        #         )
-
         for image, comp in current_comparisons_by_image.items():
-            latest_f1_score = latest_release_comparisons_by_image[image].summary.f1_score
-            current_f1_score = comp.summary.f1_score
-            if current_f1_score < latest_f1_score:
-                reasons.append(
-                    f"current F1 score is lower than the latest release F1 score: {Format.BOLD}{Format.UNDERLINE}"
-                    f"current={current_f1_score:0.2f} latest={latest_f1_score:0.2f}{Format.RESET} image={image}",
-                )
-
-            if comp.summary.indeterminate_percent > 10:
-                reasons.append(
-                    f"current indeterminate matches % is greater than 10%: {Format.BOLD}{Format.UNDERLINE}"
-                    f"current={comp.summary.indeterminate_percent:0.2f}%{Format.RESET} image={image}",
-                )
-
-            latest_fns = latest_release_comparisons_by_image[image].summary.false_negatives
-            current_fns = comp.summary.false_negatives
-            if current_fns > latest_fns:
-                reasons.append(
-                    f"current false negatives is greater than the latest release false negatives: {Format.BOLD}{Format.UNDERLINE}"
-                    f"current={current_fns} latest={latest_fns}{Format.RESET} image={image}",
-                )
+            reasons.extend(
+                not_empty(
+                    [
+                        self._evaluate_f1_score(
+                            last_f1_score=latest_release_comparisons_by_image[image].summary.f1_score,
+                            current_f1_score=comp.summary.f1_score,
+                            context=image,
+                        ),
+                        self._evaluate_indeterminate_percent(
+                            indeterminate_percent=comp.summary.indeterminate_percent,
+                            context=image,
+                        ),
+                        self._evaluate_fns(
+                            last_fns=latest_release_comparisons_by_image[image].summary.false_negatives,
+                            current_fns=comp.summary.false_negatives,
+                            context=image,
+                        ),
+                    ],
+                ),
+            )
 
         self.reasons = reasons
 
+    def _evaluate_f1_score(self, last_f1_score: float, current_f1_score: float, context: str) -> str | None:
+        test_f1_value = last_f1_score - self.config.f1_score_threshold
+        if current_f1_score < test_f1_value:
+            return f"current F1 score is lower than the last release F1 score: {Format.BOLD}{Format.UNDERLINE}"\
+                   f"current={current_f1_score:0.2f} last={last_f1_score:0.2f} "\
+                   f"by-margin={self.config.f1_score_threshold:0.2f}{Format.RESET} image={context}"
+
+    def _evaluate_indeterminate_percent(self, indeterminate_percent: float, context: str) -> str | None:
+        if indeterminate_percent > self.config.unlabeled_matches_threshold:
+            return f"current indeterminate matches % is greater than {self.config.unlabeled_matches_threshold}%: {Format.BOLD}{Format.UNDERLINE}"\
+                   f"current={indeterminate_percent:0.2f}%{Format.RESET} image={context}"
+
+    def _evaluate_fns(self, last_fns: int, current_fns: int, context: str) -> str | None:
+        test_fns = last_fns + self.config.introduced_fns_threshold
+        if current_fns > test_fns:
+            return f"current false negatives is greater than the last release false negatives: {Format.BOLD}{Format.UNDERLINE}"\
+                   f"current={current_fns} last={last_fns} "\
+                   f"by-margin={self.config.introduced_fns_threshold}{Format.RESET} image={context}"
+
     def passed(self):
         return len(self.reasons) == 0
+
+
+def not_empty(value: list[str | None]) -> list[str]:
+    return [v for v in value if v is not None]
 
 
 def validate(  # noqa: PLR0913

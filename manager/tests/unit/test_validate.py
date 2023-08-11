@@ -118,8 +118,8 @@ def test_is_result_set_stale(test_dir_path, test_case, db_info, expected):
             "new-db-run-missing-half",
             "all-tp",
             [
-                "current F1 score is lower than the latest release F1 score: current=0.53 latest=1.00 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
-                "current false negatives is greater than the latest release false negatives: current=9 latest=0 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+                "current F1 score is lower than the last release F1 score: current=0.53 last=1.00 by-margin=0.00 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+                "current false negatives is greater than the last release false negatives: current=9 last=0 by-margin=0 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
             ],
             id="fail-when-introduced-fns",
         ),
@@ -139,7 +139,7 @@ def test_is_result_set_stale(test_dir_path, test_case, db_info, expected):
             "old-db-run-missing-half",
             "first-half-fp",
             [
-                "current F1 score is lower than the latest release F1 score: current=0.53 latest=1.00 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
+                "current F1 score is lower than the last release F1 score: current=0.53 last=1.00 by-margin=0.00 image=docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
             ],
             id="fail-when-introduced-fps",
         ),
@@ -195,3 +195,194 @@ def test_validate_image(test_dir_path, result_set, label_set, expected_reasons):
     assert gate
     assert gate.passed() == expected_pass
     assert gate.reasons == expected_reasons
+
+
+@pytest.mark.parametrize(
+    "last, current, config, expect_fail",
+    [
+        pytest.param(
+            0.5, 0.5,
+            validate.GateConfig(),
+            False,
+            id="default-config-pass-when-no-difference",
+        ),
+        pytest.param(
+            0.5, 0.55,
+            validate.GateConfig(),
+            False,
+            id="default-config-pass-when-there-is-better-performance",
+        ),
+        pytest.param(
+            0.5, 0.49,
+            validate.GateConfig(),
+            True,
+            id="default-config-fail-when-below-0-threshold",
+        ),
+        pytest.param(
+            0.5, 0.5,
+            validate.GateConfig(f1_score_threshold=0.1),
+            False,
+            id="custom-config-pass-when-no-difference",
+        ),
+        pytest.param(
+            0.5, 0.55,
+            validate.GateConfig(f1_score_threshold=0.1),
+            False,
+            id="custom-config-pass-when-there-is-better-performance",
+        ),
+        pytest.param(
+            0.5, 0.49,
+            validate.GateConfig(f1_score_threshold=0.1),
+            False,
+            id="custom-config-pass-when-within-margin",
+        ),
+        pytest.param(
+            0.5, 0.4,
+            validate.GateConfig(f1_score_threshold=0.1),
+            False,
+            id="custom-config-pass-when-at-margin",
+        ),
+        pytest.param(
+            0.5, 0.39,
+            validate.GateConfig(f1_score_threshold=0.1),
+            True,
+            id="custom-config-fail-when-below-margin",
+        )
+    ]
+)
+def test_gate_evaluate_f1_score(last, current, config, expect_fail):
+    gate = validate.Gate(None, None, config=config)
+    reason = gate._evaluate_f1_score(
+        last_f1_score=last,
+        current_f1_score=current,
+        context="test",
+    )
+
+    reason_is_fail = reason is not None
+
+    assert reason_is_fail == expect_fail
+
+
+@pytest.mark.parametrize(
+    "last, current, config, expect_fail",
+    [
+        pytest.param(
+            5, 5,
+            validate.GateConfig(),
+            False,
+            id="default-config-pass-when-no-difference",
+        ),
+        pytest.param(
+            5, 4,
+            validate.GateConfig(),
+            False,
+            id="default-config-pass-when-there-is-better-performance",
+        ),
+        pytest.param(
+            5, 6,
+            validate.GateConfig(),
+            True,
+            id="default-config-fail-when-below-0-threshold",
+        ),
+        pytest.param(
+            5, 5,
+            validate.GateConfig(introduced_fns_threshold=2),
+            False,
+            id="custom-config-pass-when-no-difference",
+        ),
+        pytest.param(
+            5, 4,
+            validate.GateConfig(introduced_fns_threshold=2),
+            False,
+            id="custom-config-pass-when-there-is-better-performance",
+        ),
+        pytest.param(
+            5, 6,
+            validate.GateConfig(introduced_fns_threshold=2),
+            False,
+            id="custom-config-pass-when-within-margin",
+        ),
+        pytest.param(
+            5, 7,
+            validate.GateConfig(introduced_fns_threshold=2),
+            False,
+            id="custom-config-pass-when-at-margin",
+        ),
+        pytest.param(
+            5, 8,
+            validate.GateConfig(introduced_fns_threshold=2),
+            True,
+            id="custom-config-fail-when-below-margin",
+        )
+    ]
+)
+def test_gate_evaluate_fns(last, current, config, expect_fail):
+    gate = validate.Gate(None, None, config=config)
+    reason = gate._evaluate_fns(
+        last_fns=last,
+        current_fns=current,
+        context="test",
+    )
+
+    reason_is_fail = reason is not None
+
+    assert reason_is_fail == expect_fail
+
+
+@pytest.mark.parametrize(
+    "indeterminate_percent, config, expect_fail",
+    [
+        pytest.param(
+            9,
+            validate.GateConfig(),
+            False,
+            id="default-config-pass-when-below-threshold",
+        ),
+        pytest.param(
+            10,
+            validate.GateConfig(),
+            False,
+            id="default-config-pass-when-at-threshold",
+        ),
+        pytest.param(
+            11,
+            validate.GateConfig(),
+            True,
+            id="default-config-fail-when-above-threshold",
+        ),
+        pytest.param(
+            9,
+            validate.GateConfig(unlabeled_matches_threshold=20),
+            False,
+            id="custom-config-pass-when-below-margin",
+        ),
+        pytest.param(
+            20,
+            validate.GateConfig(unlabeled_matches_threshold=20),
+            False,
+            id="custom-config-pass-when-at-margin",
+        ),
+        pytest.param(
+            19,
+            validate.GateConfig(unlabeled_matches_threshold=20),
+            False,
+            id="custom-config-pass-when-within-margin",
+        ),
+        pytest.param(
+            21,
+            validate.GateConfig(unlabeled_matches_threshold=20),
+            True,
+            id="custom-config-fail-when-above-margin",
+        )
+    ]
+)
+def test_evaluate_indeterminate_percent(indeterminate_percent, config, expect_fail):
+    gate = validate.Gate(None, None, config=config)
+    reason = gate._evaluate_indeterminate_percent(
+        indeterminate_percent=indeterminate_percent,
+        context="test",
+    )
+
+    reason_is_fail = reason is not None
+
+    assert reason_is_fail == expect_fail

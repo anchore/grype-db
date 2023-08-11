@@ -7,6 +7,8 @@ import mergedeep
 import yaml
 from dataclass_wizard import asdict, fromdict
 
+from grype_db_manager import validate
+
 DEFAULT_CONFIGS = (
     ".grype-db-manager.yaml",
     "grype-db-manager.yaml",
@@ -45,6 +47,7 @@ class Validate:
     grype: Grype = field(default_factory=Grype)
     syft: Syft = field(default_factory=Syft)
     default_max_year: int = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DEFAULT_MAX_YEAR", default=2021)
+    gate: validate.GateConfig = field(default_factory=validate.GateConfig)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)
@@ -131,5 +134,11 @@ def _load(path: str) -> Application:
                 raise FileNotFoundError("parsed empty config")
     except FileNotFoundError:
         cfg = Application()
+
+    # wire up the gate configuration so any gates created will use values from the application config
+    validate.Gate.set_default_config(cfg.validate.gate)
+    gate_instance = validate.Gate(None, None)
+    if gate_instance.config != cfg.validate.gate:
+        raise ValueError("failed to set default gate config")
 
     return cfg
