@@ -1,20 +1,34 @@
 import tarfile
 import tempfile
+import json
 from pathlib import Path
 from dataclasses import dataclass
 
 import zstandard
-from dataclasses_json import dataclass_json
+from dataclass_wizard import fromdict, asdict
 
 FILE = "metadata.json"
 
 
-@dataclass_json
 @dataclass
 class Metadata:
     built: str
     version: int
     # note: the checksum is not included here since that is for the contained db file, not the checksum of the archive itself
+
+    @classmethod
+    def from_json(cls, contents: str):
+        return cls.from_dict(json.loads(contents))
+
+    @classmethod
+    def from_dict(cls, contents: dict):
+        return fromdict(cls, contents)
+
+    def to_json(self, indent=None):
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
+    def to_dict(self):
+        return asdict(self)
 
 
 def from_archive(path: str) -> Metadata:
@@ -23,6 +37,7 @@ def from_archive(path: str) -> Metadata:
     elif path.endswith(".tar.zst"):
         return from_tar_zst(path)
     raise RuntimeError(f"unsupported archive type: {path}")
+
 
 def from_tar(tar_obj) -> Metadata:
     f = tar_obj.extractfile(tar_obj.getmember(FILE))
@@ -34,6 +49,7 @@ def from_tar(tar_obj) -> Metadata:
 def from_tar_gz(path: str) -> Metadata:
     with tarfile.open(path, "r") as a:
         return from_tar(a)
+
 
 def from_tar_zst(path: str) -> Metadata:
     archive = Path(path).expanduser()

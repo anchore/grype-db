@@ -1,0 +1,8 @@
+log:
+  level: debug
+
+distribution:
+  listing-file-name: listing.json
+  s3-path: grype/databases
+  s3-bucket: testbucket
+  aws-region: us-west-2

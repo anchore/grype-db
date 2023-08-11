@@ -8,14 +8,6 @@ from yardstick.cli import config as ycfg
 from grype_db_manager import validate, grypedb
 
 
-def test_grype_version():
-    assert "v0.7.0" == validate.grype_version(1)
-    assert "v0.12.1" == validate.grype_version(2)
-    assert "v0.40.1" == validate.grype_version(3)
-    assert "v0.50.2" == validate.grype_version(4)
-    assert "main" == validate.grype_version(5)
-
-
 def test_guess_tool_orientation():
     latest_release_tool, current_tool = validate.guess_tool_orientation(["grype@latest", "grype[custom-db]@latest"])
 
@@ -31,7 +23,7 @@ def test_guess_tool_orientation():
 
 def _partial_db_info(checksum: str):
     return grypedb.DBInfo(
-        session_id="session-id",
+        uuid="session-id",
         schema_version=5,
         db_checksum=checksum,
         db_created=datetime.datetime.now(tz=datetime.timezone.utc),

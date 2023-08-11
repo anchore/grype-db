@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 import collections
-import json
 import logging
 from dataclasses import InitVar, dataclass, field
-from functools import lru_cache
-from importlib.resources import files
 from typing import TYPE_CHECKING
 
 import yardstick
@@ -343,13 +340,3 @@ def guess_tool_orientation(tools: list[str]):
         raise ValueError("current tool not found")
     return latest_release_tool, current_tool
 
-
-@lru_cache
-def _get_schema_mapping() -> dict[str, str]:
-    content = files("grype_db_manager.data").joinpath("grype-schema-version-mapping.json").read_text()
-    return json.loads(content)
-
-
-def grype_version(schema_version: int) -> str:
-    mapping = _get_schema_mapping()
-    return mapping[str(schema_version)]

@@ -17,8 +17,9 @@ class LoggingContext(object):
         if self.level is not None:
             self.logger.setLevel(self.old_level)
 
+
 def download_to_file(bucket: str, key: str, path: str):
-    logging.info(f"downloading file from s3 bucket={bucket} key={key} to local={path}")
+    logging.debug(f"downloading file from s3 bucket={bucket} key={key} to local={path}")
 
     s3 = boto3.client("s3")
     og_level = logging.root.level
@@ -29,7 +30,7 @@ def download_to_file(bucket: str, key: str, path: str):
 
 
 def upload(bucket: str, key: str, contents: str, **kwargs):
-    logging.info(f"uploading to s3 bucket={bucket} key={key}")
+    logging.debug(f"uploading to s3 bucket={bucket} key={key}")
 
     # boto is a little too verbose... let's tone that down just for a bit
     with LoggingContext(level=logging.WARNING):
@@ -38,7 +39,7 @@ def upload(bucket: str, key: str, contents: str, **kwargs):
 
 
 def get_s3_object_contents(bucket: str, key: str):
-    logging.info(f"get s3 contents bucket={bucket} key={key}")
+    logging.debug(f"get s3 contents bucket={bucket} key={key}")
 
     # boto is a little too verbose... let's tone that down just for a bit
     with LoggingContext(level=logging.WARNING):

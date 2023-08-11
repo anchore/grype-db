@@ -55,6 +55,7 @@ ruff = "0.0.282" # the ruff project is pretty early, even a patch bump tends to 
 types-requests = "^2.31.0.2"
 #vunnel = "^0.15.2"
 vunnel = {path = "../vunnel", develop = true}
+moto = "^4.1.14"
 
 [build-system]
 requires = ["poetry-core"]

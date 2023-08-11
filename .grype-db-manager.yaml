@@ -9,6 +9,12 @@ grype-db:
 
   config: config/grype-db-nightly-publisher.yaml
 
+distribution:
+  listing-file-name: listing.json
+  s3-path: grype/databases
+  s3-bucket: toolbox-data.anchore.io
+  aws-region: us-west-2
+
 validate:
   # new vulnerabilities are added all of the time, instead of keeping up it's easier to ignore newer entries.
   # This approach helps tremendously with keeping the analysis relatively stable.

@@ -10,7 +10,7 @@ import click
 import yaml
 
 from grype_db_manager import __name__ as package_name
-from grype_db_manager.cli import config, db, tool
+from grype_db_manager.cli import config, db, tool, listing
 from grype_db_manager.format import Format
 
 
@@ -140,3 +140,4 @@ def show_config(cfg: config.Application):
 
 cli.add_command(db.group)
 cli.add_command(tool.group)
+cli.add_command(listing.group)

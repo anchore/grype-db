@@ -60,6 +60,13 @@ class Validate:
         self.images = images
 
 
+@dataclass()
+class Distribution:
+    listing_file_name: str = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_LISTING_FILE_NAME", default="listing.json")
+    s3_path: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_PATH", None)
+    s3_bucket: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_BUCKET", None)
+
+
 @dataclass
 class Application:
     root: str = os.environ.get("GRYPE_DB_MANAGER_ROOT", default=".grype-db-manager")
@@ -69,6 +76,7 @@ class Application:
 
     grype_db: GrypeDB = field(default_factory=GrypeDB)
     validate: Validate = field(default_factory=Validate)
+    distribution: Distribution = field(default_factory=Distribution)
 
 
 def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Application:

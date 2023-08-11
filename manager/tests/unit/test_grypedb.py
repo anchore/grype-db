@@ -15,7 +15,7 @@ class TestDBManager:
 
         expected = [
             grypedb.DBInfo(
-                session_id="9d1fce98-9c10-4887-949e-8296a259daf5",
+                uuid="9d1fce98-9c10-4887-949e-8296a259daf5",
                 schema_version=4,
                 db_checksum="sha256:0f2f6e45dcde94259c078d237e575a30787c5ad04345c57e4d5dea08a95af4cb",
                 db_created=None,
@@ -26,7 +26,7 @@ class TestDBManager:
                 ),
             ),
             grypedb.DBInfo(
-                session_id="41e4c9e7-73c7-4106-bfb3-82e58ce15d9a",
+                uuid="41e4c9e7-73c7-4106-bfb3-82e58ce15d9a",
                 schema_version=5,
                 db_checksum="sha256:c996a4c459a2fca9283c4fd8cdb53e3b050650d76e6ce517b91e34430f6db854",
                 db_created=None,

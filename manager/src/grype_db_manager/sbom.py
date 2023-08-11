@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import contextlib
 import datetime
 import json
 import logging
 import os
-import pathlib
 import subprocess
 from typing import TYPE_CHECKING
 
 import yardstick
 from yardstick import artifact, store
+
+from grype_db_manager import utils
 
 if TYPE_CHECKING:
     from yardstick.cli import config as ycfg
@@ -144,16 +144,8 @@ class Oras:
             return proc
 
         if cd:
-            with set_directory(cd):
+            with utils.set_directory(cd):
                 return call()
         return call()
 
 
-@contextlib.contextmanager
-def set_directory(path: pathlib.Path):
-    origin = pathlib.Path().absolute()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(origin)

@@ -10,8 +10,8 @@
 /build
 /dist
 /snapshot
-/metadata.json
-/listing.json
+metadata.json
+listing.json
 .vscode/
 *.db
 *.db-journal

@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from publisher.utils import listing
+from grype_db_manager import listing
 
 
 def test_listing_add_sorts_by_date():
@@ -599,3 +599,48 @@ def test_prune(subject, now, max_age, min_elements, urls):
         actual[schema_version] = [e["url"] for e in elements]
 
     assert urls == actual
+
+
+def test_to_and_from_json():
+    subject = listing.empty_listing()
+
+    something1 = listing.Entry(
+        built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
+            "%Y-%m-%dT%H:%M:%S.%f%z"
+        ),
+        version=3,
+        url="https://b-place.com/something-3.tar.zst", # note: this gets filtered out!
+        checksum="123456789",
+    )
+
+    something2 = listing.Entry(
+        built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
+            "%Y-%m-%dT%H:%M:%S.%f%z"
+        ),
+        version=4,
+        url="https://a-place.com/something-4.tar.gz", # note: this gets filtered out!
+        checksum="123456789",
+    )
+
+    something3 = listing.Entry(
+        built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
+            "%Y-%m-%dT%H:%M:%S.%f%z"
+        ),
+        version=5,
+        url="https://c-place.com/something-5.tar.gz",
+        checksum="123456789",
+    )
+
+    subject.add(something1)
+    subject.add(something2)
+    subject.add(something3)
+
+    got_to = subject.to_json()
+
+    expected_to = '{"available": {"3": [{"built": "2017-11-28T23:55:59.342380", "checksum": "123456789", "url": "https://b-place.com/something-3.tar.zst", "version": 3}], "4": [{"built": "2016-11-28T23:55:59.342380", "checksum": "123456789", "url": "https://a-place.com/something-4.tar.gz", "version": 4}], "5": [{"built": "2019-11-28T23:55:59.342380", "checksum": "123456789", "url": "https://c-place.com/something-5.tar.gz", "version": 5}]}}'
+
+    assert expected_to == got_to
+
+    got_from = listing.Listing.from_json(got_to)
+
+    assert subject == got_from

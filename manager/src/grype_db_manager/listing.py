@@ -1,28 +1,24 @@
+from __future__ import annotations
+
 import os
 import json
+import datetime
 import logging
 import tempfile
 import threading
 import contextlib
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, urlunparse
-from typing import List, Dict, Set, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from publisher.utils.constants import (
-    DB_SUFFIXES,
-)
 
-import iso8601  # type: ignore
-from dataclasses_json import dataclass_json
+import iso8601
+from dataclass_wizard import fromdict, asdict
 
-import publisher.utils.s3utils as s3utils
-import publisher.utils.grype as grype
+from grype_db_manager import schema, grype, s3utils, distribution
 
 LISTING_FILENAME = "listing.json"
 
 
-@dataclass_json
 @dataclass
 class Entry:
     built: str
@@ -32,21 +28,34 @@ class Entry:
 
     def basename(self):
         basename = os.path.basename(urlparse(self.url, allow_fragments=False).path)
-        if not has_suffix(basename, suffixes=DB_SUFFIXES):
+        if not has_suffix(basename, suffixes=distribution.DB_SUFFIXES):
             raise RuntimeError(f"entry url is not a db archive: {basename}")
 
         return basename
 
     def age(self, now=None):
         if not now:
-            now = datetime.now(timezone.utc)
+            now = datetime.datetime.now(tz=datetime.timezone.utc)
         return (now-iso8601.parse_date(self.built)).days
 
 
-@dataclass_json
 @dataclass
 class Listing:
-    available: Dict[int, List[Entry]]
+    available: dict[int, list[Entry]]
+
+    @classmethod
+    def from_json(cls, contents: str):
+        return cls.from_dict(json.loads(contents))
+
+    @classmethod
+    def from_dict(cls, contents: dict):
+        return fromdict(cls, contents)
+
+    def to_json(self, indent=None):
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
+    def to_dict(self):
+        return asdict(self)
 
     def prune(self, max_age_days, minimum_elements, now=None):
         for schema_version, entries in self.available.items():
@@ -54,7 +63,7 @@ class Listing:
             pruned = []
 
             if len(entries) <= minimum_elements:
-                logging.info(f"too few entries to prune for schema version {schema_version} ({len(entries)} entries < {minimum_elements})")
+                logging.warning(f"too few entries to prune for schema version {schema_version} ({len(entries)} entries < {minimum_elements})")
                 continue
 
             for entry in entries:
@@ -78,7 +87,7 @@ class Listing:
             )
 
             if not pruned:
-                logging.info(f"no entries to prune from schema version {schema_version}")
+                logging.debug(f"no entries to prune from schema version {schema_version}")
                 continue
 
             logging.info(f"pruning {len(pruned)} entries from schema version {schema_version}, {len(kept)} entries remain")
@@ -100,6 +109,9 @@ class Listing:
         )
 
     def remove_by_basename(self, basenames: set[str], quiet: bool = False):
+        if not basenames:
+            return
+
         if not quiet:
             logging.info(f"removing {len(basenames)} from existing listing")
 
@@ -123,7 +135,7 @@ class Listing:
         url = os.path.normpath("/".join([path, LISTING_FILENAME]).lstrip("/"))
         return urlunparse(urlparse(url))  # normalize the url
 
-    def basenames(self) -> Set[str]:
+    def basenames(self) -> set[str]:
         names = set()
         for _, entries in self.available.items():
             for entry in entries:
@@ -140,7 +152,7 @@ class Listing:
         return self.available[schema_version][0]
 
 
-def has_suffix(el: str, suffixes: Optional[set[str]]):
+def has_suffix(el: str, suffixes: set[str] | None):
     if not suffixes:
         return True
     for s in suffixes:
@@ -148,12 +160,20 @@ def has_suffix(el: str, suffixes: Optional[set[str]]):
             return True
     return False
 
+
 def empty_listing() -> Listing:
     return Listing(available={})
 
 
-def fetch(bucket: str, path: str):
-    logging.info(f"fetching existing listing")
+def fetch(bucket: str, path: str, create_if_missing: bool = False) -> Listing:
+    if not path or not bucket:
+        if create_if_missing:
+            logging.warning("no path or bucket specified, creating empty listing")
+            return empty_listing()
+        else:
+            raise ValueError("S3 path and S3 bucket are not specified")
+
+    logging.info(f"fetching existing listing from s3://{bucket}/{path}")
     listing_path = Listing.url(path)
     try:
         listing_contents = s3utils.get_s3_object_contents(
@@ -163,11 +183,13 @@ def fetch(bucket: str, path: str):
             logging.info(
                 f"discovered existing listing entry bucket={bucket} key={listing_path}"
             )
-            return Listing.from_json(listing_contents)  # type: ignore
+            return Listing.from_json(listing_contents)
 
-        # TODO: this is not a safe assumption in the long run... remove this after the first run?
-        logging.warning("could not find existing listing, assuming empty")
-        return empty_listing()
+        if create_if_missing:
+            logging.warning("could not find existing listing in bucket, assuming empty")
+            return empty_listing()
+        else:
+            raise ValueError(f"could not find existing listing file at s3://{bucket}/{listing_path}")
     except json.decoder.JSONDecodeError:
         logging.error("listing exists, but json parse failed")
         raise
@@ -194,7 +216,7 @@ def http_server(directory: str):
         pass
 
 
-def acceptance_test(test_listing: Listing, image: str, override_schema_release: Optional[Tuple[str, str]] = None):
+def acceptance_test(test_listing: Listing, image: str, store_root: str, override_schema_release: tuple[str, str] | None = None):
     # write the listing to a temp dir that is served up locally on an HTTP server. This is used by grype to locally
     # download the listing file and check that it works against S3 (since the listing entries have DB urls that
     # reside in S3).
@@ -216,14 +238,16 @@ def acceptance_test(test_listing: Listing, image: str, override_schema_release: 
                 logging.info(f"testing grype schema-version={override_schema!r}")
                 tool_obj = grype.Grype(
                     schema_version=override_schema,
+                    store_root=store_root,
                     update_url=listing_url,
                     release=override_release
                 )
             else:
-                for schema_version in grype.Grype.supported_schema_versions():
+                for schema_version in schema.supported_schema_versions():
                     logging.info(f"testing grype schema-version={schema_version!r}")
                     tool_obj = grype.Grype(
                         schema_version=schema_version,
+                        store_root=store_root,
                         update_url=listing_url,
                     )
 

@@ -1,5 +1,5 @@
 # in percent
-COVERAGE_THRESHOLD := 40
+COVERAGE_THRESHOLD := 60
 
 .DEFAULT_GOAL := all
 
