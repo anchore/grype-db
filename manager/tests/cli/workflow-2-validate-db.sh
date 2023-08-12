@@ -12,7 +12,7 @@ assert_not_empty $(last_stdout_file)
 DB_ID="$(last_stdout)"
 
 ### Start of testing ########################
-header "Case 1: fail validation: too many unknowns)"
+header "Case 1: fail DB validation (too many unknowns)"
 
 make clean-yardstick-labels
 
@@ -21,7 +21,7 @@ assert_contains $(last_stderr_file) "current indeterminate matches % is greater 
 
 
 #############################################
-header "Case 2: pass validation (half tp/fp)"
+header "Case 2: pass DB validation (half tp/fp)"
 
 make clean-yardstick-labels
 echo "installing half-tp-half-fp-labels"
@@ -32,7 +32,7 @@ assert_contains $(last_stdout_file) "Validation passed"
 
 
 #############################################
-header "Case 2: pass validation (all tp)"
+header "Case 2: pass DB validation (all tp)"
 
 make clean-yardstick-labels
 echo "installing all-tp-labels"

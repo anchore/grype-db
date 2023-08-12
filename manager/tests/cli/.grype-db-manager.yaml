@@ -9,20 +9,33 @@ grype-db:
 
   config: .grype-db.yaml
 
+distribution:
+  listing-file-name: listing.json
+  s3-path: grype/databases
+  # note: we are using localstack for testing, so the bucket name is arbitrary
+  s3-bucket: testbucket
+  aws-region: us-west-2
+  s3-endpoint-url: http://localhost:4566
+
 validate:
-  # new vulnerabilities are added all of the time, instead of keeping up it's easier to ignore newer entries.
-  # This approach helps tremendously with keeping the analysis relatively stable.
-  default-max-year: 2021
+  listing:
+    image: "centos:8.2.2004"
+    minimum-packages: 85
+    minimum-vulnerabilities: 400
+  db:
+    # new vulnerabilities are added all of the time, instead of keeping up it's easier to ignore newer entries.
+    # This approach helps tremendously with keeping the analysis relatively stable.
+    default-max-year: 2021
 
-  grype:
-    version: latest
+    grype:
+      version: latest
 
-  syft:
-    # this should USUALLY match the version of syft that is referenced in vulnerability-match-labels on the main branch.
-    # However, in this case we are going to allow for this version to drift in testing. It's ok if we download
-    # the SBOM and NOT use it, since we are testing the workflow generally works.
-    version: v0.86.1
+    syft:
+      # this should USUALLY match the version of syft that is referenced in vulnerability-match-labels on the main branch.
+      # However, in this case we are going to allow for this version to drift in testing. It's ok if we download
+      # the SBOM and NOT use it, since we are testing the workflow generally works.
+      version: v0.86.1
 
-  # note: always reference images with BOTH a tag and a digest
-  images:
-    - docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495
+    # note: always reference images with BOTH a tag and a digest
+    images:
+      - docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495

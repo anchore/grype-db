@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass, field
 
 import mergedeep
 import yaml
 from dataclass_wizard import asdict, fromdict
 
-from grype_db_manager import db
+from grype_db_manager import db, s3utils
 
 DEFAULT_CONFIGS = (
     ".grype-db-manager.yaml",
@@ -83,6 +84,8 @@ class Distribution:
     listing_file_name: str = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_LISTING_FILE_NAME", default="listing.json")
     s3_path: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_PATH", None)
     s3_bucket: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_BUCKET", None)
+    s3_endpoint_url: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL", None)
+    aws_region: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_AWS_REGION", None)
 
 
 @dataclass
@@ -155,5 +158,13 @@ def _load(path: str) -> Application:
     gate_instance = db.validation.Gate(None, None)
     if gate_instance.config != cfg.validate.db.gate:
         raise ValueError("failed to set default gate config")
+
+    # setup the endpoint url and region for all s3 calls
+    if cfg.distribution.s3_endpoint_url:
+        sys.stderr.write(f"Overriding S3 endpoint URL: {cfg.distribution.s3_endpoint_url}\n")
+        s3utils.ClientFactory.set_endpoint_url(cfg.distribution.s3_endpoint_url)
+
+    if cfg.distribution.aws_region:
+        s3utils.ClientFactory.set_region_name(cfg.distribution.aws_region)
 
     return cfg

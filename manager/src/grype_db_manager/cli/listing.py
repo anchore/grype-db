@@ -6,7 +6,7 @@ import click
 
 from grype_db_manager.cli import config, error
 from grype_db_manager import distribution
-from grype_db_manager import db
+from grype_db_manager import db, s3utils
 from grype_db_manager.db.format import Format
 
 
@@ -70,6 +70,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool):
         f.write(the_listing.to_json())
 
     click.echo(listing_file_name)
+    return listing_file_name
 
 
 @group.command(name="validate", help="validate all supported schema versions are expressed in the listing file")
@@ -111,12 +112,39 @@ def validate_listing(cfg: config.Application, listing_file: str):
 
 
 @group.command(name="upload", help="upload a listing file to S3")
+@click.option("--ttl", "-t", "ttl_seconds", default=60 * 5, help="time to live in seconds for the listing file")
 @click.argument("listing-file")
 @click.pass_obj
-def upload_listing(cfg: config.Application):
+def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int):
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
 
-    raise NotImplementedError("uploading listing files is not yet implemented")
+    with open(listing_file, "r") as f:
+        the_listing = db.Listing.from_json(f.read())
+
+    s3utils.upload(bucket=s3_bucket,
+                   key=the_listing.url(s3_path),
+                   contents=the_listing.to_json(),
+                   CacheControl=f"public,max-age={ttl_seconds}")
+
+    click.echo(f"{listing_file} uploaded to s3://{s3_bucket}/{s3_path}")
 
 
+@group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
+@click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
+@click.pass_obj
+@click.pass_context
+def update_listing(ctx, cfg: config.Application, dry_run: bool):
+    if dry_run:
+        click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
+    click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")
+    listing_file_name = ctx.invoke(create_listing)
+
+    click.echo(f"{Format.BOLD}Validating listing file{Format.RESET}")
+    ctx.invoke(validate_listing, listing_file=listing_file_name)
+
+    if not dry_run:
+        click.echo(f"{Format.BOLD}Uploading listing file{Format.RESET}")
+        ctx.invoke(upload_listing, listing_file=listing_file_name)
+    else:
+        click.echo(f"{Format.ITALIC}Dry run! Skipping the upload of the listing file to S3{Format.RESET}")
