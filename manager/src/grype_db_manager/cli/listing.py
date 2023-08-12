@@ -140,11 +140,11 @@ def update_listing(ctx, cfg: config.Application, dry_run: bool):
     click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")
     listing_file_name = ctx.invoke(create_listing)
 
-    click.echo(f"{Format.BOLD}Validating listing file{Format.RESET}")
+    click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")
     ctx.invoke(validate_listing, listing_file=listing_file_name)
 
     if not dry_run:
-        click.echo(f"{Format.BOLD}Uploading listing file{Format.RESET}")
+        click.echo(f"{Format.BOLD}Uploading listing file {listing_file_name!r}{Format.RESET}")
         ctx.invoke(upload_listing, listing_file=listing_file_name)
     else:
         click.echo(f"{Format.ITALIC}Dry run! Skipping the upload of the listing file to S3{Format.RESET}")

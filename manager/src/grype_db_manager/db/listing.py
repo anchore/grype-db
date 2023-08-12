@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import json
 import datetime
+import functools
 import logging
 import tempfile
 import threading
@@ -14,7 +15,7 @@ from dataclasses import dataclass
 import iso8601
 from dataclass_wizard import fromdict, asdict
 
-from grype_db_manager import grype, s3utils, distribution
+from grype_db_manager import grype, s3utils, distribution, utils
 from grype_db_manager.db import schema
 
 LISTING_FILENAME = "listing.json"
@@ -203,8 +204,10 @@ def _http_server(directory: str):
     listing_url = f"{url}/{LISTING_FILENAME}"
 
     def serve():
-        os.chdir(directory)
-        httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
+        httpd = HTTPServer(
+            server_address,
+            functools.partial(SimpleHTTPRequestHandler, directory=directory),
+        )
         logging.info(f"starting test server at {url}")
         httpd.serve_forever()
 

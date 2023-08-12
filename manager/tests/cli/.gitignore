@@ -3,3 +3,4 @@ cli-test-data
 .grype-db-manager
 grype-db-cache.tar.gz
 venv
+bin

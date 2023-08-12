@@ -9,6 +9,8 @@ export AWS_ACCESS_KEY_ID="test"
 export AWS_SECRET_ACCESS_KEY="test"
 export AWS_REGION="us-west-2"
 
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b bin
+
 set -e
 
 pushd s3-mock
@@ -28,6 +30,19 @@ header "Case 1: update a listing file based on S3 state"
 run grype-db-manager listing update
 assert_contains $(last_stdout_file) "Validation passed"
 assert_contains $(last_stdout_file) "listing.json uploaded to s3://testbucket/grype/databases"
+
+# check if grype works with this updated listing file
+export GRYPE_DB_UPDATE_URL="http://localhost:4566/testbucket/grype/databases/listing.json"
+export GRYPE_DB_CACHE_DIR="./bin"
+
+run bin/grype db update
+run bin/grype db list
+
+assert_contains $(last_stdout_file) "http://localhost:4566"
+
+run bin/grype alpine:3.2
+
+assert_contains $(last_stdout_file) "CVE-2016-2148"
 
 
 ### End of testing ########################
