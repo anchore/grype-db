@@ -1,4 +1,17 @@
+import os
+
 from grype_db_manager.cli import config
+
+
+def test_load_from_env_vars():
+    os.environ["GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION"] = "grype-version"
+    os.environ["GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION"] = "schema-version"
+
+    # asserts that we defer the env var lookup until the object creation and that the values are wired up correctly
+    cfg = config.Application()
+
+    assert cfg.validate.listing.override_grype_version == "grype-version"
+    assert cfg.validate.listing.override_db_schema_version == "schema-version"
 
 
 def test_load_default():

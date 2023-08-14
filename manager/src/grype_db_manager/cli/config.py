@@ -18,9 +18,16 @@ DEFAULT_CONFIGS = (
 )
 
 
+def env_lookup(key: str, default: Any) -> callable:
+    def _env_factory() -> Any:
+        return os.environ.get(key, default)
+
+    return _env_factory
+
+
 @dataclass
 class Log:
-    level: str = os.environ.get("GRYPE_DB_MANAGER_LOG_LEVEL", default="INFO")
+    level: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_LOG_LEVEL", default="INFO"))
 
     def __post_init__(self) -> None:
         self.level = self.level.upper()
@@ -28,20 +35,20 @@ class Log:
 
 @dataclass
 class GrypeDB:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_GRYPE_DB_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_GRYPE_DB_CONFIG", default="")
+    version: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_GRYPE_DB_VERSION", default="latest"))
+    config: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_GRYPE_DB_CONFIG", default=""))
 
 
 @dataclass
 class Grype:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_CONFIG", default="")
+    version: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_VERSION", default="latest"))
+    config: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_CONFIG", default=""))
 
 
 @dataclass
 class Syft:
-    version: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_VERSION", default="latest")
-    config: str = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_CONFIG", default="")
+    version: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_VERSION", default="latest"))
+    config: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_CONFIG", default=""))
 
 
 @dataclass
@@ -49,7 +56,7 @@ class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
     syft: Syft = field(default_factory=Syft)
-    default_max_year: int = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_DB_DEFAULT_MAX_YEAR", default=2021)
+    default_max_year: int = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_DEFAULT_MAX_YEAR", default=2021))
     gate: db.validation.GateConfig = field(default_factory=db.validation.GateConfig)
 
     def __post_init__(self):
@@ -68,16 +75,24 @@ class ValidateDB:
 
 @dataclass
 class ValidateListing:
-    image: str | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_IMAGE", default=None)
-    minimum_packages: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_PACKAGES", default=None)
-    minimum_vulnerabilities: int | None = os.environ.get(
-        "GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_VULNERABILITIES",
-        default=None,
+    image: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_LISTING_IMAGE", default=None))
+    minimum_packages: int | None = field(
+        default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_PACKAGES", default=None),
     )
-    override_grype_version: str | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION", default=None)
-    override_db_schema_version: int | None = os.environ.get(
-        "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION",
-        default=None,
+    minimum_vulnerabilities: int | None = field(
+        default_factory=env_lookup(
+            "GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_VULNERABILITIES",
+            default=None,
+        ),
+    )
+    override_grype_version: str | None = field(
+        default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION", default=None),
+    )
+    override_db_schema_version: int | None = field(
+        default_factory=env_lookup(
+            "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION",
+            default=None,
+        ),
     )
 
 
@@ -89,18 +104,20 @@ class Validate:
 
 @dataclass()
 class Distribution:
-    listing_file_name: str = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_LISTING_FILE_NAME", default="listing.json")
-    s3_path: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_PATH", None)
-    s3_bucket: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_BUCKET", None)
-    s3_endpoint_url: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL", None)
-    aws_region: str | None = os.environ.get("GRYPE_DB_MANAGER_DISTRIBUTION_AWS_REGION", None)
+    listing_file_name: str = field(
+        default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_LISTING_FILE_NAME", default="listing.json"),
+    )
+    s3_path: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_S3_PATH", None))
+    s3_bucket: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_S3_BUCKET", None))
+    s3_endpoint_url: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL", None))
+    aws_region: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_AWS_REGION", None))
 
 
 @dataclass
 class Application:
-    root: str = os.environ.get("GRYPE_DB_MANAGER_ROOT", default=".grype-db-manager")
-    vunnel_root: str = os.environ.get("GRYPE_DB_VUNNEL_ROOT", default="data/vunnel")
-    yardstick_root: str = os.environ.get("GRYPE_DB_YARDSTICK_ROOT", default="data/yardstick")
+    root: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_ROOT", default=".grype-db-manager"))
+    vunnel_root: str = field(default_factory=env_lookup("GRYPE_DB_VUNNEL_ROOT", default="data/vunnel"))
+    yardstick_root: str = field(default_factory=env_lookup("GRYPE_DB_YARDSTICK_ROOT", default="data/yardstick"))
     log: Log = field(default_factory=Log)
 
     grype_db: GrypeDB = field(default_factory=GrypeDB)
