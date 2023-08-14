@@ -95,7 +95,7 @@ select = [
   "COM", # flake8-commas
   "DTZ", # flake8-datetimez
   "E",   # pycodestyle, errors
-  # "EM",  # flake8-errmsg     # seems to aggressive relative to the current codebase
+  "EM",  # flake8-errmsg
   # "ERA", # flake8-eradicate  # not all code in comments should be removed
   "EXE", # flake8-executable
   "F",   # pyflakes
@@ -119,7 +119,7 @@ select = [
   "T10", # flake8-debugger
   "TCH", # flake8-type-checking
   "TID", # flake8-tidy-imports
-  # "TRY", # tryceratops   # seems to aggressive relative to the current codebase
+   "TRY", # tryceratops
   "UP",  # pyupgrade
   "W",   # pycodestyle, warnings
   "YTT", # flake8-2020
@@ -134,6 +134,7 @@ ignore = [
   "PLW2901", # "Outer for loop variable X overwritten by inner assignment target", not useful in most cases
   "RUF100", # no blanket "noqa" usage, can be improved over time, but not now
   "RUF009", # "Do not perform function call `os.environ.get` in dataclass defaults", not useful for us since we use this for 12-factor configuration
+  "TRY003", # specifying long messages outside the exception class is excellent context! why is this an antipattern?
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)` -- not compatible with python 3.9 (even with __future__ import)
 ]
 

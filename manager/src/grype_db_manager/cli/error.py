@@ -1,11 +1,11 @@
-from functools import wraps, partial
+from functools import partial, wraps
 
 import click
 
 
 class CLIError(click.ClickException):
     def format_message(self) -> str:
-        return click.style(self.message, fg='red')
+        return click.style(self.message, fg="red")
 
 
 def handle_exception(func=None, *, handle):
@@ -17,6 +17,6 @@ def handle_exception(func=None, *, handle):
         try:
             return func(*args, **kwargs)
         except handle as e:
-            raise CLIError(e)
+            raise CLIError(e) from e
 
     return wrapper

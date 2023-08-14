@@ -2,7 +2,7 @@
 
 . utils.sh
 
-title "Starting workflow 2: fail DB validation due to missing labels"
+title "Starting workflow 2: validate DB"
 
 header "Setup: create the DB"
 make clean-manager
@@ -17,7 +17,7 @@ header "Case 1: fail DB validation (too many unknowns)"
 make clean-yardstick-labels
 
 run_expect_fail grype-db-manager db validate $DB_ID
-assert_contains $(last_stderr_file) "current indeterminate matches % is greater than 10%"
+assert_contains $(last_stderr_file) "current indeterminate matches % is greater than 10.0%"
 
 
 #############################################

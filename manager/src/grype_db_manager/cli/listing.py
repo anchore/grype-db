@@ -4,9 +4,8 @@ import logging
 
 import click
 
+from grype_db_manager import db, distribution, s3utils
 from grype_db_manager.cli import config, error
-from grype_db_manager import distribution
-from grype_db_manager import db, s3utils
 from grype_db_manager.db.format import Format
 
 
@@ -19,7 +18,7 @@ def group(_: config.Application):
 @group.command(name="create", help="create a new listing file based on the current S3 state")
 @click.option("--ignore-missing-listing", "-i", default=False, help="ignore missing listing from S3", is_flag=True)
 @click.pass_obj
-@error.handle_exception(handle=(ValueError, ))
+@error.handle_exception(handle=(ValueError,))
 def create_listing(cfg: config.Application, ignore_missing_listing: bool):
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
@@ -39,7 +38,10 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool):
     )
 
     if missing_basenames:
-        logging.warning(f"missing {len(missing_basenames)} databases in S3 which were in the existing listing file (removing entries in the next listing file)")
+        logging.warning(
+            f"missing {len(missing_basenames)} databases in S3 which were in the existing"
+            " listing file (removing entries in the next listing file)",
+        )
         for basename in missing_basenames:
             logging.warning(f"  - {basename}")
 
@@ -76,25 +78,30 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool):
 @group.command(name="validate", help="validate all supported schema versions are expressed in the listing file")
 @click.argument("listing-file")
 @click.pass_obj
-@error.handle_exception(handle=(ValueError, ))
+@error.handle_exception(handle=(ValueError,))
 def validate_listing(cfg: config.Application, listing_file: str):
-    with open(listing_file, "r") as f:
+    with open(listing_file) as f:
         listing_obj = db.Listing.from_json(f.read())
 
     if not cfg.validate.listing.image:
-        raise ValueError("no image specified to validate against")
+        msg = "no image specified to validate against"
+        raise ValueError(msg)
 
     if not cfg.validate.listing.minimum_packages:
-        raise ValueError("minimum packages must be specified")
+        msg = "minimum packages must be specified"
+        raise ValueError(msg)
 
     if not cfg.validate.listing.minimum_vulnerabilities:
-        raise ValueError("minimum vulnerabilities must be specified")
+        msg = "minimum vulnerabilities must be specified"
+        raise ValueError(msg)
 
     if cfg.validate.listing.override_db_schema_version and not cfg.validate.listing.override_grype_version:
-        raise ValueError("override grype version must be specified if override db schema version is specified")
+        msg = "override grype version must be specified if override db schema version is specified"
+        raise ValueError(msg)
 
     if cfg.validate.listing.override_grype_version and not cfg.validate.listing.override_db_schema_version:
-        raise ValueError("ovrerride db schema version must be specified if override grype version is specified")
+        msg = "ovrerride db schema version must be specified if override grype version is specified"
+        raise ValueError(msg)
 
     override_schema_release = None
     if cfg.validate.listing.override_db_schema_version and cfg.validate.listing.override_grype_version:
@@ -119,13 +126,15 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
 
-    with open(listing_file, "r") as f:
+    with open(listing_file) as f:
         the_listing = db.Listing.from_json(f.read())
 
-    s3utils.upload(bucket=s3_bucket,
-                   key=the_listing.url(s3_path),
-                   contents=the_listing.to_json(),
-                   CacheControl=f"public,max-age={ttl_seconds}")
+    s3utils.upload(
+        bucket=s3_bucket,
+        key=the_listing.url(s3_path),
+        contents=the_listing.to_json(),
+        CacheControl=f"public,max-age={ttl_seconds}",
+    )
 
     click.echo(f"{listing_file} uploaded to s3://{s3_bucket}/{s3_path}")
 

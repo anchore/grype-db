@@ -68,7 +68,8 @@ class DBManager:
     def get_db_info(self, db_uuid: str, allow_missing_archive: bool = False) -> DBInfo | None:
         session_dir = os.path.join(self.db_dir, db_uuid)
         if not os.path.exists(session_dir):
-            raise DBInvalidException(f"path does not exist: {session_dir!r}")
+            msg = f"path does not exist: {session_dir!r}"
+            raise DBInvalidException(msg)
 
         # get the created timestamp
         db_created_timestamp = None
@@ -80,7 +81,8 @@ class DBManager:
         # read info from the metadata file in build/metadata.json
         metadata_path = os.path.join(session_dir, "build", "metadata.json")
         if not os.path.exists(metadata_path):
-            raise DBInvalidException(f"missing metadata.json for DB {db_uuid!r}")
+            msg = f"missing metadata.json for DB {db_uuid!r}"
+            raise DBInvalidException(msg)
 
         with open(metadata_path) as f:
             metadata = json.load(f)
@@ -93,9 +95,11 @@ class DBManager:
 
         matches = glob.glob(db_pattern)
         if not matches:
-            raise DBInvalidException(f"db archive not found for {db_uuid!r}")
+            msg = f"db archive not found for {db_uuid!r}"
+            raise DBInvalidException(msg)
         if len(matches) > 1:
-            raise DBInvalidException(f"multiple db archives found for {db_uuid!r}")
+            msg = f"multiple db archives found for {db_uuid!r}"
+            raise DBInvalidException(msg)
 
         abs_archive_path = os.path.abspath(matches[0])
 
@@ -174,7 +178,8 @@ class GrypeDB:
         matches = glob.glob(db_pattern)
         if len(matches) != 1:
             logging.error(f"no db file matches found: {matches}")
-            raise RuntimeError("failed to build db")
+            msg = "failed to build db"
+            raise RuntimeError(msg)
 
         logging.info(f"db archive created: {matches[0]}")
 

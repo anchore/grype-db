@@ -1,12 +1,12 @@
 import logging
 
-import boto3  # type: ignore
+import boto3
 
 
 class ClientFactory:
     endpoint_url = None
     region = None
-    
+
     @classmethod
     def set_endpoint_url(cls, endpoint_url):
         cls.endpoint_url = endpoint_url
@@ -25,9 +25,9 @@ class ClientFactory:
             kwargs["region_name"] = cls.region
 
         return boto3.client("s3", **kwargs)
-    
 
-class LoggingContext(object):
+
+class LoggingContext:
     def __init__(self, logger=None, level=None):
         self.logger = logger or logging.root
         self.level = level
@@ -67,7 +67,7 @@ def upload_file(bucket: str, key: str, path: str, client_factory=ClientFactory, 
     # boto is a little too verbose... let's tone that down just for a bit
     with LoggingContext(level=logging.WARNING):
         s3 = client_factory.new()
-        s3.upload_file(path, bucket, key.lstrip("/"))
+        s3.upload_file(Filename=path, Bucket=bucket, Key=key.lstrip("/"), ExtraArgs=kwargs)
 
 
 def get_s3_object_contents(bucket: str, key: str, client_factory=ClientFactory):
@@ -80,7 +80,7 @@ def get_s3_object_contents(bucket: str, key: str, client_factory=ClientFactory):
             obj = s3.get_object(Bucket=bucket, Key=key)
             return obj["Body"].read().decode("utf-8")
         except s3.exceptions.NoSuchKey:
-            return
+            return None
 
 
 def get_matching_s3_objects(bucket: str, prefix: str = "", suffix: str = "", client_factory=ClientFactory):
@@ -91,10 +91,7 @@ def get_matching_s3_objects(bucket: str, prefix: str = "", suffix: str = "", cli
 
     # we can pass the prefix directly to the S3 API.  If the user has passed
     # a tuple or list of prefixes, we go through them one by one.
-    if isinstance(prefix, str):
-        prefixes = (prefix,)
-    else:
-        prefixes = prefix
+    prefixes = (prefix,) if isinstance(prefix, str) else prefix
 
     for key_prefix in prefixes:
         kwargs["Prefix"] = key_prefix.lstrip("/")

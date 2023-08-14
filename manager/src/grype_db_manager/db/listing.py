@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-import os
-import json
+import contextlib
 import datetime
 import functools
+import json
 import logging
+import os
 import tempfile
 import threading
-import contextlib
+from dataclasses import dataclass
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, urlunparse
-from dataclasses import dataclass
 
 import iso8601
-from dataclass_wizard import fromdict, asdict
+from dataclass_wizard import asdict, fromdict
 
-from grype_db_manager import grype, s3utils, distribution, utils
+from grype_db_manager import distribution, grype, s3utils
 from grype_db_manager.db import schema
 
 LISTING_FILENAME = "listing.json"
@@ -31,14 +31,15 @@ class Entry:
     def basename(self):
         basename = os.path.basename(urlparse(self.url, allow_fragments=False).path)
         if not has_suffix(basename, suffixes=distribution.DB_SUFFIXES):
-            raise RuntimeError(f"entry url is not a db archive: {basename}")
+            msg = f"entry url is not a db archive: {basename}"
+            raise RuntimeError(msg)
 
         return basename
 
     def age(self, now=None):
         if not now:
             now = datetime.datetime.now(tz=datetime.timezone.utc)
-        return (now-iso8601.parse_date(self.built)).days
+        return (now - iso8601.parse_date(self.built)).days
 
 
 @dataclass
@@ -65,7 +66,9 @@ class Listing:
             pruned = []
 
             if len(entries) <= minimum_elements:
-                logging.warning(f"too few entries to prune for schema version {schema_version} ({len(entries)} entries < {minimum_elements})")
+                logging.warning(
+                    f"too few entries to prune for schema version {schema_version} ({len(entries)} entries < {minimum_elements})",
+                )
                 continue
 
             for entry in entries:
@@ -76,7 +79,7 @@ class Listing:
 
             # latest elements are in the back
             pruned.sort(
-                key=lambda x: iso8601.parse_date(x.built)
+                key=lambda x: iso8601.parse_date(x.built),
             )
 
             while len(kept) < minimum_elements and len(pruned) > 0:
@@ -85,7 +88,7 @@ class Listing:
             # latest elements are in the front
             kept.sort(
                 key=lambda x: iso8601.parse_date(x.built),
-                reverse=True
+                reverse=True,
             )
 
             if not pruned:
@@ -107,7 +110,7 @@ class Listing:
         # keep listing entries sorted by date (rfc3339 formatted entries, which iso8601 is a superset of)
         self.available[entry.version].sort(
             key=lambda x: iso8601.parse_date(x.built),
-            reverse=True
+            reverse=True,
         )
 
     def remove_by_basename(self, basenames: set[str], quiet: bool = False):
@@ -117,7 +120,7 @@ class Listing:
         if not quiet:
             logging.info(f"removing {len(basenames)} from existing listing")
 
-        for version, entries in self.available.items():
+        for _version, entries in self.available.items():
             remove = []
             for entry in entries:
                 if entry.basename() in basenames:
@@ -126,9 +129,9 @@ class Listing:
                 entries.remove(entry)
 
     def log(self):
-        logging.info(f"listing contents:")
-        for schema, entries in self.available.items():
-            logging.info(f"  schema: {schema}")
+        logging.info("listing contents:")
+        for schema_version, entries in self.available.items():
+            logging.info(f"  schema-version: {schema_version}")
             for entry in entries:
                 logging.info(f"    entry: {entry}")
 
@@ -157,10 +160,7 @@ class Listing:
 def has_suffix(el: str, suffixes: set[str] | None):
     if not suffixes:
         return True
-    for s in suffixes:
-        if el.endswith(s):
-            return True
-    return False
+    return any(el.endswith(s) for s in suffixes)
 
 
 def empty_listing() -> Listing:
@@ -172,28 +172,30 @@ def fetch(bucket: str, path: str, create_if_missing: bool = False) -> Listing:
         if create_if_missing:
             logging.warning("no path or bucket specified, creating empty listing")
             return empty_listing()
-        else:
-            raise ValueError("S3 path and S3 bucket are not specified")
+        msg = "S3 path and S3 bucket are not specified"
+        raise ValueError(msg)
 
     logging.info(f"fetching existing listing from s3://{bucket}/{path}")
     listing_path = Listing.url(path)
     try:
         listing_contents = s3utils.get_s3_object_contents(
-            bucket=bucket, key=listing_path
+            bucket=bucket,
+            key=listing_path,
         )
         if listing_contents:
             logging.info(
-                f"discovered existing listing entry bucket={bucket} key={listing_path}"
+                f"discovered existing listing entry bucket={bucket} key={listing_path}",
             )
             return Listing.from_json(listing_contents)
 
         if create_if_missing:
             logging.warning("could not find existing listing in bucket, assuming empty")
             return empty_listing()
-        else:
-            raise ValueError(f"could not find existing listing file at s3://{bucket}/{listing_path}")
+        msg = f"could not find existing listing file at s3://{bucket}/{listing_path}"
+        raise ValueError(msg)
+
     except json.decoder.JSONDecodeError:
-        logging.error("listing exists, but json parse failed")
+        logging.exception("listing exists, but json parse failed")
         raise
 
 
@@ -220,7 +222,7 @@ def _http_server(directory: str):
         pass
 
 
-def _smoke_test(
+def _smoke_test(  # noqa: PLR0913
     schema_version: str,
     listing_url: str,
     image: str,
@@ -239,13 +241,16 @@ def _smoke_test(
     packages, vulnerabilities = grype.Report(report_contents=output).parse()
     logging.info(f"scan result with downloaded DB: packages={len(packages)} vulnerabilities={len(vulnerabilities)}")
     if not packages or not vulnerabilities:
-        raise ValueError("validation failed: missing packages and/or vulnerabilities")
+        msg = "validation failed: missing packages and/or vulnerabilities"
+        raise ValueError(msg)
 
     if len(packages) < minimum_packages:
-        raise ValueError(f"validation failed: expected at least {minimum_packages} packages, got {len(packages)}")
+        msg = f"validation failed: expected at least {minimum_packages} packages, got {len(packages)}"
+        raise ValueError(msg)
 
     if len(vulnerabilities) < minimum_vulnerabilities:
-        raise ValueError(f"validation failed: expected at least {minimum_vulnerabilities} vulnerabilities, got {len(vulnerabilities)}")
+        msg = f"validation failed: expected at least {minimum_vulnerabilities} vulnerabilities, got {len(vulnerabilities)}"
+        raise ValueError(msg)
 
 
 def smoke_test(
@@ -266,7 +271,7 @@ def smoke_test(
         # way too verbose!
         # logging.info(listing_contents)
         with open(os.path.join(tempdir, LISTING_FILENAME), "w") as f:
-            f.write(listing_contents)  # type: ignore
+            f.write(listing_contents)
 
         # ensure grype can perform a db update for all supported schema versions. Note: we are only testing the
         # listing entry for the DB is usable (the download succeeds and grype and the update process, which does

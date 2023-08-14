@@ -35,10 +35,11 @@ assert_contains $(last_stdout_file) "listing.json uploaded to s3://testbucket/gr
 export GRYPE_DB_UPDATE_URL="http://localhost:4566/testbucket/grype/databases/listing.json"
 export GRYPE_DB_CACHE_DIR="./bin"
 
-run bin/grype db update
 run bin/grype db list
 
 assert_contains $(last_stdout_file) "http://localhost:4566"
+
+run bin/grype db update
 
 run bin/grype alpine:3.2
 

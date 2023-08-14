@@ -8,19 +8,15 @@ from grype_db_manager import distribution
 @pytest.mark.parametrize(
     "basename,expected",
     [
-        pytest.param(
-            "vulnerability-db_v2_2022-12-02T08:18:50Z_f1fabf7df7a8311d1f4f.tar.gz", 251,
-            id="new-archive-style"
-        ),
-        pytest.param(
-            "vulnerability-db_v3_2022-01-23T08:16:27Z.tar.gz", 564,
-            id="original-archive-style"
-        ),
-    ]
+        pytest.param("vulnerability-db_v2_2022-12-02T08:18:50Z_f1fabf7df7a8311d1f4f.tar.gz", 251, id="new-archive-style"),
+        pytest.param("vulnerability-db_v3_2022-01-23T08:16:27Z.tar.gz", 564, id="original-archive-style"),
+    ],
 )
 def test_age_from_basename(mocker, basename, expected):
     # patch grypedb.distribution._now with a mock
-    mocker.patch.object(distribution, "_now", return_value=datetime.datetime(2023, 8, 10, 17, 50, 16, 805478, tzinfo=datetime.timezone.utc))
+    mocker.patch.object(
+        distribution, "_now", return_value=datetime.datetime(2023, 8, 10, 17, 50, 16, 805478, tzinfo=datetime.timezone.utc)
+    )
 
     assert expected == distribution.age_from_basename(basename)
 

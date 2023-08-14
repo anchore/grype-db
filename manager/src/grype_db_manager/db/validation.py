@@ -52,7 +52,8 @@ class Gate:
             return
 
         if not self.config:
-            raise RuntimeError("default GateConfig must be specified before creating a Gate instance")
+            msg = "default GateConfig must be specified before creating a Gate instance"
+            raise RuntimeError(msg)
 
         reasons = []
 
@@ -90,21 +91,30 @@ class Gate:
     def _evaluate_f1_score(self, last_f1_score: float, current_f1_score: float, context: str) -> str | None:
         test_f1_value = last_f1_score - self.config.f1_score_threshold
         if current_f1_score < test_f1_value:
-            return f"current F1 score is lower than the last release F1 score: {Format.BOLD}{Format.UNDERLINE}"\
-                   f"current={current_f1_score:0.2f} last={last_f1_score:0.2f} "\
-                   f"by-margin={self.config.f1_score_threshold:0.2f}{Format.RESET} image={context}"
+            return str(
+                f"current F1 score is lower than the last release F1 score: {Format.BOLD}{Format.UNDERLINE}"
+                f"current={current_f1_score:0.2f} last={last_f1_score:0.2f} "
+                f"by-margin={self.config.f1_score_threshold:0.2f}{Format.RESET} image={context}",
+            )
+        return None
 
     def _evaluate_indeterminate_percent(self, indeterminate_percent: float, context: str) -> str | None:
         if indeterminate_percent > self.config.unlabeled_matches_threshold:
-            return f"current indeterminate matches % is greater than {self.config.unlabeled_matches_threshold}%: {Format.BOLD}{Format.UNDERLINE}"\
-                   f"current={indeterminate_percent:0.2f}%{Format.RESET} image={context}"
+            return str(
+                f"current indeterminate matches % is greater than {self.config.unlabeled_matches_threshold}%: {Format.BOLD}{Format.UNDERLINE}"
+                f"current={indeterminate_percent:0.2f}%{Format.RESET} image={context}",
+            )
+        return None
 
     def _evaluate_fns(self, last_fns: int, current_fns: int, context: str) -> str | None:
         test_fns = last_fns + self.config.introduced_fns_threshold
         if current_fns > test_fns:
-            return f"current false negatives is greater than the last release false negatives: {Format.BOLD}{Format.UNDERLINE}"\
-                   f"current={current_fns} last={last_fns} "\
-                   f"by-margin={self.config.introduced_fns_threshold}{Format.RESET} image={context}"
+            return str(
+                f"current false negatives is greater than the last release false negatives: {Format.BOLD}{Format.UNDERLINE}"
+                f"current={current_fns} last={last_fns} "
+                f"by-margin={self.config.introduced_fns_threshold}{Format.RESET} image={context}",
+            )
+        return None
 
     def passed(self):
         return len(self.reasons) == 0
@@ -176,7 +186,10 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
 
     request_images = cfg.result_sets[result_set].images()
     is_stale = _is_result_set_stale(
-        request_images=request_images, result_set=result_set, db_info=db_info, yardstick_root_dir=cfg.store_root,
+        request_images=request_images,
+        result_set=result_set,
+        db_info=db_info,
+        yardstick_root_dir=cfg.store_root,
     )
 
     if is_stale or recapture:
@@ -359,7 +372,8 @@ def guess_tool_orientation(tools: list[str]):
     latest_release_tool = None
     for _idx, tool_name_version in enumerate(tools):
         if "@" not in tool_name_version:
-            raise ValueError(f"tool is missing a version: {tool_name_version}")
+            msg = f"tool is missing a version: {tool_name_version}"
+            raise ValueError(msg)
         if "custom-db" not in tool_name_version:
             latest_release_tool = tool_name_version
             continue
@@ -370,6 +384,6 @@ def guess_tool_orientation(tools: list[str]):
         latest_release_tool, current_tool = sorted(tools)
 
     if current_tool is None:
-        raise ValueError("current tool not found")
+        msg = "current tool not found"
+        raise ValueError(msg)
     return latest_release_tool, current_tool
-

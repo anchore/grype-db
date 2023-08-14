@@ -2,7 +2,6 @@ from grype_db_manager.db import metadata
 
 
 def test_to_and_from_json():
-
     subject = metadata.Metadata(
         built="2026-05-04T03:02:01Z",
         version=1,

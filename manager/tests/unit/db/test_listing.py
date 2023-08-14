@@ -11,9 +11,7 @@ def test_listing_add_sorts_by_date():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://b-place.com/something.tar.gz",
             checksum="123456789",
@@ -22,9 +20,7 @@ def test_listing_add_sorts_by_date():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://a-place.com/something.tar.gz",
             checksum="123456789",
@@ -33,9 +29,7 @@ def test_listing_add_sorts_by_date():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://c-place.com/something.tar.gz",
             checksum="123456789",
@@ -44,9 +38,7 @@ def test_listing_add_sorts_by_date():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://b-place.com/something.tar.zst",
             checksum="123456789",
@@ -55,9 +47,7 @@ def test_listing_add_sorts_by_date():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://a-place.com/something.tar.zst",
             checksum="123456789",
@@ -66,9 +56,7 @@ def test_listing_add_sorts_by_date():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://c-place.com/something.tar.zst",
             checksum="123456789",
@@ -91,9 +79,9 @@ def test_listing_add_sorts_by_date():
 @pytest.mark.parametrize(
     "s3_path, expected",
     (
-            ("somewhere/in/the/bucket", "somewhere/in/the/bucket/listing.json"),
-            ("somewhere/in/the/bucket///", "somewhere/in/the/bucket/listing.json"),
-            ("//somewhere/in/the/bucket/", "somewhere/in/the/bucket/listing.json"),
+        ("somewhere/in/the/bucket", "somewhere/in/the/bucket/listing.json"),
+        ("somewhere/in/the/bucket///", "somewhere/in/the/bucket/listing.json"),
+        ("//somewhere/in/the/bucket/", "somewhere/in/the/bucket/listing.json"),
     ),
 )
 def test_listing_url(s3_path, expected):
@@ -105,9 +93,7 @@ def test_listing_basenames():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://b-place.com/something-1.tar.gz",
             checksum="123456789",
@@ -116,9 +102,7 @@ def test_listing_basenames():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://a-place.com/something.tar.gz",
             checksum="123456789",
@@ -127,9 +111,7 @@ def test_listing_basenames():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://c-place.com/something.tar.gz",
             checksum="123456789",
@@ -138,9 +120,7 @@ def test_listing_basenames():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://b-place.com/something-1.tar.zst",
             checksum="123456789",
@@ -149,9 +129,7 @@ def test_listing_basenames():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://a-place.com/something.tar.zst",
             checksum="123456789",
@@ -160,9 +138,7 @@ def test_listing_basenames():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://c-place.com/something.tar.zst",
             checksum="123456789",
@@ -177,9 +153,7 @@ def test_listing_latest():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://b-place.com/something-1.tar.gz",
             checksum="123456789",
@@ -188,9 +162,7 @@ def test_listing_latest():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://a-place.com/something.tar.gz",
             checksum="123456789",
@@ -199,9 +171,7 @@ def test_listing_latest():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://c-place.com/something.tar.gz",
             checksum="123456789",
@@ -210,9 +180,7 @@ def test_listing_latest():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://b-place.com/something-1.tar.zst",
             checksum="123456789",
@@ -221,9 +189,7 @@ def test_listing_latest():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://a-place.com/something.tar.zst",
             checksum="123456789",
@@ -232,9 +198,7 @@ def test_listing_latest():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=4,
             url="https://c-place.com/something.tar.zst",
             checksum="123456789",
@@ -250,9 +214,7 @@ def test_listing_basename_difference():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://b-place.com/something-1.tar.gz",
             checksum="123456789",
@@ -261,9 +223,7 @@ def test_listing_basename_difference():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://a-place.com/something-2.tar.gz",
             checksum="123456789",
@@ -272,9 +232,7 @@ def test_listing_basename_difference():
 
     subject.add(
         db.listing.Entry(
-            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-                "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
+            built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
             version=3,
             url="https://c-place.com/something-3.tar.gz",
             checksum="123456789",
@@ -295,27 +253,21 @@ def test_filtering_listing_basename_difference():
     subject = db.listing.empty_listing()
 
     something1 = db.listing.Entry(
-        built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f%z"
-        ),
+        built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         version=3,
-        url="https://b-place.com/something-1.tar.zst", # note: this gets filtered out!
+        url="https://b-place.com/something-1.tar.zst",  # note: this gets filtered out!
         checksum="123456789",
     )
 
     something2 = db.listing.Entry(
-        built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f%z"
-        ),
+        built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         version=3,
-        url="https://a-place.com/something-2.tar.gz", # note: this gets filtered out!
+        url="https://a-place.com/something-2.tar.gz",  # note: this gets filtered out!
         checksum="123456789",
     )
 
     something3 = db.listing.Entry(
-        built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f%z"
-        ),
+        built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         version=3,
         url="https://c-place.com/something-3.tar.gz",
         checksum="123456789",
@@ -485,15 +437,17 @@ def listing_day_by_day():
 
     return subject
 
-@pytest.mark.parametrize("subject,now,max_age,min_elements,urls",
+
+@pytest.mark.parametrize(
+    "subject,now,max_age,min_elements,urls",
     [
-         (
-             # dont prune anything...
-             listing_over_years(),
-             datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
-             9000,
-             3,
-             {
+        (
+            # dont prune anything...
+            listing_over_years(),
+            datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
+            9000,
+            3,
+            {
                 "3": [
                     "https://c-place.com/something.tar.gz",
                     "https://b-place.com/something.tar.gz",
@@ -503,92 +457,92 @@ def listing_day_by_day():
                     "https://c-place.com/something.tar.zst",
                     "https://b-place.com/something.tar.zst",
                     "https://a-place.com/something.tar.zst",
-                ]
-            }
+                ],
+            },
         ),
         (
-                # we prune based on the age...
-                listing_over_years(),
-                datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
-                7,
-                1,
-                {
-                    "3": [
-                        "https://c-place.com/something.tar.gz",
-                    ],
-                    "4": [
-                        "https://c-place.com/something.tar.zst",
-                    ]
-                }
+            # we prune based on the age...
+            listing_over_years(),
+            datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
+            7,
+            1,
+            {
+                "3": [
+                    "https://c-place.com/something.tar.gz",
+                ],
+                "4": [
+                    "https://c-place.com/something.tar.zst",
+                ],
+            },
         ),
         (
-                # we prune based on the age... older elements are kept to ensure minimum elements
-                listing_over_years(),
-                datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
-                7,
-                2,
-                {
-                    "3": [
-                        "https://c-place.com/something.tar.gz",
-                        "https://b-place.com/something.tar.gz",
-                    ],
-                    "4": [
-                        "https://c-place.com/something.tar.zst",
-                        "https://b-place.com/something.tar.zst",
-                    ]
-                }
+            # we prune based on the age... older elements are kept to ensure minimum elements
+            listing_over_years(),
+            datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
+            7,
+            2,
+            {
+                "3": [
+                    "https://c-place.com/something.tar.gz",
+                    "https://b-place.com/something.tar.gz",
+                ],
+                "4": [
+                    "https://c-place.com/something.tar.zst",
+                    "https://b-place.com/something.tar.zst",
+                ],
+            },
         ),
         (
-                # we prune based on the age... minimum elements is ignored
-                listing_day_by_day(),
-                datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
-                1,
-                1,
-                {
-                    "3": [
-                        "https://c-place.com/something.tar.gz",
-                        "https://a-place.com/something.tar.gz",
-                    ],
-                    "4": [
-                        "https://c-place.com/something.tar.zst",
-                        "https://a-place.com/something.tar.zst",
-                    ]
-                }
+            # we prune based on the age... minimum elements is ignored
+            listing_day_by_day(),
+            datetime.datetime(2019, 11, 28, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
+            1,
+            1,
+            {
+                "3": [
+                    "https://c-place.com/something.tar.gz",
+                    "https://a-place.com/something.tar.gz",
+                ],
+                "4": [
+                    "https://c-place.com/something.tar.zst",
+                    "https://a-place.com/something.tar.zst",
+                ],
+            },
         ),
         (
-                # we prune based on the age... minimum elements is ignored (+ 1 day in the future)
-                listing_day_by_day(),
-                datetime.datetime(2019, 11, 29, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
-                2,
-                1,
-                {
-                    "3": [
-                        "https://c-place.com/something.tar.gz",
-                        "https://a-place.com/something.tar.gz",
-                    ],
-                    "4": [
-                        "https://c-place.com/something.tar.zst",
-                        "https://a-place.com/something.tar.zst",
-                    ]
-                }
+            # we prune based on the age... minimum elements is ignored (+ 1 day in the future)
+            listing_day_by_day(),
+            datetime.datetime(2019, 11, 29, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
+            2,
+            1,
+            {
+                "3": [
+                    "https://c-place.com/something.tar.gz",
+                    "https://a-place.com/something.tar.gz",
+                ],
+                "4": [
+                    "https://c-place.com/something.tar.zst",
+                    "https://a-place.com/something.tar.zst",
+                ],
+            },
         ),
         (
-                # we prune based on the age... minimum elements is ignored (+ 1 year in the future)
-                listing_day_by_day(),
-                datetime.datetime(2020, 11, 29, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
-                2,
-                1,
-                {
-                    "3": [
-                        "https://c-place.com/something.tar.gz",
-                    ],
-                    "4": [
-                        "https://c-place.com/something.tar.zst",
-                    ]
-                }
+            # we prune based on the age... minimum elements is ignored (+ 1 year in the future)
+            listing_day_by_day(),
+            datetime.datetime(2020, 11, 29, 23, 55, 59, 342380, tzinfo=datetime.timezone.utc),
+            2,
+            1,
+            {
+                "3": [
+                    "https://c-place.com/something.tar.gz",
+                ],
+                "4": [
+                    "https://c-place.com/something.tar.zst",
+                ],
+            },
         ),
-    ]
- )
+    ],
+)
 def test_prune(subject, now, max_age, min_elements, urls):
     subject.prune(max_age_days=max_age, minimum_elements=min_elements, now=now)
 
@@ -605,27 +559,21 @@ def test_to_and_from_json():
     subject = db.listing.empty_listing()
 
     something1 = db.listing.Entry(
-        built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f%z"
-        ),
+        built=datetime.datetime(2017, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         version=3,
-        url="https://b-place.com/something-3.tar.zst", # note: this gets filtered out!
+        url="https://b-place.com/something-3.tar.zst",  # note: this gets filtered out!
         checksum="123456789",
     )
 
     something2 = db.listing.Entry(
-        built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f%z"
-        ),
+        built=datetime.datetime(2016, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         version=4,
-        url="https://a-place.com/something-4.tar.gz", # note: this gets filtered out!
+        url="https://a-place.com/something-4.tar.gz",  # note: this gets filtered out!
         checksum="123456789",
     )
 
     something3 = db.listing.Entry(
-        built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f%z"
-        ),
+        built=datetime.datetime(2019, 11, 28, 23, 55, 59, 342380).strftime("%Y-%m-%dT%H:%M:%S.%f%z"),
         version=5,
         url="https://c-place.com/something-5.tar.gz",
         checksum="123456789",

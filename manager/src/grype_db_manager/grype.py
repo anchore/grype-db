@@ -1,9 +1,8 @@
-import os
-import re
+import collections
 import json
 import logging
-import collections
-from typing import Tuple, Set, Optional
+import os
+import re
 
 from yardstick.tool import grype
 
@@ -15,10 +14,9 @@ Vulnerability = collections.namedtuple("Vulnerability", "id")
 
 
 class Grype:
-
     BIN = "grype"
 
-    def __init__(self, schema_version: int, store_root: str, update_url: str = "", release: Optional[str] = None):
+    def __init__(self, schema_version: int, store_root: str, update_url: str = "", release: str | None = None):
         self.schema_version = schema_version
         if release:
             logging.warning(f"overriding grype release for schema={schema_version!r} with release={release!r}")
@@ -60,21 +58,7 @@ class Report:
         self.report_contents = report_contents
 
     def _enumerate(self, section):
-        try:
-            data = json.loads(self.report_contents)
-        except Exception as exc:
-            os.makedirs(ERROR_DIR, exist_ok=True)
-            report_path = os.path.join(ERROR_DIR, "grype-error.json")
-            with open(report_path, "w") as f:
-                f.write(self.report_contents)
-
-            preview = self.report_contents
-            if len(preview) > 100:
-                preview = preview[:100] + "..."
-            logging.error(
-                f"json decode failed, full contents written to: {report_path}\npreview: {preview}", exc_info=exc
-            )
-            raise
+        data = json.loads(self.report_contents)
 
         if section == "matches" and isinstance(data, list):
             # < v0.1.0-beta.10 there was no mapping at the root of the document (so could only support matches info)
@@ -85,14 +69,14 @@ class Report:
             for entry in data[section]:
                 yield entry
 
-    def parse(self) -> Tuple[Set["Package"], Set["Vulnerability"]]:
+    def parse(self) -> tuple[set["Package"], set["Vulnerability"]]:
         packages = set()
         vulnerabilities = set()
         for entry in self._enumerate(section="matches"):
             # not all versions of grype included epoch in the version, so for comparison it is vital that
             # we do not consider this field of the version at all.
             version = entry["artifact"]["version"]
-            if re.match(r'^\d+:', version):
+            if re.match(r"^\d+:", version):
                 version = ":".join(version.split(":")[1:])
 
             package = Package(
@@ -125,12 +109,12 @@ def check_db_cache_dir(schema_version, db_runtime_dir):
 
     logging.error(f"db_runtime_dir: {db_runtime_dir}")
     logging.error(
-        f"db import appears to have failed, was expecting path: {db_metadata_file}"
+        f"db import appears to have failed, was expecting path: {db_metadata_file}",
     )
     logging.error("db runtime directory has these files: ")
     for _f in os.listdir(db_runtime_dir):
         logging.error(f"{_f}")
 
     raise RuntimeError(
-        "db import appears to have failed, was expecting path: %s" % db_metadata_file
+        "db import appears to have failed, was expecting path: %s" % db_metadata_file,
     )

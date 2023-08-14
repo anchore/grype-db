@@ -22,7 +22,7 @@ def main():
 
     # patch the client factory to use localstack
     localstack_s3_endpoint = "localhost:4566"
-    s3utils.ClientFactory.set_endpoint_url("http://"+localstack_s3_endpoint)
+    s3utils.ClientFactory.set_endpoint_url("http://" + localstack_s3_endpoint)
 
     if not cache_exists(listing_cache_dir):
         download_cache(listing_cache_dir, localstack_s3_endpoint, s3_bucket, s3_path)
@@ -55,7 +55,7 @@ def download_cache(cache_dir: str, localstack_s3_endpoint: str, s3_bucket: str, 
 
         with requests.get(entry.url, stream=True) as r:
             r.raise_for_status()
-            with open(listing_cache_path, 'wb') as f:
+            with open(listing_cache_path, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
 
         downloaded[schema_version] = listing_cache_path
@@ -84,7 +84,7 @@ def prep_localstack(cache_dir: str, s3_bucket: str, s3_path: str):
 
     if not bucket_exists(s3_bucket):
         s3 = s3utils.ClientFactory.new()
-        s3.create_bucket(Bucket=s3_bucket, CreateBucketConfiguration={'LocationConstraint': os.environ["AWS_REGION"]})
+        s3.create_bucket(Bucket=s3_bucket, CreateBucketConfiguration={"LocationConstraint": os.environ["AWS_REGION"]})
 
     # load the listing file from the cache dir
     local_listing_path = f"{cache_dir}/listing.json"

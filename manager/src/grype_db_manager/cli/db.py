@@ -11,10 +11,13 @@ from yardstick.cli import config as ycfg
 from yardstick.tool.grype import Grype
 from yardstick.tool.syft import Syft
 
+from grype_db_manager import db, s3utils
 from grype_db_manager.cli import config
 from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
-from grype_db_manager import db
+
+# 1 year
+DEFAULT_TTL_SECONDS = 31536000
 
 
 @click.group(name="db", help="manage local grype database builds")
@@ -167,12 +170,46 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
 
 
 @group.command(name="upload", help="upload a grype database")
-@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
+@click.option("--ttl-seconds", "-t", default=DEFAULT_TTL_SECONDS, help="the TTL for the uploaded DB (should be relatively high)")
 @click.argument("db-uuid")
 @click.pass_obj
-def upload_db(cfg: config.Application, db_uuid: str) -> None:
-    logging.info(f"uploading DB {db_uuid}")
+def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
+    s3_bucket = cfg.distribution.s3_bucket
+    s3_path = cfg.distribution.s3_path
 
-    raise NotImplementedError()
+    db_manager = DBManager(root_dir=cfg.root)
+    db_info = db_manager.get_db_info(db_uuid=db_uuid)
+
+    key = f"{s3_path}/{os.path.basename(db_info.archive_path)}"
+
+    s3utils.upload_file(
+        bucket=s3_bucket,
+        key=key,
+        path=db_info.archive_path,
+        CacheControl=f"public,max-age={ttl_seconds}",
+    )
+
+    click.echo(f"DB {db_uuid} uploaded to s3://{s3_bucket}/{s3_path}")
 
 
+@group.command(name="build-and-upload", help="upload a grype database")
+@click.option("--dry-run", "-d", is_flag=True, help="do not upload the DB to S3")
+@click.option("--skip-validate", "-s", is_flag=True, help="skip validation of the DB")
+@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
+@click.pass_obj
+@click.pass_context
+def build_and_upload_db(ctx, cfg: config.Application, skip_validate: bool, dry_run: bool) -> None:
+    if skip_validate:
+        click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
+
+    click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")
+    db_uuid = ctx.invoke(build_db)
+
+    click.echo(f"{Format.BOLD}Validating DB {db_uuid!r}{Format.RESET}")
+    ctx.invoke(validate_db, db_uuid=db_uuid)
+
+    if not dry_run:
+        click.echo(f"{Format.BOLD}Uploading DB {db_uuid!r}{Format.RESET}")
+        ctx.invoke(upload_db, db_uuid=db_uuid)
+    else:
+        click.echo(f"{Format.ITALIC}Dry run! Skipping the upload of the DB to S3{Format.RESET}")

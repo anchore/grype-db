@@ -1,11 +1,11 @@
+import json
 import tarfile
 import tempfile
-import json
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 import zstandard
-from dataclass_wizard import fromdict, asdict
+from dataclass_wizard import asdict, fromdict
 
 FILE = "metadata.json"
 
@@ -34,16 +34,18 @@ class Metadata:
 def from_archive(path: str) -> Metadata:
     if path.endswith(".tar.gz"):
         return from_tar_gz(path)
-    elif path.endswith(".tar.zst"):
+    if path.endswith(".tar.zst"):
         return from_tar_zst(path)
-    raise RuntimeError(f"unsupported archive type: {path}")
+    msg = f"unsupported archive type: {path}"
+    raise RuntimeError(msg)
 
 
 def from_tar(tar_obj) -> Metadata:
     f = tar_obj.extractfile(tar_obj.getmember(FILE))
     if not f:
-        raise RuntimeError(f"failed to find {FILE}")
-    return Metadata.from_json(f.read().decode())  # type: ignore
+        msg = f"failed to find {FILE}"
+        raise RuntimeError(msg)
+    return Metadata.from_json(f.read().decode())
 
 
 def from_tar_gz(path: str) -> Metadata:

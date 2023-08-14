@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 from functools import lru_cache
 from importlib.resources import files
-from dataclasses import dataclass, field
 
 import mergedeep
 from dataclass_wizard import asdict, fromdict
@@ -25,6 +25,7 @@ class SchemaMapping:
         for entry in self.Available:
             if entry.schema == schema_version:
                 return entry.grype_version
+        return None
 
     def supported_schema_versions(self) -> list[int]:
         supported = []
@@ -53,7 +54,8 @@ def _load() -> SchemaMapping:
         instance,
     )
     if cfg is None:
-        raise RuntimeError("cannot find schema mapping file")
+        msg = "cannot find schema mapping file"
+        raise RuntimeError(msg)
 
     return cfg
 

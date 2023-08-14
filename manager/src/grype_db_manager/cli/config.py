@@ -68,9 +68,15 @@ class ValidateDB:
 class ValidateListing:
     image: str | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_IMAGE", default=None)
     minimum_packages: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_PACKAGES", default=None)
-    minimum_vulnerabilities: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_VULNERABILITIES", default=None)
+    minimum_vulnerabilities: int | None = os.environ.get(
+        "GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_VULNERABILITIES",
+        default=None,
+    )
     override_grype_version: str | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION", default=None)
-    override_db_schema_version: int | None = os.environ.get("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION", default=None)
+    override_db_schema_version: int | None = os.environ.get(
+        "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION",
+        default=None,
+    )
 
 
 @dataclass()
@@ -108,7 +114,8 @@ def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Applica
         cfg = Application()
 
     if not cfg:
-        raise FileNotFoundError("no config found")
+        msg = "no config found"
+        raise FileNotFoundError(msg)
 
     return cfg
 
@@ -128,7 +135,8 @@ def _load_paths(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> 
                 return _load(p)
             except FileNotFoundError:
                 return None
-    raise ValueError(f"invalid path type {type(path)}")
+    msg = f"invalid path type {type(path)}"
+    raise ValueError(msg)
 
 
 def _load(path: str) -> Application:
@@ -149,7 +157,12 @@ def _load(path: str) -> Application:
                 instance,
             )
             if cfg is None:
-                raise FileNotFoundError("parsed empty config")
+                # the "with open()" above will not raise an exception if the file does not exist, but if we
+                # read the file and also get an empty config, we want to treat these two cases as the same
+                # thing (as if a file was not found). The linter doesn't understand this dual usage of the
+                # exception so this rule has been suppressed here.
+                msg = "parsed empty config"
+                raise FileNotFoundError(msg)  # noqa: TRY301
     except FileNotFoundError:
         cfg = Application()
 
@@ -157,14 +170,21 @@ def _load(path: str) -> Application:
     db.validation.Gate.set_default_config(cfg.validate.db.gate)
     gate_instance = db.validation.Gate(None, None)
     if gate_instance.config != cfg.validate.db.gate:
-        raise ValueError("failed to set default gate config")
+        msg = "failed to set default gate config"
+        raise ValueError(msg)
 
     # setup the endpoint url and region for all s3 calls
     if cfg.distribution.s3_endpoint_url:
         sys.stderr.write(f"Overriding S3 endpoint URL: {cfg.distribution.s3_endpoint_url}\n")
         s3utils.ClientFactory.set_endpoint_url(cfg.distribution.s3_endpoint_url)
+    else:
+        # in case this is used back-to-back with a grype-db-manager run, reset the endpoint url
+        s3utils.ClientFactory.set_endpoint_url(None)
 
     if cfg.distribution.aws_region:
         s3utils.ClientFactory.set_region_name(cfg.distribution.aws_region)
+    else:
+        # in case this is used back-to-back with a grype-db-manager run, reset the region
+        s3utils.ClientFactory.set_region_name(None)
 
     return cfg

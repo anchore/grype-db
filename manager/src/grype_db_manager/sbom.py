@@ -24,7 +24,8 @@ def download(cfg: ycfg.Application, result_set: str, store_root: str | None = No
     # input configuration, no past results.
     result_set_config = cfg.result_sets.get(result_set, None)
     if not result_set_config:
-        raise RuntimeError(f"no result set found for {result_set}")
+        msg = f"no result set found for {result_set}"
+        raise RuntimeError(msg)
 
     scan_requests = result_set_config.scan_requests()
     sbom_scan_requests = [r for r in scan_requests if r.tool.lower().startswith("syft")]
@@ -38,7 +39,8 @@ def download(cfg: ycfg.Application, result_set: str, store_root: str | None = No
         if exists:
             if len(exists) > 1:
                 print(exists)
-                raise RuntimeError(f"multiple results found for {r.image} with tool {r.tool}")
+                msg = f"multiple results found for {r.image} with tool {r.tool}"
+                raise RuntimeError(msg)
             scan_config = exists[0]
             logging.info(f"skipping SBOM {idx+1}/{len(sbom_scan_requests)} (already exists): {r.image} ")
         else:
@@ -95,7 +97,8 @@ def _download_sbom_results(request: yardstick.artifact.ScanRequest, store_root: 
     timestamp = datetime.datetime.fromisoformat(timestamp_rfc3339)
 
     if not timestamp:
-        raise RuntimeError(f"no timestamp found for {oci_ref}")
+        msg = f"no timestamp found for {oci_ref}"
+        raise RuntimeError(msg)
 
     synthesized_config = yardstick.artifact.ScanConfiguration.new(image=request.image, tool=request.tool, timestamp=timestamp)
     data, _ = yardstick.store.scan_result.store_paths(config=synthesized_config, store_root=store_root)
@@ -111,7 +114,8 @@ def _download_sbom_results(request: yardstick.artifact.ScanRequest, store_root: 
 
     scan_config = yardstick.store.scan_result.find_one(by_description=synthesized_config.path, store_root=store_root)
     if not scan_config:
-        raise RuntimeError(f"no scan config found for {synthesized_config.path}")
+        msg = f"no scan config found for {synthesized_config.path}"
+        raise RuntimeError(msg)
 
     return oci_ref, scan_config
 
@@ -139,7 +143,8 @@ class Oras:
             proc = subprocess.run(["oras", *args], env=os.environ.copy(), **kwargs)  # noqa: S603, S607
 
             if fail_on_error and proc.returncode != 0:
-                raise RuntimeError(f"return code: {proc.returncode}")
+                msg = f"return code: {proc.returncode}"
+                raise RuntimeError(msg)
 
             return proc
 
@@ -147,5 +152,3 @@ class Oras:
             with utils.set_directory(cd):
                 return call()
         return call()
-
-

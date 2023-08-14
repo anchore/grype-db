@@ -1,23 +1,27 @@
 from __future__ import annotations
 
+import datetime
+import hashlib
 import logging
 import os
-import hashlib
-import datetime
-import iso8601
 import tempfile
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
-from typing import Generator
+
+import iso8601
 
 from grype_db_manager import s3utils
 from grype_db_manager.db import listing, metadata
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 DB_SUFFIXES = {".tar.gz", ".tar.zst"}
 MAX_DB_AGE = 120  # ~4 months in days
 MINIMUM_DB_COUNT = MAX_DB_AGE  # number of db entries per schema
 
 
-def listing_entries_dbs_in_s3(
+def listing_entries_dbs_in_s3(  # noqa: PLR0913
     basenames: set[str],
     paths_by_basename: dict[str, str],
     s3_bucket: str,
@@ -30,7 +34,7 @@ def listing_entries_dbs_in_s3(
 
     # generate metadata from each downloaded archive and add to the listing file
     for basename in basenames:
-        if not any([basename.endswith(s) for s in suffixes]):
+        if not any(basename.endswith(s) for s in suffixes):
             logging.debug(f"dropping db: unsupported extension {basename!r}")
             continue
 
@@ -46,7 +50,9 @@ def listing_entries_dbs_in_s3(
         with tempfile.TemporaryDirectory(prefix="grype-downloaded-db") as tempdir:
             local_path = os.path.join(tempdir, basename)
             s3utils.download_to_file(
-                bucket=s3_bucket, key=s3_existing_path, path=local_path
+                bucket=s3_bucket,
+                key=s3_existing_path,
+                path=local_path,
             )
 
             # derive the checksum from the sha256 of the archive
@@ -60,7 +66,10 @@ def listing_entries_dbs_in_s3(
             url = urlunparse(urlparse(url))  # normalize the url
 
             yield listing.Entry(
-                built=meta.built, version=meta.version, url=url, checksum=checksum
+                built=meta.built,
+                version=meta.version,
+                url=url,
+                checksum=checksum,
             )
 
 
@@ -74,12 +83,12 @@ def existing_dbs_in_s3(s3_bucket: str, s3_path: str, suffixes: set[str] | None =
 
     for suffix in suffixes:
         found = list(
-            s3utils.get_matching_s3_keys(bucket=s3_bucket, prefix=s3_path, suffix=suffix)
+            s3utils.get_matching_s3_keys(bucket=s3_bucket, prefix=s3_path, suffix=suffix),
         )
         existing_databases.extend(found)
 
     logging.info(
-        f"found {len(existing_databases)} existing databases in bucket={s3_bucket} path={s3_path}"
+        f"found {len(existing_databases)} existing databases in bucket={s3_bucket} path={s3_path}",
     )
 
     return get_paths_by_basename(existing_databases)
@@ -94,8 +103,9 @@ def get_paths_by_basename(paths: list[str]) -> dict[str, str]:
 
             paths_by_basename[basename] = path
         else:
+            msg = f"duplicate basenames found (this should not happen): {basename}"
             raise RuntimeError(
-                f"duplicate basenames found (this should not happen): {basename}"
+                msg,
             )
     return paths_by_basename
 
@@ -112,8 +122,8 @@ def age_from_basename(basename: str) -> int | None:
         return None
 
     try:
-        return (_now()-iso8601.parse_date(ts_field)).days
-    except:
+        return (_now() - iso8601.parse_date(ts_field)).days
+    except:  # noqa: E722
         logging.exception(f"unable to parse age from basename {basename}")
 
 
