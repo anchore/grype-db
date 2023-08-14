@@ -1,0 +1,42 @@
+root: data/manager
+vunnel-root: data/vunnel
+yardstick-root: data/yardstick
+
+grype-db:
+  # use the current repo at the current commit as the source of truth for the grype-db build source.
+  # note: assume this will be invoked from the root of the repo
+  version: file://.
+
+  # grype-db application configuration to use.
+  # note: assume this will be invoked from the root of the repo
+  config: config/grype-db-nightly-publisher.yaml
+
+distribution:
+  listing-file-name: listing.json
+  s3-path: grype/databases
+  s3-bucket: testbucket
+  aws-region: us-west-2
+  s3-endpoint-url: http://localhost:4566
+
+validate:
+  listing:
+    image: "centos:8.2.2004"
+    minimum-packages: 85
+    minimum-vulnerabilities: 400
+
+  db:
+    default-max-year: 2021
+
+    gate:
+      f1-score-threshold: 0.0
+      unlabeled-matches-threshold: 10.0
+      introduced-fns-threshold: 0
+
+    grype:
+      version: latest
+
+    syft:
+      version: v0.86.1
+
+    images:
+      - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880

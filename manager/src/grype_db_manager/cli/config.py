@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import enum
 import os
 import sys
 from dataclasses import dataclass, field
+from typing import Any
 
 import mergedeep
 import yaml
@@ -105,11 +107,64 @@ class Application:
     validate: Validate = field(default_factory=Validate)
     distribution: Distribution = field(default_factory=Distribution)
 
+    def to_yaml(self) -> str:
+        # noqa
+        class IndentDumper(yaml.Dumper):
+            def increase_indent(self, flow: bool = False, indentless: bool = False) -> None:  # noqa: ARG002
+                return super().increase_indent(flow, False)
 
-def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Application:
+        def enum_asdict_factory(data: list[tuple[str, Any]]) -> dict[Any, Any]:
+            # prevents showing oddities such as
+            #
+            #   wolfi:
+            #       request_timeout: 125
+            #       runtime:
+            #       existing_input: !!python/object/apply:vunnel.provider.InputStatePolicy
+            #           - keep
+            #       existing_results: !!python/object/apply:vunnel.provider.ResultStatePolicy
+            #           - delete-before-write
+            #       on_error:
+            #           action: !!python/object/apply:vunnel.provider.OnErrorAction
+            #           - fail
+            #           input: !!python/object/apply:vunnel.provider.InputStatePolicy
+            #           - keep
+            #           results: !!python/object/apply:vunnel.provider.ResultStatePolicy
+            #           - keep
+            #           retry_count: 3
+            #           retry_delay: 5
+            #       result_store: !!python/object/apply:vunnel.result.StoreStrategy
+            #           - flat-file
+            #
+            # and instead preferring:
+            #
+            #   wolfi:
+            #       request_timeout: 125
+            #       runtime:
+            #       existing_input: keep
+            #       existing_results: delete-before-write
+            #       on_error:
+            #           action: fail
+            #           input: keep
+            #           results: keep
+            #           retry_count: 3
+            #           retry_delay: 5
+            #       result_store: flat-file
+
+            def convert_value(obj: Any) -> Any:
+                if isinstance(obj, enum.Enum):
+                    return obj.value
+                return obj
+
+            return {k: convert_value(v) for k, v in data}
+
+        cfg_dict = asdict(self, dict_factory=enum_asdict_factory)
+        return yaml.dump(cfg_dict, Dumper=IndentDumper, default_flow_style=False)
+
+
+def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS, wire_values: bool = True) -> Application:
     cfg: Application | None = None
     try:
-        cfg = _load_paths(path)
+        cfg = _load_paths(path, wire_values=wire_values)
     except FileNotFoundError:
         cfg = Application()
 
@@ -120,26 +175,26 @@ def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Applica
     return cfg
 
 
-def _load_paths(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS) -> Application | None:
+def _load_paths(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS, wire_values: bool = True) -> Application | None:
     if not path:
         path = DEFAULT_CONFIGS
     elif isinstance(path, str):
         if path == "":
             path = DEFAULT_CONFIGS
         else:
-            return _load(path)
+            return _load(path, wire_values=wire_values)
 
     if isinstance(path, (list, tuple)):
         for p in path:
             try:
-                return _load(p)
+                return _load(p, wire_values=wire_values)
             except FileNotFoundError:
                 return None
     msg = f"invalid path type {type(path)}"
     raise ValueError(msg)
 
 
-def _load(path: str) -> Application:
+def _load(path: str, wire_values: bool = True) -> Application:
     try:
         with open(path, encoding="utf-8") as f:
             app_object = yaml.safe_load(f.read()) or {}
@@ -166,25 +221,26 @@ def _load(path: str) -> Application:
     except FileNotFoundError:
         cfg = Application()
 
-    # wire up the gate configuration so any gates created will use values from the application config
-    db.validation.Gate.set_default_config(cfg.validate.db.gate)
-    gate_instance = db.validation.Gate(None, None)
-    if gate_instance.config != cfg.validate.db.gate:
-        msg = "failed to set default gate config"
-        raise ValueError(msg)
+    if wire_values:
+        # wire up the gate configuration so any gates created will use values from the application config
+        db.validation.Gate.set_default_config(cfg.validate.db.gate)
+        gate_instance = db.validation.Gate(None, None)
+        if gate_instance.config != cfg.validate.db.gate:
+            msg = "failed to set default gate config"
+            raise ValueError(msg)
 
-    # setup the endpoint url and region for all s3 calls
-    if cfg.distribution.s3_endpoint_url:
-        sys.stderr.write(f"Overriding S3 endpoint URL: {cfg.distribution.s3_endpoint_url}\n")
-        s3utils.ClientFactory.set_endpoint_url(cfg.distribution.s3_endpoint_url)
-    else:
-        # in case this is used back-to-back with a grype-db-manager run, reset the endpoint url
-        s3utils.ClientFactory.set_endpoint_url(None)
+        # setup the endpoint url and region for all s3 calls
+        if cfg.distribution.s3_endpoint_url:
+            sys.stderr.write(f"Overriding S3 endpoint URL: {cfg.distribution.s3_endpoint_url}\n")
+            s3utils.ClientFactory.set_endpoint_url(cfg.distribution.s3_endpoint_url)
+        else:
+            # in case this is used back-to-back with a grype-db-manager run, reset the endpoint url
+            s3utils.ClientFactory.set_endpoint_url(None)
 
-    if cfg.distribution.aws_region:
-        s3utils.ClientFactory.set_region_name(cfg.distribution.aws_region)
-    else:
-        # in case this is used back-to-back with a grype-db-manager run, reset the region
-        s3utils.ClientFactory.set_region_name(None)
+        if cfg.distribution.aws_region:
+            s3utils.ClientFactory.set_region_name(cfg.distribution.aws_region)
+        else:
+            # in case this is used back-to-back with a grype-db-manager run, reset the region
+            s3utils.ClientFactory.set_region_name(None)
 
     return cfg

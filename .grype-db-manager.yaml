@@ -24,6 +24,10 @@ validate:
     minimum-vulnerabilities: 400
 
   db:
+    # new vulnerabilities are added all the time, instead of keeping up it's easier to ignore newer entries.
+    # This approach helps tremendously with keeping the analysis relatively stable.
+    default-max-year: 2021
+
     gate:
       # float between 0 and 1, the maximum allowable difference below the OSS F1 score before the gate fails (default 0,
       # meaning the test F1 score must be equal to or greater than the OSS F1 score to pass the gate)
@@ -36,10 +40,6 @@ validate:
       # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
       # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
       introduced-fns-threshold: 0
-
-    # new vulnerabilities are added all the time, instead of keeping up it's easier to ignore newer entries.
-    # This approach helps tremendously with keeping the analysis relatively stable.
-    default-max-year: 2021
 
     grype:
       version: latest
