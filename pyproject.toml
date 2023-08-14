@@ -87,7 +87,7 @@ cache-dir = ".cache/ruff"
 line-length = 150
 select = [
   "A",   # flake8-builtins
-  # "ANN", # flake8-annotations   # this is great, but let mypy handle this so it can honor type:ignore comments without noqa comments too
+  "ANN", # flake8-annotations
   "ARG", # flake8-unused-arguments
   "B",   # flake8-bugbear
   "C",   # mccabe
@@ -126,6 +126,12 @@ select = [
 ]
 
 ignore = [
+  "ANN401", # should allow for typing.Any in *args and **kwargs
+  "ANN002", # don't require type annotations for arbirary *args
+  "ANN003", # don't require type annotations for arbirary **kwargs
+  "ANN101", # annotating self if useless on an instance method
+  "ANN102", # annotating cls if useless on a class method
+  "ANN204", # annotating return type of __init__ and __post_init__ is useless
   "ARG001", # unused args are ok, as they communicate intent in interfaces, even if not used in impls.
   "ARG002", # unused args are ok, as they communicate intent in interfaces, even if not used in impls.
   "G004", # it's ok to use formatted strings for logging

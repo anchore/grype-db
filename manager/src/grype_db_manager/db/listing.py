@@ -10,6 +10,7 @@ import tempfile
 import threading
 from dataclasses import dataclass
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 import iso8601
@@ -17,6 +18,9 @@ from dataclass_wizard import asdict, fromdict
 
 from grype_db_manager import distribution, grype, s3utils
 from grype_db_manager.db import schema
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 LISTING_FILENAME = "listing.json"
 
@@ -28,7 +32,7 @@ class Entry:
     url: str
     checksum: str
 
-    def basename(self):
+    def basename(self) -> str:
         basename = os.path.basename(urlparse(self.url, allow_fragments=False).path)
         if not has_suffix(basename, suffixes=distribution.DB_SUFFIXES):
             msg = f"entry url is not a db archive: {basename}"
@@ -36,7 +40,7 @@ class Entry:
 
         return basename
 
-    def age(self, now=None):
+    def age_in_days(self, now: datetime.datetime | None = None) -> int:
         if not now:
             now = datetime.datetime.now(tz=datetime.timezone.utc)
         return (now - iso8601.parse_date(self.built)).days
@@ -47,20 +51,20 @@ class Listing:
     available: dict[int, list[Entry]]
 
     @classmethod
-    def from_json(cls, contents: str):
+    def from_json(cls, contents: str) -> Listing:
         return cls.from_dict(json.loads(contents))
 
     @classmethod
-    def from_dict(cls, contents: dict):
+    def from_dict(cls, contents: dict) -> Listing:
         return fromdict(cls, contents)
 
-    def to_json(self, indent=None):
+    def to_json(self, indent: int | None = None) -> str:
         return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return asdict(self)
 
-    def prune(self, max_age_days, minimum_elements, now=None):
+    def prune(self, max_age_days: int, minimum_elements: int, now: datetime.datetime | None = None) -> None:
         for schema_version, entries in self.available.items():
             kept = []
             pruned = []
@@ -72,7 +76,7 @@ class Listing:
                 continue
 
             for entry in entries:
-                if entry.age(now) > max_age_days:
+                if entry.age_in_days(now) > max_age_days:
                     pruned.append(entry)
                 else:
                     kept.append(entry)
@@ -98,7 +102,7 @@ class Listing:
             logging.info(f"pruning {len(pruned)} entries from schema version {schema_version}, {len(kept)} entries remain")
             self.available[schema_version] = kept
 
-    def add(self, entry: Entry, quiet: bool = False):
+    def add(self, entry: Entry, quiet: bool = False) -> None:
         if not quiet:
             logging.info(f"adding new listing entry: {entry}")
 
@@ -113,7 +117,7 @@ class Listing:
             reverse=True,
         )
 
-    def remove_by_basename(self, basenames: set[str], quiet: bool = False):
+    def remove_by_basename(self, basenames: set[str], quiet: bool = False) -> None:
         if not basenames:
             return
 
@@ -128,7 +132,7 @@ class Listing:
             for entry in remove:
                 entries.remove(entry)
 
-    def log(self):
+    def log(self) -> None:
         logging.info("listing contents:")
         for schema_version, entries in self.available.items():
             logging.info(f"  schema-version: {schema_version}")
@@ -136,7 +140,7 @@ class Listing:
                 logging.info(f"    entry: {entry}")
 
     @staticmethod
-    def url(path: str):
+    def url(path: str) -> str:
         url = os.path.normpath("/".join([path, LISTING_FILENAME]).lstrip("/"))
         return urlunparse(urlparse(url))  # normalize the url
 
@@ -147,7 +151,7 @@ class Listing:
                 names.add(entry.basename())
         return names
 
-    def basename_difference(self, other: set[str]) -> (set[str], set[str]):
+    def basename_difference(self, other: set[str]) -> tuple[set[str], set[str]]:
         basenames = self.basenames()
         new_basenames = other - basenames
         missing_basenames = basenames - other
@@ -157,7 +161,7 @@ class Listing:
         return self.available[schema_version][0]
 
 
-def has_suffix(el: str, suffixes: set[str] | None):
+def has_suffix(el: str, suffixes: set[str] | None) -> bool:
     if not suffixes:
         return True
     return any(el.endswith(s) for s in suffixes)
@@ -200,12 +204,12 @@ def fetch(bucket: str, path: str, create_if_missing: bool = False) -> Listing:
 
 
 @contextlib.contextmanager
-def _http_server(directory: str):
+def _http_server(directory: str) -> Iterator[str]:
     server_address = ("127.0.0.1", 5555)
     url = f"http://{server_address[0]}:{server_address[1]}"
     listing_url = f"{url}/{LISTING_FILENAME}"
 
-    def serve():
+    def serve() -> None:
         httpd = HTTPServer(
             server_address,
             functools.partial(SimpleHTTPRequestHandler, directory=directory),
@@ -229,7 +233,7 @@ def _smoke_test(  # noqa: PLR0913
     minimum_packages: int,
     minimum_vulnerabilities: int,
     store_root: str,
-):
+) -> None:
     logging.info(f"testing grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
@@ -259,7 +263,7 @@ def smoke_test(
     minimum_packages: int,
     minimum_vulnerabilities: int,
     override_schema_release: tuple[str, str] | None = None,
-):
+) -> None:
     # write the listing to a temp dir that is served up locally on an HTTP server. This is used by grype to locally
     # download the listing file and check that it works against S3 (since the listing entries have DB urls that
     # reside in S3).

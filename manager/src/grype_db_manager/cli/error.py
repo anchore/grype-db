@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from functools import partial, wraps
+from typing import Any
 
 import click
 
@@ -8,12 +11,12 @@ class CLIError(click.ClickException):
         return click.style(self.message, fg="red")
 
 
-def handle_exception(func=None, *, handle):
+def handle_exception(func: callable = None, *, handle: Any | tuple[Any, ...]) -> callable:  # noqa: RUF013
     if not func:
         return partial(handle_exception, handle=handle)
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> Any:
         try:
             return func(*args, **kwargs)
         except handle as e:

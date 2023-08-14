@@ -31,7 +31,7 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
             self.start_time = time.time()
             super().__init__(*args, **kwargs)
 
-        def format(self, record):  # noqa: A003
+        def format(self, record: logging.LogRecord) -> str:  # noqa: A003
             elapsed_seconds = record.created - self.start_time
             elapsed = datetime.timedelta(seconds=elapsed_seconds)
             record.delta = f"{int(elapsed.total_seconds()):04d}"
@@ -84,7 +84,7 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
 
 @cli.command(name="config", help="show the application config")
 @click.pass_obj
-def show_config(cfg: config.Application):
+def show_config(cfg: config.Application) -> None:
     # noqa
     class IndentDumper(yaml.Dumper):
         def increase_indent(self, flow: bool = False, indentless: bool = False) -> None:  # noqa: ARG002

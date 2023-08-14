@@ -22,13 +22,13 @@ DEFAULT_TTL_SECONDS = 31536000
 
 @click.group(name="db", help="manage local grype database builds")
 @click.pass_obj
-def group(_: config.Application):
+def group(_: config.Application) -> None:
     pass
 
 
 @group.command(name="list", help="list databases")
 @click.pass_obj
-def list_dbs(cfg: config.Application):
+def list_dbs(cfg: config.Application) -> None:
     db_manager = DBManager(root_dir=cfg.root)
 
     dbs = sorted(db_manager.list_dbs(), key=lambda x: x.db_created)
@@ -48,7 +48,7 @@ def list_dbs(cfg: config.Application):
 
 @group.command(name="clear", help="delete all databases")
 @click.pass_obj
-def clear_dbs(cfg: config.Application):
+def clear_dbs(cfg: config.Application) -> None:
     db_dir = os.path.join(cfg.root, DB_DIR)
     if os.path.exists(db_dir):
         shutil.rmtree(db_dir)
@@ -198,7 +198,7 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.pass_obj
 @click.pass_context
-def build_and_upload_db(ctx, cfg: config.Application, skip_validate: bool, dry_run: bool) -> None:
+def build_and_upload_db(ctx: click.core.Context, cfg: config.Application, skip_validate: bool, dry_run: bool) -> None:
     if skip_validate:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
 

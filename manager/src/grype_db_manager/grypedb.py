@@ -65,7 +65,7 @@ class DBManager:
 
         return db_uuid
 
-    def get_db_info(self, db_uuid: str, allow_missing_archive: bool = False) -> DBInfo | None:
+    def get_db_info(self, db_uuid: str) -> DBInfo | None:
         session_dir = os.path.join(self.db_dir, db_uuid)
         if not os.path.exists(session_dir):
             msg = f"path does not exist: {session_dir!r}"
@@ -190,7 +190,7 @@ class GrypeDB:
 
         return db_uuid
 
-    def build_db(self, build_dir: str, schema_version: int, provider_root_dir: str):
+    def build_db(self, build_dir: str, schema_version: int, provider_root_dir: str) -> None:
         self.run(
             "build",
             "--schema",
@@ -201,7 +201,7 @@ class GrypeDB:
             config=self.config_path,
         )
 
-    def package_db(self, build_dir: str, provider_root_dir: str):
+    def package_db(self, build_dir: str, provider_root_dir: str) -> None:
         self.run(
             "package",
             "--dir",
@@ -210,7 +210,7 @@ class GrypeDB:
             config=self.config_path,
         )
 
-    def run(self, *args, provider_root_dir: str, config: str):
+    def run(self, *args, provider_root_dir: str, config: str) -> int:
         cmd = " ".join([self.bin_path, *args])
         level = logging.getLevelName(logging.getLogger().getEffectiveLevel())
         if level == "TRACE":
@@ -235,7 +235,7 @@ class GrypeDB:
         return ret
 
 
-def print_annotation(s: str, italic: bool = True, grey: bool = True):
+def print_annotation(s: str, italic: bool = True, grey: bool = True) -> None:
     prefix = ""
     if italic:
         prefix += str(Format.ITALIC)
@@ -243,7 +243,7 @@ def print_annotation(s: str, italic: bool = True, grey: bool = True):
         prefix += str(Format.GREY)
     if prefix and sys.stderr.isatty():
         s = f"{prefix}{s}{Format.RESET}"
-    return sys.stderr.write(s + "\n")
+    sys.stderr.write(s + "\n")
 
 
 def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912

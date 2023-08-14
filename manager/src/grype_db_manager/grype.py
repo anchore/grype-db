@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 import collections
 import json
 import logging
 import os
 import re
+from typing import TYPE_CHECKING
 
 from yardstick.tool import grype
 
 from grype_db_manager.db import schema
 from grype_db_manager.utils import repo_root
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 Package = collections.namedtuple("Package", "name type version")
 Vulnerability = collections.namedtuple("Vulnerability", "id")
@@ -31,19 +37,19 @@ class Grype:
         self.tool = grype.Grype.install(version=self.release, path=os.path.join(store_root, self.release), env=env)
 
     @staticmethod
-    def supported_schema_versions():
+    def supported_schema_versions() -> list[str]:
         path = os.path.join(repo_root(), "grype-schema-version-mapping.json")
         with open(path) as fh:
             obj = json.load(fh)
         return obj.keys()
 
-    def update_db(self):
+    def update_db(self) -> None:
         self.tool.run("db", "update", "-vv")
 
         # ensure the db cache is not empty for the current schema
         check_db_cache_dir(self.schema_version, os.path.join(self.tool.path, "db"))
 
-    def import_db(self, db_path: str):
+    def import_db(self, db_path: str) -> None:
         self.tool.run("db", "import", db_path)
 
         # ensure the db cache is not empty for the current schema
@@ -54,10 +60,10 @@ class Grype:
 
 
 class Report:
-    def __init__(self, report_contents):
+    def __init__(self, report_contents: str):
         self.report_contents = report_contents
 
-    def _enumerate(self, section):
+    def _enumerate(self, section: str) -> Iterable[dict]:
         data = json.loads(self.report_contents)
 
         if section == "matches" and isinstance(data, list):
@@ -69,7 +75,7 @@ class Report:
             for entry in data[section]:
                 yield entry
 
-    def parse(self) -> tuple[set["Package"], set["Vulnerability"]]:
+    def parse(self) -> tuple[set[Package], set[Vulnerability]]:
         packages = set()
         vulnerabilities = set()
         for entry in self._enumerate(section="matches"):
@@ -91,7 +97,7 @@ class Report:
         return packages, vulnerabilities
 
 
-def check_db_cache_dir(schema_version, db_runtime_dir):
+def check_db_cache_dir(schema_version: str, db_runtime_dir: str) -> None:
     """
     Ensure that there is a `metadata.json` file for the cache directory, which signals that there
     are files related to a database pull

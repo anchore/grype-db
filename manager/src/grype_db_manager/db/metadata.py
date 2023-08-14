@@ -14,20 +14,20 @@ FILE = "metadata.json"
 class Metadata:
     built: str
     version: int
-    # note: the checksum is not included here since that is for the contained db file, not the checksum of the archive itself
+    # note: the checksum is not included here since that is for the contained db file, not the archive
 
     @classmethod
-    def from_json(cls, contents: str):
+    def from_json(cls, contents: str) -> "Metadata":
         return cls.from_dict(json.loads(contents))
 
     @classmethod
-    def from_dict(cls, contents: dict):
+    def from_dict(cls, contents: dict) -> "Metadata":
         return fromdict(cls, contents)
 
-    def to_json(self, indent=None):
+    def to_json(self, indent: int | None = None) -> str:
         return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -40,7 +40,7 @@ def from_archive(path: str) -> Metadata:
     raise RuntimeError(msg)
 
 
-def from_tar(tar_obj) -> Metadata:
+def from_tar(tar_obj: tarfile.TarFile) -> Metadata:
     f = tar_obj.extractfile(tar_obj.getmember(FILE))
     if not f:
         msg = f"failed to find {FILE}"

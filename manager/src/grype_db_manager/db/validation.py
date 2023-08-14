@@ -40,7 +40,7 @@ class Gate:
     config: GateConfig = field(default_factory=GateConfig)
 
     @classmethod
-    def set_default_config(cls, config: GateConfig):
+    def set_default_config(cls, config: GateConfig) -> None:
         cls.config = config
 
     def __post_init__(
@@ -116,7 +116,7 @@ class Gate:
             )
         return None
 
-    def passed(self):
+    def passed(self) -> bool:
         return len(self.reasons) == 0
 
 
@@ -178,7 +178,7 @@ def validate(  # noqa: PLR0913
     return ret
 
 
-def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_dir: str, recapture: bool = False):
+def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_dir: str, recapture: bool = False) -> None:
     dbm = grypedb.DBManager(root_dir=root_dir)
     db_info = dbm.get_db_info(db_uuid)
 
@@ -283,7 +283,7 @@ def validate_image(
     verbosity: int = 0,
     label_entries: list[artifact.LabelEntry] | None = None,
     store_root: str | None = None,
-):
+) -> Gate:
     # compare each grype result against one another, looking for matching differences
     relative_comparison = yardstick.compare_results(
         descriptions=descriptions,
@@ -325,7 +325,7 @@ def log_validation_results(
     comparisons_by_result_id: dict[str, list[comparison.AgainstLabels]],
     stats_by_image_tool_pair: comparison.ImageToolLabelStats,
     verbosity: int = 0,
-):
+) -> None:
     if verbosity > 1:
         image = sorted(stats_by_image_tool_pair.true_positives.keys())[0]
         tools = sorted(stats_by_image_tool_pair.true_positives[image].keys())
@@ -364,7 +364,7 @@ def log_validation_results(
             logging.info(f"match differences found between tooling: {diffs}")
 
 
-def guess_tool_orientation(tools: list[str]):
+def guess_tool_orientation(tools: list[str]) -> tuple[str, str]:
     if len(tools) != 2:
         raise RuntimeError("expected 2 tools, got %s" % tools)
 

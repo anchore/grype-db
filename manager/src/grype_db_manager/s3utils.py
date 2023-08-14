@@ -1,6 +1,14 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 import boto3
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from botocore.client import BaseClient
 
 
 class ClientFactory:
@@ -8,15 +16,15 @@ class ClientFactory:
     region = None
 
     @classmethod
-    def set_endpoint_url(cls, endpoint_url):
+    def set_endpoint_url(cls, endpoint_url: str | None) -> None:
         cls.endpoint_url = endpoint_url
 
     @classmethod
-    def set_region_name(cls, region):
+    def set_region_name(cls, region: str | None) -> None:
         cls.region = region
 
     @classmethod
-    def new(cls):
+    def new(cls) -> BaseClient:
         kwargs = {}
         if cls.endpoint_url:
             kwargs["endpoint_url"] = cls.endpoint_url
@@ -28,7 +36,7 @@ class ClientFactory:
 
 
 class LoggingContext:
-    def __init__(self, logger=None, level=None):
+    def __init__(self, logger: logging.Logger | None = None, level: str | int | None = None):
         self.logger = logger or logging.root
         self.level = level
 
@@ -37,12 +45,12 @@ class LoggingContext:
             self.old_level = self.logger.level
             self.logger.setLevel(self.level)
 
-    def __exit__(self, et, ev, tb):
+    def __exit__(self, *args, **kwargs):
         if self.level is not None:
             self.logger.setLevel(self.old_level)
 
 
-def download_to_file(bucket: str, key: str, path: str, client_factory=ClientFactory):
+def download_to_file(bucket: str, key: str, path: str, client_factory: type[ClientFactory] = ClientFactory) -> None:
     logging.debug(f"downloading file from s3 bucket={bucket} key={key} to local={path}")
 
     s3 = client_factory.new()
@@ -52,7 +60,7 @@ def download_to_file(bucket: str, key: str, path: str, client_factory=ClientFact
         s3.download_file(Bucket=bucket, Key=key.lstrip("/"), Filename=path)
 
 
-def upload(bucket: str, key: str, contents: str, client_factory=ClientFactory, **kwargs):
+def upload(bucket: str, key: str, contents: str, client_factory: type[ClientFactory] = ClientFactory, **kwargs) -> None:
     logging.debug(f"uploading to s3 bucket={bucket} key={key}")
 
     # boto is a little too verbose... let's tone that down just for a bit
@@ -61,7 +69,7 @@ def upload(bucket: str, key: str, contents: str, client_factory=ClientFactory, *
         s3.put_object(Body=contents, Bucket=bucket, Key=key.lstrip("/"), **kwargs)
 
 
-def upload_file(bucket: str, key: str, path: str, client_factory=ClientFactory, **kwargs):
+def upload_file(bucket: str, key: str, path: str, client_factory: type[ClientFactory] = ClientFactory, **kwargs) -> None:
     logging.debug(f"uploading file={path} to s3 bucket={bucket} key={key}")
 
     # boto is a little too verbose... let's tone that down just for a bit
@@ -70,7 +78,7 @@ def upload_file(bucket: str, key: str, path: str, client_factory=ClientFactory, 
         s3.upload_file(Filename=path, Bucket=bucket, Key=key.lstrip("/"), ExtraArgs=kwargs)
 
 
-def get_s3_object_contents(bucket: str, key: str, client_factory=ClientFactory):
+def get_s3_object_contents(bucket: str, key: str, client_factory: type[ClientFactory] = ClientFactory) -> str | None:
     logging.debug(f"get s3 contents bucket={bucket} key={key}")
 
     # boto is a little too verbose... let's tone that down just for a bit
@@ -83,7 +91,12 @@ def get_s3_object_contents(bucket: str, key: str, client_factory=ClientFactory):
             return None
 
 
-def get_matching_s3_objects(bucket: str, prefix: str = "", suffix: str = "", client_factory=ClientFactory):
+def get_matching_s3_objects(
+    bucket: str,
+    prefix: str = "",
+    suffix: str = "",
+    client_factory: type[ClientFactory] = ClientFactory,
+) -> Iterable[str]:
     s3 = client_factory.new()
     paginator = s3.get_paginator("list_objects_v2")
 
@@ -107,6 +120,6 @@ def get_matching_s3_objects(bucket: str, prefix: str = "", suffix: str = "", cli
                     yield obj
 
 
-def get_matching_s3_keys(bucket: str, prefix: str = "", suffix: str = ""):
+def get_matching_s3_keys(bucket: str, prefix: str = "", suffix: str = "") -> Iterable[str]:
     for obj in get_matching_s3_objects(bucket, prefix, suffix):
         yield obj["Key"]

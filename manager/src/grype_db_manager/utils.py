@@ -5,6 +5,10 @@ import functools
 import os
 import pathlib
 import subprocess
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @functools.lru_cache(maxsize=1)
@@ -18,7 +22,7 @@ def repo_root() -> str:
 
 
 @contextlib.contextmanager
-def set_directory(path: pathlib.Path | str):
+def set_directory(path: pathlib.Path | str) -> Iterable[None]:
     origin = pathlib.Path().absolute()
     try:
         os.chdir(path)

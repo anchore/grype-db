@@ -4,7 +4,7 @@ import os
 import re
 from typing import Any
 
-from colr import color
+from colr import color as Color
 from supports_color import supportsColor
 from tabulate import tabulate
 from yardstick import artifact, comparison
@@ -51,7 +51,7 @@ def format_percent(value: float) -> str:
     )
 
 
-def get_section_rgb_tuple(index, sections):
+def get_section_rgb_tuple(index: int, sections: int) -> tuple[int, int, int]:
     half_sections = int(sections / 2)
     red_hsv_tuples = list(reversed([(0, float(x) / float(half_sections - 1), 1) for x in range(half_sections)]))
     green_hsv_tuples = [(0.33, float(x) / float(half_sections - 1), 1) for x in range(half_sections)]
@@ -60,7 +60,7 @@ def get_section_rgb_tuple(index, sections):
     return values[0] * 255, values[1] * 255, values[2] * 255
 
 
-def get_section_index(value, min_value, max_value, sections, invert):
+def get_section_index(value: int, min_value: int, max_value: int, sections: int, invert: bool) -> tuple[int, float]:
     value = min(max(value, min_value), max_value)
     value_ratio = float(value - min_value) / float(max_value - min_value)
     if invert:
@@ -68,11 +68,17 @@ def get_section_index(value, min_value, max_value, sections, invert):
     return min(max(int(sections * value_ratio), 0), sections - 1), value_ratio
 
 
-def format_value_red_green_spectrum(value, min_value=0, max_value=1, sections=10, invert=False):
+def format_value_red_green_spectrum(
+    value: int,
+    min_value: int = 0,
+    max_value: int = 1,
+    sections: int = 10,
+    invert: bool = False,
+) -> str:
     index, value_ratio = get_section_index(value, min_value, max_value, sections, invert)
     color_rgb_tuple = get_section_rgb_tuple(index, sections)
 
-    formatted_value = color(f"{value:6.2f}", fore=color_rgb_tuple)
+    formatted_value = Color(f"{value:6.2f}", fore=color_rgb_tuple)
 
     if value_ratio > 0.9:
         # bold
@@ -125,7 +131,7 @@ def match_differences_table(  # noqa: C901
     latest_release_tool: str,
     relative_comparison: comparison.ByPreservedMatch,
     comparisons_by_result_id: dict[str, list[comparison.AgainstLabels]],
-):
+) -> tuple[str, int]:
     # show the relative comparison unique differences paired up with label conclusions (TP/FP/FN/TN/Unknown)
     all_rows: list[list[Any]] = []
     for result in relative_comparison.results:
@@ -172,7 +178,7 @@ def match_differences_table(  # noqa: C901
                 ],
             )
 
-    def escape_ansi(line):
+    def escape_ansi(line: str) -> str:
         ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
         return ansi_escape.sub("", line)
 
@@ -206,7 +212,7 @@ def treeify(lines: list[str], prefix: str = space, postfix: str = "──", colo
     return ret.rstrip()
 
 
-def indent_block(text, prefix=" ") -> str:
+def indent_block(text: str, prefix: str = " ") -> str:
     return "".join(prefix + line for line in text.splitlines(True))
 
 

@@ -11,7 +11,7 @@ from grype_db_manager.db.format import Format
 
 @click.group(name="listing", help="manage the grype-db listing file")
 @click.pass_obj
-def group(_: config.Application):
+def group(_: config.Application) -> None:
     pass
 
 
@@ -19,7 +19,7 @@ def group(_: config.Application):
 @click.option("--ignore-missing-listing", "-i", default=False, help="ignore missing listing from S3", is_flag=True)
 @click.pass_obj
 @error.handle_exception(handle=(ValueError,))
-def create_listing(cfg: config.Application, ignore_missing_listing: bool):
+def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str:
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
 
@@ -79,7 +79,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool):
 @click.argument("listing-file")
 @click.pass_obj
 @error.handle_exception(handle=(ValueError,))
-def validate_listing(cfg: config.Application, listing_file: str):
+def validate_listing(cfg: config.Application, listing_file: str) -> None:
     with open(listing_file) as f:
         listing_obj = db.Listing.from_json(f.read())
 
@@ -122,7 +122,7 @@ def validate_listing(cfg: config.Application, listing_file: str):
 @click.option("--ttl", "-t", "ttl_seconds", default=60 * 5, help="time to live in seconds for the listing file")
 @click.argument("listing-file")
 @click.pass_obj
-def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int):
+def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int) -> None:
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
 
@@ -143,7 +143,7 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 @click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
 @click.pass_obj
 @click.pass_context
-def update_listing(ctx, cfg: config.Application, dry_run: bool):
+def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
     click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")

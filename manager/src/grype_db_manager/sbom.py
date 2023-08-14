@@ -19,7 +19,7 @@ SBOM_IMAGE_PREFIX = "ghcr.io/anchore/vml-sbom"
 TIMESTAMP_OCI_ANNOTATION_KEY = "io.anchore.yardstick.timestamp"
 
 
-def download(cfg: ycfg.Application, result_set: str, store_root: str | None = None):
+def download(cfg: ycfg.Application, result_set: str, store_root: str | None = None) -> None:
     # derive a set of all images to operate on from the "sbom" result set. This should always be based on the
     # input configuration, no past results.
     result_set_config = cfg.result_sets.get(result_set, None)
@@ -61,7 +61,7 @@ def _update_sbom_scan_config(
     existing_result_set: artifact.ResultSet,
     sbom_scan_config: artifact.ScanConfiguration,
     sbom_scan_request: artifact.ScanRequest,
-):
+) -> None:
     for state in existing_result_set.state:
         if state.request and not state.request.tool.lower().startswith("syft"):
             continue
@@ -85,7 +85,10 @@ def _get_or_create_result_set(cfg: ycfg.Application, result_set: str, store_root
     return existing_result_set
 
 
-def _download_sbom_results(request: yardstick.artifact.ScanRequest, store_root: str | None = None):
+def _download_sbom_results(
+    request: yardstick.artifact.ScanRequest,
+    store_root: str | None = None,
+) -> tuple[str | None, artifact.ScanConfiguration | None]:
     oci_ref = oci_sbom_reference_from_image(request.image)
     proc = Oras.manifest_fetch(target=oci_ref, capture_output=True, fail_on_error=False)
     if proc.returncode != 0:
@@ -139,7 +142,7 @@ class Oras:
 
     @classmethod
     def run(cls, *args, cd: str | None = None, fail_on_error: bool = True, **kwargs) -> subprocess.CompletedProcess:
-        def call():
+        def call() -> subprocess.CompletedProcess:
             proc = subprocess.run(["oras", *args], env=os.environ.copy(), **kwargs)  # noqa: S603, S607
 
             if fail_on_error and proc.returncode != 0:
