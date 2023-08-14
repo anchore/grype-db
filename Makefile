@@ -103,7 +103,7 @@ test: unit cli ## Run all tests
 bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools bootstrap-python  ## Download and install all tooling dependencies (+ prep tooling in the ./tmp dir)
 
 .PHONY: bootstrap-python
-bootstrap-python: ## Install python dependencies
+bootstrap-python:
 	cd manager && make bootstrap
 
 .PHONY: bootstrap-tools
@@ -166,7 +166,7 @@ unit: ## Run GO unit tests (with coverage)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: db-acceptance
-db-acceptance: ## Run acceptance tests (for local use, not CI)
+db-acceptance: ## Run acceptance tests
 	$(call title,"Running DB acceptance tests (schema=$(schema))")
 	./test/db/acceptance.sh $(schema)
 

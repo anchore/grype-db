@@ -15,12 +15,6 @@ well as acceptance testing. You will require the following:
    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
    ```
 
-- [Git LFS](https://git-lfs.github.com/) installed for managing test fixtures in the repo, once installed initialze with:
-
-   ```bash
-   git lfs install
-   ```
-
 To download go tooling used for static analysis and dependent go modules run the following:
 
 ```bash
@@ -52,7 +46,7 @@ make acceptance
 # Note: this may take a while... go make some coffee.
 ```
 
-The main make tasks for common static analysis functions are `lint`, `format`, and `lint-fix`.
+The main make tasks for common static analysis functions are `lint`, `format`, `lint-fix`, `unit`, `cli`.
 
 See `make help` for all the current make tasks.
 
@@ -61,7 +55,7 @@ See `make help` for all the current make tasks.
 
 1. Create a new `v#` schema package in the `grype` repo (within `pkg/db`)
 2. Create a new `v#` schema package in the `grype-db` repo (use the `bump-schema.py` helper script) that uses the new changes from `grype-db`
-3. Modify the `grype-schema-version-mapping.json` to pin the last-latest version to a specific version of grype and add the new schema version pinned to the "main" branch of grype (or a development branch)
+3. Modify the `manager/src/grype_db_manager/data/schema-info.json` to pin the last-latest version to a specific version of grype and add the new schema version pinned to the "main" branch of grype (or a development branch)
 4. Update all references in `grype` to use the new schema
 5. Use the [Staging DB Publisher](https://github.com/anchore/grype-db/actions/workflows/staging-db-publisher.yaml) workflow to test your DB changes with grype in a flow similar to the daily DB publisher workflow
 
@@ -237,12 +231,12 @@ The in-repo `.grype-db.yaml` and `.vunnel.yaml` configurations are used to defin
 
 **This workflow takes the latest vulnerability data cache, builds a grype DB, and publishes it for general consumption.**
 
-The `publish/` directory contains all code responsible for driving the Daily DB Publisher workflow, generating DBs
-for all supported schema versions and making them available to the public. The publishing process is made of four steps 
+The `manager/` directory contains all code responsible for driving the Daily DB Publisher workflow, generating DBs
+for all supported schema versions and making them available to the public. The publishing process is made of three steps 
 (depicted and described below):
 
 ```
-~~~~~ 1. Pull ~~~~~      ~~~~~~~~~~~~~ 2. Generate ~~~~~~~~~~~~     ~~ 3. Upload DBs ~~     ~~ 4. Upload Listing ~~
+~~~~~ 1. Pull ~~~~~      ~~~~~~~~~~~~~~~~~~ 2. Generate Databases ~~~~~~~~~~~~~~~~~~~~      ~~ 3. Update Listing ~~
 
 ┌─────────────────┐      ┌──────────────┐     ┌───────────────┐     ┌────────────────┐      ┌─────────────────────┐
 │ Pull vuln data  ├──┬──►│ Build V1 DB  ├────►│ Package V1 DB ├────►│ Upload Archive ├──┬──►│ Update listing file │
@@ -256,50 +250,39 @@ for all supported schema versions and making them available to the public. The p
 
 **Note: Running these steps locally may result in publishing a locally generated DB to production, which should never be done.**
 
-1. **pull**: Download the latest vulnerability data from various upstream data sources into a local cache directory. 
-   In CI, this is invoked from the root of the repo:
+1. **pull**: Download the latest vulnerability data from various upstream data sources into a local directory.
+   ```bash
+   # from the repo root
+   make download-all-provider-cache
+   ```
+
+   The destination for the provider data is in the `data/vunnel` directory.
+
+
+2. **generate**: Build databases for all supported schema versions based on the latest vulnerability data and upload them to S3.
 
    ```bash
    # from the repo root
-   GRYPE_DB_BUILDER_CACHE_DIR=publish/cache go run main.go pull -vv
+   # must be in a poetry shell
+   grype-db-manager db build-and-upload --schema-version <version>
    ```
 
-   Note that all pulled vuln data is cached into the `publish/cache` directory.
+   This call needs to be repeated for all schema versions that are supported (see `manager/src/grype_db_manager/data/schema-info.json`).
+
+   Once built each DB is smoke tested with grype by comparing the performance of the last OSS DB with the current
+   (local) DB, using the [vulnerability-match-label](https://github.com/anchore/vulnerability-match-labels) to quality differences.
+
+   Only DBs that pass validation are uploaded to S3. At this step the DBs can be downloaded from S3 but are NOT yet
+   discoverable via `grype db download` yet (this is what the listing file update will do).
 
 
-2. **generate**: Build and package a DB from the cached vuln data for a specific DB schema version:
-
-   ```bash
-   # from publish/
-   poetry run publisher generate --schema-version <version>
-   ```
-
-   This call needs to be repeated for all schema versions that are supported (see the `grype-schema-version-mapping.json`
-   file in the root of the repo). During this step all DBs and DB archives generated are stored in the `publish/build` directory.
-   Once built, DBs are subjected to testing against grype. Each DB is imported by grype, grype is invoked with a test
-   image, and the result is compared against a golden test-fixture saved at `publish/test-fixtures`. If the test-fixture
-   and the actual report obtained from grype differ significantly, then the script fails.
-   Once the comparison test passes, the DB archive is moved from the `publish/build` directory to the `publish/stage`
-   directory.
-
-
-3. **upload-dbs**: All DB archives found in the `publish/stage` directory are uploaded to S3.
-
-   ```bash
-   # from publish/
-   ./upload-dbs.sh <bucket> <s3-path>
-   ```
-
-   Note: only the DB archives are uploaded to S3, the listing file has not been touched. This means that though the
-   uploaded DBs are now publicly accessible, installations of grype will not attempt to use the DBs.
-
-
-4. **upload-listing**: Generate and upload a new listing file to S3 based on the existing listing file and newly
+3**update-listing**: Generate and upload a new listing file to S3 based on the existing listing file and newly
    discovered DB archives already uploaded to S3.
 
    ```bash
-   # from publish/
-   poetry run publisher upload-listing --s3-bucket <bucket> --s3-path <s3-path>
+   # from the repo root
+   # must be in a poetry shell
+   grype-db-manager listing update
    ```
    
    During this step the locally crafted listing file is tested against installations of grype. The correctness of the
@@ -307,23 +290,3 @@ for all supported schema versions and making them available to the public. The p
    a non-zero count of matches found.
 
    Once the listing file has been uploaded user-facing grype installations should pick up that there are new DBs available to download.
-
-
-#### FAQ for daily DB generation
-
-**1. The "generate DB" step fails with "RuntimeError: failed quality gate: vulnerabilities not within tolerance"...**
-
-The "generate DB" step validates the DB against a test fixture in `publish/test-fixtures`. This fixture needs to be
-periodically updated with the latest expected set of vulnerabilities. This process should probably be one day updated
-to ignore CVEs after a certain year to aid in not needing to update this test fixture that frequently.
-
-To easily update the test fixtures (and similar ones used for acceptance tests):
-```
-make update-test-fixtures
-```
-
-If using an M1 use
-```
-arch -x86_64 make update-test-fixtures
-```
-This is necessary because old versions of Grype didn't release arm64 binaries. 

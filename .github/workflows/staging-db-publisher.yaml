@@ -78,12 +78,12 @@ jobs:
         if: github.event.inputs.publish-databases != 'false'
         run: make download-all-provider-cache
 
-      - name: Generate DB (schema ${{ github.event.inputs.schema-version }})
+      - name: Generate and upload DB (schema ${{ github.event.inputs.schema-version }})
         # note about workflow dispatch inputs and booleans:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-databases != 'false'
-        run: poetry run grype-db-manager --schema-version ${{ github.event.inputs.schema-version }}
+        run: poetry run grype-db-manager -c ./config/grype-db-manager/db-publisher-staging.yaml db build-and-upload --schema-version ${{ github.event.inputs.schema-version }}
 
       - name: Upload DB (schema ${{ github.event.inputs.schema-version }})
         run: publish/upload-dbs.sh ${{ env.AWS_BUCKET }} ${{ env.AWS_BUCKET_PATH }}
@@ -96,9 +96,7 @@ jobs:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-listing != 'false'
-        run: |
-          cd publish &&
-          poetry run publisher upload-listing --s3-bucket ${{ env.AWS_BUCKET }} --s3-path ${{ env.AWS_BUCKET_PATH }}
+        run: poetry run grype-db-manager -c ./config/grype-db-manager/db-publisher-staging.yaml listing update
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
