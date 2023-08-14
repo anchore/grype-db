@@ -3,15 +3,36 @@ import os
 from grype_db_manager.cli import config
 
 
-def test_load_from_env_vars():
-    os.environ["GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION"] = "grype-version"
-    os.environ["GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION"] = "schema-version"
+def test_override_from_environment():
+    env = {
+        "TEST_APP_LOG_LEVEL": "DEBUG",
+    }
 
-    # asserts that we defer the env var lookup until the object creation and that the values are wired up correctly
-    cfg = config.Application()
+    cfg = config.Application(
+        log=config.Log(
+            level="INFO",
+        ),
+    )
+
+    config.override_from_environment(cfg, prefix="TEST_APP", env=env)
+
+    assert cfg.log.level == "DEBUG"
+
+
+def test_load_from_env_vars_overrides_disk(test_dir_path):
+    env = {
+        "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION": "grype-version",
+        "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION": "schema-version",
+        "GRYPE_DB_MANAGER_DISTRIBUTION_S3_PATH": "s3-path",
+    }
+
+    # ensure that we override values from disk with env vars
+    config_path = test_dir_path("fixtures/config/full.yaml")
+    cfg = config.load(config_path, wire_values=False, env=env)
 
     assert cfg.validate.listing.override_grype_version == "grype-version"
     assert cfg.validate.listing.override_db_schema_version == "schema-version"
+    assert cfg.distribution.s3_path == "s3-path"
 
 
 def test_load_default():
@@ -20,8 +41,13 @@ def test_load_default():
     actual = cfg.to_yaml()
 
     expected = """\
+data:
+  root: .grype-db-manager
+  vunnelRoot: data/vunnel
+  yardstickRoot: data/yardstick
 distribution:
   awsRegion: null
+  downloadUrlPrefix: null
   listingFileName: listing.json
   s3Bucket: null
   s3EndpointUrl: null
@@ -31,7 +57,6 @@ grypeDb:
   version: latest
 log:
   level: INFO
-root: .grype-db-manager
 validate:
   db:
     defaultMaxYear: 2021
@@ -52,8 +77,6 @@ validate:
     minimumVulnerabilities: null
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
-vunnelRoot: data/vunnel
-yardstickRoot: data/yardstick
 """
 
     assert actual == expected
@@ -67,8 +90,13 @@ def test_load(test_dir_path):
     actual = cfg.to_yaml()
 
     expected = """\
+data:
+  root: data/manager
+  vunnelRoot: data/vunnel
+  yardstickRoot: data/yardstick
 distribution:
   awsRegion: us-west-2
+  downloadUrlPrefix: http://localhost:4566/testbucket
   listingFileName: listing.json
   s3Bucket: testbucket
   s3EndpointUrl: http://localhost:4566
@@ -78,7 +106,6 @@ grypeDb:
   version: file://.
 log:
   level: INFO
-root: data/manager
 validate:
   db:
     defaultMaxYear: 2021
@@ -100,8 +127,6 @@ validate:
     minimumVulnerabilities: 400
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
-vunnelRoot: data/vunnel
-yardstickRoot: data/yardstick
 """
 
     assert actual == expected

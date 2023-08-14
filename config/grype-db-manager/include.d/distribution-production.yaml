@@ -1,0 +1,7 @@
+# distribution:
+
+listing-file-name: listing.json
+s3-path: grype/databases
+s3-bucket: toolbox-data.anchore.io
+aws-region: us-west-2
+download-url-prefix: https://toolbox-data.anchore.io

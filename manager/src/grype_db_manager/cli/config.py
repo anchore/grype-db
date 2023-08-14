@@ -3,14 +3,22 @@ from __future__ import annotations
 import enum
 import os
 import sys
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass, field, is_dataclass
+from typing import TYPE_CHECKING, Any
 
 import mergedeep
 import yaml
 from dataclass_wizard import asdict, fromdict
+from yamlinclude import YamlIncludeConstructor
 
 from grype_db_manager import db, s3utils
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+# enable !include statements in the application configuration file
+YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.SafeLoader)
+
 
 DEFAULT_CONFIGS = (
     ".grype-db-manager.yaml",
@@ -18,16 +26,9 @@ DEFAULT_CONFIGS = (
 )
 
 
-def env_lookup(key: str, default: Any) -> callable:
-    def _env_factory() -> Any:
-        return os.environ.get(key, default)
-
-    return _env_factory
-
-
 @dataclass
 class Log:
-    level: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_LOG_LEVEL", default="INFO"))
+    level: str = "INFO"
 
     def __post_init__(self) -> None:
         self.level = self.level.upper()
@@ -35,20 +36,20 @@ class Log:
 
 @dataclass
 class GrypeDB:
-    version: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_GRYPE_DB_VERSION", default="latest"))
-    config: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_GRYPE_DB_CONFIG", default=""))
+    version: str = "latest"
+    config: str = ""
 
 
 @dataclass
 class Grype:
-    version: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_VERSION", default="latest"))
-    config: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_GRYPE_CONFIG", default=""))
+    version: str = "latest"
+    config: str = ""
 
 
 @dataclass
 class Syft:
-    version: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_VERSION", default="latest"))
-    config: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_SYFT_CONFIG", default=""))
+    version: str = "latest"
+    config: str = ""
 
 
 @dataclass
@@ -56,7 +57,7 @@ class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
     syft: Syft = field(default_factory=Syft)
-    default_max_year: int = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_DB_DEFAULT_MAX_YEAR", default=2021))
+    default_max_year: int = 2021
     gate: db.validation.GateConfig = field(default_factory=db.validation.GateConfig)
 
     def __post_init__(self):
@@ -75,25 +76,11 @@ class ValidateDB:
 
 @dataclass
 class ValidateListing:
-    image: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_LISTING_IMAGE", default=None))
-    minimum_packages: int | None = field(
-        default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_PACKAGES", default=None),
-    )
-    minimum_vulnerabilities: int | None = field(
-        default_factory=env_lookup(
-            "GRYPE_DB_MANAGER_VALIDATE_LISTING_MINIMUM_VULNERABILITIES",
-            default=None,
-        ),
-    )
-    override_grype_version: str | None = field(
-        default_factory=env_lookup("GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION", default=None),
-    )
-    override_db_schema_version: int | None = field(
-        default_factory=env_lookup(
-            "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION",
-            default=None,
-        ),
-    )
+    image: str | None = None
+    minimum_packages: int | None = None
+    minimum_vulnerabilities: int | None = None
+    override_grype_version: str | None = None
+    override_db_schema_version: int | None = None
 
 
 @dataclass()
@@ -104,20 +91,24 @@ class Validate:
 
 @dataclass()
 class Distribution:
-    listing_file_name: str = field(
-        default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_LISTING_FILE_NAME", default="listing.json"),
-    )
-    s3_path: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_S3_PATH", None))
-    s3_bucket: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_S3_BUCKET", None))
-    s3_endpoint_url: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL", None))
-    aws_region: str | None = field(default_factory=env_lookup("GRYPE_DB_MANAGER_DISTRIBUTION_AWS_REGION", None))
+    listing_file_name: str = "listing.json"
+    s3_path: str | None = None
+    s3_bucket: str | None = None
+    s3_endpoint_url: str | None = None
+    download_url_prefix: str | None = None
+    aws_region: str | None = None
+
+
+@dataclass
+class Data:
+    root: str = ".grype-db-manager"
+    vunnel_root: str = "data/vunnel"
+    yardstick_root: str = "data/yardstick"
 
 
 @dataclass
 class Application:
-    root: str = field(default_factory=env_lookup("GRYPE_DB_MANAGER_ROOT", default=".grype-db-manager"))
-    vunnel_root: str = field(default_factory=env_lookup("GRYPE_DB_VUNNEL_ROOT", default="data/vunnel"))
-    yardstick_root: str = field(default_factory=env_lookup("GRYPE_DB_YARDSTICK_ROOT", default="data/yardstick"))
+    data: Data = field(default_factory=Data)
     log: Log = field(default_factory=Log)
 
     grype_db: GrypeDB = field(default_factory=GrypeDB)
@@ -178,12 +169,12 @@ class Application:
         return yaml.dump(cfg_dict, Dumper=IndentDumper, default_flow_style=False)
 
 
-def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS, wire_values: bool = True) -> Application:
-    cfg: Application | None = None
-    try:
-        cfg = _load_paths(path, wire_values=wire_values)
-    except FileNotFoundError:
-        cfg = Application()
+def load(
+    path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS,
+    wire_values: bool = True,
+    env: Mapping | None = None,
+) -> Application:
+    cfg = _load_paths(path, wire_values=wire_values, env=env)
 
     if not cfg:
         msg = "no config found"
@@ -192,51 +183,61 @@ def load(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS, wire_value
     return cfg
 
 
-def _load_paths(path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS, wire_values: bool = True) -> Application | None:
+def _load_paths(
+    path: None | str | list[str] | tuple[str],
+    wire_values: bool = True,
+    env: Mapping | None = None,
+) -> Application | None:
     if not path:
         path = DEFAULT_CONFIGS
-    elif isinstance(path, str):
+
+    if isinstance(path, str):
         if path == "":
             path = DEFAULT_CONFIGS
         else:
-            return _load(path, wire_values=wire_values)
+            return _load(path, wire_values=wire_values, env=env)
 
     if isinstance(path, (list, tuple)):
         for p in path:
-            try:
-                return _load(p, wire_values=wire_values)
-            except FileNotFoundError:
-                return None
+            if not os.path.exists(p):
+                continue
+
+            return _load(p, wire_values=wire_values, env=env)
+
+        # use the default application config
+        return Application()
+
     msg = f"invalid path type {type(path)}"
     raise ValueError(msg)
 
 
-def _load(path: str, wire_values: bool = True) -> Application:
-    try:
-        with open(path, encoding="utf-8") as f:
-            app_object = yaml.safe_load(f.read()) or {}
-            # we need a full default application config first then merge the loaded config on top.
-            # Why? dataclass_wizard.fromdict() will create instances from the dataclass default
-            # and NOT the field definition from the container. So it is possible to specify a
-            # single field in the config and all other fields would be set to the default value
-            # based on the dataclass definition and not any field(default_factory=...) hints
-            # from the containing class.
-            instance = asdict(Application())
+def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Application:
+    with open(path, encoding="utf-8") as f:
+        app_object = yaml.load(f.read(), yaml.SafeLoader) or {}  # noqa: S506 (since our loader is using the safe loader)
+        # we need a full default application config first then merge the loaded config on top.
+        # Why? dataclass_wizard.fromdict() will create instances from the dataclass default
+        # and NOT the field definition from the container. So it is possible to specify a
+        # single field in the config and all other fields would be set to the default value
+        # based on the dataclass definition and not any field(default_factory=...) hints
+        # from the containing class.
+        instance = asdict(Application())
 
-            mergedeep.merge(instance, app_object)
-            cfg = fromdict(
-                Application,
-                instance,
-            )
-            if cfg is None:
-                # the "with open()" above will not raise an exception if the file does not exist, but if we
-                # read the file and also get an empty config, we want to treat these two cases as the same
-                # thing (as if a file was not found). The linter doesn't understand this dual usage of the
-                # exception so this rule has been suppressed here.
-                msg = "parsed empty config"
-                raise FileNotFoundError(msg)  # noqa: TRY301
-    except FileNotFoundError:
-        cfg = Application()
+        mergedeep.merge(instance, app_object)
+        cfg = fromdict(
+            Application,
+            instance,
+        )
+
+    if cfg is None:
+        # the "with open()" above will not raise an exception if the file does not exist, but if we
+        # read the file and also get an empty config, we want to treat these two cases as the same
+        # thing (as if a file was not found). The linter doesn't understand this dual usage of the
+        # exception so this rule has been suppressed here.
+        msg = "parsed empty config"
+        raise FileNotFoundError(msg)  # noqa: TRY301
+
+    # 12 factor rules: env var > config file
+    override_from_environment(cfg, prefix="GRYPE_DB_MANAGER", env=env)
 
     if wire_values:
         # wire up the gate configuration so any gates created will use values from the application config
@@ -261,3 +262,24 @@ def _load(path: str, wire_values: bool = True) -> Application:
             s3utils.ClientFactory.set_region_name(None)
 
     return cfg
+
+
+def override_from_environment(obj: Any, prefix: str = "", path: str = "", env: Mapping | None = None) -> None:
+    if env is None:
+        env = os.environ
+
+    for field_name, field_value in obj.__dict__.items():
+        if is_dataclass(field_value):
+            override_from_environment(
+                field_value,
+                prefix=prefix,
+                path=f"{path}.{field_name}" if path else field_name,
+                env=env,
+            )
+
+        else:
+            full_path = f"{prefix}_{path.upper()}".replace(".", "_")
+            env_var_name = f"{full_path}_{field_name.upper()}"
+            env_value = env.get(env_var_name, None)
+            if env_value is not None:
+                setattr(obj, field_name, env_value)

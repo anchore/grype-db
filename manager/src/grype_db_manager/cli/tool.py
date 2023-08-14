@@ -17,7 +17,7 @@ def group(_: config.Application) -> None:
 @group.command(name="list", help="list grype-db installations")
 @click.pass_obj
 def list_installed(cfg: config.Application) -> None:
-    all_installations = GrypeDB.list_installed(root_dir=cfg.root)
+    all_installations = GrypeDB.list_installed(root_dir=cfg.data.root)
     if not all_installations:
         click.echo("no grype-db installations found")
         return
@@ -33,14 +33,14 @@ def list_installed(cfg: config.Application) -> None:
 @group.command(name="install", help="install grype-db at the configured version")
 @click.pass_obj
 def install(cfg: config.Application) -> None:
-    GrypeDB.install(version=cfg.grype_db.version, root_dir=cfg.root)
+    GrypeDB.install(version=cfg.grype_db.version, root_dir=cfg.data.root)
 
 
 @group.command(name="clear", help="delete all grype-db installations")
 @click.pass_obj
 def clear(cfg: config.Application) -> None:
     # recursively delete the tools dir
-    tools_dir = os.path.join(cfg.root, TOOLS_DIR)
+    tools_dir = os.path.join(cfg.data.root, TOOLS_DIR)
     if os.path.exists(tools_dir):
         shutil.rmtree(tools_dir)
         click.echo("tools deleted")

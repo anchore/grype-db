@@ -1,4 +1,4 @@
-# note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
+# this is a grype-db application configuration file intended for use with the daily db publisher workflow
 
 provider:
   root: data/vunnel

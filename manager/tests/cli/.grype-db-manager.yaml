@@ -1,6 +1,7 @@
-root: cli-test-data/manager
-vunnel-root: cli-test-data/vunnel
-yardstick-root: cli-test-data/yardstick
+data:
+  root: cli-test-data/manager
+  vunnel-root: cli-test-data/vunnel
+  yardstick-root: cli-test-data/yardstick
 
 grype-db:
   # use the current repo at the current commit as the source of truth for the
@@ -16,12 +17,13 @@ distribution:
   s3-bucket: testbucket
   aws-region: us-west-2
   s3-endpoint-url: http://localhost:4566
+  download-url-prefix: http://localhost:4566/testbucket
 
 validate:
   listing:
-    image: "centos:8.2.2004"
-    minimum-packages: 85
-    minimum-vulnerabilities: 400
+    image: "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
+    minimum-packages: 10          # 14 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
+    minimum-vulnerabilities: 10   # 15 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
   db:
     # new vulnerabilities are added all of the time, instead of keeping up it's easier to ignore newer entries.
     # This approach helps tremendously with keeping the analysis relatively stable.

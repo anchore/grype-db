@@ -5,7 +5,6 @@ import shutil
 # the credentials are not required for localstack, but the boto3 client will complain if they are not set
 os.environ["AWS_ACCESS_KEY_ID"] = "test"
 os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
-os.environ["AWS_REGION"] = "us-west-2"
 
 from grype_db_manager import db, s3utils
 from grype_db_manager.cli import config
@@ -16,13 +15,11 @@ def main():
 
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
+    region = cfg.distribution.aws_region
 
     # prep the listing cache dir
     listing_cache_dir = ".listing-cache"
-
-    # patch the client factory to use localstack
     localstack_s3_endpoint = "localhost:4566"
-    s3utils.ClientFactory.set_endpoint_url("http://" + localstack_s3_endpoint)
 
     if not cache_exists(listing_cache_dir):
         download_cache(listing_cache_dir, localstack_s3_endpoint, s3_bucket, s3_path)
@@ -30,7 +27,7 @@ def main():
     if is_cache_prepped(listing_cache_dir, s3_bucket, s3_path):
         print("cache already prepped")
     else:
-        prep_localstack(listing_cache_dir, s3_bucket, s3_path)
+        prep_localstack(listing_cache_dir, s3_bucket, s3_path, region)
     show_localstack(s3_bucket)
     print("done!")
 
@@ -79,12 +76,12 @@ def download_cache(cache_dir: str, localstack_s3_endpoint: str, s3_bucket: str, 
         f.write(new_listing_contents)
 
 
-def prep_localstack(cache_dir: str, s3_bucket: str, s3_path: str):
+def prep_localstack(cache_dir: str, s3_bucket: str, s3_path: str, region: str):
     print("prepping localstack")
 
     if not bucket_exists(s3_bucket):
         s3 = s3utils.ClientFactory.new()
-        s3.create_bucket(Bucket=s3_bucket, CreateBucketConfiguration={"LocationConstraint": os.environ["AWS_REGION"]})
+        s3.create_bucket(Bucket=s3_bucket, CreateBucketConfiguration={"LocationConstraint": region})
 
     # load the listing file from the cache dir
     local_listing_path = f"{cache_dir}/listing.json"

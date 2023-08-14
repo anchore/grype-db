@@ -22,6 +22,7 @@ def group(_: config.Application) -> None:
 def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str:
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
+    download_url_prefix = cfg.distribution.download_url_prefix
 
     # get existing listing file...
     the_listing = db.listing.fetch(bucket=s3_bucket, path=s3_path, create_if_missing=ignore_missing_listing)
@@ -54,6 +55,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
         paths_by_basename=existing_paths_by_basename,
         s3_bucket=s3_bucket,
         s3_path=s3_path,
+        download_url_prefix=download_url_prefix,
     ):
         the_listing.add(entry)
 
@@ -141,9 +143,8 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
 @click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
-@click.pass_obj
 @click.pass_context
-def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool) -> None:
+def update_listing(ctx: click.core.Context, dry_run: bool) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
     click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")

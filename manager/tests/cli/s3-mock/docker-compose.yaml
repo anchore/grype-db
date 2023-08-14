@@ -9,7 +9,11 @@ services:
     environment:
       - SERVICES=s3
       - DEBUG=0
-      - DATA_DIR=/tmp/localstack/data
+      - DATA_DIR=/var/localstack/data
     volumes:
-      - './.localstack:/tmp/localstack'
+      - 'localstack:/var/localstack'
       - '/var/run/docker.sock:/var/run/docker.sock'
+
+volumes:
+  localstack:
+

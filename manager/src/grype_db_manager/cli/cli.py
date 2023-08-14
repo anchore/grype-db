@@ -82,7 +82,8 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
 @cli.command(name="config", help="show the application config")
 @click.pass_obj
 def show_config(cfg: config.Application) -> None:
-    click.echo_via_pager(cfg.to_yaml())
+    # click.echo_via_pager(cfg.to_yaml())
+    click.echo(cfg.to_yaml())
 
 
 cli.add_command(db.group)

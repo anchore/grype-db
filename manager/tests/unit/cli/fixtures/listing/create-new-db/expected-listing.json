@@ -16,7 +16,7 @@
       {
         "built": "2023-08-08T01:33:25Z",
         "checksum": "sha256:9ece0b838be60974aee62087cf366b84e5b7cb74e7a665d86de7735aca927d36",
-        "url": "https://testbucket/grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
+        "url": "http://localhost:4566/testbucket/grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
         "version": 1
       }
     ],
@@ -36,7 +36,7 @@
       {
         "built": "2023-08-08T01:33:25Z",
         "checksum": "sha256:ac567d4894ad6cb41bff9aafad3e37dbff65bf3708b88e0888fef2be278128b9",
-        "url": "https://testbucket/grype/databases/vulnerability-db_v2_2023-08-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
+        "url": "http://localhost:4566/testbucket/grype/databases/vulnerability-db_v2_2023-08-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
         "version": 2
       }
     ],
@@ -56,7 +56,7 @@
       {
         "built": "2023-08-08T01:33:25Z",
         "checksum": "sha256:1cbf29901c0b3721bf54306394eb8a50c64aa312a1c28c030fd348c0ae858ac5",
-        "url": "https://testbucket/grype/databases/vulnerability-db_v3_2023-08-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
+        "url": "http://localhost:4566/testbucket/grype/databases/vulnerability-db_v3_2023-08-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
         "version": 3
       }
     ],
@@ -76,7 +76,7 @@
       {
         "built": "2023-08-08T01:33:25Z",
         "checksum": "sha256:b0a652d53fe87c6fdd7206f792575c714fc5a592c09d9edd62b70babf2bfc9f0",
-        "url": "https://testbucket/grype/databases/vulnerability-db_v4_2023-08-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
+        "url": "http://localhost:4566/testbucket/grype/databases/vulnerability-db_v4_2023-08-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
         "version": 4
       }
     ],
@@ -96,7 +96,7 @@
       {
         "built": "2023-08-08T01:33:25Z",
         "checksum": "sha256:00014c5c33e7a6561afc51d9e6171b3adf9cec39c2ad3c3946676227a04917d6",
-        "url": "https://testbucket/grype/databases/vulnerability-db_v5_2023-08-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
+        "url": "http://localhost:4566/testbucket/grype/databases/vulnerability-db_v5_2023-08-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
         "version": 5
       }
     ]

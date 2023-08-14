@@ -28,9 +28,13 @@ def listing_entries_dbs_in_s3(  # noqa: PLR0913
     s3_path: str,
     suffixes: set[str] | None = None,
     max_age: int = MAX_DB_AGE,
+    download_url_prefix: str = "",
 ) -> Generator[listing.Entry, None, None]:
     if not suffixes:
         suffixes = DB_SUFFIXES
+
+    if not download_url_prefix:
+        raise ValueError("download_url_prefix must be specified")
 
     # generate metadata from each downloaded archive and add to the listing file
     for basename in basenames:
@@ -62,7 +66,7 @@ def listing_entries_dbs_in_s3(  # noqa: PLR0913
             meta = metadata.from_archive(path=local_path)
 
             # create a new listing entry and add it to the listing
-            url = "https://{}".format("/".join([s3_bucket, s3_path, basename]))
+            url = f"{download_url_prefix}/{s3_path}/{basename}"
             url = urlunparse(urlparse(url))  # normalize the url
 
             yield listing.Entry(

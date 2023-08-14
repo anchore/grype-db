@@ -1,0 +1,7 @@
+data: !include include.d/data.yaml
+
+grype-db: !include include.d/grype-db-local-build.yaml
+
+distribution: !include include.d/distribution-production.yaml
+
+validate: !include include.d/validate.yaml
