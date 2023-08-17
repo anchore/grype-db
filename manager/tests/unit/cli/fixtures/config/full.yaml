@@ -34,9 +34,6 @@ validate:
       unlabeled-matches-threshold: 10.0
       introduced-fns-threshold: 0
 
-    grype:
-      version: latest
-
     syft:
       version: v0.86.1
 

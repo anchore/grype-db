@@ -7,7 +7,6 @@ import click
 import yardstick
 from tabulate import tabulate
 from yardstick.cli import config as ycfg
-from yardstick.tool.grype import Grype
 from yardstick.tool.syft import Syft
 
 from grype_db_manager import db, s3utils
@@ -117,9 +116,7 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
     if cfg.validate.db.syft.version == "latest":
         syft_version = Syft.latest_version_from_github()
 
-    grype_version = cfg.validate.db.grype.version
-    if cfg.validate.db.grype.version == "latest":
-        grype_version = Grype.latest_version_from_github()
+    grype_version = db.schema.grype_version(db_info.schema_version)
 
     result_set = "db-validation"
 

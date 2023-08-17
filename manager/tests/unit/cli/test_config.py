@@ -66,7 +66,6 @@ validate:
       unlabeledMatchesThreshold: 10.0
     grype:
       config: ''
-      version: latest
     images: []
     syft:
       config: ''
@@ -115,7 +114,6 @@ validate:
       unlabeledMatchesThreshold: 10.0
     grype:
       config: ''
-      version: latest
     images:
       - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
     syft:

@@ -42,7 +42,6 @@ class GrypeDB:
 
 @dataclass
 class Grype:
-    version: str = "latest"
     config: str = ""
 
 

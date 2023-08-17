@@ -1,4 +1,4 @@
-from . import listing, metadata
+from . import listing, metadata, schema
 from .listing import Listing
 from .metadata import Metadata
 from .validation import validate
@@ -9,4 +9,5 @@ __all__ = [
     "listing",
     "metadata",
     "validate",
+    "schema",
 ]
