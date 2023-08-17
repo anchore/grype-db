@@ -1,0 +1,8 @@
+data: !include include.d/data.yaml
+
+grype-db: !include include.d/grype-db-local-build.yaml
+
+# note: do not include the distribution config here. It is only used for the production/staging pipelines.
+# distribution: ...
+
+validate: !include include.d/validate.yaml
