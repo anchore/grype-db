@@ -160,10 +160,15 @@ check-licenses:
 ## Testing targets #################################
 
 .PHONY: unit
-unit: ## Run GO unit tests (with coverage)
+unit: ## Run Go unit tests (with coverage)
 	$(call title,Running Go unit tests)
 	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
+
+.PHONY: unit-python
+unit-python: ## Run Python unit tests (with coverage)
+	$(call title,Running Python unit tests)
+	cd manager && poetry run make unit
 
 .PHONY: db-acceptance
 db-acceptance: ## Run acceptance tests

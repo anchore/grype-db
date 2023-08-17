@@ -57,7 +57,7 @@ jobs:
           go: false
 
       - name: Run python unit tests
-        run: cd manager && make unit
+        run: make unit-python
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Build-Snapshot-Artifacts:
