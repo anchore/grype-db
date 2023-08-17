@@ -34,7 +34,8 @@ def listing_entries_dbs_in_s3(  # noqa: PLR0913
         suffixes = DB_SUFFIXES
 
     if not download_url_prefix:
-        raise ValueError("download_url_prefix must be specified")
+        msg = "download_url_prefix must be specified"
+        raise ValueError(msg)
 
     # generate metadata from each downloaded archive and add to the listing file
     for basename in basenames:

@@ -40,8 +40,8 @@ jobs:
         with:
           python: false
 
-      - name: Run unit tests
-        run: make unit-go
+      - name: Run go unit tests
+        run: make unit
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Unit-Test-Python:
@@ -56,8 +56,8 @@ jobs:
         with:
           go: false
 
-      - name: Run unit tests
-        run: make unit-python
+      - name: Run python unit tests
+        run: cd manager && make unit
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Build-Snapshot-Artifacts:

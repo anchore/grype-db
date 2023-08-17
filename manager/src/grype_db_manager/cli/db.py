@@ -6,7 +6,6 @@ import sys
 import click
 import yardstick
 from tabulate import tabulate
-from yardstick import store
 from yardstick.cli import config as ycfg
 from yardstick.tool.grype import Grype
 from yardstick.tool.syft import Syft

@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import logging
 from dataclasses import InitVar, dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yardstick
 from yardstick import artifact, capture, comparison, store
@@ -31,7 +31,9 @@ class GateConfig:
     introduced_fns_threshold: int = 0
 
 
-_default_gate_config = GateConfig()
+# note: a class property on a dataclass will not work since it is not mutable (cannot convey
+# changes to all future instances)
+_default_gate_config = GateConfig()  # noqa: PLW0603
 
 
 def _get_config() -> GateConfig:
@@ -39,7 +41,7 @@ def _get_config() -> GateConfig:
 
 
 def set_default_gate_config(config: GateConfig) -> None:
-    global _default_gate_config
+    global _default_gate_config  # noqa: PLW0603
     _default_gate_config = config
 
 
@@ -338,37 +340,20 @@ def log_validation_results(
     verbosity: int = 0,
 ) -> None:
     if verbosity > 2:
-        image = sorted(stats_by_image_tool_pair.true_positives.keys())[0]
-        tools = sorted(stats_by_image_tool_pair.true_positives[image].keys())
-        table = format.stats_table_by_tool(
-            tools,
-            image,
-            stats_by_image_tool_pair,
-        )
-
-        logging.info(table)
+        _log_stats(stats_by_image_tool_pair)
 
     if verbosity > 1:
-        # show false negative label entries
-        fns_by_id = {}
-        for result in results:
-            comp = comparisons_by_result_id[result.ID]
-            fns = comp.false_negative_label_entries
-            fns_by_id[result.ID] = fns
+        _log_fns(results, comparisons_by_result_id)
 
-        unique_fns_by_id = collections.defaultdict(list)
-        for result_id, fns in fns_by_id.items():
-            for fn in fns:
-                if _is_unique_fn(fns_by_id, result_id, fn):
-                    unique_fns_by_id[result_id].append(fn)
+    _log_differences(relative_comparison, results, comparisons_by_result_id, verbosity)
 
-        for result in results:
-            fns = unique_fns_by_id[result.ID]
-            ret = f"false negatives found uniquely in result={result.ID}: {len(fns)}\n"
-            for label in fns:
-                ret += f"{format.space}    {label.summarize()}\n"
-            logging.info(ret.rstrip())
 
+def _log_differences(
+    relative_comparison: comparison.ByPreservedMatch,
+    results: list[artifact.ScanResult],
+    comparisons_by_result_id: dict[str, list[comparison.AgainstLabels]],
+    verbosity: int,
+) -> None:
     latest_release_tool, current_tool = guess_tool_orientation([r.config.tool for r in results])
 
     table, diffs = format.match_differences_table(
@@ -386,7 +371,41 @@ def log_validation_results(
             logging.info(f"match differences found between tooling: {diffs}")
 
 
-def _is_unique_fn(fns_by_id, result_id, fn):
+def _log_stats(stats_by_image_tool_pair: comparison.ImageToolLabelStats) -> None:
+    image = sorted(stats_by_image_tool_pair.true_positives.keys())[0]
+    tools = sorted(stats_by_image_tool_pair.true_positives[image].keys())
+    table = format.stats_table_by_tool(
+        tools,
+        image,
+        stats_by_image_tool_pair,
+    )
+
+    logging.info(table)
+
+
+def _log_fns(results: list[artifact.ScanResult], comparisons_by_result_id: dict[str, list[comparison.AgainstLabels]]) -> None:
+    # show false negative label entries
+    fns_by_id = {}
+    for result in results:
+        comp = comparisons_by_result_id[result.ID]
+        fns = comp.false_negative_label_entries
+        fns_by_id[result.ID] = fns
+
+    unique_fns_by_id = collections.defaultdict(list)
+    for result_id, fns in fns_by_id.items():
+        for fn in fns:
+            if _is_unique_fn(fns_by_id, result_id, fn):
+                unique_fns_by_id[result_id].append(fn)
+
+    for result in results:
+        fns = unique_fns_by_id[result.ID]
+        ret = f"false negatives found uniquely in result={result.ID}: {len(fns)}\n"
+        for label in fns:
+            ret += f"{format.space}    {label.summarize()}\n"
+        logging.info(ret.rstrip())
+
+
+def _is_unique_fn(fns_by_id: dict[str, set[str]], result_id: str, fn: Any) -> bool:
     for other_result_id, other_fns in fns_by_id.items():
         if other_result_id == result_id:
             continue
