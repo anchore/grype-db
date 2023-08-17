@@ -9,5 +9,7 @@ This is a rough outline of the DB release process using this tool
 grype-db-manager -v db build-and-upload --schema-version #
 
 # recreate the DB listing file from the current S3 state and upload it
+# note: this requires having your AWS credentials configured
 grype-db-manager listing update
 ```
+
