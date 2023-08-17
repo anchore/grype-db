@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
-BOLD=$(tput bold)
-RESET=$(tput sgr0)
+BOLD=$(tput -T linux bold)
+RESET=$(tput -T linux sgr0)
 
 function title() {
   echo "${BOLD}$1${RESET}"
