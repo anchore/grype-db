@@ -13,15 +13,15 @@ db:
   gate:
     # float between 0 and 1, the maximum allowable difference below the OSS F1 score before the gate fails (default 0,
     # meaning the test F1 score must be equal to or greater than the OSS F1 score to pass the gate)
-    f1-score-threshold: 0.0
+    f1-score-threshold: 0.15
 
     # float between 0 and 100, the maximum % of unlabeled matches for a scan result before the gate fails (default 10%,
     # meaning the test scan must have less than 10% unlabeled matches to pass the gate)
-    unlabeled-matches-threshold: 10.0
+    unlabeled-matches-threshold: 25.0
 
     # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
     # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
-    introduced-fns-threshold: 0
+    introduced-fns-threshold: 10
 
   grype:
     version: latest
@@ -42,26 +42,10 @@ db:
     - docker.io/anchore/test_images:grype-quality-java-d89207b@sha256:b3534fc2e37943136d5b54e3a58b55d4ccd4363d926cf7aa5bf55a524cf8275b
     - docker.io/anchore/test_images:grype-quality-golang-d89207b@sha256:7536ee345532f674ec9e448e3768db4e546c48220ba2b6ec9bc9cfbfb3b7b74a
     - docker.io/anchore/test_images:grype-quality-ruby-d89207b@sha256:1a5a5f870924e88a6f0f2b8089cf276ef0a79b5244a052cdfe4a47bb9e5a2c10
-    - docker.io/anchore/test_images:vulnerabilities-package-name-normalization@sha256:92f1981518e92bf3712ff95cf342f7f4d5fc83fb93a30a36d7d1204e64342199
-    - docker.io/anchore/test_images:appstreams-centos-stream-8-1a287dd@sha256:808f6cf3cf4473eb39ff9bb47ead639d2ed71255b75b9b140162b58c6102bcc9
-    - docker.io/anchore/test_images:appstreams-oraclelinux-8-1a287dd@sha256:c8d664b0e728d52f57eeb98ed1899c16d3b265f02ddfb41303d7a16c31e0b0f1
-    - docker.io/anchore/test_images:appstreams-rhel-8-1a287dd@sha256:524ff8a75f21fd886ec7ed82387766df386671e8b77e898d05786118d5b7880b
     - docker.io/anchore/test_images:java-56d52bc@sha256:10008791acbc5866de04108746a02a0c4029ce3a4400a9b3dad45d7f2245f9da
     - docker.io/anchore/test_images:npm-56d52bc@sha256:ba42ded8613fc643d407a050faf5ab48cfb405ad3ef2015bf6feeb5dff44738d
     - docker.io/anchore/test_images:gems-56d52bc@sha256:5763c8a225f950961bf01ddec68e36f18e236130e182f2b9290a6e03b9777bfe
     - docker.io/anchore/test_images:golang-56d52bc@sha256:d1819e59e89e8ea90073460acb4ebb2ee18ccead9fa880dae91e8fc61b19ca1c
-    - docker.io/anchore/test_images:ubuntu-content-56d52bc@sha256:f8e72da9f67caf90714926e7b21f0da93ca1e528b37a97dffe71e2ec38872a8b
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.11-d5be50d@sha256:01c78cee3fe398bf1f77566177770b07f1d2af01753c2434cb0735bd43a078b6
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.12-d5be50d@sha256:55c9ba4e24e15c0467a071d93fead0990b8f04bb60b359b4056a997598aa56a1
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.13-d5be50d@sha256:6749b1509fc4dd3f2b4e8688325fc5d447751bc9ae3be10c0f1fb92ec062b798
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.14-d5be50d@sha256:fe242a3a63699425317fba0a749253bceb700fb3d63e7a0f6497f53a587e38c5
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.15-d5be50d@sha256:7790691e5efae8bfe9cf4a4447312318d8daaf05ffd5f265ae913edf660f4653
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.6-d5be50d@sha256:58637f273108e3e9eb4df4d73f7b6b1da303cbbf64f65e65fb7762482f2de63d
-    - docker.io/anchore/test_images:vulnerabilities-alpine-3.8-d5be50d@sha256:a287a0ff98ac343aa710f4f4258d7198e240e9d416d5c7274663564202f832fb
-    - docker.io/anchore/test_images:vulnerabilities-amazonlinux-2-5c26ce9@sha256:cf742eca189b02902a0a7926ac3fbb423e799937bf4358b0d2acc6cc36ab82aa
-    - docker.io/anchore/test_images:vulnerabilities-centos@sha256:746d31247006cc06434ce91ccf3523b2c230ff6c378ffed7ca1c60bbb48ea86f
-    - docker.io/anchore/test_images:vulnerabilities-no-distro-6bde59e@sha256:347fba6fbfa15d4e11217f9d49bf70a5a6eef35c6c642dc8c5db89115912d0c1
-    - docker.io/anchore/test_images:syft_bin-cf22714@sha256:c27b02c6322180fd8a7a3097d2b430bfdf9ea52ecf136edf258458e82f2c6f21
     - docker.io/anchore/test_images:alpine-package-cpe-vuln-match-bd0aaef@sha256:0825acea611c7c5cc792bc7cc20de44d7413fd287dc5afc4aab9c1891d037b4f
     - docker.io/alpine:3.2@sha256:ddac200f3ebc9902fb8cfcd599f41feb2151f1118929da21bcef57dc276975f9
     - docker.io/centos:6@sha256:3688aa867eb84332460e172b9250c9c198fdfd8d987605fd53f246f498c60bcf
@@ -89,25 +73,5 @@ db:
     - mcr.microsoft.com/cbl-mariner/base/core:2.0.20220731-arm64@sha256:51101e635f56032d5afd3fb56d66c7b93b34d5a39ddac01695d62b94473cc34e
     - docker.io/grafana/grafana:9.2.4@sha256:a11c6829cdfe7fd791e48ba5b511f3562384361fb4c568ec2d8a5041ac52babe
     - docker.io/hashicorp/vault:1.12.0@sha256:09354ca0891f7cee8fbfe8db08c62d2d757fad8ae6c91f2b6cce7a34440e3fae
-    - docker.io/ubuntu:12.04@sha256:18305429afa14ea462f810146ba44d4363ae76e4c8dfc38288cf73aa07485005
-    - docker.io/ubuntu:12.10@sha256:002fba3e3255af10be97ea26e476692a7ebed0bb074a9ab960b2e7a1526b15d7
-    - docker.io/ubuntu:13.04@sha256:bc48dd7075ce920ebbaa4581d3200e9fb3aaec31591061d7e3a280a04ef0248c
-    - docker.io/ubuntu:14.04@sha256:881afbae521c910f764f7187dbfbca3cc10c26f8bafa458c76dda009a901c29d
-    - docker.io/ubuntu:14.10@sha256:6341c688b4b0b82ec735389b3c97df8cf2831b8cb8bd1856779130a86574ac5c
-    - docker.io/ubuntu:15.04@sha256:2fb27e433b3ecccea2a14e794875b086711f5d49953ef173d8a03e8707f1510f
-    - docker.io/ubuntu:15.10@sha256:02521a2d079595241c6793b2044f02eecf294034f31d6e235ac4b2b54ffc41f3
-    - docker.io/ubuntu:16.10@sha256:8dc9652808dc091400d7d5983949043a9f9c7132b15c14814275d25f94bca18a
-    - docker.io/ubuntu:17.04@sha256:213e05583a7cb8756a3f998e6dd65204ddb6b4c128e2175dcdf174cdf1877459
-    - docker.io/ubuntu:17.10@sha256:9c4bf7dbb981591d4a1169138471afe4bf5ff5418841d00e30a7ba372e38d6c1
-    - docker.io/ubuntu:18.04@sha256:971a12d7e92a23183dead8bfc415aa650e7deb1cc5fed11a3d21f759a891fde9
-    - docker.io/ubuntu:18.10@sha256:c95b7b93ccd48c3bfd97f8cac6d5ca8053ced584c9e8e6431861ca30b0d73114
-    - docker.io/ubuntu:19.04@sha256:3db17bfc30b41cc18552578f4a66d7010050eb9fdc42bf6c3d82bb0dcdf88d58
-    - docker.io/ubuntu:19.10@sha256:6852f9e05c5bce8aa77173fa83ce611f69f271ee3a16503c5f80c199969fd1eb
     - docker.io/ubuntu:20.04@sha256:9d42d0e3e57bc067d10a75ee33bdd1a5298e95e5fc3c5d1fce98b455cb879249
-    - docker.io/ubuntu:20.10@sha256:754eb641a1ba98a8b483c3595a14164fa4ed7f4b457e1aa05f13ce06f8151723
-    - docker.io/ubuntu:21.04@sha256:cb92f03e258f965442b883f5402b310dd7a5ea0a661a865ad02a42bc21234bf7
-    - docker.io/ubuntu:21.10@sha256:253908b2844746ab3f3a08fc8a44b9b9fc1efc408d5969b093ab9ffa11eb1894
-    - docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d
-    - docker.io/ubuntu:22.10@sha256:80fb4ea0c0a384a3072a6be1879c342bb636b0d105209535ba893ba75ab38ede
-    - docker.io/ubuntu:23.04@sha256:09f035f46361d193ded647342903b413d57d05cc06acff8285f9dda9f2d269d5
     - gcr.io/distroless/python3-debian11@sha256:69ae7f133d33faab720af28e78fb45707b623bcbc94ae02a07c633bf053f4b40

@@ -31,17 +31,25 @@ class GateConfig:
     introduced_fns_threshold: int = 0
 
 
+_default_gate_config = GateConfig()
+
+
+def _get_config() -> GateConfig:
+    return _default_gate_config
+
+
+def set_default_gate_config(config: GateConfig) -> None:
+    global _default_gate_config
+    _default_gate_config = config
+
+
 @dataclass
 class Gate:
     label_comparisons: InitVar[list[comparison.AgainstLabels] | None]
     label_comparison_stats: InitVar[comparison.ImageToolLabelStats | None]
 
     reasons: list[str] = field(default_factory=list)
-    config: GateConfig = field(default_factory=GateConfig)
-
-    @classmethod
-    def set_default_config(cls, config: GateConfig) -> None:
-        cls.config = config
+    config: GateConfig = field(default_factory=_get_config)
 
     def __post_init__(
         self,
@@ -146,7 +154,9 @@ def validate(  # noqa: PLR0913
 
     result_set_obj = store.result_set.load(name=result_set)
     images = sorted({s.config.image for s in result_set_obj.state})
+    logging.info("loading labels...")
     label_entries = store.labels.load_for_image(images, year_max_limit=cfg.default_max_year)
+    # label_collection = artifact.LabelEntryCollection(label_entries)
 
     lines = [f"result-set: {result_set}", f"labels: {len(label_entries)}", f"max-cve-year: {cfg.default_max_year}"]
     banner = f"validating db={db_uuid}\n{format.treeify(lines)}"
@@ -167,6 +177,7 @@ def validate(  # noqa: PLR0913
             cfg,
             descriptions=[s.config.path for s in result_states],
             verbosity=verbosity,
+            # label_entries=label_collection.for_image(image),
             label_entries=label_entries,
         )
         ret.append(gate)
@@ -326,7 +337,7 @@ def log_validation_results(
     stats_by_image_tool_pair: comparison.ImageToolLabelStats,
     verbosity: int = 0,
 ) -> None:
-    if verbosity > 1:
+    if verbosity > 2:
         image = sorted(stats_by_image_tool_pair.true_positives.keys())[0]
         tools = sorted(stats_by_image_tool_pair.true_positives[image].keys())
         table = format.stats_table_by_tool(
@@ -337,12 +348,23 @@ def log_validation_results(
 
         logging.info(table)
 
-    if verbosity > 2:
+    if verbosity > 1:
         # show false negative label entries
+        fns_by_id = {}
         for result in results:
             comp = comparisons_by_result_id[result.ID]
             fns = comp.false_negative_label_entries
-            ret = f"false negative matches found in result={result.ID}: {len(fns)}\n"
+            fns_by_id[result.ID] = fns
+
+        unique_fns_by_id = collections.defaultdict(list)
+        for result_id, fns in fns_by_id.items():
+            for fn in fns:
+                if _is_unique_fn(fns_by_id, result_id, fn):
+                    unique_fns_by_id[result_id].append(fn)
+
+        for result in results:
+            fns = unique_fns_by_id[result.ID]
+            ret = f"false negatives found uniquely in result={result.ID}: {len(fns)}\n"
             for label in fns:
                 ret += f"{format.space}    {label.summarize()}\n"
             logging.info(ret.rstrip())
@@ -362,6 +384,15 @@ def log_validation_results(
             logging.info(f"match differences found between tooling:\n{table}")
         else:
             logging.info(f"match differences found between tooling: {diffs}")
+
+
+def _is_unique_fn(fns_by_id, result_id, fn):
+    for other_result_id, other_fns in fns_by_id.items():
+        if other_result_id == result_id:
+            continue
+        if fn in other_fns:
+            return False
+    return True
 
 
 def guess_tool_orientation(tools: list[str]) -> tuple[str, str]:

@@ -241,10 +241,10 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
 
     if wire_values:
         # wire up the gate configuration so any gates created will use values from the application config
-        db.validation.Gate.set_default_config(cfg.validate.db.gate)
+        db.validation.set_default_gate_config(cfg.validate.db.gate)
         gate_instance = db.validation.Gate(None, None)
         if gate_instance.config != cfg.validate.db.gate:
-            msg = "failed to set default gate config"
+            msg = f"failed to set default gate config: {gate_instance.config} != {cfg.validate.db.gate}"
             raise ValueError(msg)
 
         # setup the endpoint url and region for all s3 calls

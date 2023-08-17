@@ -114,8 +114,13 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
     # we do this to resolve to a specific version of each tool in the request configuration
-    syft = Syft.install(version=cfg.validate.db.syft.version, within_path=store.tool.install_base(name="syft"))
-    grype = Grype.install(version=cfg.validate.db.grype.version, within_path=store.tool.install_base(name="grype"))
+    syft_version = cfg.validate.db.syft.version
+    if cfg.validate.db.syft.version == "latest":
+        syft_version = Syft.latest_version_from_github()
+
+    grype_version = cfg.validate.db.grype.version
+    if cfg.validate.db.grype.version == "latest":
+        grype_version = Grype.latest_version_from_github()
 
     result_set = "db-validation"
 
@@ -132,18 +137,18 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
                             name="syft",
                             produces="SBOM",
                             refresh=False,
-                            version=syft.version_detail,
+                            version=syft_version,
                         ),
                         ycfg.Tool(
                             label="custom-db",
                             name="grype",
                             takes="SBOM",
-                            version=grype.version_detail + f"+import-db={db_info.archive_path}",
+                            version=grype_version + f"+import-db={db_info.archive_path}",
                         ),
                         ycfg.Tool(
                             name="grype",
                             takes="SBOM",
-                            version=grype.version_detail,
+                            version=grype_version,
                         ),
                     ],
                 ),
