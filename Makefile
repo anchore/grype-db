@@ -173,7 +173,7 @@ unit-python: ## Run Python unit tests (with coverage)
 .PHONY: db-acceptance
 db-acceptance: ## Run acceptance tests
 	$(call title,"Running DB acceptance tests (schema=$(schema))")
-	./test/db/acceptance.sh $(schema)
+	poetry run ./test/db/acceptance.sh $(schema)
 
 .PHONY: cli
 cli: cli-go cli-python ## Run all CLI tests
