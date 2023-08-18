@@ -276,7 +276,7 @@ for all supported schema versions and making them available to the public. The p
    discoverable via `grype db download` yet (this is what the listing file update will do).
 
 
-3**update-listing**: Generate and upload a new listing file to S3 based on the existing listing file and newly
+3. **update-listing**: Generate and upload a new listing file to S3 based on the existing listing file and newly
    discovered DB archives already uploaded to S3.
 
    ```bash
