@@ -9,7 +9,7 @@ from tabulate import tabulate
 from yardstick.cli import config as ycfg
 
 from grype_db_manager import db, s3utils
-from grype_db_manager.cli import config
+from grype_db_manager.cli import config, error
 from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
 
@@ -165,7 +165,10 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
 @click.option("--ttl-seconds", "-t", default=DEFAULT_TTL_SECONDS, help="the TTL for the uploaded DB (should be relatively high)")
 @click.argument("db-uuid")
 @click.pass_obj
+@error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
+    s3utils.check_credentials()
+
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
 
@@ -190,6 +193,7 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 @click.option("--skip-validate", is_flag=True, help="skip validation of the DB")
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.pass_context
+@error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def build_and_upload_db(
     ctx: click.core.Context,
     schema_version: str,
@@ -197,14 +201,19 @@ def build_and_upload_db(
     dry_run: bool,
     verbosity: bool,
 ) -> None:
-    if skip_validate:
+    if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
+    else:
+        s3utils.check_credentials()
 
     click.echo(f"{Format.BOLD}Building DB for schema v{schema_version}{Format.RESET}")
     db_uuid = ctx.invoke(build_db, schema_version=schema_version)
 
-    click.echo(f"{Format.BOLD}Validating DB {db_uuid!r}{Format.RESET}")
-    ctx.invoke(validate_db, db_uuid=db_uuid, verbosity=verbosity)
+    if skip_validate:
+        click.echo(f"{Format.ITALIC}Skipping validation of DB {db_uuid!r}{Format.RESET}")
+    else:
+        click.echo(f"{Format.BOLD}Validating DB {db_uuid!r}{Format.RESET}")
+        ctx.invoke(validate_db, db_uuid=db_uuid, verbosity=verbosity)
 
     if not dry_run:
         click.echo(f"{Format.BOLD}Uploading DB {db_uuid!r}{Format.RESET}")

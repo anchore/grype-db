@@ -20,9 +20,6 @@ on:
 
 env:
   CGO_ENABLED: "0"
-  AWS_BUCKET: toolbox-data.anchore.io
-  AWS_BUCKET_PATH: grype/databases
-  AWS_DEFAULT_REGION: us-west-2
   SLACK_NOTIFICATIONS: true
 
 jobs:

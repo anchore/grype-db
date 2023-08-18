@@ -123,3 +123,16 @@ def get_matching_s3_objects(
 def get_matching_s3_keys(bucket: str, prefix: str = "", suffix: str = "") -> Iterable[str]:
     for obj in get_matching_s3_objects(bucket, prefix, suffix):
         yield obj["Key"]
+
+
+class CredentialsError(Exception):
+    pass
+
+
+def check_credentials() -> None:
+    sts = boto3.client("sts")
+    try:
+        sts.get_caller_identity()
+    except Exception as e:
+        msg = f"AWS credentials not found or invalid: {e}"
+        raise CredentialsError(msg) from e
