@@ -7,7 +7,6 @@ import click
 import yardstick
 from tabulate import tabulate
 from yardstick.cli import config as ycfg
-from yardstick.tool.syft import Syft
 
 from grype_db_manager import db, s3utils
 from grype_db_manager.cli import config
@@ -111,11 +110,6 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
-    # we do this to resolve to a specific version of each tool in the request configuration
-    syft_version = cfg.validate.db.syft.version
-    if cfg.validate.db.syft.version == "latest":
-        syft_version = Syft.latest_version_from_github()
-
     grype_version = db.schema.grype_version(db_info.schema_version)
 
     result_set = "db-validation"
@@ -130,20 +124,12 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
                     images=images,
                     tools=[
                         ycfg.Tool(
-                            name="syft",
-                            produces="SBOM",
-                            refresh=False,
-                            version=syft_version,
-                        ),
-                        ycfg.Tool(
                             label="custom-db",
                             name="grype",
-                            takes="SBOM",
                             version=grype_version + f"+import-db={db_info.archive_path}",
                         ),
                         ycfg.Tool(
                             name="grype",
-                            takes="SBOM",
                             version=grype_version,
                         ),
                     ],

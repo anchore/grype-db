@@ -67,9 +67,6 @@ validate:
     grype:
       config: ''
     images: []
-    syft:
-      config: ''
-      version: latest
   listing:
     image: null
     minimumPackages: null
@@ -116,9 +113,6 @@ validate:
       config: ''
     images:
       - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
-    syft:
-      config: ''
-      version: v0.86.1
   listing:
     image: centos:8.2.2004
     minimumPackages: 85

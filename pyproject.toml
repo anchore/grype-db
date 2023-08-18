@@ -146,3 +146,6 @@ ignore = [
 extend-exclude = [
   "**/tests/**",
 ]
+
+[tool.ruff.pylint]
+max-args = 8

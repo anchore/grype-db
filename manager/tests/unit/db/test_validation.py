@@ -59,12 +59,6 @@ bad_db_info = _partial_db_info("bad-checksum")
             id="missing-grype-request",
         ),
         pytest.param(
-            "missing-syft-request",
-            expected_db_info,
-            True,
-            id="missing-syft-request",
-        ),
-        pytest.param(
             "unfulfilled-request",
             expected_db_info,
             True,

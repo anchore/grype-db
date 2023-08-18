@@ -34,8 +34,5 @@ validate:
       unlabeled-matches-threshold: 10.0
       introduced-fns-threshold: 0
 
-    syft:
-      version: v0.86.1
-
     images:
       - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880

@@ -65,7 +65,7 @@
         "refresh": true
       },
       "config": {
-        "image_repo": "docker.io/anchore/test_images",
+        "image_repo": "docker.io/anchore/bogus",
         "image_digest": "sha256:f56164678054e5eb59ab838367373a49df723b324617b1ba6de775749d7f91d4",
         "tool_name": "grype",
         "tool_version": "v0.65.1",

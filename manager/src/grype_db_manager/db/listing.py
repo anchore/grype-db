@@ -226,7 +226,7 @@ def _http_server(directory: str) -> Iterator[str]:
         pass
 
 
-def _smoke_test(  # noqa: PLR0913
+def _smoke_test(
     schema_version: str,
     listing_url: str,
     image: str,

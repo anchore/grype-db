@@ -46,16 +46,9 @@ class Grype:
 
 
 @dataclass
-class Syft:
-    version: str = "latest"
-    config: str = ""
-
-
-@dataclass
 class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
-    syft: Syft = field(default_factory=Syft)
     default_max_year: int = 2021
     gate: db.validation.GateConfig = field(default_factory=db.validation.GateConfig)
 

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 import yardstick
 from yardstick import artifact, capture, comparison, store
 
-from grype_db_manager import grypedb, sbom
+from grype_db_manager import grypedb
 from grype_db_manager.db import format
 from grype_db_manager.db.format import Format
 
@@ -134,7 +134,7 @@ def not_empty(value: list[str | None]) -> list[str]:
     return [v for v in value if v is not None]
 
 
-def validate(  # noqa: PLR0913
+def validate(
     cfg: ycfg.Application,
     result_set: str,
     db_uuid: str,
@@ -195,8 +195,6 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
     dbm = grypedb.DBManager(root_dir=root_dir)
     db_info = dbm.get_db_info(db_uuid)
 
-    sbom.download(cfg=cfg, result_set=result_set)
-
     request_images = cfg.result_sets[result_set].images()
     is_stale = _is_result_set_stale(
         request_images=request_images,
@@ -211,7 +209,7 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
         logging.info(f"skipping grype capture for result-set={result_set} (already exists)")
 
 
-def _is_result_set_stale(  # noqa: C901, PLR0911, PLR0912
+def _is_result_set_stale(
     request_images: list[str],
     result_set: str,
     db_info: grypedb.DBInfo,
@@ -223,6 +221,49 @@ def _is_result_set_stale(  # noqa: C901, PLR0911, PLR0912
         logging.warning(f"result-set does not exist: {e}")
         return True
 
+    if not result_set_object:
+        logging.warning("result-set does is empty")
+        return True
+
+    if _is_db_checksums_stale(result_set_object, db_info):
+        return True
+
+    if _is_result_set_consistent(result_set_object, request_images):
+        return True
+
+    return False
+
+
+def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_images: list[str]) -> bool:
+    # all requests should have configs...
+    requests_with_no_configs = [s.request for s in result_set_object.state if not s.config]
+    if requests_with_no_configs:
+        logging.warning(f"result-set has unfulfilled requests ({len(requests_with_no_configs)} missing results)")
+        return True
+
+    grype_requests_by_image = collections.defaultdict(list)
+    for s in result_set_object.state:
+        if s.config and "grype" in s.config.tool:
+            grype_requests_by_image[s.config.full_image].append(s.request)
+
+    missing_grype_requests = [
+        image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2
+    ]
+
+    if missing_grype_requests:
+        logging.warning(f"result-set has missing grype requests: {missing_grype_requests}")
+        return True
+
+    grype_config_images = {s.config.full_image for s in result_set_object.state if s.config and "grype" in s.config.tool_name}
+    mismatched_images = set(request_images) != set(grype_config_images)
+    if mismatched_images:
+        logging.warning("result-set has mismatched image sets")
+        return True
+
+    return False
+
+
+def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grypedb.DBInfo) -> bool:
     # all existing requests should be for the same db we are validating...
     db_checksums = {
         s.config.detail.get("db", {}).get("checksum", "")
@@ -242,49 +283,6 @@ def _is_result_set_stale(  # noqa: C901, PLR0911, PLR0912
         logging.warning(
             f"result-set was captured for a different db: expected={db_info.db_checksum} actual={next(iter(db_checksums))}",
         )
-        return True
-
-    if not result_set_object:
-        logging.warning("result-set does is empty")
-        return True
-
-    # all images in each config for syft and grype should match all images referenced in requests
-    syft_config_images = {s.config.full_image for s in result_set_object.state if s.config and "syft" in s.config.tool_name}
-    grype_config_images = {s.config.full_image for s in result_set_object.state if s.config and "grype" in s.config.tool_name}
-    mismatched_images = set(request_images) != set(syft_config_images) or set(request_images) != set(grype_config_images)
-    if mismatched_images:
-        logging.warning("result-set has mismatched image sets")
-        return True
-
-    # all requests should have configs...
-    requests_with_no_configs = [s.request for s in result_set_object.state if not s.config]
-    if requests_with_no_configs:
-        logging.warning(f"result-set has unfulfilled requests ({len(requests_with_no_configs)} missing results)")
-        return True
-
-    # make certain that all images have 1 syft request and 2 grype requests...
-    syft_requests_by_image = collections.defaultdict(list)
-    for s in result_set_object.state:
-        if s.config and "syft" in s.config.tool:
-            syft_requests_by_image[s.config.full_image].append(s.request)
-
-    missing_syft_requests = [image for image in request_images if image not in syft_requests_by_image]
-
-    if missing_syft_requests:
-        logging.warning(f"result-set has missing syft requests: {missing_syft_requests}")
-        return True
-
-    grype_requests_by_image = collections.defaultdict(list)
-    for s in result_set_object.state:
-        if s.config and "grype" in s.config.tool:
-            grype_requests_by_image[s.config.full_image].append(s.request)
-
-    missing_grype_requests = [
-        image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2
-    ]
-
-    if missing_grype_requests:
-        logging.warning(f"result-set has missing grype requests: {missing_grype_requests}")
         return True
 
     return False

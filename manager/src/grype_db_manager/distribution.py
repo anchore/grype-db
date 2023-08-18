@@ -21,7 +21,7 @@ MAX_DB_AGE = 120  # ~4 months in days
 MINIMUM_DB_COUNT = MAX_DB_AGE  # number of db entries per schema
 
 
-def listing_entries_dbs_in_s3(  # noqa: PLR0913
+def listing_entries_dbs_in_s3(
     basenames: set[str],
     paths_by_basename: dict[str, str],
     s3_bucket: str,
