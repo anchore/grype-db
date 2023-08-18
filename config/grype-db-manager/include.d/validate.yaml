@@ -57,4 +57,3 @@ db:
     - ghcr.io/chainguard-images/scanner-test@sha256:59bddc101fba0c45d5c093575c6bc5bfee7f0e46ff127e6bb4e5acaaafb525f9
     - mcr.microsoft.com/cbl-mariner/base/core:2.0.20220731-arm64@sha256:51101e635f56032d5afd3fb56d66c7b93b34d5a39ddac01695d62b94473cc34e
     - docker.io/ubuntu:20.04@sha256:9d42d0e3e57bc067d10a75ee33bdd1a5298e95e5fc3c5d1fce98b455cb879249
-    - gcr.io/distroless/python3-debian11@sha256:69ae7f133d33faab720af28e78fb45707b623bcbc94ae02a07c633bf053f4b40
