@@ -75,7 +75,7 @@ def build_db(cfg: config.Application, schema_version: int) -> str:
 @click.argument("db-uuid")
 @click.pass_obj
 def show_db(cfg: config.Application, db_uuid: str) -> None:
-    db_manager = DBManager(root_dir=cfg.root)
+    db_manager = DBManager(root_dir=cfg.data.root)
     db_info = db_manager.get_db_info(db_uuid=db_uuid)
 
     d = db_info.__dict__

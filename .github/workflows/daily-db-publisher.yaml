@@ -80,7 +80,7 @@ jobs:
         run: make download-all-provider-cache
 
       - name: Generate and upload DB (schema ${{ matrix.schema-version }})
-        run: poetry run grype-db-manager -c ./config/grype-db-manager/db-publisher-production.yaml db build-and-upload --schema-version ${{ matrix.schema-version }}
+        run: poetry run grype-db-manager -c ./config/grype-db-manager/publish-production.yaml db build-and-upload --schema-version ${{ matrix.schema-version }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
@@ -118,7 +118,7 @@ jobs:
         uses: ./.github/actions/bootstrap
 
       - name: Publish listing file
-        run: poetry run grype-db-manager -c ./config/grype-db-manager/db-publisher-production.yaml listing update
+        run: poetry run grype-db-manager -c ./config/grype-db-manager/publish-production.yaml listing update
         env:
             AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
