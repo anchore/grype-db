@@ -3,6 +3,10 @@
 . utils.sh
 
 title "Starting workflow 2: validate DB"
+# this test uses raw vunnel data to create a DB from scratch and see if it passes validation. There are different sets
+# of labels to trigger a failing validation as well as passing validations under other non-ideal conditions.
+# ultimately it is up to unit tests to fully exercise the validation logic, but this test is a good sanity check
+# that the data needed for validations is wired up correctly.
 
 header "Setup: create the DB"
 make clean-manager

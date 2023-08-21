@@ -3,6 +3,9 @@
 . utils.sh
 
 title "Starting workflow 3: update the listing file"
+# this uses real, already-built DBs (from the production workflow) to exercise the listing file update logic.
+# an S3 mock is used to upload a set of DBs and to generate a new listing file from. The uploaded listing file
+# is then used by grype to download the correct DB and run a scan.
 
 # note: these credentials / configurations must match the ones used in s3-mock/setup.py and .grype-db-manager.yaml
 export AWS_ACCESS_KEY_ID="test"

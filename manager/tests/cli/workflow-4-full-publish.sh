@@ -3,6 +3,9 @@
 . utils.sh
 
 title "Starting workflow 4: full publish workflow"
+# this test exercises the full publish workflow, by building and validating a new DB from raw vunnel data,
+# uploading the DB to an S3 mock, updating and upload the listing file, and then using the updated listing file
+# in a grype scan.
 
 # note: these credentials / configurations must match the ones used in s3-mock/setup.py and .grype-db-manager.yaml
 export AWS_ACCESS_KEY_ID="test"
@@ -23,6 +26,9 @@ BIN_DIR="./bin"
 rm -rf $BIN_DIR
 
 curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $BIN_DIR $GRYPE_VERSION
+
+make clean-manager
+make cli-test-data/vunnel/oracle
 
 pushd s3-mock
 docker-compose up -d
