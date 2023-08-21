@@ -38,7 +38,7 @@ jobs:
   update-provider:
     name: "Update provider"
     needs: discover-providers
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -84,7 +84,7 @@ jobs:
 
   aggregate-cache:
     name: "Aggregate provider cache"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     if: ${{ always() }}
     needs:
       - update-provider

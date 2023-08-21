@@ -54,7 +54,7 @@ jobs:
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
     needs: discover-schema-versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
@@ -112,7 +112,7 @@ jobs:
 
     name: "Publish listing file"
     needs: generate-and-publish-dbs
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     steps:
 
       - uses: actions/checkout@v3

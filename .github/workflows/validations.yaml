@@ -108,7 +108,7 @@ jobs:
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
