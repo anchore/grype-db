@@ -2,7 +2,7 @@
 
 . utils.sh
 
-title "Starting workflow 3: update the listing file (dry-run)"
+title "Starting workflow 3: update the listing file"
 
 # note: these credentials / configurations must match the ones used in s3-mock/setup.py and .grype-db-manager.yaml
 export AWS_ACCESS_KEY_ID="test"
@@ -11,9 +11,13 @@ export AWS_REGION="us-west-2"
 
 GRYPE_VERSION="v0.65.0"
 
-curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b bin $GRYPE_VERSION
-
 set -e
+
+BIN_DIR="./bin"
+
+rm -rf $BIN_DIR
+
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $BIN_DIR $GRYPE_VERSION
 
 pushd s3-mock
 docker-compose up -d
@@ -35,7 +39,7 @@ assert_contains $(last_stdout_file) "listing.json uploaded to s3://testbucket/gr
 
 # check if grype works with this updated listing file
 export GRYPE_DB_UPDATE_URL="http://localhost:4566/testbucket/grype/databases/listing.json"
-export GRYPE_DB_CACHE_DIR="./bin"
+export GRYPE_DB_CACHE_DIR=$BIN_DIR
 
 run bin/grype db list
 

@@ -16,9 +16,13 @@ SCHEMA_VERSION="5"
 export GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION=$GRYPE_VERSION
 export GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION=$SCHEMA_VERSION
 
-curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b bin $GRYPE_VERSION
-
 set -e
+
+BIN_DIR="./bin"
+
+rm -rf $BIN_DIR
+
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $BIN_DIR $GRYPE_VERSION
 
 pushd s3-mock
 docker-compose up -d

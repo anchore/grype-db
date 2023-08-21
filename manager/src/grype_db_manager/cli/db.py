@@ -193,8 +193,8 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 @click.option("--dry-run", "-d", is_flag=True, help="do not upload the DB to S3")
 @click.option("--skip-validate", is_flag=True, help="skip validation of the DB")
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
-@click.pass_context
 @click.pass_obj
+@click.pass_context
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def build_and_upload_db(
     ctx: click.core.Context,

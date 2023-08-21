@@ -147,8 +147,8 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
 @click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
-@click.pass_context
 @click.pass_obj
+@click.pass_context
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool) -> None:
     if dry_run:
