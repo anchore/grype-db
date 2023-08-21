@@ -25,22 +25,12 @@ assert_contains $(last_stderr_file) "current indeterminate matches % is greater 
 
 
 #############################################
-header "Case 2: pass DB validation (half tp/fp)"
+header "Case 2: pass DB validation"
 
 make clean-yardstick-labels
-echo "installing half-tp-half-fp-labels"
-cp -a ./fixtures/half-tp-half-fp-labels/* ./cli-test-data/yardstick/labels/
-
-run grype-db-manager db validate $DB_ID
-assert_contains $(last_stdout_file) "Validation passed"
-
-
-#############################################
-header "Case 2: pass DB validation (all tp)"
-
-make clean-yardstick-labels
-echo "installing all-tp-labels"
-cp -a ./fixtures/all-tp-labels/* ./cli-test-data/yardstick/labels/
+echo "installing labels"
+# use the real labels
+cp -a ../../../data/yardstick/labels/docker.io+oraclelinux* ./cli-test-data/yardstick/labels/
 
 run grype-db-manager db validate $DB_ID
 assert_contains $(last_stdout_file) "Validation passed"
