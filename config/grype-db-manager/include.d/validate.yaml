@@ -23,12 +23,6 @@ db:
     # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
     introduced-fns-threshold: 10
 
-  syft:
-    # this should match the version of syft that is referenced in vulnerability-match-labels on the main branch.
-    # Ultimately this is tied to the version of the syft used when building the OCI SBOM cache images hosted on ghcr.io,
-    # not the version of syft referenced in the vulnerability-match-labels submodule.
-    version: v0.86.1
-
   # these are the set of images we will capture grype scans for using an existing published DB and a newly build DB.
   # The assumption is that they should perform similarly or the new DB should perform better. We do allow for the new
   # DB to perform slightly worse based on the above gate configuration, but not by much. These images are NOT
