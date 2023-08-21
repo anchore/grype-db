@@ -167,7 +167,8 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
 @click.pass_obj
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
-    s3utils.check_credentials()
+    if cfg.assert_aws_credentials:
+        s3utils.check_credentials()
 
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
@@ -193,9 +194,11 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 @click.option("--skip-validate", is_flag=True, help="skip validation of the DB")
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.pass_context
+@click.pass_obj
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def build_and_upload_db(
     ctx: click.core.Context,
+    cfg: config.Application,
     schema_version: str,
     skip_validate: bool,
     dry_run: bool,
@@ -203,7 +206,7 @@ def build_and_upload_db(
 ) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
-    else:
+    elif cfg.assert_aws_credentials:
         s3utils.check_credentials()
 
     click.echo(f"{Format.BOLD}Building DB for schema v{schema_version}{Format.RESET}")

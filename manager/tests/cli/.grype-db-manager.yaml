@@ -1,3 +1,7 @@
+# calling sts:GetCallerIdentity is a cheap way to assert that the credentials are valid
+# however, with localstack we need to disable this check since we don't have a valid token to begin with
+assert_aws_credentials: false
+
 data:
   root: cli-test-data/manager
   vunnel-root: cli-test-data/vunnel

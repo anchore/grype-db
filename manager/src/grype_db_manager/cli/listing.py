@@ -126,7 +126,8 @@ def validate_listing(cfg: config.Application, listing_file: str) -> None:
 @click.pass_obj
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int) -> None:
-    s3utils.check_credentials()
+    if cfg.assert_aws_credentials:
+        s3utils.check_credentials()
 
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
@@ -147,11 +148,12 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
 @click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
 @click.pass_context
+@click.pass_obj
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
-def update_listing(ctx: click.core.Context, dry_run: bool) -> None:
+def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
-    else:
+    elif cfg.assert_aws_credentials:
         s3utils.check_credentials()
 
     click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")

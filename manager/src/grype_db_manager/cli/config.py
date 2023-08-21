@@ -106,6 +106,7 @@ class Application:
     grype_db: GrypeDB = field(default_factory=GrypeDB)
     validate: Validate = field(default_factory=Validate)
     distribution: Distribution = field(default_factory=Distribution)
+    assert_aws_credentials: bool = True
 
     def to_yaml(self) -> str:
         # noqa
