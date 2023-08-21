@@ -41,6 +41,7 @@ def test_load_default():
     actual = cfg.to_yaml()
 
     expected = """\
+assertAwsCredentials: true
 data:
   root: .grype-db-manager
   vunnelRoot: data/vunnel
@@ -86,6 +87,7 @@ def test_load(test_dir_path):
     actual = cfg.to_yaml()
 
     expected = """\
+assertAwsCredentials: false
 data:
   root: data/manager
   vunnelRoot: data/vunnel

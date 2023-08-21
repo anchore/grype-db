@@ -1,3 +1,5 @@
+assertAwsCredentials: false
+
 data:
   root: data/manager
   vunnel-root: data/vunnel
