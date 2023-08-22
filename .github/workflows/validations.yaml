@@ -119,6 +119,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
+        with:
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -169,6 +171,8 @@ jobs:
     runs-on: ubuntu-22.04-4core-16gb
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap

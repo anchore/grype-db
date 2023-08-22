@@ -53,6 +53,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
+        with:
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
