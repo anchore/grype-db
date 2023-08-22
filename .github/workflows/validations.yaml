@@ -167,7 +167,6 @@ jobs:
   Cli-Python:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
     name: "CLI tests (Python)"
-    needs: [Unit-Test-Python]
     runs-on: ubuntu-22.04-4core-16gb
     steps:
       - uses: actions/checkout@v3
