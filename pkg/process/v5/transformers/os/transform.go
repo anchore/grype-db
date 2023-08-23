@@ -77,7 +77,7 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                     vulnerability.Vulnerability.Name,
 			PackageQualifiers:      qualifiers,
-			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VersionFormat),
+			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VersionFormat, vulnerability.Vulnerability.Name),
 			VersionFormat:          fixedInEntry.VersionFormat,
 			PackageName:            grypeNamespace.Resolver().Normalize(fixedInEntry.Name),
 			Namespace:              entryNamespace,
@@ -187,7 +187,28 @@ func getRelatedVulnerabilities(entry unmarshal.OSVulnerability) (vulns []grypeDB
 	return vulns
 }
 
-func enforceConstraint(constraint, format string) string {
+func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
+	constraint := fmt.Sprintf("< %s", fixVersion)
+
+	if strings.HasPrefix(vulnerabilityID, "ALASKERNEL-") {
+		// Amazon advisories of the form ALASKERNEL-5.4-2023-048 should be interpreted as only applying to
+		// the 5.4.x kernel line since Amazon issue a separate advisory per affected line, thus the constraint
+		// should be >= 5.4, < {fix version}.  In the future the vunnel schema for OS vulns should be enhanced
+		// to emit actual constraints rather than fixed-in entries (tracked in https://github.com/anchore/vunnel/issues/266)
+		// at which point this workaround in grype-db can be removed.
+
+		components := strings.Split(vulnerabilityID, "-")
+
+		if len(components) == 4 {
+			base := components[1]
+			constraint = fmt.Sprintf(">= %s, < %s", base, fixVersion)
+		}
+	}
+
+	return constraint
+}
+
+func enforceConstraint(constraint, format, vulnerabilityID string) string {
 	constraint = common.CleanConstraint(constraint)
 	if len(constraint) == 0 {
 		return ""
@@ -197,6 +218,6 @@ func enforceConstraint(constraint, format string) string {
 		return common.EnforceSemVerConstraint(constraint)
 	default:
 		// the passed constraint is a fixed version
-		return fmt.Sprintf("< %s", constraint)
+		return deriveConstraintFromFix(constraint, vulnerabilityID)
 	}
 }
