@@ -1,0 +1,3369 @@
+{
+ "matches": [
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9239",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9239.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9239.html",
+     "https://linux.oracle.com/cve/CVE-2022-24407.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.1.23-15.0.1.el6_6.2"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-24407",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-24407",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "http://www.openwall.com/lists/oss-security/2022/02/23/4",
+      "https://github.com/cyrusimap/cyrus-sasl/blob/fdcd13ceaef8de684dc69008011fa865c5b4a3ac/docsrc/sasl/release-notes/2.1/index.rst",
+      "https://lists.debian.org/debian-lts-announce/2022/03/msg00002.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/4FIXU75Q6RBNK6UYM7MQ3TCFGXR7AX4U/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/H26R4SMGM3WHXX4XYNNJB4YGFIL5UNF4/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/ZZC6BMPI3V3MC2IGNLN377ETUWO7QBIH/",
+      "https://security.netapp.com/advisory/ntap-20221007-0003/",
+      "https://www.cyrusimap.org/sasl/sasl/release-notes/2.1/index.html#new-in-2-1-28",
+      "https://www.debian.org/security/2022/dsa-5087",
+      "https://www.oracle.com/security-alerts/cpujul2022.html"
+     ],
+     "description": "In Cyrus SASL 2.1.17 through 2.1.27 before 2.1.28, plugins/sql.c does not escape the password for a SQL INSERT or UPDATE statement.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:S/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 6.5,
+        "exploitabilityScore": 8,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.8,
+        "exploitabilityScore": 2.8,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "cyrus-sasl",
+       "version": "2.1.23-15.el6_6.2"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.1.23-15.0.1.el6_6.2 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9239"
+     }
+    },
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "cyrus-sasl-lib",
+       "version": "0:2.1.23-15.el6_6.2"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.1.23-15.0.1.el6_6.2 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9239"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "f6a800e831276a37",
+    "name": "cyrus-sasl-lib",
+    "version": "2.1.23-15.el6_6.2",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "BSD"
+    ],
+    "cpes": [
+     "cpe:2.3:a:cyrus-sasl-lib:cyrus-sasl-lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus-sasl-lib:cyrus_sasl_lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus_sasl_lib:cyrus-sasl-lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus_sasl_lib:cyrus_sasl_lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:cyrus-sasl-lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:cyrus_sasl_lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus-sasl:cyrus-sasl-lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus-sasl:cyrus_sasl_lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus_sasl:cyrus-sasl-lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus_sasl:cyrus_sasl_lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus:cyrus-sasl-lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*",
+     "cpe:2.3:a:cyrus:cyrus_sasl_lib:2.1.23-15.el6_6.2:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/cyrus-sasl-lib@2.1.23-15.el6_6.2?arch=x86_64&upstream=cyrus-sasl-2.1.23-15.el6_6.2.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "cyrus-sasl",
+      "version": "2.1.23-15.el6_6.2"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9314",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9314.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9314.html",
+     "https://linux.oracle.com/cve/CVE-2021-25217.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "12:4.1.1-63.P1.0.2.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2021-25217",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-25217",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "http://www.openwall.com/lists/oss-security/2021/05/26/6",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-406691.pdf",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-637483.pdf",
+      "https://kb.isc.org/docs/cve-2021-25217",
+      "https://lists.debian.org/debian-lts-announce/2021/06/msg00002.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/5QI4DYC7J4BGHEW3NH4XHMWTHYC36UK4/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Z2LB42JWIV4M4WDNXX5VGIP26FEYWKIF/",
+      "https://security.gentoo.org/glsa/202305-22",
+      "https://security.netapp.com/advisory/ntap-20220325-0011/"
+     ],
+     "description": "In ISC DHCP 4.1-ESV-R1 -> 4.1-ESV-R16, ISC DHCP 4.4.0 -> 4.4.2 (Other branches of ISC DHCP (i.e., releases in the 4.0.x series or lower and releases in the 4.3.x series) are beyond their End-of-Life (EOL) and no longer supported by ISC. From inspection it is clear that the defect is also present in releases from those series, but they have not been officially tested for the vulnerability), The outcome of encountering the defect while reading a lease that will trigger it varies, according to: the component being affected (i.e., dhclient or dhcpd) whether the package was built as a 32-bit or 64-bit binary whether the compiler flag -fstack-protection-strong was used when compiling In dhclient, ISC has not successfully reproduced the error on a 64-bit system. However, on a 32-bit system it is possible to cause dhclient to crash when reading an improper lease, which could cause network connectivity problems for an affected system due to the absence of a running DHCP client process. In dhcpd, when run in DHCPv4 or DHCPv6 mode: if the dhcpd server binary was built for a 32-bit architecture AND the -fstack-protection-strong flag was specified to the compiler, dhcpd may exit while parsing a lease file containing an objectionable lease, resulting in lack of service to clients. Additionally, the offending lease and the lease immediately following it in the lease database may be improperly deleted. if the dhcpd server binary was built for a 64-bit architecture OR if the -fstack-protection-strong compiler flag was NOT specified, the crash will not occur, but it is possible for the offending lease and the lease which immediately followed it to be improperly deleted.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:A/AC:L/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 3.3,
+        "exploitabilityScore": 6.5,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "security-officer@isc.org",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.4,
+        "exploitabilityScore": 2.8,
+        "impactScore": 4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Secondary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.4,
+        "exploitabilityScore": 2.8,
+        "impactScore": 4
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "dhcp",
+       "version": "4.1.1-63.P1.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 12:4.1.1-63.P1.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9314"
+     }
+    },
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "dhclient",
+       "version": "12:4.1.1-63.P1.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 12:4.1.1-63.P1.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9314"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "e1dd48a4902bde30",
+    "name": "dhclient",
+    "version": "12:4.1.1-63.P1.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "ISC"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:dhclient:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhclient:dhclient:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/dhclient@4.1.1-63.P1.0.1.el6_10?arch=x86_64&epoch=12&upstream=dhcp-4.1.1-63.P1.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "dhcp",
+      "version": "4.1.1-63.P1.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": 12,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9314",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9314.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9314.html",
+     "https://linux.oracle.com/cve/CVE-2021-25217.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "12:4.1.1-63.P1.0.2.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2021-25217",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-25217",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "http://www.openwall.com/lists/oss-security/2021/05/26/6",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-406691.pdf",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-637483.pdf",
+      "https://kb.isc.org/docs/cve-2021-25217",
+      "https://lists.debian.org/debian-lts-announce/2021/06/msg00002.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/5QI4DYC7J4BGHEW3NH4XHMWTHYC36UK4/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Z2LB42JWIV4M4WDNXX5VGIP26FEYWKIF/",
+      "https://security.gentoo.org/glsa/202305-22",
+      "https://security.netapp.com/advisory/ntap-20220325-0011/"
+     ],
+     "description": "In ISC DHCP 4.1-ESV-R1 -> 4.1-ESV-R16, ISC DHCP 4.4.0 -> 4.4.2 (Other branches of ISC DHCP (i.e., releases in the 4.0.x series or lower and releases in the 4.3.x series) are beyond their End-of-Life (EOL) and no longer supported by ISC. From inspection it is clear that the defect is also present in releases from those series, but they have not been officially tested for the vulnerability), The outcome of encountering the defect while reading a lease that will trigger it varies, according to: the component being affected (i.e., dhclient or dhcpd) whether the package was built as a 32-bit or 64-bit binary whether the compiler flag -fstack-protection-strong was used when compiling In dhclient, ISC has not successfully reproduced the error on a 64-bit system. However, on a 32-bit system it is possible to cause dhclient to crash when reading an improper lease, which could cause network connectivity problems for an affected system due to the absence of a running DHCP client process. In dhcpd, when run in DHCPv4 or DHCPv6 mode: if the dhcpd server binary was built for a 32-bit architecture AND the -fstack-protection-strong flag was specified to the compiler, dhcpd may exit while parsing a lease file containing an objectionable lease, resulting in lack of service to clients. Additionally, the offending lease and the lease immediately following it in the lease database may be improperly deleted. if the dhcpd server binary was built for a 64-bit architecture OR if the -fstack-protection-strong compiler flag was NOT specified, the crash will not occur, but it is possible for the offending lease and the lease which immediately followed it to be improperly deleted.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:A/AC:L/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 3.3,
+        "exploitabilityScore": 6.5,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "security-officer@isc.org",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.4,
+        "exploitabilityScore": 2.8,
+        "impactScore": 4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Secondary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.4,
+        "exploitabilityScore": 2.8,
+        "impactScore": 4
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "dhcp-common",
+       "version": "12:4.1.1-63.P1.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 12:4.1.1-63.P1.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9314"
+     }
+    },
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "dhcp",
+       "version": "4.1.1-63.P1.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 12:4.1.1-63.P1.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9314"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "957542e0d2b50671",
+    "name": "dhcp-common",
+    "version": "12:4.1.1-63.P1.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "ISC"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:dhcp-common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:dhcp_common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhcp-common:dhcp-common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhcp-common:dhcp_common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhcp_common:dhcp-common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhcp_common:dhcp_common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhcp:dhcp-common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:dhcp:dhcp_common:12:4.1.1-63.P1.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/dhcp-common@4.1.1-63.P1.0.1.el6_10?arch=x86_64&epoch=12&upstream=dhcp-4.1.1-63.P1.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "dhcp",
+      "version": "4.1.1-63.P1.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": 12,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9962",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9962.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9962.html",
+     "https://linux.oracle.com/cve/CVE-2022-40674.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.0.1-13.0.2.el6_8"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-40674",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-40674",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://github.com/libexpat/libexpat/pull/629",
+      "https://github.com/libexpat/libexpat/pull/640",
+      "https://lists.debian.org/debian-lts-announce/2022/09/msg00029.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GSVZN3IJ6OCPSJL7AEX3ZHSHAHFOGESK/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/J2IGJNHFV53PYST7VQV3T4NHVYAMXA36/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LQB6FJAM5YQ35SF5B2MN25Y2FX56EOEZ/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WE2ZKEPGFCZ7R6DRVH3K6RBJPT42ZBEG/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/XCGBVQQ47URGJAZWHCISHDWF6QBTV2LE/",
+      "https://security.gentoo.org/glsa/202209-24",
+      "https://security.gentoo.org/glsa/202211-06",
+      "https://security.netapp.com/advisory/ntap-20221028-0008/",
+      "https://www.debian.org/security/2022/dsa-5236"
+     ],
+     "description": "libexpat before 2.4.9 has a use-after-free in the doContent function in xmlparse.c.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.1,
+        "exploitabilityScore": 2.2,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "expat",
+       "version": "0:2.0.1-13.el6_8"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.0.1-13.0.2.el6_8 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9962"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "5a74806368614b1c",
+    "name": "expat",
+    "version": "2.0.1-13.el6_8",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MIT"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:expat:2.0.1-13.el6_8:*:*:*:*:*:*:*",
+     "cpe:2.3:a:expat:expat:2.0.1-13.el6_8:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/expat@2.0.1-13.el6_8?arch=x86_64&upstream=expat-2.0.1-13.el6_8.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9359",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9359.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9359.html",
+     "https://linux.oracle.com/cve/CVE-2022-25235.html",
+     "https://linux.oracle.com/cve/CVE-2022-25236.html",
+     "https://linux.oracle.com/cve/CVE-2022-25315.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.0.1-13.0.1.el6_8"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-25235",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-25235",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "http://www.openwall.com/lists/oss-security/2022/02/19/1",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-484086.pdf",
+      "https://github.com/libexpat/libexpat/pull/562",
+      "https://lists.debian.org/debian-lts-announce/2022/03/msg00007.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/3UFRBA3UQVIQKXTBUQXDWQOVWNBKLERU/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Y27XO3JMKAOMQZVPS3B4MJGEAHCZF5OM/",
+      "https://security.gentoo.org/glsa/202209-24",
+      "https://security.netapp.com/advisory/ntap-20220303-0008/",
+      "https://www.debian.org/security/2022/dsa-5085",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html"
+     ],
+     "description": "xmltok_impl.c in Expat (aka libexpat) before 2.4.5 lacks certain validation of encoding, such as checks for whether a UTF-8 character is valid in a certain context.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 10,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    },
+    {
+     "id": "CVE-2022-25236",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-25236",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "http://packetstormsecurity.com/files/167238/Zoom-XMPP-Stanza-Smuggling-Remote-Code-Execution.html",
+      "http://www.openwall.com/lists/oss-security/2022/02/19/1",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-484086.pdf",
+      "https://github.com/libexpat/libexpat/pull/561",
+      "https://lists.debian.org/debian-lts-announce/2022/03/msg00007.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/3UFRBA3UQVIQKXTBUQXDWQOVWNBKLERU/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Y27XO3JMKAOMQZVPS3B4MJGEAHCZF5OM/",
+      "https://security.gentoo.org/glsa/202209-24",
+      "https://security.netapp.com/advisory/ntap-20220303-0008/",
+      "https://www.debian.org/security/2022/dsa-5085",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html"
+     ],
+     "description": "xmlparse.c in Expat (aka libexpat) before 2.4.5 allows attackers to insert namespace-separator characters into namespace URIs.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 10,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    },
+    {
+     "id": "CVE-2022-25315",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-25315",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "http://www.openwall.com/lists/oss-security/2022/02/19/1",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-484086.pdf",
+      "https://github.com/libexpat/libexpat/pull/559",
+      "https://lists.debian.org/debian-lts-announce/2022/03/msg00007.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/3UFRBA3UQVIQKXTBUQXDWQOVWNBKLERU/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Y27XO3JMKAOMQZVPS3B4MJGEAHCZF5OM/",
+      "https://security.gentoo.org/glsa/202209-24",
+      "https://security.netapp.com/advisory/ntap-20220303-0008/",
+      "https://www.debian.org/security/2022/dsa-5085",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html"
+     ],
+     "description": "In Expat (aka libexpat) before 2.4.5, there is an integer overflow in storeRawNames.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 10,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "expat",
+       "version": "0:2.0.1-13.el6_8"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.0.1-13.0.1.el6_8 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9359"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "5a74806368614b1c",
+    "name": "expat",
+    "version": "2.0.1-13.el6_8",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MIT"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:expat:2.0.1-13.el6_8:*:*:*:*:*:*:*",
+     "cpe:2.3:a:expat:expat:2.0.1-13.el6_8:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/expat@2.0.1-13.el6_8?arch=x86_64&upstream=expat-2.0.1-13.el6_8.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9318",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9318.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9318.html",
+     "https://linux.oracle.com/cve/CVE-2021-27219.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.28.8-10.0.1.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2021-27219",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-27219",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://gitlab.gnome.org/GNOME/glib/-/issues/2319",
+      "https://lists.apache.org/thread.html/rf9fa47ab66495c78bb4120b0754dd9531ca2ff0430f6685ac9b07772@%3Cdev.mina.apache.org%3E",
+      "https://lists.debian.org/debian-lts-announce/2022/06/msg00006.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/2REA7RVKN7ZHRLJOEGBRQKJIPZQPAELZ/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/JJMPNDO4GDVURYQFYKFOWY5HAF4FTEPN/",
+      "https://security.gentoo.org/glsa/202107-13",
+      "https://security.netapp.com/advisory/ntap-20210319-0004/"
+     ],
+     "description": "An issue was discovered in GNOME GLib before 2.66.6 and 2.67.x before 2.67.3. The function g_bytes_new has an integer overflow on 64-bit platforms due to an implicit cast from 64 bits to 32 bits. The overflow could potentially lead to memory corruption.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 5,
+        "exploitabilityScore": 10,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "glib2",
+       "version": "0:2.28.8-10.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.28.8-10.0.1.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9318"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "d59a0adcabdc6aa1",
+    "name": "glib2",
+    "version": "2.28.8-10.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "LGPLv2+"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:glib2:2.28.8-10.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:glib2:glib2:2.28.8-10.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/glib2@2.28.8-10.el6?arch=x86_64&upstream=glib2-2.28.8-10.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12104",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12104.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12104.html",
+     "https://linux.oracle.com/cve/CVE-2022-42898.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.10.3-65.0.1.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-42898",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-42898",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://bugzilla.samba.org/show_bug.cgi?id=15203",
+      "https://github.com/heimdal/heimdal/security/advisories/GHSA-64mq-fvfj-5x3c",
+      "https://github.com/krb5/krb5/commit/ea92d2f0fcceb54a70910fa32e9a0d7a5afc3583",
+      "https://security.netapp.com/advisory/ntap-20230216-0008/",
+      "https://security.netapp.com/advisory/ntap-20230223-0001/",
+      "https://web.mit.edu/kerberos/advisories/",
+      "https://web.mit.edu/kerberos/krb5-1.19/",
+      "https://web.mit.edu/kerberos/krb5-1.20/README-1.20.1.txt",
+      "https://www.samba.org/samba/security/CVE-2022-42898.html"
+     ],
+     "description": "PAC parsing in MIT Kerberos 5 (aka krb5) before 1.19.4 and 1.20.x before 1.20.1 has integer overflows that may lead to remote code execution (in KDC, kadmind, or a GSS or Kerberos application server) on 32-bit platforms (which have a resultant heap-based buffer overflow), and cause a denial of service on other platforms. This occurs in krb5_pac_parse in lib/krb5/krb/pac.c. Heimdal before 7.7.1 has \"a similar bug.\"",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.8,
+        "exploitabilityScore": 2.8,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "krb5-libs",
+       "version": "0:1.10.3-65.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.10.3-65.0.1.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12104"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "ea5504dfaaf7a4c5",
+    "name": "krb5-libs",
+    "version": "1.10.3-65.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MIT"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:krb5-libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:krb5_libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:krb5-libs:krb5-libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:krb5-libs:krb5_libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:krb5_libs:krb5-libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:krb5_libs:krb5_libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:krb5:krb5-libs:1.10.3-65.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:krb5:krb5_libs:1.10.3-65.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/krb5-libs@1.10.3-65.el6?arch=x86_64&upstream=krb5-1.10.3-65.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "krb5",
+      "version": "1.10.3-65.el6"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9591",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9591.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "Critical",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9591.html",
+     "https://linux.oracle.com/cve/CVE-2021-43527.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.2.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2021-43527",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-43527",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=1737470",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-594438.pdf",
+      "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_68_1_RTM/",
+      "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_73_RTM/",
+      "https://security.gentoo.org/glsa/202212-05",
+      "https://security.netapp.com/advisory/ntap-20211229-0002/",
+      "https://www.mozilla.org/security/advisories/mfsa2021-51/",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html",
+      "https://www.starwindsoftware.com/security/sw-20220802-0001/"
+     ],
+     "description": "NSS (Network Security Services) versions prior to 3.73 or 3.68.1 ESR are vulnerable to a heap overflow when handling DER-encoded DSA or RSA-PSS signatures. Applications using NSS for handling signatures encoded within CMS, S/MIME, PKCS \\#7, or PKCS \\#12 are likely to be impacted. Applications using NSS for certificate validation or other TLS, X.509, OCSP or CRL functionality may be impacted, depending on how they configure NSS. *Note: This vulnerability does NOT impact Mozilla Firefox.* However, email clients and PDF viewers that use NSS for signature verification, such as Thunderbird, LibreOffice, Evolution and Evince are believed to be impacted. This vulnerability affects NSS < 3.73 and NSS < 3.68.1.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 10,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9591"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "085e56b6e14c5d82",
+    "name": "nss",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12238",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+     "https://linux.oracle.com/cve/CVE-2023-0767.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2023-0767",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-0767",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://alas.aws.amazon.com/AL2/ALAS-2023-1992.html",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=1804640",
+      "https://www.mozilla.org/security/advisories/mfsa2023-05/",
+      "https://www.mozilla.org/security/advisories/mfsa2023-06/",
+      "https://www.mozilla.org/security/advisories/mfsa2023-07/"
+     ],
+     "description": "An attacker could construct a PKCS 12 cert bundle in such a way that could allow for arbitrary memory writes via PKCS 12 Safe Bag attributes being mishandled. This vulnerability affects Firefox < 110, Thunderbird < 102.8, and Firefox ESR < 102.8.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.8,
+        "exploitabilityScore": 2.8,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "085e56b6e14c5d82",
+    "name": "nss",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9591",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9591.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "Critical",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9591.html",
+     "https://linux.oracle.com/cve/CVE-2021-43527.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.2.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2021-43527",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-43527",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=1737470",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-594438.pdf",
+      "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_68_1_RTM/",
+      "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_73_RTM/",
+      "https://security.gentoo.org/glsa/202212-05",
+      "https://security.netapp.com/advisory/ntap-20211229-0002/",
+      "https://www.mozilla.org/security/advisories/mfsa2021-51/",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html",
+      "https://www.starwindsoftware.com/security/sw-20220802-0001/"
+     ],
+     "description": "NSS (Network Security Services) versions prior to 3.73 or 3.68.1 ESR are vulnerable to a heap overflow when handling DER-encoded DSA or RSA-PSS signatures. Applications using NSS for handling signatures encoded within CMS, S/MIME, PKCS \\#7, or PKCS \\#12 are likely to be impacted. Applications using NSS for certificate validation or other TLS, X.509, OCSP or CRL functionality may be impacted, depending on how they configure NSS. *Note: This vulnerability does NOT impact Mozilla Firefox.* However, email clients and PDF viewers that use NSS for signature verification, such as Thunderbird, LibreOffice, Evolution and Evince are believed to be impacted. This vulnerability affects NSS < 3.73 and NSS < 3.68.1.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 10,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss-sysinit",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9591"
+     }
+    },
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9591"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "08c8cf4da2122612",
+    "name": "nss-sysinit",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-sysinit:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-sysinit:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_sysinit:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_sysinit:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss-sysinit@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "nss",
+      "version": "3.44.0-7.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12238",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+     "https://linux.oracle.com/cve/CVE-2023-0767.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2023-0767",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-0767",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://alas.aws.amazon.com/AL2/ALAS-2023-1992.html",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=1804640",
+      "https://www.mozilla.org/security/advisories/mfsa2023-05/",
+      "https://www.mozilla.org/security/advisories/mfsa2023-06/",
+      "https://www.mozilla.org/security/advisories/mfsa2023-07/"
+     ],
+     "description": "An attacker could construct a PKCS 12 cert bundle in such a way that could allow for arbitrary memory writes via PKCS 12 Safe Bag attributes being mishandled. This vulnerability affects Firefox < 110, Thunderbird < 102.8, and Firefox ESR < 102.8.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.8,
+        "exploitabilityScore": 2.8,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    },
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss-sysinit",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "08c8cf4da2122612",
+    "name": "nss-sysinit",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-sysinit:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-sysinit:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_sysinit:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_sysinit:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss-sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss_sysinit:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss-sysinit@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "nss",
+      "version": "3.44.0-7.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9591",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9591.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "Critical",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9591.html",
+     "https://linux.oracle.com/cve/CVE-2021-43527.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.2.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2021-43527",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-43527",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=1737470",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-594438.pdf",
+      "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_68_1_RTM/",
+      "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_73_RTM/",
+      "https://security.gentoo.org/glsa/202212-05",
+      "https://security.netapp.com/advisory/ntap-20211229-0002/",
+      "https://www.mozilla.org/security/advisories/mfsa2021-51/",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html",
+      "https://www.starwindsoftware.com/security/sw-20220802-0001/"
+     ],
+     "description": "NSS (Network Security Services) versions prior to 3.73 or 3.68.1 ESR are vulnerable to a heap overflow when handling DER-encoded DSA or RSA-PSS signatures. Applications using NSS for handling signatures encoded within CMS, S/MIME, PKCS \\#7, or PKCS \\#12 are likely to be impacted. Applications using NSS for certificate validation or other TLS, X.509, OCSP or CRL functionality may be impacted, depending on how they configure NSS. *Note: This vulnerability does NOT impact Mozilla Firefox.* However, email clients and PDF viewers that use NSS for signature verification, such as Thunderbird, LibreOffice, Evolution and Evince are believed to be impacted. This vulnerability affects NSS < 3.73 and NSS < 3.68.1.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 10,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss-tools",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9591"
+     }
+    },
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.2.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9591"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "5d161f5b9eb6bc84",
+    "name": "nss-tools",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-tools:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-tools:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_tools:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_tools:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss-tools@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "nss",
+      "version": "3.44.0-7.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12238",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+     "https://linux.oracle.com/cve/CVE-2023-0767.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2023-0767",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-0767",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://alas.aws.amazon.com/AL2/ALAS-2023-1992.html",
+      "https://bugzilla.mozilla.org/show_bug.cgi?id=1804640",
+      "https://www.mozilla.org/security/advisories/mfsa2023-05/",
+      "https://www.mozilla.org/security/advisories/mfsa2023-06/",
+      "https://www.mozilla.org/security/advisories/mfsa2023-07/"
+     ],
+     "description": "An attacker could construct a PKCS 12 cert bundle in such a way that could allow for arbitrary memory writes via PKCS 12 Safe Bag attributes being mishandled. This vulnerability affects Firefox < 110, Thunderbird < 102.8, and Firefox ESR < 102.8.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.8,
+        "exploitabilityScore": 2.8,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss-tools",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    },
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "5d161f5b9eb6bc84",
+    "name": "nss-tools",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-tools:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-tools:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_tools:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_tools:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss-tools@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "nss",
+      "version": "3.44.0-7.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12297",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12297.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12297.html",
+     "https://linux.oracle.com/cve/CVE-2023-0286.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.0.1e-59.0.4.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2023-0286",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-0286",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.6.2-relnotes.txt",
+      "https://ftp.openbsd.org/pub/OpenBSD/patches/7.2/common/018_x509.patch.sig",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=2c6c9d439b484e1ba9830d8454a34fa4f80fdfe9",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=2f7530077e0ef79d98718138716bc51ca0cad658",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=fd2af07dc083a350c959147097003a14a5e8ac4d",
+      "https://www.openssl.org/news/secadv/20230207.txt"
+     ],
+     "description": "There is a type confusion vulnerability relating to X.400 address processing inside an X.509 GeneralName. X.400 addresses were parsed as an ASN1_STRING but the public structure definition for GENERAL_NAME incorrectly specified the type of the x400Address field as ASN1_TYPE. This field is subsequently interpreted by the OpenSSL function GENERAL_NAME_cmp as an ASN1_TYPE rather than an ASN1_STRING. When CRL checking is enabled (i.e. the application sets the X509_V_FLAG_CRL_CHECK flag), this vulnerability may allow an attacker to pass arbitrary pointers to a memcmp call, enabling them to read memory contents or enact a denial of service. In most cases, the attack requires the attacker to provide both the certificate chain and CRL, neither of which need to have a valid signature. If the attacker only controls one of these inputs, the other input must already contain an X.400 address as a CRL distribution point, which is uncommon. As such, this vulnerability is most likely to only affect applications which have implemented their own functionality for retrieving CRLs over a network.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.4,
+        "exploitabilityScore": 2.2,
+        "impactScore": 5.2
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "openssl",
+       "version": "0:1.0.1e-58.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.0.1e-59.0.4.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12297"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "b8bfb2f8aef1c1a0",
+    "name": "openssl",
+    "version": "1.0.1e-58.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "OpenSSL"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:openssl:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/openssl@1.0.1e-58.0.1.el6_10?arch=x86_64&upstream=openssl-1.0.1e-58.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9246",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9246.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9246.html",
+     "https://linux.oracle.com/cve/CVE-2022-0778.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.0.1e-59.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-0778",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-0778",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "http://packetstormsecurity.com/files/167344/OpenSSL-1.0.2-1.1.1-3.0-BN_mod_sqrt-Infinite-Loop.html",
+      "http://seclists.org/fulldisclosure/2022/May/33",
+      "http://seclists.org/fulldisclosure/2022/May/35",
+      "http://seclists.org/fulldisclosure/2022/May/38",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-712929.pdf",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=3118eb64934499d93db3230748a452351d1d9a65",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=a466912611aa6cbdf550cd10601390e587451246",
+      "https://lists.debian.org/debian-lts-announce/2022/03/msg00023.html",
+      "https://lists.debian.org/debian-lts-announce/2022/03/msg00024.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/323SNN6ZX7PRJJWP2BUAFLPUAE42XWLZ/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GDB3GQVJPXJE7X5C5JN6JAA4XUDWD6E6/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/W6K3PR542DXWLEFFMFIDMME4CWMHJRMG/",
+      "https://psirt.global.sonicwall.com/vuln-detail/SNWLID-2022-0002",
+      "https://security.gentoo.org/glsa/202210-02",
+      "https://security.netapp.com/advisory/ntap-20220321-0002/",
+      "https://security.netapp.com/advisory/ntap-20220429-0005/",
+      "https://support.apple.com/kb/HT213255",
+      "https://support.apple.com/kb/HT213256",
+      "https://support.apple.com/kb/HT213257",
+      "https://www.debian.org/security/2022/dsa-5103",
+      "https://www.openssl.org/news/secadv/20220315.txt",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html",
+      "https://www.oracle.com/security-alerts/cpujul2022.html",
+      "https://www.tenable.com/security/tns-2022-06",
+      "https://www.tenable.com/security/tns-2022-07",
+      "https://www.tenable.com/security/tns-2022-08",
+      "https://www.tenable.com/security/tns-2022-09"
+     ],
+     "description": "The BN_mod_sqrt() function, which computes a modular square root, contains a bug that can cause it to loop forever for non-prime moduli. Internally this function is used when parsing certificates that contain elliptic curve public keys in compressed form or explicit elliptic curve parameters with a base point encoded in compressed form. It is possible to trigger the infinite loop by crafting a certificate that has invalid explicit curve parameters. Since certificate parsing happens prior to verification of the certificate signature, any process that parses an externally supplied certificate may thus be subject to a denial of service attack. The infinite loop can also be reached when parsing crafted private keys as they can contain explicit elliptic curve parameters. Thus vulnerable situations include: - TLS clients consuming server certificates - TLS servers consuming client certificates - Hosting providers taking certificates or private keys from customers - Certificate authorities parsing certification requests from subscribers - Anything else which parses ASN.1 elliptic curve parameters Also any other applications that use the BN_mod_sqrt() where the attacker can control the parameter values are vulnerable to this DoS issue. In the OpenSSL 1.0.2 version the public key is not parsed during initial parsing of the certificate which makes it slightly harder to trigger the infinite loop. However any operation which requires the public key from the certificate will trigger the infinite loop. In particular the attacker can use a self-signed certificate to trigger the loop during verification of the certificate signature. This issue affects OpenSSL versions 1.0.2, 1.1.1 and 3.0. It was addressed in the releases of 1.1.1n and 3.0.2 on the 15th March 2022. Fixed in OpenSSL 3.0.2 (Affected 3.0.0,3.0.1). Fixed in OpenSSL 1.1.1n (Affected 1.1.1-1.1.1m). Fixed in OpenSSL 1.0.2zd (Affected 1.0.2-1.0.2zc).",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 5,
+        "exploitabilityScore": 10,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "openssl",
+       "version": "0:1.0.1e-58.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.0.1e-59.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9246"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "b8bfb2f8aef1c1a0",
+    "name": "openssl",
+    "version": "1.0.1e-58.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "OpenSSL"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:openssl:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/openssl@1.0.1e-58.0.1.el6_10?arch=x86_64&upstream=openssl-1.0.1e-58.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9137",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9137.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9137.html",
+     "https://linux.oracle.com/cve/CVE-2020-1971.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.0.1e-59.0.1.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2020-1971",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2020-1971",
+     "namespace": "nvd:cpe",
+     "severity": "Medium",
+     "urls": [
+      "http://www.openwall.com/lists/oss-security/2021/09/14/2",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-389290.pdf",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=2154ab83e14ede338d2ede9bbe5cdfce5d5a6c9e",
+      "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=f960d81215ebf3f65e03d4d5d857fb9b666d6920",
+      "https://kb.pulsesecure.net/articles/Pulse_Security_Advisories/SA44676",
+      "https://lists.apache.org/thread.html/r63c6f2dd363d9b514d0a4bcf624580616a679898cc14c109a49b750c@%3Cdev.tomcat.apache.org%3E",
+      "https://lists.apache.org/thread.html/rbb769f771711fb274e0a4acb1b5911c8aab544a6ac5e8c12d40c5143@%3Ccommits.pulsar.apache.org%3E",
+      "https://lists.debian.org/debian-lts-announce/2020/12/msg00020.html",
+      "https://lists.debian.org/debian-lts-announce/2020/12/msg00021.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/DGSI34Y5LQ5RYXN4M2I5ZQT65LFVDOUU/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PWPSSZNZOBJU2YR6Z4TGHXKYW3YP5QG7/",
+      "https://security.FreeBSD.org/advisories/FreeBSD-SA-20:33.openssl.asc",
+      "https://security.gentoo.org/glsa/202012-13",
+      "https://security.netapp.com/advisory/ntap-20201218-0005/",
+      "https://security.netapp.com/advisory/ntap-20210513-0002/",
+      "https://www.debian.org/security/2020/dsa-4807",
+      "https://www.openssl.org/news/secadv/20201208.txt",
+      "https://www.oracle.com//security-alerts/cpujul2021.html",
+      "https://www.oracle.com/security-alerts/cpuApr2021.html",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html",
+      "https://www.oracle.com/security-alerts/cpujan2021.html",
+      "https://www.oracle.com/security-alerts/cpuoct2021.html",
+      "https://www.tenable.com/security/tns-2020-11",
+      "https://www.tenable.com/security/tns-2021-09",
+      "https://www.tenable.com/security/tns-2021-10"
+     ],
+     "description": "The X.509 GeneralName type is a generic type for representing different types of names. One of those name types is known as EDIPartyName. OpenSSL provides a function GENERAL_NAME_cmp which compares different instances of a GENERAL_NAME to see if they are equal or not. This function behaves incorrectly when both GENERAL_NAMEs contain an EDIPARTYNAME. A NULL pointer dereference and a crash may occur leading to a possible denial of service attack. OpenSSL itself uses the GENERAL_NAME_cmp function for two purposes: 1) Comparing CRL distribution point names between an available CRL and a CRL distribution point embedded in an X509 certificate 2) When verifying that a timestamp response token signer matches the timestamp authority name (exposed via the API functions TS_RESP_verify_response and TS_RESP_verify_token) If an attacker can control both items being compared then that attacker could trigger a crash. For example if the attacker can trick a client or server into checking a malicious certificate against a malicious CRL then this may occur. Note that some applications automatically download CRLs based on a URL embedded in a certificate. This checking happens prior to the signatures on the certificate and CRL being verified. OpenSSL's s_server, s_client and verify tools have support for the \"-crl_download\" option which implements automatic CRL downloading and this attack has been demonstrated to work against those tools. Note that an unrelated bug means that affected versions of OpenSSL cannot parse or construct correct encodings of EDIPARTYNAME. However it is possible to construct a malformed EDIPARTYNAME that OpenSSL's parser will accept and hence trigger this attack. All OpenSSL 1.1.1 and 1.0.2 versions are affected by this issue. Other OpenSSL releases are out of support and have not been checked. Fixed in OpenSSL 1.1.1i (Affected 1.1.1-1.1.1h). Fixed in OpenSSL 1.0.2x (Affected 1.0.2-1.0.2w).",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:M/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 4.3,
+        "exploitabilityScore": 8.6,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 5.9,
+        "exploitabilityScore": 2.2,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "openssl",
+       "version": "0:1.0.1e-58.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.0.1e-59.0.1.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9137"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "b8bfb2f8aef1c1a0",
+    "name": "openssl",
+    "version": "1.0.1e-58.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "OpenSSL"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:openssl:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/openssl@1.0.1e-58.0.1.el6_10?arch=x86_64&upstream=openssl-1.0.1e-58.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "GHSA-p28m-34f6-967q",
+    "dataSource": "https://github.com/advisories/GHSA-p28m-34f6-967q",
+    "namespace": "github:language:python",
+    "severity": "High",
+    "urls": [
+     "https://github.com/advisories/GHSA-p28m-34f6-967q"
+    ],
+    "description": "High severity vulnerability that affects pyopenssl",
+    "cvss": [
+     {
+      "version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "metrics": {
+       "baseScore": 8.1,
+       "exploitabilityScore": 2.2,
+       "impactScore": 5.9
+      },
+      "vendorMetadata": {
+       "base_severity": "High",
+       "status": "N/A"
+      }
+     }
+    ],
+    "fix": {
+     "versions": [
+      "17.5.0"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2018-1000807",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2018-1000807",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00014.html",
+      "https://access.redhat.com/errata/RHSA-2019:0085",
+      "https://github.com/pyca/pyopenssl/pull/723",
+      "https://usn.ubuntu.com/3813-1/"
+     ],
+     "description": "Python Cryptographic Authority pyopenssl version prior to version 17.5.0 contains a CWE-416: Use After Free vulnerability in X509 object handling that can result in Use after free can lead to possible denial of service or remote code execution.. This attack appear to be exploitable via Depends on the calling application and if it retains a reference to the memory.. This vulnerability appears to have been fixed in 17.5.0.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 6.8,
+        "exploitabilityScore": 8.6,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.1,
+        "exploitabilityScore": 2.2,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "python-matcher",
+     "searchedBy": {
+      "language": "python",
+      "namespace": "github:language:python",
+      "package": {
+       "name": "pyOpenSSL",
+       "version": "0.13.1"
+      }
+     },
+     "found": {
+      "versionConstraint": "<17.5.0 (python)",
+      "vulnerabilityID": "GHSA-p28m-34f6-967q"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "6aba4e9eecd585ae",
+    "name": "pyOpenSSL",
+    "version": "0.13.1",
+    "type": "python",
+    "locations": [
+     {
+      "path": "/usr/lib64/python2.6/site-packages/pyOpenSSL-0.13.1-py2.6.egg-info",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "python",
+    "licenses": [
+     "APL2"
+    ],
+    "cpes": [
+     "cpe:2.3:a:jean_paul_calderone_project:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone_project:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone_project:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:pyOpenSSL:0.13.1:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:pypi/pyOpenSSL@0.13.1",
+    "upstreams": []
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "CVE-2018-1000807",
+    "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2018-1000807",
+    "namespace": "nvd:cpe",
+    "severity": "High",
+    "urls": [
+     "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00014.html",
+     "https://access.redhat.com/errata/RHSA-2019:0085",
+     "https://github.com/pyca/pyopenssl/pull/723",
+     "https://usn.ubuntu.com/3813-1/"
+    ],
+    "description": "Python Cryptographic Authority pyopenssl version prior to version 17.5.0 contains a CWE-416: Use After Free vulnerability in X509 object handling that can result in Use after free can lead to possible denial of service or remote code execution.. This attack appear to be exploitable via Depends on the calling application and if it retains a reference to the memory.. This vulnerability appears to have been fixed in 17.5.0.",
+    "cvss": [
+     {
+      "source": "nvd@nist.gov",
+      "type": "Primary",
+      "version": "2.0",
+      "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+      "metrics": {
+       "baseScore": 6.8,
+       "exploitabilityScore": 8.6,
+       "impactScore": 6.4
+      },
+      "vendorMetadata": {}
+     },
+     {
+      "source": "nvd@nist.gov",
+      "type": "Primary",
+      "version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "metrics": {
+       "baseScore": 8.1,
+       "exploitabilityScore": 2.2,
+       "impactScore": 5.9
+      },
+      "vendorMetadata": {}
+     }
+    ],
+    "fix": {
+     "versions": [],
+     "state": "unknown"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "cpe-match",
+     "matcher": "python-matcher",
+     "searchedBy": {
+      "namespace": "nvd:cpe",
+      "cpes": [
+       "cpe:2.3:a:pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*"
+      ],
+      "Package": {
+       "name": "pyOpenSSL",
+       "version": "0.13.1"
+      }
+     },
+     "found": {
+      "vulnerabilityID": "CVE-2018-1000807",
+      "versionConstraint": "< 17.5.0 (unknown)",
+      "cpes": [
+       "cpe:2.3:a:pyopenssl:pyopenssl:*:*:*:*:*:*:*:*"
+      ]
+     }
+    }
+   ],
+   "artifact": {
+    "id": "6aba4e9eecd585ae",
+    "name": "pyOpenSSL",
+    "version": "0.13.1",
+    "type": "python",
+    "locations": [
+     {
+      "path": "/usr/lib64/python2.6/site-packages/pyOpenSSL-0.13.1-py2.6.egg-info",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "python",
+    "licenses": [
+     "APL2"
+    ],
+    "cpes": [
+     "cpe:2.3:a:jean_paul_calderone_project:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone_project:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone_project:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:pyOpenSSL:0.13.1:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:pypi/pyOpenSSL@0.13.1",
+    "upstreams": []
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "GHSA-2rcm-phc9-3945",
+    "dataSource": "https://github.com/advisories/GHSA-2rcm-phc9-3945",
+    "namespace": "github:language:python",
+    "severity": "Medium",
+    "urls": [
+     "https://github.com/advisories/GHSA-2rcm-phc9-3945"
+    ],
+    "description": "Moderate severity vulnerability that affects pyopenssl",
+    "cvss": [
+     {
+      "version": "3.0",
+      "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "metrics": {
+       "baseScore": 5.9,
+       "exploitabilityScore": 2.2,
+       "impactScore": 3.6
+      },
+      "vendorMetadata": {
+       "base_severity": "Medium",
+       "status": "N/A"
+      }
+     }
+    ],
+    "fix": {
+     "versions": [
+      "17.5.0"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2018-1000808",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2018-1000808",
+     "namespace": "nvd:cpe",
+     "severity": "Medium",
+     "urls": [
+      "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00014.html",
+      "https://access.redhat.com/errata/RHSA-2019:0085",
+      "https://github.com/pyca/pyopenssl/pull/723",
+      "https://usn.ubuntu.com/3813-1/"
+     ],
+     "description": "Python Cryptographic Authority pyopenssl version Before 17.5.0 contains a CWE - 401 : Failure to Release Memory Before Removing Last Reference vulnerability in PKCS #12 Store that can result in Denial of service if memory runs low or is exhausted. This attack appear to be exploitable via Depends upon calling application, however it could be as simple as initiating a TLS connection. Anything that would cause the calling application to reload certificates from a PKCS #12 store.. This vulnerability appears to have been fixed in 17.5.0.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:M/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 4.3,
+        "exploitabilityScore": 8.6,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.0",
+       "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 5.9,
+        "exploitabilityScore": 2.2,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "python-matcher",
+     "searchedBy": {
+      "language": "python",
+      "namespace": "github:language:python",
+      "package": {
+       "name": "pyOpenSSL",
+       "version": "0.13.1"
+      }
+     },
+     "found": {
+      "versionConstraint": "<17.5.0 (python)",
+      "vulnerabilityID": "GHSA-2rcm-phc9-3945"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "6aba4e9eecd585ae",
+    "name": "pyOpenSSL",
+    "version": "0.13.1",
+    "type": "python",
+    "locations": [
+     {
+      "path": "/usr/lib64/python2.6/site-packages/pyOpenSSL-0.13.1-py2.6.egg-info",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "python",
+    "licenses": [
+     "APL2"
+    ],
+    "cpes": [
+     "cpe:2.3:a:jean_paul_calderone_project:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone_project:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone_project:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderoneproject:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:jean_paul_calderone:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun_project:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkunproject:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:pyOpenSSL:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:exarkun:pyOpenSSL:0.13.1:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:pyOpenSSL:0.13.1:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:pypi/pyOpenSSL@0.13.1",
+    "upstreams": []
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-3550",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+     "https://linux.oracle.com/cve/CVE-2022-0391.html",
+     "https://linux.oracle.com/cve/CVE-2023-24329.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.6.6-68.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-0391",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-0391",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://bugs.python.org/issue43882",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/CSD2YBXP3ZF44E44QMIIAR5VTO35KTRB/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UDBDBAU6HUPZHISBOARTXZ5GKHF2VH5U/",
+      "https://security.gentoo.org/glsa/202305-02",
+      "https://security.netapp.com/advisory/ntap-20220225-0009/",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html"
+     ],
+     "description": "A flaw was found in Python, specifically within the urllib.parse module. This module helps break Uniform Resource Locator (URL) strings into components. The issue involves how the urlparse method does not sanitize input and allows characters like '\\r' and '\\n' in the URL path. This flaw allows an attacker to input a crafted URL, leading to injection attacks. This flaw affects Python versions prior to 3.10.0b1, 3.9.5, 3.8.11, 3.7.11 and 3.6.14.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:N/I:P/A:N",
+       "metrics": {
+        "baseScore": 5,
+        "exploitabilityScore": 10,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    },
+    {
+     "id": "CVE-2023-24329",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-24329",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://github.com/python/cpython/issues/102153",
+      "https://github.com/python/cpython/pull/99421",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/6PEVICI7YNGGMSL3UCMWGE66QFLATH72/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/DSL6NSOAXWBJJ67XPLSSC74MNKZF3BBO/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/EM2XLZSTXG44TMFXF4E6VTGKR2MQCW3G/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/F2NY75GFDZ5T6YPN44D3VMFT5SUVTOTG/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GR5US3BYILYJ4SKBV6YBNPRUBAL5P2CN/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/H23OSKC6UG6IWOQAUPW74YUHWRWVXJP7/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/JZTLGV2HYFF4AMYJL25VDIGAIHCU7UPA/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LWC4WGXER5P6Q75RFGL7QUTPP3N5JR7T/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/MZEHSXSCMA4WWQKXT6QV7AAR6SWNZ2VP/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/O5SP4RT3RRS434ZS2HQKQJ3VZW7YPKYR/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OHHJHJRLEF3TDT2K3676CAUVRDD4CCMR/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PEUN6T22UJFXR7J5F6UUHCXXPKJ2DVHI/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PURM5CFDABEWAIWZFD2MQ7ZJGCPYSQ44/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Q3J5N24ECS4B6MJDRO6UAYU6GPLYBDCL/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/QRQHN7RWJQJHYP6E5EKESOYP5VDSHZG4/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/RA2MBEEES6L46OD64OBSVUUMGKNGMOWW/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/T4IDB5OAR5Y4UK3HLMZBW4WEL2B7YFMJ/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TZH26JGNZ5XYPZ5SAU3NKSBSPRE5OHTG/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/U2MZOJYGFCB5PPT6AKMAU72N7QOYWLBP/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UONZWLB4QVLQIY5CPDLEUEKH6WX4VQMC/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WTOAUJNDWZDRWVSXJ354AYZYKRMT56HU/",
+      "https://pointernull.com/security/python-url-parse-problem.html",
+      "https://security.netapp.com/advisory/ntap-20230324-0004/"
+     ],
+     "description": "An issue in the urllib.parse component of Python before 3.11.4 allows attackers to bypass blocklisting methods by supplying a URL that starts with blank characters.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "python",
+       "version": "0:2.6.6-68.0.2.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.6.6-68.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-3550"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "9f32045094caf30e",
+    "name": "python",
+    "version": "2.6.6-68.0.2.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "Python"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:python:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/python@2.6.6-68.0.2.el6_10?arch=x86_64&upstream=python-2.6.6-68.0.2.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-3550",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+     "https://linux.oracle.com/cve/CVE-2022-0391.html",
+     "https://linux.oracle.com/cve/CVE-2023-24329.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.6.6-68.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-0391",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-0391",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://bugs.python.org/issue43882",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/CSD2YBXP3ZF44E44QMIIAR5VTO35KTRB/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UDBDBAU6HUPZHISBOARTXZ5GKHF2VH5U/",
+      "https://security.gentoo.org/glsa/202305-02",
+      "https://security.netapp.com/advisory/ntap-20220225-0009/",
+      "https://www.oracle.com/security-alerts/cpuapr2022.html"
+     ],
+     "description": "A flaw was found in Python, specifically within the urllib.parse module. This module helps break Uniform Resource Locator (URL) strings into components. The issue involves how the urlparse method does not sanitize input and allows characters like '\\r' and '\\n' in the URL path. This flaw allows an attacker to input a crafted URL, leading to injection attacks. This flaw affects Python versions prior to 3.10.0b1, 3.9.5, 3.8.11, 3.7.11 and 3.6.14.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:N/I:P/A:N",
+       "metrics": {
+        "baseScore": 5,
+        "exploitabilityScore": 10,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    },
+    {
+     "id": "CVE-2023-24329",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-24329",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://github.com/python/cpython/issues/102153",
+      "https://github.com/python/cpython/pull/99421",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/6PEVICI7YNGGMSL3UCMWGE66QFLATH72/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/DSL6NSOAXWBJJ67XPLSSC74MNKZF3BBO/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/EM2XLZSTXG44TMFXF4E6VTGKR2MQCW3G/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/F2NY75GFDZ5T6YPN44D3VMFT5SUVTOTG/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GR5US3BYILYJ4SKBV6YBNPRUBAL5P2CN/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/H23OSKC6UG6IWOQAUPW74YUHWRWVXJP7/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/JZTLGV2HYFF4AMYJL25VDIGAIHCU7UPA/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LWC4WGXER5P6Q75RFGL7QUTPP3N5JR7T/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/MZEHSXSCMA4WWQKXT6QV7AAR6SWNZ2VP/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/O5SP4RT3RRS434ZS2HQKQJ3VZW7YPKYR/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OHHJHJRLEF3TDT2K3676CAUVRDD4CCMR/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PEUN6T22UJFXR7J5F6UUHCXXPKJ2DVHI/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PURM5CFDABEWAIWZFD2MQ7ZJGCPYSQ44/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/Q3J5N24ECS4B6MJDRO6UAYU6GPLYBDCL/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/QRQHN7RWJQJHYP6E5EKESOYP5VDSHZG4/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/RA2MBEEES6L46OD64OBSVUUMGKNGMOWW/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/T4IDB5OAR5Y4UK3HLMZBW4WEL2B7YFMJ/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TZH26JGNZ5XYPZ5SAU3NKSBSPRE5OHTG/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/U2MZOJYGFCB5PPT6AKMAU72N7QOYWLBP/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UONZWLB4QVLQIY5CPDLEUEKH6WX4VQMC/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WTOAUJNDWZDRWVSXJ354AYZYKRMT56HU/",
+      "https://pointernull.com/security/python-url-parse-problem.html",
+      "https://security.netapp.com/advisory/ntap-20230324-0004/"
+     ],
+     "description": "An issue in the urllib.parse component of Python before 3.11.4 allows attackers to bypass blocklisting methods by supplying a URL that starts with blank characters.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "python",
+       "version": "2.6.6-68.0.2.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.6.6-68.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-3550"
+     }
+    },
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "python-libs",
+       "version": "0:2.6.6-68.0.2.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.6.6-68.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-3550"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "c040d024fc745b0d",
+    "name": "python-libs",
+    "version": "2.6.6-68.0.2.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "Python"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-libs:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-libs:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_libs:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_libs:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/python-libs@2.6.6-68.0.2.el6_10?arch=x86_64&upstream=python-2.6.6-68.0.2.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "python",
+      "version": "2.6.6-68.0.2.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9783",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9783.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9783.html",
+     "https://linux.oracle.com/cve/CVE-2022-24903.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:5.8.10-12.0.2.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-24903",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-24903",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "https://github.com/rsyslog/rsyslog/commit/f211042ecbb472f9d8beb4678a65d272b6f07705",
+      "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-ggw7-xr6h-mmr8",
+      "https://lists.debian.org/debian-lts-announce/2022/05/msg00028.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GMNNXLCU2UORRVSZO24HL4KMVPK5PHVW/",
+      "https://security.netapp.com/advisory/ntap-20221111-0002/",
+      "https://www.debian.org/security/2022/dsa-5150"
+     ],
+     "description": "Rsyslog is a rocket-fast system for log processing. Modules for TCP syslog reception have a potential heap buffer overflow when octet-counted framing is used. This can result in a segfault or some other malfunction. As of our understanding, this vulnerability can not be used for remote code execution. But there may still be a slight chance for experts to do that. The bug occurs when the octet count is read. While there is a check for the maximum number of octets, digits are written to a heap buffer even when the octet count is over the maximum, This can be used to overrun the memory buffer. However, once the sequence of digits stop, no additional characters can be added to the buffer. In our opinion, this makes remote exploits impossible or at least highly complex. Octet-counted framing is one of two potential framing modes. It is relatively uncommon, but enabled by default on receivers. Modules `imtcp`, `imptcp`, `imgssapi`, and `imhttp` are used for regular syslog message reception. It is best practice not to directly expose them to the public. When this practice is followed, the risk is considerably lower. Module `imdiag` is a diagnostics module primarily intended for testbench runs. We do not expect it to be present on any production installation. Octet-counted framing is not very common. Usually, it needs to be specifically enabled at senders. If users do not need it, they can turn it off for the most important modules. This will mitigate the vulnerability.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+       "metrics": {
+        "baseScore": 6.8,
+        "exploitabilityScore": 8.6,
+        "impactScore": 6.4
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.1,
+        "exploitabilityScore": 2.2,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "security-advisories@github.com",
+       "type": "Secondary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 8.1,
+        "exploitabilityScore": 2.2,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "rsyslog",
+       "version": "0:5.8.10-12.0.1.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:5.8.10-12.0.2.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9783"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "be6eda67de6eb161",
+    "name": "rsyslog",
+    "version": "5.8.10-12.0.1.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "(GPLv3+ and ASL 2.0)"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:rsyslog:5.8.10-12.0.1.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:rsyslog:rsyslog:5.8.10-12.0.1.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/rsyslog@5.8.10-12.0.1.el6?arch=x86_64&upstream=rsyslog-5.8.10-12.0.1.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9988",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9988.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9988.html",
+     "https://linux.oracle.com/cve/CVE-2022-37434.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.2.3-29.0.3.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2022-37434",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2022-37434",
+     "namespace": "nvd:cpe",
+     "severity": "Critical",
+     "urls": [
+      "http://seclists.org/fulldisclosure/2022/Oct/37",
+      "http://seclists.org/fulldisclosure/2022/Oct/38",
+      "http://seclists.org/fulldisclosure/2022/Oct/41",
+      "http://seclists.org/fulldisclosure/2022/Oct/42",
+      "http://www.openwall.com/lists/oss-security/2022/08/05/2",
+      "http://www.openwall.com/lists/oss-security/2022/08/09/1",
+      "https://github.com/curl/curl/issues/9271",
+      "https://github.com/ivd38/zlib_overflow",
+      "https://github.com/madler/zlib/blob/21767c654d31d2dccdde4330529775c6c5fd5389/zlib.h#L1062-L1063",
+      "https://github.com/madler/zlib/commit/eff308af425b67093bab25f80f1ae950166bece1",
+      "https://github.com/nodejs/node/blob/75b68c6e4db515f76df73af476eccf382bbcb00a/deps/zlib/inflate.c#L762-L764",
+      "https://lists.debian.org/debian-lts-announce/2022/09/msg00012.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/JWN4VE3JQR4O2SOUS5TXNLANRPMHWV4I/",
+      "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/NMBOJ77A7T7PQCARMDUK75TE6LLESZ3O/",
+      "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/PAVPQNCG3XRLCLNSQRM3KAN5ZFMVXVTY/",
+      "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/X5U7OTKZSHY2I3ZFJSR2SHFHW72RKGDK/",
+      "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YRQAI7H4M4RQZ2IWZUEEXECBE5D56BH2/",
+      "https://security.netapp.com/advisory/ntap-20220901-0005/",
+      "https://security.netapp.com/advisory/ntap-20230427-0007/",
+      "https://support.apple.com/kb/HT213488",
+      "https://support.apple.com/kb/HT213489",
+      "https://support.apple.com/kb/HT213490",
+      "https://support.apple.com/kb/HT213491",
+      "https://support.apple.com/kb/HT213493",
+      "https://support.apple.com/kb/HT213494",
+      "https://www.debian.org/security/2022/dsa-5218"
+     ],
+     "description": "zlib through 1.2.12 has a heap-based buffer over-read or buffer overflow in inflate in inflate.c via a large gzip header extra field. NOTE: only applications that call inflateGetHeader are affected. Some common applications bundle the affected zlib source code but may be unable to call inflateGetHeader (e.g., see the nodejs/node reference).",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+       "metrics": {
+        "baseScore": 9.8,
+        "exploitabilityScore": 3.9,
+        "impactScore": 5.9
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "zlib",
+       "version": "0:1.2.3-29.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.2.3-29.0.3.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9988"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "9fbfc334a6cfb07e",
+    "name": "zlib",
+    "version": "1.2.3-29.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "zlib and Boost"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:zlib:1.2.3-29.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:zlib:zlib:1.2.3-29.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/zlib@1.2.3-29.el6?arch=x86_64&upstream=zlib-1.2.3-29.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9565",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9565.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9565.html",
+     "https://linux.oracle.com/cve/CVE-2018-25032.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.2.3-29.0.1.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [
+    {
+     "id": "CVE-2018-25032",
+     "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2018-25032",
+     "namespace": "nvd:cpe",
+     "severity": "High",
+     "urls": [
+      "http://seclists.org/fulldisclosure/2022/May/33",
+      "http://seclists.org/fulldisclosure/2022/May/35",
+      "http://seclists.org/fulldisclosure/2022/May/38",
+      "http://www.openwall.com/lists/oss-security/2022/03/25/2",
+      "http://www.openwall.com/lists/oss-security/2022/03/26/1",
+      "https://cert-portal.siemens.com/productcert/pdf/ssa-333517.pdf",
+      "https://github.com/madler/zlib/commit/5c44459c3b28a9bd3283aaceab7c615f8020c531",
+      "https://github.com/madler/zlib/compare/v1.2.11...v1.2.12",
+      "https://github.com/madler/zlib/issues/605",
+      "https://lists.debian.org/debian-lts-announce/2022/04/msg00000.html",
+      "https://lists.debian.org/debian-lts-announce/2022/05/msg00008.html",
+      "https://lists.debian.org/debian-lts-announce/2022/09/msg00023.html",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/DCZFIJBJTZ7CL5QXBFKTQ22Q26VINRUF/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/DF62MVMH3QUGMBDCB3DY2ERQ6EBHTADB/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/JZZPTWRYQULAOL3AW7RZJNVZ2UONXCV4/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/NS2D2GFPFGOJUL4WQ3DUAY7HF4VWQ77F/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/VOKNP2L734AEL47NRYGVZIKEFOUBQY5Y/",
+      "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/XOKFMSNQ5D5WGMALBNBXU3GE442V74WU/",
+      "https://security.gentoo.org/glsa/202210-42",
+      "https://security.netapp.com/advisory/ntap-20220526-0009/",
+      "https://security.netapp.com/advisory/ntap-20220729-0004/",
+      "https://support.apple.com/kb/HT213255",
+      "https://support.apple.com/kb/HT213256",
+      "https://support.apple.com/kb/HT213257",
+      "https://www.debian.org/security/2022/dsa-5111",
+      "https://www.openwall.com/lists/oss-security/2022/03/24/1",
+      "https://www.openwall.com/lists/oss-security/2022/03/28/1",
+      "https://www.openwall.com/lists/oss-security/2022/03/28/3",
+      "https://www.oracle.com/security-alerts/cpujul2022.html"
+     ],
+     "description": "zlib before 1.2.12 allows memory corruption when deflating (i.e., when compressing) if the input has many distant matches.",
+     "cvss": [
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "2.0",
+       "vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+       "metrics": {
+        "baseScore": 5,
+        "exploitabilityScore": 10,
+        "impactScore": 2.9
+       },
+       "vendorMetadata": {}
+      },
+      {
+       "source": "nvd@nist.gov",
+       "type": "Primary",
+       "version": "3.1",
+       "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+       "metrics": {
+        "baseScore": 7.5,
+        "exploitabilityScore": 3.9,
+        "impactScore": 3.6
+       },
+       "vendorMetadata": {}
+      }
+     ]
+    }
+   ],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "zlib",
+       "version": "0:1.2.3-29.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.2.3-29.0.1.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9565"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "9fbfc334a6cfb07e",
+    "name": "zlib",
+    "version": "1.2.3-29.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "zlib and Boost"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:zlib:1.2.3-29.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:zlib:zlib:1.2.3-29.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/zlib@1.2.3-29.el6?arch=x86_64&upstream=zlib-1.2.3-29.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  }
+ ],
+ "source": {
+  "type": "image",
+  "target": {
+   "userInput": "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+   "imageID": "sha256:c187fee7ec1b25f3114cbe9639cdc1296ee0d43fb117fc557b953b5c362de979",
+   "manifestDigest": "sha256:6ae670f11b7845231975c2ef0da53de11e047856e6757151d7ce3cde3a047ffe",
+   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+   "tags": [],
+   "imageSize": 170647420,
+   "layers": [
+    {
+     "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+     "digest": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9",
+     "size": 170647420
+    }
+   ],
+   "manifest": "eyJzY2hlbWFWZXJzaW9uIjoyLCJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQuZG9ja2VyLmRpc3RyaWJ1dGlvbi5tYW5pZmVzdC52Mitqc29uIiwiY29uZmlnIjp7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuY29udGFpbmVyLmltYWdlLnYxK2pzb24iLCJzaXplIjoxNDc4LCJkaWdlc3QiOiJzaGEyNTY6YzE4N2ZlZTdlYzFiMjVmMzExNGNiZTk2MzljZGMxMjk2ZWUwZDQzZmIxMTdmYzU1N2I5NTNiNWMzNjJkZTk3OSJ9LCJsYXllcnMiOlt7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjoxNzg0MTg2ODgsImRpZ2VzdCI6InNoYTI1Njo4ZmI3NDc0NmZlOTAzOWViM2ZjNzk3OWRjOTcyZTQyMTAwYTFkNDA5MmM1MTk2YTUxMWI3ZGQ0N2JlZTc2NGI5In1dfQ==",
+   "config": "eyJhcmNoaXRlY3R1cmUiOiJhbWQ2NCIsImNvbmZpZyI6eyJIb3N0bmFtZSI6IiIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiIiwiQXR0YWNoU3RkaW4iOmZhbHNlLCJBdHRhY2hTdGRvdXQiOmZhbHNlLCJBdHRhY2hTdGRlcnIiOmZhbHNlLCJUdHkiOmZhbHNlLCJPcGVuU3RkaW4iOmZhbHNlLCJTdGRpbk9uY2UiOmZhbHNlLCJFbnYiOlsiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iXSwiQ21kIjpbIi9iaW4vYmFzaCJdLCJJbWFnZSI6InNoYTI1Njo1NGQ3ZTcxYmUyZjk0NGU4OTIyZmYzZDRjNGZkZjMyODYwNmM1Yjc0Zjk4MGJkYjZkMjhlOGQ0YzVjMzdkYzM2IiwiVm9sdW1lcyI6bnVsbCwiV29ya2luZ0RpciI6IiIsIkVudHJ5cG9pbnQiOm51bGwsIk9uQnVpbGQiOm51bGwsIkxhYmVscyI6bnVsbH0sImNvbnRhaW5lciI6IjQ4M2FhYzU4MmM4OTBhMjM2Y2M2Y2Y1NzcyNDY2Mzg2NWJkMzc0ZjUyZDhlY2ZjMGYyNDc5YzNjOGU1NWU2OWIiLCJjb250YWluZXJfY29uZmlnIjp7Ikhvc3RuYW1lIjoiNDgzYWFjNTgyYzg5IiwiRG9tYWlubmFtZSI6IiIsIlVzZXIiOiIiLCJBdHRhY2hTdGRpbiI6ZmFsc2UsIkF0dGFjaFN0ZG91dCI6ZmFsc2UsIkF0dGFjaFN0ZGVyciI6ZmFsc2UsIlR0eSI6ZmFsc2UsIk9wZW5TdGRpbiI6ZmFsc2UsIlN0ZGluT25jZSI6ZmFsc2UsIkVudiI6WyJQQVRIPS91c3IvbG9jYWwvc2JpbjovdXNyL2xvY2FsL2JpbjovdXNyL3NiaW46L3Vzci9iaW46L3NiaW46L2JpbiJdLCJDbWQiOlsiL2Jpbi9zaCIsIi1jIiwiIyhub3ApICIsIkNNRCBbXCIvYmluL2Jhc2hcIl0iXSwiSW1hZ2UiOiJzaGEyNTY6NTRkN2U3MWJlMmY5NDRlODkyMmZmM2Q0YzRmZGYzMjg2MDZjNWI3NGY5ODBiZGI2ZDI4ZThkNGM1YzM3ZGMzNiIsIlZvbHVtZXMiOm51bGwsIldvcmtpbmdEaXIiOiIiLCJFbnRyeXBvaW50IjpudWxsLCJPbkJ1aWxkIjpudWxsLCJMYWJlbHMiOnt9fSwiY3JlYXRlZCI6IjIwMjEtMDMtMDlUMjA6Mzc6MDUuODQzNjYwNTg3WiIsImRvY2tlcl92ZXJzaW9uIjoiMTkuMDMuMTIiLCJoaXN0b3J5IjpbeyJjcmVhdGVkIjoiMjAyMS0wMy0wOVQyMDozNzowNS4xNzQxMjcyMDVaIiwiY3JlYXRlZF9ieSI6Ii9iaW4vc2ggLWMgIyhub3ApIEFERCBmaWxlOjc1NDllOGY3ZTg0MDhlYzMyZmRjZWMyODNkYmQ0OTU4MzkzZWRmZjBmZTIxNzU0YzdmYjJhYTkzNGM5ZGE2OTEgaW4gLyAifSx7ImNyZWF0ZWQiOiIyMDIxLTAzLTA5VDIwOjM3OjA1Ljg0MzY2MDU4N1oiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgIENNRCBbXCIvYmluL2Jhc2hcIl0iLCJlbXB0eV9sYXllciI6dHJ1ZX1dLCJvcyI6ImxpbnV4Iiwicm9vdGZzIjp7InR5cGUiOiJsYXllcnMiLCJkaWZmX2lkcyI6WyJzaGEyNTY6OGZiNzQ3NDZmZTkwMzllYjNmYzc5NzlkYzk3MmU0MjEwMGExZDQwOTJjNTE5NmE1MTFiN2RkNDdiZWU3NjRiOSJdfX0=",
+   "repoDigests": [
+    "oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
+   ],
+   "architecture": "amd64",
+   "os": "linux"
+  }
+ },
+ "distro": {
+  "name": "oraclelinux",
+  "version": "6.10",
+  "idLike": []
+ },
+ "descriptor": {
+  "name": "grype",
+  "version": "0.65.1",
+  "configuration": {
+   "configPath": "",
+   "verbosity": 0,
+   "output": [
+    "json"
+   ],
+   "file": "",
+   "distro": "",
+   "add-cpes-if-none": false,
+   "output-template-file": "",
+   "quiet": false,
+   "check-for-app-update": false,
+   "only-fixed": false,
+   "only-notfixed": false,
+   "platform": "",
+   "search": {
+    "scope": "Squashed",
+    "unindexed-archives": false,
+    "indexed-archives": true
+   },
+   "ignore": null,
+   "exclude": [],
+   "db": {
+    "cache-dir": "cli-test-data/yardstick/tools/grype/v0.65.1/db/oss",
+    "update-url": "https://toolbox-data.anchore.io/grype/databases/listing.json",
+    "ca-cert": "",
+    "auto-update": false,
+    "validate-by-hash-on-start": false,
+    "validate-age": false,
+    "max-allowed-built-age": 432000000000000
+   },
+   "externalSources": {
+    "enable": false,
+    "maven": {
+     "searchUpstreamBySha1": true,
+     "baseUrl": "https://search.maven.org/solrsearch/select"
+    }
+   },
+   "match": {
+    "java": {
+     "using-cpes": true
+    },
+    "dotnet": {
+     "using-cpes": true
+    },
+    "golang": {
+     "using-cpes": true
+    },
+    "javascript": {
+     "using-cpes": false
+    },
+    "python": {
+     "using-cpes": true
+    },
+    "ruby": {
+     "using-cpes": true
+    },
+    "stock": {
+     "using-cpes": true
+    }
+   },
+   "dev": {
+    "profile-cpu": false,
+    "profile-mem": false
+   },
+   "fail-on-severity": "",
+   "registry": {
+    "insecure-skip-tls-verify": false,
+    "insecure-use-http": false,
+    "auth": []
+   },
+   "log": {
+    "structured": false,
+    "level": "warn",
+    "file": ""
+   },
+   "show-suppressed": false,
+   "by-cve": false,
+   "name": "",
+   "default-image-pull-source": ""
+  },
+  "db": {
+   "built": "2023-08-08T01:33:25Z",
+   "schemaVersion": 5,
+   "location": "cli-test-data/yardstick/tools/grype/v0.65.1/db/oss/5",
+   "checksum": "sha256:20b0a31d433279802531567a21986e1c9b7fb5efd6bcf8cdbd3abd04f71ae35c",
+   "error": null
+  },
+  "timestamp": "2023-08-08T09:24:49.813408-04:00"
+ }
+}

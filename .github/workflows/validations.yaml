@@ -23,15 +23,13 @@ jobs:
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
-        with:
-          python: false
 
       - name: Run static analysis
         run: make static-analysis
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
-  Unit-Test:
-    name: "Unit tests"
+  Unit-Test-Go:
+    name: "Unit tests (Go)"
     runs-on: ubuntu-20.04
     steps:
 
@@ -39,13 +37,27 @@ jobs:
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
+        with:
+          python: false
 
-      - name: Install dependencies and package
-        run: |
-          cd publish && poetry install
-
-      - name: Run unit tests
+      - name: Run go unit tests
         run: make unit
+
+  # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+  Unit-Test-Python:
+    name: "Unit tests (Python)"
+    runs-on: ubuntu-20.04
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+        with:
+          go: false
+
+      - name: Run python unit tests
+        run: make unit-python
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Build-Snapshot-Artifacts:
@@ -89,14 +101,14 @@ jobs:
       - name: Read supported schema versions
         id: read-schema-versions
         run: |
-          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | .schema]'`
           echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
@@ -108,19 +120,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          # this downloads and initializes LFS, but does not pull the objects
-          lfs: true
-
-      - name: Checkout LFS objects
-        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
-        run: git lfs pull
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
-
-      - name: Install dependencies and package
-        run: |
-          cd test/acceptance && poetry install
 
       - name: Login to ghcr.io
         run: |
@@ -129,19 +132,13 @@ jobs:
       - name: Pull vulnerability data
         run: make download-all-provider-cache
 
-      - name: Build DB
-        run: |
-          cd test/acceptance && \
-          poetry run python grype-ingest.py generate --schema-version ${{ matrix.schema-version }}
+      - name: Build and validate the DB
+        run: make db-acceptance schema=${{ matrix.schema-version }}
 
-      - name: Test DB
-        run: |
-          cd test/acceptance && \
-          poetry run python grype-ingest.py test --schema-version ${{ matrix.schema-version }}
 
-  Cli-Linux:
+  Cli-Go-Linux:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
-    name: "CLI tests (Linux)"
+    name: "CLI tests (Go-Linux)"
     needs: [Build-Snapshot-Artifacts]
     runs-on: ubuntu-20.04
     steps:
@@ -149,6 +146,8 @@ jobs:
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
+        with:
+          python: false
 
       - name: Restore CLI test-fixture cache
         uses: actions/cache@v3
@@ -162,5 +161,20 @@ jobs:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
 
-      - name: Run CLI Tests (Linux)
-        run: make cli
+      - name: Run Go CLI Tests (Linux)
+        run: make cli-go
+
+  Cli-Python:
+    # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+    name: "CLI tests (Python)"
+    runs-on: ubuntu-22.04-4core-16gb
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+
+      - name: Run Python CLI Tests
+        run: make cli-python

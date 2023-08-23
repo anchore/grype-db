@@ -20,9 +20,6 @@ on:
 
 env:
   CGO_ENABLED: "0"
-  AWS_BUCKET: toolbox-data.anchore.io
-  AWS_BUCKET_PATH: grype/databases
-  AWS_DEFAULT_REGION: us-west-2
   SLACK_NOTIFICATIONS: true
 
 jobs:
@@ -47,7 +44,7 @@ jobs:
       - name: Read supported schema versions
         id: read-schema-versions
         run: |
-          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | .schema]'`
           echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   generate-and-publish-dbs:
@@ -57,7 +54,7 @@ jobs:
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
     needs: discover-schema-versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
@@ -69,19 +66,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          # this downloads and initializes LFS, but does not pull the objects
-          lfs: true
-
-      - name: Checkout LFS objects
-        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
-        run: git lfs pull
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
-
-      - name: Install dependencies and package
-        run: |
-          cd publish && poetry install
 
       - name: Login to ghcr.io
         run: |
@@ -90,13 +78,14 @@ jobs:
       - name: Pull vulnerability data
         run: make download-all-provider-cache
 
-      - name: Generate DB (schema ${{ matrix.schema-version }})
+      - name: Generate and upload DB (schema ${{ matrix.schema-version }})
         run: |
-          cd publish && \
-          poetry run publisher generate --schema-version ${{ matrix.schema-version }}
-
-      - name: Upload DB (schema ${{ matrix.schema-version }})
-        run: publish/upload-dbs.sh ${{ env.AWS_BUCKET }} ${{ env.AWS_BUCKET_PATH }}
+          poetry run \
+            grype-db-manager \
+              -c ./config/grype-db-manager/publish-production.yaml \
+              db build-and-upload \
+                --schema-version ${{ matrix.schema-version }} \
+                -vv
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
@@ -104,7 +93,7 @@ jobs:
       - uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          fields: workflow,eventName
+          fields: workflow,eventName,job
           text: Publishing the Grype DB has failed (schema ${{ matrix.schema-version }})
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
@@ -125,29 +114,22 @@ jobs:
 
     name: "Publish listing file"
     needs: generate-and-publish-dbs
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     steps:
 
       - uses: actions/checkout@v3
         with:
-          # this downloads and initializes LFS, but does not pull the objects
-          lfs: true
-
-      - name: Checkout LFS objects
-        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
-        run: git lfs pull
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
 
-      - name: Install dependencies and package
-        run: |
-          cd publish && poetry install
-
       - name: Publish listing file
         run: |
-          cd publish && \
-          poetry run publisher upload-listing --s3-bucket ${{ env.AWS_BUCKET }} --s3-path ${{ env.AWS_BUCKET_PATH }}
+          poetry run \
+            grype-db-manager \
+              -c ./config/grype-db-manager/publish-production.yaml \
+                listing update
         env:
             AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
@@ -155,7 +137,7 @@ jobs:
       - uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          fields: workflow,eventName
+          fields: workflow,eventName,job
           text: Publishing the Grype DB listing file has failed
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}

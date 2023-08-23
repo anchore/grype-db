@@ -29,30 +29,50 @@ jobs:
           checkName: "Static analysis"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Check unit test results
+      - name: Check unit test results (go)
         uses: fountainhead/action-wait-for-check@v1.1.0
-        id: unit
+        id: unit-go
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
-          checkName: "Unit tests"
+          checkName: "Unit tests (Go)"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Check cli test results (linux)
+      - name: Check unit test results (python)
         uses: fountainhead/action-wait-for-check@v1.1.0
-        id: cli-linux
+        id: unit-python
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
-          checkName: "CLI tests (Linux)"
+          checkName: "Unit tests (Python)"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check cli test results (go-linux)
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: cli-go-linux
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "CLI tests (Go-Linux)"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check cli test results (python)
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: cli-python
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "CLI tests (Python)"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Quality gate
-        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success' || steps.cli-linux.outputs.conclusion != 'success'
+        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit-go.outputs.conclusion != 'success' || steps.cli-go-linux.outputs.conclusion != 'success' || steps.unit-python.outputs.conclusion != 'success' || steps.cli-python.outputs.conclusion != 'success'
         run: |
           echo "Static Analysis Status: ${{ steps.static-analysis.conclusion }}"
-          echo "Unit Test Status: ${{ steps.unit.outputs.conclusion }}"
-          echo "CLI Test (Linux) Status: ${{ steps.cli-linux.outputs.conclusion }}"
+          echo "Go Unit Test Status: ${{ steps.unit-go.outputs.conclusion }}"
+          echo "Python Unit Test Status: ${{ steps.unit-python.outputs.conclusion }}"
+          echo "Go CLI Test (Linux) Status: ${{ steps.cli-go-linux.outputs.conclusion }}"
+          echo "Python CLI Test Status: ${{ steps.cli-python.outputs.conclusion }}"
           false
 
   read-schema-versions:
@@ -66,7 +86,7 @@ jobs:
       - name: Read supported schema versions
         id: read-schema-versions
         run: |
-          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | .schema]'`
           echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   quality-gate-acceptance-test:

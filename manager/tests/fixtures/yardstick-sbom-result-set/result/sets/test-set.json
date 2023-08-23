@@ -1,0 +1,88 @@
+{
+  "name": "test-set",
+  "state": [
+    {
+      "request": {
+        "image": "docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+        "tool": "syft@v0.74.1",
+        "label": null,
+        "profile": null,
+        "provides": "SBOM",
+        "takes": null,
+        "refresh": false
+      },
+      "config": {
+        "image_repo": "docker.io/ubuntu",
+        "image_digest": "sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+        "tool_name": "syft",
+        "tool_version": "v0.74.1",
+        "image_tag": "22.04",
+        "tool_input": null,
+        "timestamp": "2023-06-30T12:57:59.354289+00:00",
+        "detail": {},
+        "ID": "3ae4d03d-f04b-43eb-982c-8c2e1f966bad"
+      }
+    },
+    {
+      "request": {
+        "image": "docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+        "tool": "grype@v0.65.0+import-db=/Users/wagoodman/code/grype-db/data/manager/dbs/7a10b0c2-c648-4933-9293-fdbba9db151d/stage/vulnerability-db_v5_2023-08-03T01:34:34Z_54b7b6a76b058f1fa587.tar.gz",
+        "label": null,
+        "profile": null,
+        "provides": null,
+        "takes": "SBOM",
+        "refresh": true
+      },
+      "config": {
+        "image_repo": "docker.io/ubuntu",
+        "image_digest": "sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+        "tool_name": "grype",
+        "tool_version": "v0.65.0",
+        "image_tag": "22.04",
+        "tool_input": "data/yardstick/result/store/docker.io+ubuntu@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d/syft@v0.74.1/2023-06-30T12:57:59.354289+00:00/data.json",
+        "timestamp": "2023-08-04T01:55:53.779369+00:00",
+        "detail": {
+          "version_detail": "v0.65.0",
+          "db": {
+            "built": "2023-08-03T01:34:34Z",
+            "schemaVersion": 5,
+            "location": "data/yardstick/tools/grype/v0.65.0/db/sha256:91e36b2c6f7180249796673e54aa8ce2e06315e10f2aae830964cc0204b666cd/5",
+            "checksum": "sha256:91e36b2c6f7180249796673e54aa8ce2e06315e10f2aae830964cc0204b666cd",
+            "error": null
+          }
+        },
+        "ID": "90ffc1bf-854d-43fb-b8e6-5e183713bea8"
+      }
+    },
+    {
+      "request": {
+        "image": "docker.io/ubuntu:22.04@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+        "tool": "grype@v0.65.0",
+        "label": null,
+        "profile": null,
+        "provides": null,
+        "takes": "SBOM",
+        "refresh": true
+      },
+      "config": {
+        "image_repo": "docker.io/ubuntu",
+        "image_digest": "sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d",
+        "tool_name": "grype",
+        "tool_version": "v0.65.0",
+        "image_tag": "22.04",
+        "tool_input": "data/yardstick/result/store/docker.io+ubuntu@sha256:aa6c2c047467afc828e77e306041b7fa4a65734fe3449a54aa9c280822b0d87d/syft@v0.74.1/2023-06-30T12:57:59.354289+00:00/data.json",
+        "timestamp": "2023-08-04T01:55:54.462888+00:00",
+        "detail": {
+          "db": {
+            "built": "2023-08-03T01:33:59Z",
+            "schemaVersion": 5,
+            "location": "data/yardstick/tools/grype/v0.65.0/db/oss/5",
+            "checksum": "sha256:57a798d55bcab6aef94a51d703e5f854cf8da43ecf58c43ff72e4c735b768ce8",
+            "error": null
+          }
+        },
+        "ID": "0789416b-cbe5-44ba-a1af-661a8a1c5e2e"
+      }
+    }
+  ]
+}

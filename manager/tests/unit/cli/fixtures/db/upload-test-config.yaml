@@ -1,0 +1,7 @@
+distribution:
+  listing-file-name: listing.json
+  s3-path: grype/databases
+  # note: we are using localstack for testing, so the bucket name is arbitrary
+  s3-bucket: testbucket
+  aws-region: us-west-2
+  s3-endpoint-url: http://localhost:4566

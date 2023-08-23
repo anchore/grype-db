@@ -38,18 +38,14 @@ on:
 
 env:
   CGO_ENABLED: "0"
-  AWS_BUCKET: toolbox-data.anchore.io
-  # do NOT change this value
-  AWS_BUCKET_PATH: grype/staging-databases
-  AWS_DEFAULT_REGION: us-west-2
   # note: these GRYPE_* env vars are used by the python scripts
-  GRYPE_TEST_SCHEMA: ${{ github.event.inputs.schema-version }}
-  GRYPE_TEST_BRANCH: ${{ github.event.inputs.grype-branch }}
+  GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION: ${{ github.event.inputs.schema-version }}
+  GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION: ${{ github.event.inputs.grype-branch }}
 
 jobs:
   publish-staging-db:
     name: "Generate and publish staging DB"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     # set the permissions granted to the github token to read the pull cache from ghcr.io
     permissions:
       packages: read
@@ -58,20 +54,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          # this downloads and initializes LFS, but does not pull the objects
-          lfs: true
-
-      - name: Checkout LFS objects
-        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
-        run: git lfs pull
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
-
-      - name: Install dependencies and package
-        run: |
-          # note: pyyaml is needed for the one-off python script for pulling the provider cache
-          cd publish && poetry install && pip install pyyaml
 
       - name: Login to ghcr.io
         run: |
@@ -94,17 +80,18 @@ jobs:
         if: github.event.inputs.publish-databases != 'false'
         run: make download-all-provider-cache
 
-      - name: Generate DB (schema ${{ github.event.inputs.schema-version }})
+      - name: Generate and upload DB (schema ${{ github.event.inputs.schema-version }})
         # note about workflow dispatch inputs and booleans:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-databases != 'false'
         run: |
-          cd publish &&
-          poetry run publisher generate --schema-version ${{ github.event.inputs.schema-version }}
-
-      - name: Upload DB (schema ${{ github.event.inputs.schema-version }})
-        run: publish/upload-dbs.sh ${{ env.AWS_BUCKET }} ${{ env.AWS_BUCKET_PATH }}
+          poetry run \
+            grype-db-manager \
+              -c ./config/grype-db-manager/publish-staging.yaml \
+                db build-and-upload \
+                  --schema-version ${{ github.event.inputs.schema-version }} \
+                  -vv
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
@@ -115,8 +102,10 @@ jobs:
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-listing != 'false'
         run: |
-          cd publish &&
-          poetry run publisher upload-listing --s3-bucket ${{ env.AWS_BUCKET }} --s3-path ${{ env.AWS_BUCKET_PATH }}
+          poetry run \
+            grype-db-manager \
+              -c ./config/grype-db-manager/publish-staging.yaml \
+                listing update
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}

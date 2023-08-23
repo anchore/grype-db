@@ -1,0 +1,1 @@
+{"ID": "8f983ee0-c97c-477d-b5c8-2a463c447aaf", "image": {"exact": "docker.io/oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"}, "label": "FP", "package": {"name": "nss", "version": "3.44.0-7.0.1.el6_10"}, "timestamp": "2023-08-08T15:19:45.295185", "tool": "grype[custom-db]@v0.65.1", "user": "wagoodman", "vulnerability_id": "ELSA-2023-12238"}
