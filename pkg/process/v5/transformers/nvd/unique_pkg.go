@@ -130,7 +130,12 @@ func buildConstraint(match nvd.CpeMatch) string {
 			return ""
 		}
 		version := c.Version().String()
+		update := c.Update().String()
 		if version != ANY && version != NA {
+			if update != ANY && update != NA {
+				version = fmt.Sprintf("%s-%s", version, update)
+			}
+
 			constraints = append(constraints, fmt.Sprintf("= %s", version))
 		}
 	}
