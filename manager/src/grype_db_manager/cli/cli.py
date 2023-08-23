@@ -46,8 +46,6 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
             "formatters": {
                 "standard": {
                     "()": DeltaTimeFormatter,
-                    # "format": "%(log_color)s[%(delta)s] %(levelname)5s %(message)s",
-                    # "format": f"{ansi_grey}%(levelname)-5s{ansi_reset} %(log_color)s%(message)s",
                     "format": f"{Format.GREY}%(delta)s{Format.RESET} %(log_color)s%(message)s",
                     "datefmt": "%Y-%m-%d %H:%M:%S",
                     "log_colors": {
