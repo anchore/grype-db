@@ -1,6 +1,12 @@
-/data
+# note: you cannot add exceptions for nested paths. You have to add patterns for each parent path as a pattern and specific exceptions for those parents
+# this dance here is to ignore everything in /data but still include the symlink at /data/yardstick/labels
+/data/*
+!/data/yardstick
+/data/yardstick/*
 !/data/yardstick/labels
 !/data/vulnerability-match-labels
+
+# default data directories
 /vunnel
 /bin
 .yardstick

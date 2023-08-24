@@ -134,6 +134,8 @@ jobs:
 
       - name: Build and validate the DB
         run: make db-acceptance schema=${{ matrix.schema-version }}
+        env:
+          FORCE_COLOR: true
 
 
   Cli-Go-Linux:

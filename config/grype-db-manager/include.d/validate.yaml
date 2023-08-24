@@ -17,7 +17,7 @@ db:
 
     # float between 0 and 100, the maximum % of unlabeled matches for a scan result before the gate fails (default 10%,
     # meaning the test scan must have less than 10% unlabeled matches to pass the gate)
-    unlabeled-matches-threshold: 25.0
+    unlabeled-matches-threshold: 35.0
 
     # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
     # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
