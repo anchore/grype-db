@@ -26,4 +26,4 @@ fi
 
 title "Validating DB"
 
-grype-db-manager db validate $DB_ID -vv
+grype-db-manager db validate $DB_ID -vvv

@@ -21,6 +21,7 @@ on:
 env:
   CGO_ENABLED: "0"
   SLACK_NOTIFICATIONS: true
+  FORCE_COLOR: true
 
 jobs:
   discover-schema-versions:
@@ -85,7 +86,7 @@ jobs:
               -c ./config/grype-db-manager/publish-production.yaml \
               db build-and-upload \
                 --schema-version ${{ matrix.schema-version }} \
-                -vv
+                -vvv
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
