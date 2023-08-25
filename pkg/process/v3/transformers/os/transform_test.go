@@ -579,6 +579,147 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "Amazon",
+			numEntries: 3,
+			fixture:    "test-fixtures/amazon-multiple-kernel-advisories.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:                "ALAS-2021-1704",
+					PackageName:       "kernel-headers",
+					VersionConstraint: "< 4.14.246-187.474.amzn2",
+					VersionFormat:     "rpm",
+					Namespace:         "amzn:2",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-3653",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-3656",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-3732",
+							Namespace: "nvd",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"4.14.246-187.474.amzn2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+				{
+					ID:                "ALAS-2021-1704",
+					PackageName:       "kernel",
+					VersionConstraint: "< 4.14.246-187.474.amzn2",
+					VersionFormat:     "rpm",
+					Namespace:         "amzn:2",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-3653",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-3656",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-3732",
+							Namespace: "nvd",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"4.14.246-187.474.amzn2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+				{
+					ID:                "ALASKERNEL-5.4-2022-007",
+					PackageName:       "kernel-headers",
+					VersionConstraint: ">= 5.4, < 5.4.144-69.257.amzn2",
+					VersionFormat:     "rpm",
+					Namespace:         "amzn:2",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-3753",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-40490",
+							Namespace: "nvd",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"5.4.144-69.257.amzn2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+				{
+					ID:                "ALASKERNEL-5.4-2022-007",
+					PackageName:       "kernel",
+					VersionConstraint: ">= 5.4, < 5.4.144-69.257.amzn2",
+					VersionFormat:     "rpm",
+					Namespace:         "amzn:2",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-3753",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-40490",
+							Namespace: "nvd",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"5.4.144-69.257.amzn2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+				{
+					ID:                "ALASKERNEL-5.10-2022-005",
+					PackageName:       "kernel-headers",
+					VersionConstraint: ">= 5.10, < 5.10.62-55.141.amzn2",
+					VersionFormat:     "rpm",
+					Namespace:         "amzn:2",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-3753",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-40490",
+							Namespace: "nvd",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"5.10.62-55.141.amzn2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+				{
+					ID:                "ALASKERNEL-5.10-2022-005",
+					PackageName:       "kernel",
+					VersionConstraint: ">= 5.10, < 5.10.62-55.141.amzn2",
+					VersionFormat:     "rpm",
+					Namespace:         "amzn:2",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-3753",
+							Namespace: "nvd",
+						},
+						{
+							ID:        "CVE-2021-40490",
+							Namespace: "nvd",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"5.10.62-55.141.amzn2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -591,7 +732,7 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 
 			entries, err := unmarshal.OSVulnerabilityEntries(f)
 			require.NoError(t, err)
-			require.Len(t, entries, len(test.vulns))
+			require.Len(t, entries, test.numEntries)
 
 			var vulns []grypeDB.Vulnerability
 			for _, entry := range entries {

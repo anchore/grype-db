@@ -393,6 +393,73 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "Amazon",
+			numEntries: 3,
+			fixture:    "test-fixtures/amazon-multiple-kernel-advisories.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:                   "ALAS-2021-1704",
+					RecordSource:         "vulnerabilities:amzn:2",
+					PackageName:          "kernel-headers",
+					VersionConstraint:    "< 4.14.246-187.474.amzn2",
+					VersionFormat:        "rpm",
+					Namespace:            "amzn:2",
+					ProxyVulnerabilities: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
+					FixedInVersion:       "4.14.246-187.474.amzn2",
+				},
+				{
+					ID:                   "ALAS-2021-1704",
+					RecordSource:         "vulnerabilities:amzn:2",
+					PackageName:          "kernel",
+					VersionConstraint:    "< 4.14.246-187.474.amzn2",
+					VersionFormat:        "rpm",
+					Namespace:            "amzn:2",
+					ProxyVulnerabilities: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
+					FixedInVersion:       "4.14.246-187.474.amzn2",
+				},
+				{
+					ID:                   "ALASKERNEL-5.4-2022-007",
+					RecordSource:         "vulnerabilities:amzn:2",
+					PackageName:          "kernel-headers",
+					VersionConstraint:    ">= 5.4, < 5.4.144-69.257.amzn2",
+					VersionFormat:        "rpm",
+					Namespace:            "amzn:2",
+					ProxyVulnerabilities: []string{"CVE-2021-3753", "CVE-2021-40490"},
+					FixedInVersion:       "5.4.144-69.257.amzn2",
+				},
+				{
+					ID:                   "ALASKERNEL-5.4-2022-007",
+					RecordSource:         "vulnerabilities:amzn:2",
+					PackageName:          "kernel",
+					VersionConstraint:    ">= 5.4, < 5.4.144-69.257.amzn2",
+					VersionFormat:        "rpm",
+					Namespace:            "amzn:2",
+					ProxyVulnerabilities: []string{"CVE-2021-3753", "CVE-2021-40490"},
+					FixedInVersion:       "5.4.144-69.257.amzn2",
+				},
+				{
+					ID:                   "ALASKERNEL-5.10-2022-005",
+					RecordSource:         "vulnerabilities:amzn:2",
+					PackageName:          "kernel-headers",
+					VersionConstraint:    ">= 5.10, < 5.10.62-55.141.amzn2",
+					VersionFormat:        "rpm",
+					Namespace:            "amzn:2",
+					ProxyVulnerabilities: []string{"CVE-2021-3753", "CVE-2021-40490"},
+					FixedInVersion:       "5.10.62-55.141.amzn2",
+				},
+				{
+					ID:                   "ALASKERNEL-5.10-2022-005",
+					RecordSource:         "vulnerabilities:amzn:2",
+					PackageName:          "kernel",
+					VersionConstraint:    ">= 5.10, < 5.10.62-55.141.amzn2",
+					VersionFormat:        "rpm",
+					Namespace:            "amzn:2",
+					ProxyVulnerabilities: []string{"CVE-2021-3753", "CVE-2021-40490"},
+					FixedInVersion:       "5.10.62-55.141.amzn2",
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -405,7 +472,7 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 
 			entries, err := unmarshal.OSVulnerabilityEntries(f)
 			assert.NoError(t, err)
-			assert.Len(t, entries, len(test.vulns))
+			assert.Len(t, entries, test.numEntries)
 
 			var vulns []grypeDB.Vulnerability
 			for _, entry := range entries {
