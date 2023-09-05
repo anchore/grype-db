@@ -40,7 +40,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -65,7 +65,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-22.04-4core-16gb
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
