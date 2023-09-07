@@ -76,7 +76,8 @@ class DBManager:
         timestamp_path = os.path.join(session_dir, "timestamp")
         if os.path.exists(timestamp_path):
             with open(timestamp_path) as f:
-                db_created_timestamp = datetime.datetime.fromisoformat(f.read())
+                raw = f.read()
+                db_created_timestamp = datetime.datetime.fromisoformat(raw.replace('\n', ''))
 
         # read info from the metadata file in build/metadata.json
         metadata_path = os.path.join(session_dir, "build", "metadata.json")
@@ -107,7 +108,7 @@ class DBManager:
             uuid=db_uuid,
             schema_version=metadata["version"],
             db_checksum=metadata["checksum"],
-            db_created=db_created_timestamp,
+            db_created=db_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
             data_created=metadata["built"],
             archive_path=abs_archive_path,
         )
