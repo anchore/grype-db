@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -64,7 +64,7 @@ jobs:
     name: "Build snapshot artifacts"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -96,7 +96,7 @@ jobs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -118,7 +118,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -144,7 +144,7 @@ jobs:
     needs: [Build-Snapshot-Artifacts]
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -171,7 +171,7 @@ jobs:
     name: "CLI tests (Python)"
     runs-on: ubuntu-22.04-4core-16gb
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
