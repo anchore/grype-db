@@ -22,7 +22,7 @@
     },
     {
       "schema": "5",
-      "grype-version": "main",
+      "grype-version": "go-v1.21.0",
       "supported": true
     }
   ]
