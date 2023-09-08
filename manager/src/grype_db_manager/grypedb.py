@@ -126,7 +126,7 @@ class DBManager:
             except DBInvalidException as e:
                 logging.debug(f"failed to get info for session {db_uuid!r}: {e}")
 
-        return sessions
+        return sorted(sessions, key=lambda x: x.db_created)
 
 
 class GrypeDB:
