@@ -107,7 +107,7 @@ class DBManager:
             uuid=db_uuid,
             schema_version=metadata["version"],
             db_checksum=metadata["checksum"],
-            db_created=db_created_timestamp,
+            db_created=db_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
             data_created=metadata["built"],
             archive_path=abs_archive_path,
         )
@@ -126,7 +126,7 @@ class DBManager:
             except DBInvalidException as e:
                 logging.debug(f"failed to get info for session {db_uuid!r}: {e}")
 
-        return sessions
+        return sorted(sessions, key=lambda x: x.db_created)
 
 
 class GrypeDB:

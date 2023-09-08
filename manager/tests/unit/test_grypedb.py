@@ -18,8 +18,8 @@ class TestDBManager:
                 uuid="9d1fce98-9c10-4887-949e-8296a259daf5",
                 schema_version=4,
                 db_checksum="sha256:0f2f6e45dcde94259c078d237e575a30787c5ad04345c57e4d5dea08a95af4cb",
-                db_created=None,
-                data_created="2023-07-31T03:45:08Z",
+                db_created="2023-07-30T03:45:08Z",
+                data_created="2023-07-30T03:45:08Z",
                 archive_path=path_to_archive(
                     "9d1fce98-9c10-4887-949e-8296a259daf5",
                     "vulnerability-db_v4_2023-08-03T01:34:34Z_54b7b6a76b058f1fa587.tar.gz",
@@ -29,7 +29,7 @@ class TestDBManager:
                 uuid="41e4c9e7-73c7-4106-bfb3-82e58ce15d9a",
                 schema_version=5,
                 db_checksum="sha256:c996a4c459a2fca9283c4fd8cdb53e3b050650d76e6ce517b91e34430f6db854",
-                db_created=None,
+                db_created="2023-07-31T03:45:08Z",
                 data_created="2023-07-31T01:34:05Z",
                 archive_path=path_to_archive(
                     "41e4c9e7-73c7-4106-bfb3-82e58ce15d9a",
