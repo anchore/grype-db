@@ -23,7 +23,7 @@ GOSIMPORTS_VERSION := v0.3.7
 BOUNCER_VERSION = v0.4.0
 CHRONICLE_VERSION = v0.6.0
 GORELEASER_VERSION = v1.13.0
-CRANE_VERSION=v0.12.1
+CRANE_VERSION=v0.16.1
 GLOW_VERSION := v1.5.0
 
 # Formatting variables #################################
