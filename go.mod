@@ -1,6 +1,7 @@
 module github.com/anchore/grype-db
 
-go 1.21
+go 1.21.1
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/OneOfOne/xxhash v1.2.8
