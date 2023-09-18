@@ -40,7 +40,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -65,7 +65,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
         with:
           submodules: true
 
@@ -91,7 +91,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
 
-      - uses: 8398a7/action-slack@v3
+      - uses: 8398a7/action-slack@c68ef06f0453ff793265b5f723c692e413ba48b7 #v3.4.0
         with:
           status: ${{ job.status }}
           fields: workflow,eventName,job
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-22.04-4core-16gb
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
         with:
           submodules: true
 
@@ -135,7 +135,7 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
 
-      - uses: 8398a7/action-slack@v3
+      - uses: 8398a7/action-slack@c68ef06f0453ff793265b5f723c692e413ba48b7 #v3.4.0
         with:
           status: ${{ job.status }}
           fields: workflow,eventName,job
