@@ -178,11 +178,17 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 
     key = f"{s3_path}/{os.path.basename(db_info.archive_path)}"
 
+    # TODO: we have folks that require legacy behavior, where the content type was application/x-tar
+    kwargs = {}
+    if db_info.archive_path.endswith(".tar.gz"):
+        kwargs["ContentType"] = "application/x-tar"
+
     s3utils.upload_file(
         bucket=s3_bucket,
         key=key,
         path=db_info.archive_path,
         CacheControl=f"public,max-age={ttl_seconds}",
+        **kwargs,
     )
 
     click.echo(f"DB {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
