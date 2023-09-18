@@ -12,7 +12,7 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
 
       - name: Check if tag already exists
         # note: this will fail if the tag already exists
@@ -21,7 +21,7 @@ jobs:
           git tag ${{ github.event.inputs.version }}
 
       - name: Check static analysis results
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 #v1.1.0
         id: static-analysis
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check unit test results (go)
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 #v1.1.0
         id: unit-go
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -39,7 +39,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check unit test results (python)
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 #v1.1.0
         id: unit-python
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -48,7 +48,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check cli test results (go-linux)
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 #v1.1.0
         id: cli-go-linux
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check cli test results (python)
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 #v1.1.0
         id: cli-python
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -81,7 +81,7 @@ jobs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -98,7 +98,7 @@ jobs:
     steps:
 
       - name: Check acceptance test results
-        uses: fountainhead/action-wait-for-check@v1.1.0
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 #v1.1.0
         id: acceptance
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -122,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
         with:
           fetch-depth: 0
 

@@ -53,7 +53,7 @@ jobs:
       contents: read
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac #v4.0.0
         with:
           submodules: true
 
@@ -69,7 +69,7 @@ jobs:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.run-tmate != 'false'
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@f309efdef7da88e388f96a3cafc4f181ac639f7a #v3.9.0
         timeout-minutes: ${{ fromJSON(github.event.inputs.tmate-duration) }}
         with:
           limit-access-to-actor: true
