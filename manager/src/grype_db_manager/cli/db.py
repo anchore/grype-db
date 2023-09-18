@@ -188,7 +188,7 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
         key=key,
         path=db_info.archive_path,
         CacheControl=f"public,max-age={ttl_seconds}",
-        **kwargs
+        **kwargs,
     )
 
     click.echo(f"DB {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
