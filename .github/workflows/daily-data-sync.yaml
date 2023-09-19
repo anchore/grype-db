@@ -68,7 +68,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: 8398a7/action-slack@047b09b154480ed39076984b64f324fff010d703 #v3.9.3
+      - uses: 8398a7/action-slack@fbd6aa58ba854a740e11a35d0df80cb5d12101d8 #v3.15.1
         with:
           status: ${{ job.status }}
           fields: workflow,eventName
