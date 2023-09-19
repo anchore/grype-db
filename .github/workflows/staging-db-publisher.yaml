@@ -69,7 +69,7 @@ jobs:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.run-tmate != 'false'
-        uses: mxschmitt/action-tmate@f309efdef7da88e388f96a3cafc4f181ac639f7a #v3.9.0
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 #v3.9.0
         timeout-minutes: ${{ fromJSON(github.event.inputs.tmate-duration) }}
         with:
           limit-access-to-actor: true
