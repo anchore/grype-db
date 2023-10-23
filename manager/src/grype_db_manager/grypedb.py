@@ -9,6 +9,7 @@ import os
 import re
 import shlex
 import shutil
+import sqlite3
 import subprocess
 import sys
 import uuid
@@ -25,6 +26,206 @@ DB_DIR = "dbs"
 # TODO:
 # - add tests for GrypeDB.install*
 
+# these are the minimum expected namespaces that should be present in the DB based on the v4+ schema.
+# TODO: ideally this would be coupled to the definitions defined in the vunnel quality gate config file
+# https://github.com/anchore/vunnel/blob/v0.17.2/tests/quality/config.yaml#L53
+# however, its important to use the file for the same version of vunnel used by grype-db to build the DB, which
+# isn't always possible to know. Ideally this version info would be captured in the vunnel data directory directly.
+# For the meantime this is a snapshot of the expected namespaces for vunnel 0.17.2 in Oct 2023 (boo! 👻).
+expected_namespaces = [
+    "alpine:distro:alpine:3.10",
+    "alpine:distro:alpine:3.11",
+    "alpine:distro:alpine:3.12",
+    "alpine:distro:alpine:3.13",
+    "alpine:distro:alpine:3.14",
+    "alpine:distro:alpine:3.15",
+    "alpine:distro:alpine:3.16",
+    "alpine:distro:alpine:3.17",
+    "alpine:distro:alpine:3.18",
+    "alpine:distro:alpine:3.2",
+    "alpine:distro:alpine:3.3",
+    "alpine:distro:alpine:3.4",
+    "alpine:distro:alpine:3.5",
+    "alpine:distro:alpine:3.6",
+    "alpine:distro:alpine:3.7",
+    "alpine:distro:alpine:3.8",
+    "alpine:distro:alpine:3.9",
+    "alpine:distro:alpine:edge",
+    "amazon:distro:amazonlinux:2",
+    "amazon:distro:amazonlinux:2022",
+    "amazon:distro:amazonlinux:2023",
+    "chainguard:distro:chainguard:rolling",
+    "debian:distro:debian:10",
+    "debian:distro:debian:11",
+    "debian:distro:debian:12",
+    "debian:distro:debian:13",
+    "debian:distro:debian:7",
+    "debian:distro:debian:8",
+    "debian:distro:debian:9",
+    "debian:distro:debian:unstable",
+    "github:language:dart",
+    "github:language:dotnet",
+    "github:language:go",
+    "github:language:java",
+    "github:language:javascript",
+    "github:language:php",
+    "github:language:python",
+    "github:language:ruby",
+    "github:language:rust",
+    "github:language:swift",
+    "mariner:distro:mariner:1.0",
+    "mariner:distro:mariner:2.0",
+    "nvd:cpe",
+    "oracle:distro:oraclelinux:5",
+    "oracle:distro:oraclelinux:6",
+    "oracle:distro:oraclelinux:7",
+    "oracle:distro:oraclelinux:8",
+    "oracle:distro:oraclelinux:9",
+    "redhat:distro:redhat:5",
+    "redhat:distro:redhat:6",
+    "redhat:distro:redhat:7",
+    "redhat:distro:redhat:8",
+    "redhat:distro:redhat:9",
+    "sles:distro:sles:11",
+    "sles:distro:sles:11.1",
+    "sles:distro:sles:11.2",
+    "sles:distro:sles:11.3",
+    "sles:distro:sles:11.4",
+    "sles:distro:sles:12",
+    "sles:distro:sles:12.1",
+    "sles:distro:sles:12.2",
+    "sles:distro:sles:12.3",
+    "sles:distro:sles:12.4",
+    "sles:distro:sles:12.5",
+    "sles:distro:sles:15",
+    "sles:distro:sles:15.1",
+    "sles:distro:sles:15.2",
+    "sles:distro:sles:15.3",
+    "sles:distro:sles:15.4",
+    "sles:distro:sles:15.5",
+    "ubuntu:distro:ubuntu:12.04",
+    "ubuntu:distro:ubuntu:12.10",
+    "ubuntu:distro:ubuntu:13.04",
+    "ubuntu:distro:ubuntu:14.04",
+    "ubuntu:distro:ubuntu:14.10",
+    "ubuntu:distro:ubuntu:15.04",
+    "ubuntu:distro:ubuntu:15.10",
+    "ubuntu:distro:ubuntu:16.04",
+    "ubuntu:distro:ubuntu:16.10",
+    "ubuntu:distro:ubuntu:17.04",
+    "ubuntu:distro:ubuntu:17.10",
+    "ubuntu:distro:ubuntu:18.04",
+    "ubuntu:distro:ubuntu:18.10",
+    "ubuntu:distro:ubuntu:19.04",
+    "ubuntu:distro:ubuntu:19.10",
+    "ubuntu:distro:ubuntu:20.04",
+    "ubuntu:distro:ubuntu:20.10",
+    "ubuntu:distro:ubuntu:21.04",
+    "ubuntu:distro:ubuntu:21.10",
+    "ubuntu:distro:ubuntu:22.04",
+    "ubuntu:distro:ubuntu:22.10",
+    "ubuntu:distro:ubuntu:23.04",
+    "ubuntu:distro:ubuntu:23.10",
+    "wolfi:distro:wolfi:rolling",
+]
+
+v3_expected_namespaces = [
+    "alpine:3.10",
+    "alpine:3.11",
+    "alpine:3.12",
+    "alpine:3.13",
+    "alpine:3.14",
+    "alpine:3.15",
+    "alpine:3.16",
+    "alpine:3.17",
+    "alpine:3.18",
+    "alpine:3.2",
+    "alpine:3.3",
+    "alpine:3.4",
+    "alpine:3.5",
+    "alpine:3.6",
+    "alpine:3.7",
+    "alpine:3.8",
+    "alpine:3.9",
+    "alpine:edge",
+    "amzn:2",
+    "amzn:2022",
+    "amzn:2023",
+    "chainguard:rolling",
+    "debian:10",
+    "debian:11",
+    "debian:12",
+    "debian:13",
+    "debian:7",
+    "debian:8",
+    "debian:9",
+    "debian:unstable",
+    "github:composer",
+    "github:dart",
+    "github:gem",
+    "github:go",
+    "github:java",
+    "github:npm",
+    "github:nuget",
+    "github:python",
+    "github:rust",
+    "github:swift",
+    "mariner:1.0",
+    "mariner:2.0",
+    "nvd",
+    "ol:5",
+    "ol:6",
+    "ol:7",
+    "ol:8",
+    "ol:9",
+    "rhel:5",
+    "rhel:6",
+    "rhel:7",
+    "rhel:8",
+    "rhel:9",
+    "sles:11",
+    "sles:11.1",
+    "sles:11.2",
+    "sles:11.3",
+    "sles:11.4",
+    "sles:12",
+    "sles:12.1",
+    "sles:12.2",
+    "sles:12.3",
+    "sles:12.4",
+    "sles:12.5",
+    "sles:15",
+    "sles:15.1",
+    "sles:15.2",
+    "sles:15.3",
+    "sles:15.4",
+    "sles:15.5",
+    "ubuntu:12.04",
+    "ubuntu:12.10",
+    "ubuntu:13.04",
+    "ubuntu:14.04",
+    "ubuntu:14.10",
+    "ubuntu:15.04",
+    "ubuntu:15.10",
+    "ubuntu:16.04",
+    "ubuntu:16.10",
+    "ubuntu:17.04",
+    "ubuntu:17.10",
+    "ubuntu:18.04",
+    "ubuntu:18.10",
+    "ubuntu:19.04",
+    "ubuntu:19.10",
+    "ubuntu:20.04",
+    "ubuntu:20.10",
+    "ubuntu:21.04",
+    "ubuntu:21.10",
+    "ubuntu:22.04",
+    "ubuntu:22.10",
+    "ubuntu:23.04",
+    "ubuntu:23.10",
+    "wolfi:rolling",
+]
+
 
 @dataclasses.dataclass
 class DBInfo:
@@ -37,6 +238,10 @@ class DBInfo:
 
 
 class DBInvalidException(Exception):
+    pass
+
+
+class DBNamespaceException(Exception):
     pass
 
 
@@ -64,6 +269,33 @@ class DBManager:
             f.write(now.isoformat())
 
         return db_uuid
+
+    def list_namespaces(self, db_uuid: str) -> list[str]:
+        _, build_dir = self.db_paths(db_uuid=db_uuid)
+        # a sqlite3 db
+        db_path = os.path.join(build_dir, "vulnerability.db")
+
+        # select distinct values in the "namespace" column of the "vulnerability" table
+        con = sqlite3.connect(db_path)
+        crsr = con.cursor()
+        crsr.execute("SELECT DISTINCT namespace FROM vulnerability")
+        result = crsr.fetchall()
+        con.close()
+
+        return sorted([r[0] for r in result])
+
+    def validate_namespaces(self, db_uuid: str) -> None:
+        db_info = self.get_db_info(db_uuid)
+
+        expected = v3_expected_namespaces if db_info.schema_version <= 3 else expected_namespaces
+
+        missing_namespaces = set(expected) - set(self.list_namespaces(db_uuid=db_uuid))
+
+        if missing_namespaces:
+            msg = f"missing namespaces in DB {db_uuid!r}: {sorted(missing_namespaces)!r}"
+            raise DBNamespaceException(msg)
+
+        logging.info(f"minimum expected namespaces present in {db_uuid!r}")
 
     def get_db_info(self, db_uuid: str) -> DBInfo | None:
         session_dir = os.path.join(self.db_dir, db_uuid)

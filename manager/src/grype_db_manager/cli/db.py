@@ -92,9 +92,10 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
 )
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
+@click.option("--skip-namespace-check", "skip_namespace_check", is_flag=True, help="do not ensure the minimum expected namespaces are present")
 @click.argument("db-uuid")
 @click.pass_obj
-def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbosity: int, recapture: bool) -> None:
+def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbosity: int, recapture: bool, skip_namespace_check: bool) -> None:
     logging.info(f"validating DB {db_uuid}")
 
     if not images:
@@ -106,6 +107,10 @@ def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbos
     if not db_info:
         click.echo(f"no database found with session id {db_uuid}")
         return
+
+    if not skip_namespace_check:
+        # ensure the minimum number of namespaces are present
+        db_manager.validate_namespaces(db_uuid=db_uuid)
 
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
