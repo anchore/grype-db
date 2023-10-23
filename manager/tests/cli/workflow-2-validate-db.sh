@@ -20,12 +20,12 @@ header "Case 1: fail DB validation (too many unknowns)"
 
 make clean-yardstick-labels
 
-run_expect_fail grype-db-manager db validate $DB_ID -vvv
+run_expect_fail grype-db-manager db validate $DB_ID -vvv --skip-namespace-check
 assert_contains $(last_stderr_file) "current indeterminate matches % is greater than 10.0%"
 
 
 #############################################
-header "Case 2: pass DB validation"
+header "Case 2: fail DB validation (missing namespaces)"
 
 make clean-yardstick-labels
 echo "installing labels"
@@ -33,7 +33,20 @@ echo "installing labels"
 cp -a ../../../data/vulnerability-match-labels/labels/docker.io+oraclelinux* ./cli-test-data/yardstick/labels/
 tree ./cli-test-data/yardstick/labels/
 
-run grype-db-manager db validate $DB_ID -vvv
+run_expect_fail grype-db-manager db validate $DB_ID -vvv
+assert_contains $(last_stderr_file) "missing namespaces in DB"
+
+
+#############################################
+header "Case 3: pass DB validation"
+
+make clean-yardstick-labels
+echo "installing labels"
+# use the real labels
+cp -a ../../../data/vulnerability-match-labels/labels/docker.io+oraclelinux* ./cli-test-data/yardstick/labels/
+tree ./cli-test-data/yardstick/labels/
+
+run grype-db-manager db validate $DB_ID -vvv --skip-namespace-check
 assert_contains $(last_stdout_file) "Validation passed"
 
 

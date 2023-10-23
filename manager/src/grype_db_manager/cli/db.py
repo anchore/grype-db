@@ -92,10 +92,22 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
 )
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
-@click.option("--skip-namespace-check", "skip_namespace_check", is_flag=True, help="do not ensure the minimum expected namespaces are present")
+@click.option(
+    "--skip-namespace-check",
+    "skip_namespace_check",
+    is_flag=True,
+    help="do not ensure the minimum expected namespaces are present",
+)
 @click.argument("db-uuid")
 @click.pass_obj
-def validate_db(cfg: config.Application, db_uuid: str, images: list[str], verbosity: int, recapture: bool, skip_namespace_check: bool) -> None:
+def validate_db(
+    cfg: config.Application,
+    db_uuid: str,
+    images: list[str],
+    verbosity: int,
+    recapture: bool,
+    skip_namespace_check: bool,
+) -> None:
     logging.info(f"validating DB {db_uuid}")
 
     if not images:
@@ -203,6 +215,12 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 @click.option("--schema-version", "-s", required=True, help="the DB schema version to build, validate, and upload")
 @click.option("--dry-run", "-d", is_flag=True, help="do not upload the DB to S3")
 @click.option("--skip-validate", is_flag=True, help="skip validation of the DB")
+@click.option(
+    "--skip-namespace-check",
+    "skip_namespace_check",
+    is_flag=True,
+    help="do not ensure the minimum expected namespaces are present",
+)
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.pass_obj
 @click.pass_context
@@ -212,6 +230,7 @@ def build_and_upload_db(
     cfg: config.Application,
     schema_version: str,
     skip_validate: bool,
+    skip_namespace_check: bool,
     dry_run: bool,
     verbosity: bool,
 ) -> None:
@@ -227,7 +246,7 @@ def build_and_upload_db(
         click.echo(f"{Format.ITALIC}Skipping validation of DB {db_uuid!r}{Format.RESET}")
     else:
         click.echo(f"{Format.BOLD}Validating DB {db_uuid!r}{Format.RESET}")
-        ctx.invoke(validate_db, db_uuid=db_uuid, verbosity=verbosity)
+        ctx.invoke(validate_db, db_uuid=db_uuid, verbosity=verbosity, skip_namespace_check=skip_namespace_check)
 
     if not dry_run:
         click.echo(f"{Format.BOLD}Uploading DB {db_uuid!r}{Format.RESET}")
