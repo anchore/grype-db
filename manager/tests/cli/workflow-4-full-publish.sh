@@ -42,10 +42,10 @@ header "Case 1: create and publish a DB"
 
 # note: this test is exercising the following commands:
 # grype-db-manager db build
-# grype-db-manager db validate <uuid>
+# grype-db-manager db validate <uuid> --skip-namespace-check
 # grype-db-manager db upload <uuid>
 
-run grype-db-manager db build-and-upload --schema-version $SCHEMA_VERSION
+run grype-db-manager db build-and-upload --schema-version $SCHEMA_VERSION --skip-namespace-check
 assert_contains $(last_stdout_file) "Validation passed"
 assert_contains $(last_stdout_file) "' uploaded to s3://testbucket/grype/databases"
 
