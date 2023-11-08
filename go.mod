@@ -35,7 +35,7 @@ require (
 	github.com/umisama/go-cpe v0.0.0-20190323060751-cdd6c3c28a23
 	github.com/wagoodman/go-partybus v0.0.0-20230516145632-8ccac152c651
 	github.com/wagoodman/go-progress v0.0.0-20230925121702-07e42b3cdba0
-	golang.org/x/sync v0.4.0
+	golang.org/x/sync v0.5.0
 	golang.org/x/text v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.5
