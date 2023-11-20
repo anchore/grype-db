@@ -17,6 +17,9 @@ func newUniquePkgTrackerFromSlice(candidates []pkgCandidate) uniquePkgTracker {
 }
 
 func TestFindUniquePkgs(t *testing.T) {
+	boolPtr := func(b bool) *bool {
+		return &b
+	}
 	tests := []struct {
 		name     string
 		nodes    []nvd.Node
@@ -225,6 +228,85 @@ func TestFindUniquePkgs(t *testing.T) {
 						TargetSoftware: "target",
 					},
 				}),
+		},
+		{
+			name: "cpe with multiple platforms",
+			nodes: []nvd.Node{
+				{
+					Negate:   boolPtr(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*",
+							MatchCriteriaID: "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:      true,
+						},
+					},
+				},
+				{
+					Negate:   boolPtr(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
+							MatchCriteriaID: "902B8056-9E37-443B-8905-8AA93E2447FB",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
+							MatchCriteriaID: "3D94DA3B-FA74-4526-A0A0-A872684598C6",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
+							MatchCriteriaID: "DEECE5FC-CACF-4496-A3E7-164736409252",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
+							MatchCriteriaID: "07B237A9-69A3-4A9C-9DA0-4E06BD37AE73",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
+							MatchCriteriaID: "FA6FEEC2-9F11-4643-8827-749718254FED",
+							Vulnerable:      false,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*"),
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*"),
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*"),
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*"),
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*"),
+				},
+			}),
 		},
 	}
 
