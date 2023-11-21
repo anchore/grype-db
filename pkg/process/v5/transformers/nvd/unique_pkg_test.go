@@ -1,9 +1,10 @@
 package nvd
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 
@@ -282,36 +283,37 @@ func TestFindUniquePkgs(t *testing.T) {
 					},
 				},
 			},
+			// TODO: why is this adding nils?
 			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
 				{
 					Product:        "redis",
 					Vendor:         "redis",
 					TargetSoftware: ANY,
-					PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*"),
+					PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
 				},
 				{
 					Product:        "redis",
 					Vendor:         "redis",
 					TargetSoftware: ANY,
-					PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*"),
+					PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
 				},
 				{
 					Product:        "redis",
 					Vendor:         "redis",
 					TargetSoftware: ANY,
-					PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*"),
+					PlatformCPE:    "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
 				},
 				{
 					Product:        "redis",
 					Vendor:         "redis",
 					TargetSoftware: ANY,
-					PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*"),
+					PlatformCPE:    "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
 				},
 				{
 					Product:        "redis",
 					Vendor:         "redis",
 					TargetSoftware: ANY,
-					PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*"),
+					PlatformCPE:    "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
 				},
 			}),
 		},
@@ -334,7 +336,6 @@ func TestFindUniquePkgs(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func strRef(s string) *string {
@@ -438,7 +439,6 @@ func TestBuildConstraints(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
@@ -447,31 +447,31 @@ func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
 			Product:        "redis",
 			Vendor:         "redis",
 			TargetSoftware: ANY,
-			PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*"),
+			PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
 		},
 		{
 			Product:        "redis",
 			Vendor:         "redis",
 			TargetSoftware: ANY,
-			PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*"),
+			PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
 		},
 		{
 			Product:        "redis",
 			Vendor:         "redis",
 			TargetSoftware: ANY,
-			PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*"),
+			PlatformCPE:    "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
 		},
 		{
 			Product:        "redis",
 			Vendor:         "redis",
 			TargetSoftware: ANY,
-			PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*"),
+			PlatformCPE:    "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
 		},
 		{
 			Product:        "redis",
 			Vendor:         "redis",
 			TargetSoftware: ANY,
-			PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*"),
+			PlatformCPE:    "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
 		},
 	}
 	cpeMatch := nvd.CpeMatch{

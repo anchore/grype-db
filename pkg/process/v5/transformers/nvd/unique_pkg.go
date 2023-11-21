@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/umisama/go-cpe"
-
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
+	"github.com/umisama/go-cpe"
 )
 
 const (
@@ -19,18 +19,18 @@ type pkgCandidate struct {
 	Product        string
 	Vendor         string
 	TargetSoftware string
-	PlatformCPE    *string
+	PlatformCPE    string
 }
 
 func (p pkgCandidate) String() string {
-	if p.PlatformCPE == nil {
+	if p.PlatformCPE == "" {
 		return fmt.Sprintf("%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware)
 	}
 
-	return fmt.Sprintf("%s|%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware, *p.PlatformCPE)
+	return fmt.Sprintf("%s|%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware, p.PlatformCPE)
 }
 
-func newPkgCandidate(match nvd.CpeMatch, platformCPE *string) (*pkgCandidate, error) {
+func newPkgCandidate(match nvd.CpeMatch, platformCPE string) (*pkgCandidate, error) {
 	// we are only interested in packages that are vulnerable (not related to secondary match conditioning)
 	if !match.Vulnerable {
 		return nil, nil
@@ -62,16 +62,16 @@ func findUniquePkgs(cfgs ...nvd.Configuration) uniquePkgTracker {
 	return set
 }
 
-func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) []*pkgCandidate {
+func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	nodes := c.Nodes
-	var result []*pkgCandidate
+	result := false
 	/*
 		Turn a configuration like this:
 		(AND (redis <= 6.2 (OR debian:8 debian:9 ubuntu:19 ubuntu:20))
 		Into a configuration like this:
 		(OR (AND redis <= 6.1 debian:8) (AND redis <= 6.1 debian:9) (AND redis <= 6.1 ubuntu:19) (AND redis <= 6.1 ubuntu:20))
 	*/
-	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
+	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And && len(nodes[0].CpeMatch) == 1 {
 		matches := nodes[1].CpeMatch
 		applicationNode := nodes[0].CpeMatch[0]
 		for _, maybePlatform := range matches {
@@ -79,19 +79,20 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) []*pkg
 			// Something stupid is happening. Every time this loop steps, I'm overwriting
 			// the zeroth member of the set.
 			platform := maybePlatform.Criteria
-			candidate, err := newPkgCandidate(applicationNode, &platform)
+			candidate, err := newPkgCandidate(applicationNode, platform)
 			if err != nil || candidate == nil {
 				continue
 			}
 			set.Add(*candidate, nodes[0].CpeMatch[0])
+			result = true
 		}
 
 	}
 	return result
 }
 
-func determinePlatformCPEAndNodes(c nvd.Configuration) (*string, []nvd.Node) {
-	var platformCPE *string
+func determinePlatformCPEAndNodes(c nvd.Configuration) (string, []nvd.Node) {
+	var platformCPE string
 	nodes := c.Nodes
 
 	// Only retrieve a platform CPE in very specific cases
@@ -125,7 +126,7 @@ func determinePlatformCPEAndNodes(c nvd.Configuration) (*string, []nvd.Node) {
 				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*"}]
 				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*"}]
 			*/
-			platformCPE = &nodes[1].CpeMatch[0].Criteria
+			platformCPE = nodes[1].CpeMatch[0].Criteria
 			nodes = []nvd.Node{nodes[0]}
 		}
 	}
@@ -140,32 +141,31 @@ func _findUniquePkgs(set uniquePkgTracker, c nvd.Configuration) {
 		return
 	}
 
-	platformPackageCandidates(set, c)
+	if platformPackageCandidates(set, c) {
+		return
+	}
 
-	//platformCPE, nodes := determinePlatformCPEAndNodes(c)
+	platformCPE, nodes := determinePlatformCPEAndNodes(c)
 	//
 	//// TODO: this needs to loop also the other way;
 	//// we need to be able to represent a single package
 	//// that has multiple platforms,
 	//// probably by
-	//for _, node := range nodes {
-	//	for _, match := range node.CpeMatch {
-	//		candidate, err := newPkgCandidate(match, platformCPE)
-	//		if err != nil {
-	//			// Do not halt all execution because of being unable to create
-	//			// a PkgCandidate. This can happen when a CPE is invalid which
-	//			// could avoid creating a database
-	//			log.Debugf("unable processing uniquePkg: %v", err)
-	//			continue
-	//		}
-	//		if candidate != nil {
-	//			set.Add(*candidate, match)
-	//		}
-	//	}
-	//}
-	//for _, u := range platformPackageCandidates(c) {
-	//	set.Add(*)
-	//}
+	for _, node := range nodes {
+		for _, match := range node.CpeMatch {
+			candidate, err := newPkgCandidate(match, platformCPE)
+			if err != nil {
+				// Do not halt all execution because of being unable to create
+				// a PkgCandidate. This can happen when a CPE is invalid which
+				// could avoid creating a database
+				log.Debugf("unable processing uniquePkg: %v", err)
+				continue
+			}
+			if candidate != nil {
+				set.Add(*candidate, match)
+			}
+		}
+	}
 }
 
 func buildConstraints(matches []nvd.CpeMatch) string {
