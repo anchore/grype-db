@@ -1,6 +1,8 @@
 package nvd
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -20,9 +22,13 @@ func TestFindUniquePkgs(t *testing.T) {
 	boolPtr := func(b bool) *bool {
 		return &b
 	}
+	operatorRef := func(o nvd.Operator) *nvd.Operator {
+		return &o
+	}
 	tests := []struct {
 		name     string
 		nodes    []nvd.Node
+		operator *nvd.Operator
 		expected uniquePkgTracker
 	}{
 		{
@@ -230,7 +236,8 @@ func TestFindUniquePkgs(t *testing.T) {
 				}),
 		},
 		{
-			name: "cpe with multiple platforms",
+			name:     "cpe with multiple platforms",
+			operator: operatorRef(nvd.And),
 			nodes: []nvd.Node{
 				{
 					Negate:   boolPtr(false),
@@ -312,7 +319,7 @@ func TestFindUniquePkgs(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := findUniquePkgs(nvd.Configuration{Nodes: test.nodes})
+			actual := findUniquePkgs(nvd.Configuration{Nodes: test.nodes, Operator: test.operator})
 			missing, extra := test.expected.Diff(actual)
 			if len(missing) != 0 {
 				for _, c := range missing {
@@ -432,4 +439,55 @@ func TestBuildConstraints(t *testing.T) {
 		})
 	}
 
+}
+
+func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
+	candidates := []pkgCandidate{
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*"),
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    strRef("cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*"),
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*"),
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*"),
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    strRef("cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*"),
+		},
+	}
+	cpeMatch := nvd.CpeMatch{
+		Criteria:        "cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*",
+		MatchCriteriaID: "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+	}
+	applicationNode := nvd.CpeMatch{
+		Criteria:        "cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*",
+		MatchCriteriaID: "some-uuid",
+		Vulnerable:      true,
+	}
+	tracker := newUniquePkgTracker()
+	for _, c := range candidates {
+		candidate, err := newPkgCandidate(applicationNode, c.PlatformCPE)
+		require.NoError(t, err)
+		tracker.Add(*candidate, cpeMatch)
+	}
+	assert.Len(t, tracker, len(candidates))
 }

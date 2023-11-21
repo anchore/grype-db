@@ -6,7 +6,6 @@ import (
 
 	"github.com/umisama/go-cpe"
 
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
@@ -63,17 +62,75 @@ func findUniquePkgs(cfgs ...nvd.Configuration) uniquePkgTracker {
 	return set
 }
 
+func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) []*pkgCandidate {
+	nodes := c.Nodes
+	var result []*pkgCandidate
+	/*
+		Turn a configuration like this:
+		(AND (redis <= 6.2 (OR debian:8 debian:9 ubuntu:19 ubuntu:20))
+		Into a configuration like this:
+		(OR (AND redis <= 6.1 debian:8) (AND redis <= 6.1 debian:9) (AND redis <= 6.1 ubuntu:19) (AND redis <= 6.1 ubuntu:20))
+	*/
+	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
+		matches := nodes[1].CpeMatch
+		applicationNode := nodes[0].CpeMatch[0]
+		for _, maybePlatform := range matches {
+			// TODO: I'm overwriting a pointer or something?
+			// Something stupid is happening. Every time this loop steps, I'm overwriting
+			// the zeroth member of the set.
+			platform := maybePlatform.Criteria
+			candidate, err := newPkgCandidate(applicationNode, &platform)
+			if err != nil || candidate == nil {
+				continue
+			}
+			set.Add(*candidate, nodes[0].CpeMatch[0])
+		}
+
+	}
+	return result
+}
+
 func determinePlatformCPEAndNodes(c nvd.Configuration) (*string, []nvd.Node) {
 	var platformCPE *string
 	nodes := c.Nodes
 
 	// Only retrieve a platform CPE in very specific cases
+	// WILL - I need to figure out what these
 	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
-		if len(nodes[1].CpeMatch) == 1 && !nodes[1].CpeMatch[0].Vulnerable {
+		if len(nodes[1].CpeMatch) == 1 && !nodes[1].CpeMatch[0].Vulnerable { // WILL: this is false for the record in question
+			// Here's what I think is happening:
+			// Right now, if there is _exactly one_ platform
+			// we set that platform on the vuln record we emit
+			// but if there is more than one, we just punt
+			// and say, "who knows; lots of platforms."
+			// instead, we should figure out how to or together the platforms
+			// and emit the fewest number of rows that covers all cases.
+			//
+			/*
+
+				TODAY:
+				sqlite> select id, package_name, namespace, package_qualifiers, version_constraint from vulnerability where id like 'CVE-2022-0543';
+				id             package_name  namespace                             package_qualifiers  version_constraint
+				-------------  ------------  ------------------------------------  ------------------  ---------------------
+				CVE-2022-0543  redis         nvd:cpe
+
+				This should really look more like:
+
+				sqlite> select id, package_name, namespace, package_qualifiers, version_constraint from vulnerability where id like 'CVE-2022-0543';
+				id             package_name  namespace                             package_qualifiers  version_constraint
+				-------------  ------------  ------------------------------------  ------------------  ---------------------
+				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*"}]
+				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*"}]
+				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*"}]
+				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*"}]
+				CVE-2022-0543  redis         nvd:cpe								[{"kind":"platform-cpe","cpe":"cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*"}]
+			*/
 			platformCPE = &nodes[1].CpeMatch[0].Criteria
 			nodes = []nvd.Node{nodes[0]}
 		}
 	}
+
+	// This needs to return multiple nodes?
 
 	return platformCPE, nodes
 }
@@ -83,23 +140,32 @@ func _findUniquePkgs(set uniquePkgTracker, c nvd.Configuration) {
 		return
 	}
 
-	platformCPE, nodes := determinePlatformCPEAndNodes(c)
+	platformPackageCandidates(set, c)
 
-	for _, node := range nodes {
-		for _, match := range node.CpeMatch {
-			candidate, err := newPkgCandidate(match, platformCPE)
-			if err != nil {
-				// Do not halt all execution because of being unable to create
-				// a PkgCandidate. This can happen when a CPE is invalid which
-				// could avoid creating a database
-				log.Debugf("unable processing uniquePkg: %v", err)
-				continue
-			}
-			if candidate != nil {
-				set.Add(*candidate, match)
-			}
-		}
-	}
+	//platformCPE, nodes := determinePlatformCPEAndNodes(c)
+	//
+	//// TODO: this needs to loop also the other way;
+	//// we need to be able to represent a single package
+	//// that has multiple platforms,
+	//// probably by
+	//for _, node := range nodes {
+	//	for _, match := range node.CpeMatch {
+	//		candidate, err := newPkgCandidate(match, platformCPE)
+	//		if err != nil {
+	//			// Do not halt all execution because of being unable to create
+	//			// a PkgCandidate. This can happen when a CPE is invalid which
+	//			// could avoid creating a database
+	//			log.Debugf("unable processing uniquePkg: %v", err)
+	//			continue
+	//		}
+	//		if candidate != nil {
+	//			set.Add(*candidate, match)
+	//		}
+	//	}
+	//}
+	//for _, u := range platformPackageCandidates(c) {
+	//	set.Add(*)
+	//}
 }
 
 func buildConstraints(matches []nvd.CpeMatch) string {
