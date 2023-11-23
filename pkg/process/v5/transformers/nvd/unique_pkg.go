@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/umisama/go-cpe"
+
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
-	"github.com/umisama/go-cpe"
 )
 
 const (
@@ -86,7 +87,6 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 			set.Add(*candidate, nodes[0].CpeMatch[0])
 			result = true
 		}
-
 	}
 	return result
 }

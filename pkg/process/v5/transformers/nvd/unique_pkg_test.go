@@ -3,10 +3,9 @@ package nvd
 import (
 	"testing"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
