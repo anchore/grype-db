@@ -68,24 +68,42 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	result := false
 	/*
 		Turn a configuration like this:
-		(AND (redis <= 6.2 (OR debian:8 debian:9 ubuntu:19 ubuntu:20))
+		(AND (redis <= 6.1 (OR debian:8 debian:9 ubuntu:19 ubuntu:20))
 		Into a configuration like this:
 		(OR (AND redis <= 6.1 debian:8) (AND redis <= 6.1 debian:9) (AND redis <= 6.1 ubuntu:19) (AND redis <= 6.1 ubuntu:20))
 	*/
-	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And && len(nodes[0].CpeMatch) == 1 {
-		matches := nodes[1].CpeMatch
-		applicationNode := nodes[0].CpeMatch[0]
-		for _, maybePlatform := range matches {
-			// TODO: I'm overwriting a pointer or something?
-			// Something stupid is happening. Every time this loop steps, I'm overwriting
-			// the zeroth member of the set.
-			platform := maybePlatform.Criteria
-			candidate, err := newPkgCandidate(applicationNode, platform)
-			if err != nil || candidate == nil {
-				continue
+	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
+		var platformsNode nvd.Node
+		var applicationNode nvd.Node
+		for _, n := range nodes {
+			for _, c := range n.CpeMatch {
+				if strings.HasPrefix(c.Criteria, "cpe:2.3:a") {
+					applicationNode = n
+					break
+				}
+				if strings.HasPrefix(c.Criteria, "cpe:2.3:o") {
+					platformsNode = n
+					break
+				}
 			}
-			set.Add(*candidate, nodes[0].CpeMatch[0])
-			result = true
+		}
+		if platformsNode.Operator != nvd.Or || len(platformsNode.CpeMatch) < 2 {
+			return false
+		}
+		if applicationNode.Operator != nvd.Or {
+			return false
+		}
+		matches := platformsNode.CpeMatch
+		for _, application := range applicationNode.CpeMatch {
+			for _, maybePlatform := range matches {
+				platform := maybePlatform.Criteria
+				candidate, err := newPkgCandidate(application, platform)
+				if err != nil || candidate == nil {
+					continue
+				}
+				set.Add(*candidate, application)
+				result = true
+			}
 		}
 	}
 	return result
