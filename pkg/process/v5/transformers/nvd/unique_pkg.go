@@ -63,6 +63,7 @@ func findUniquePkgs(cfgs ...nvd.Configuration) uniquePkgTracker {
 	return set
 }
 
+// nolint:gocognit
 func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	nodes := c.Nodes
 	result := false
