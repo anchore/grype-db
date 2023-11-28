@@ -63,55 +63,65 @@ func findUniquePkgs(cfgs ...nvd.Configuration) uniquePkgTracker {
 	return set
 }
 
-// nolint:gocognit
 func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	nodes := c.Nodes
-	result := false
 	/*
 		Turn a configuration like this:
 		(AND (redis <= 6.1 (OR debian:8 debian:9 ubuntu:19 ubuntu:20))
 		Into a configuration like this:
 		(OR (AND redis <= 6.1 debian:8) (AND redis <= 6.1 debian:9) (AND redis <= 6.1 ubuntu:19) (AND redis <= 6.1 ubuntu:20))
 	*/
-	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
-		var platformsNode nvd.Node
-		var applicationNode nvd.Node
-		for _, n := range nodes {
-			for _, c := range n.CpeMatch {
-				if strings.HasPrefix(c.Criteria, "cpe:2.3:a") {
-					applicationNode = n
-					break
-				}
-				if strings.HasPrefix(c.Criteria, "cpe:2.3:o") {
-					platformsNode = n
-					break
-				}
+	if len(nodes) != 2 || c.Operator == nil || *c.Operator != nvd.And {
+		return false
+	}
+	var platformsNode nvd.Node
+	var applicationNode nvd.Node
+	for _, n := range nodes {
+		for _, c := range n.CpeMatch {
+			if isApplicationCPE(c) {
+				applicationNode = n
+				break
 			}
-		}
-		if platformsNode.Operator != nvd.Or || len(platformsNode.CpeMatch) < 2 {
-			return false
-		}
-		if applicationNode.Operator != nvd.Or {
-			return false
-		}
-		matches := platformsNode.CpeMatch
-		for _, application := range applicationNode.CpeMatch {
-			for _, maybePlatform := range matches {
-				platform := maybePlatform.Criteria
-				candidate, err := newPkgCandidate(application, platform)
-				if err != nil {
-					log.Debugf("unable processing uniquePkg with multiple platforms: %v", err)
-					continue
-				}
-				if candidate == nil {
-					continue
-				}
-				set.Add(*candidate, application)
-				result = true
+			if isPlatformCPE(c) {
+				platformsNode = n
+				break
 			}
 		}
 	}
+	if platformsNode.Operator != nvd.Or || len(platformsNode.CpeMatch) < 2 {
+		return false
+	}
+	if applicationNode.Operator != nvd.Or {
+		return false
+	}
+	result := false
+	matches := platformsNode.CpeMatch
+	for _, application := range applicationNode.CpeMatch {
+		for _, maybePlatform := range matches {
+			platform := maybePlatform.Criteria
+			candidate, err := newPkgCandidate(application, platform)
+			if err != nil {
+				log.Debugf("unable processing uniquePkg with multiple platforms: %v", err)
+				continue
+			}
+			if candidate == nil {
+				continue
+			}
+			set.Add(*candidate, application)
+			result = true
+		}
+	}
 	return result
+}
+
+func isApplicationCPE(c nvd.CpeMatch) bool {
+	parts := strings.Split(c.Criteria, ":")
+	return len(parts) >= 3 && parts[0] == "cpe" && parts[2] == "a"
+}
+
+func isPlatformCPE(c nvd.CpeMatch) bool {
+	parts := strings.Split(c.Criteria, ":")
+	return len(parts) >= 3 && parts[0] == "cpe" && parts[2] == "o"
 }
 
 func determinePlatformCPEAndNodes(c nvd.Configuration) (string, []nvd.Node) {
