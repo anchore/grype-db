@@ -67,9 +67,19 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	nodes := c.Nodes
 	/*
 		Turn a configuration like this:
-		(AND (redis <= 6.1 (OR debian:8 debian:9 ubuntu:19 ubuntu:20))
+		(AND
+			(OR (cpe:2.3:a:redis:...whatever) (cpe:2.3.:something:...whatever)
+			(OR (cpe:2.3:o:debian:9....) (cpe:2.3:o:ubuntu:22..))
+		)
 		Into a configuration like this:
-		(OR (AND redis <= 6.1 debian:8) (AND redis <= 6.1 debian:9) (AND redis <= 6.1 ubuntu:19) (AND redis <= 6.1 ubuntu:20))
+		(OR
+			(AND (cpe:2.3:a:redis:...whatever) (cpe:2.3:o:debian:9...))
+			(AND (cpe:2.3:a:redis:...whatever) (cpe:2.3:o:ubuntu:22...))
+			(AND (cpe:2.3:a:something:...whatever) (cpe:2.3:o:debian:9...))
+			(AND (cpe:2.3:a:something:...whatever) (cpe:2.3:o:ubuntu:22...))
+		)
+		Because in schema v5, rows in Grype DB can only have zero or one platform CPE
+		constraint.
 	*/
 	if len(nodes) != 2 || c.Operator == nil || *c.Operator != nvd.And {
 		return false
