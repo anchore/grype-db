@@ -516,6 +516,77 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "multiple platforms some are application",
+			numEntries: 2,
+			fixture:    "test-fixtures/multiple-platforms-with-application-cpe.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-38733",
+					PackageName: "robotic_process_automation",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:a:redhat:openshift:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      ">= 21.0.0, <= 21.0.7.3 || >= 23.0.0, <= 23.0.3",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:ibm:robotic_process_automation:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+				{
+					ID:          "CVE-2023-38733",
+					PackageName: "robotic_process_automation",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      ">= 21.0.0, <= 21.0.7.3 || >= 23.0.0, <= 23.0.3",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:ibm:robotic_process_automation:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-38733",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-38733",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "Medium",
+				URLs: []string{
+					"https://exchange.xforce.ibmcloud.com/vulnerabilities/262293",
+					"https://www.ibm.com/support/pages/node/7028223",
+				},
+				Description: "\nIBM Robotic Process Automation 21.0.0 through 21.0.7.1 and 23.0.0 through 23.0.1 server could allow an authenticated user to view sensitive information from installation logs.  IBM X-Force Id:  262293.\n\n",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(4.3, 2.8, 1.4),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(4.3, 2.8, 1.4),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+						Version:        "3.1",
+						Source:         "psirt@us.ibm.com",
+						Type:           "Secondary",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {

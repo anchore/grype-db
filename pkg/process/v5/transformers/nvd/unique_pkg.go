@@ -87,15 +87,11 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	var platformsNode nvd.Node
 	var applicationNode nvd.Node
 	for _, n := range nodes {
-		for _, c := range n.CpeMatch {
-			if isApplicationCPE(c) {
-				applicationNode = n
-				break
-			}
-			if isPlatformCPE(c) {
-				platformsNode = n
-				break
-			}
+		if allCPEsVulnerable(n) {
+			applicationNode = n
+		}
+		if noCPEsVulnerable(n) {
+			platformsNode = n
 		}
 	}
 	if platformsNode.Operator != nvd.Or || len(platformsNode.CpeMatch) < 2 {
@@ -124,14 +120,22 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	return result
 }
 
-func isApplicationCPE(c nvd.CpeMatch) bool {
-	parts := strings.Split(c.Criteria, ":")
-	return len(parts) >= 3 && parts[0] == "cpe" && parts[2] == "a"
+func allCPEsVulnerable(node nvd.Node) bool {
+	for _, c := range node.CpeMatch {
+		if !c.Vulnerable {
+			return false
+		}
+	}
+	return true
 }
 
-func isPlatformCPE(c nvd.CpeMatch) bool {
-	parts := strings.Split(c.Criteria, ":")
-	return len(parts) >= 3 && parts[0] == "cpe" && parts[2] == "o"
+func noCPEsVulnerable(node nvd.Node) bool {
+	for _, c := range node.CpeMatch {
+		if c.Vulnerable {
+			return false
+		}
+	}
+	return true
 }
 
 func determinePlatformCPEAndNodes(c nvd.Configuration) (string, []nvd.Node) {
