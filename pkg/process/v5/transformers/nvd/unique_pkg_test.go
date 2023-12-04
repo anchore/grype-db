@@ -3,6 +3,7 @@ package nvd
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -488,4 +489,151 @@ func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
 		tracker.Add(*candidate, cpeMatch)
 	}
 	assert.Len(t, tracker, len(candidates))
+}
+
+func TestPlatformPackageCandidates(t *testing.T) {
+	// TODO: guard against `h` type CPEs getting in
+	type testCase struct {
+		name        string
+		config      nvd.Configuration
+		wantChanged bool
+		wantSet     uniquePkgTracker
+	}
+	tests := []testCase{
+		{
+			name: "application X platform",
+			config: nvd.Configuration{
+				Negate: nil,
+				Nodes: []nvd.Node{
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:o:some-vendor:other-platform:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+				},
+				Operator: opRef(nvd.And),
+			},
+			wantChanged: true,
+			wantSet: newUniquePkgTrackerFromSlice(
+				[]pkgCandidate{
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*"),
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*"),
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:other-platform:*:*:*:*:*:*:*:*"),
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:other-platform:*:*:*:*:*:*:*:*"),
+				},
+			),
+		},
+		{
+			name: "top-level OR is excluded",
+			config: nvd.Configuration{
+				Operator: opRef(nvd.Or),
+			},
+			wantChanged: false,
+			wantSet:     newUniquePkgTracker(),
+		},
+		{
+			name: "top-level nil op is excluded",
+			config: nvd.Configuration{
+				Operator: nil,
+			},
+			wantChanged: false,
+		},
+		{
+			name: "single hardware node results in exclusion",
+			config: nvd.Configuration{
+				Negate: nil,
+				Nodes: []nvd.Node{
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:h:some-vendor:some-device:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+				},
+				Operator: opRef(nvd.And),
+			},
+			wantChanged: false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			set := newUniquePkgTracker()
+			result := platformPackageCandidates(set, tc.config)
+			assert.Equal(t, result, tc.wantChanged)
+			if tc.wantSet == nil {
+				tc.wantSet = newUniquePkgTracker()
+			}
+			if diff := cmp.Diff(tc.wantSet.All(), set.All()); diff != "" {
+				t.Errorf("unexpected diff (-want +got)\n%s", diff)
+			}
+		})
+
+	}
+}
+
+func opRef(op nvd.Operator) *nvd.Operator {
+	return &op
+}
+
+func mustNewPackage(t *testing.T, match nvd.CpeMatch, platformCPE string) pkgCandidate {
+	p, err := newPkgCandidate(match, platformCPE)
+	require.NoError(t, err)
+	return *p
 }

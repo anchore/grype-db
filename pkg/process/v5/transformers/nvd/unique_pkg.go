@@ -87,6 +87,9 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	var platformsNode nvd.Node
 	var applicationNode nvd.Node
 	for _, n := range nodes {
+		if anyHardwareCPEPresent(n) {
+			return false
+		}
 		if allCPEsVulnerable(n) {
 			applicationNode = n
 		}
@@ -118,6 +121,16 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 		}
 	}
 	return result
+}
+
+func anyHardwareCPEPresent(n nvd.Node) bool {
+	for _, c := range n.CpeMatch {
+		parts := strings.Split(c.Criteria, ":")
+		if len(parts) < 3 || parts[2] == "h" {
+			return true
+		}
+	}
+	return false
 }
 
 func allCPEsVulnerable(node nvd.Node) bool {
