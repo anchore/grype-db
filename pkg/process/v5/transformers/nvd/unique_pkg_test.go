@@ -486,7 +486,6 @@ func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
 }
 
 func TestPlatformPackageCandidates(t *testing.T) {
-	// TODO: guard against `h` type CPEs getting in
 	type testCase struct {
 		name        string
 		config      nvd.Configuration
