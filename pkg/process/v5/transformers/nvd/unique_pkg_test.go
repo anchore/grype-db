@@ -3,7 +3,10 @@ package nvd
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
@@ -20,6 +23,7 @@ func TestFindUniquePkgs(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodes    []nvd.Node
+		operator *nvd.Operator
 		expected uniquePkgTracker
 	}{
 		{
@@ -226,11 +230,91 @@ func TestFindUniquePkgs(t *testing.T) {
 					},
 				}),
 		},
+		{
+			name:     "cpe with multiple platforms",
+			operator: opRef(nvd.And),
+			nodes: []nvd.Node{
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
+							MatchCriteriaID: "902B8056-9E37-443B-8905-8AA93E2447FB",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
+							MatchCriteriaID: "3D94DA3B-FA74-4526-A0A0-A872684598C6",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
+							MatchCriteriaID: "DEECE5FC-CACF-4496-A3E7-164736409252",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
+							MatchCriteriaID: "07B237A9-69A3-4A9C-9DA0-4E06BD37AE73",
+							Vulnerable:      false,
+						},
+						{
+							Criteria:        "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
+							MatchCriteriaID: "FA6FEEC2-9F11-4643-8827-749718254FED",
+							Vulnerable:      false,
+						},
+					},
+				},
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*",
+							MatchCriteriaID: "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:      true,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
+				},
+				{
+					Product:        "redis",
+					Vendor:         "redis",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
+				},
+			}),
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := findUniquePkgs(nvd.Configuration{Nodes: test.nodes})
+			actual := findUniquePkgs(nvd.Configuration{Nodes: test.nodes, Operator: test.operator})
 			missing, extra := test.expected.Diff(actual)
 			if len(missing) != 0 {
 				for _, c := range missing {
@@ -245,7 +329,6 @@ func TestFindUniquePkgs(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func strRef(s string) *string {
@@ -349,5 +432,205 @@ func TestBuildConstraints(t *testing.T) {
 			}
 		})
 	}
+}
 
+func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
+	candidates := []pkgCandidate{
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
+		},
+		{
+			Product:        "redis",
+			Vendor:         "redis",
+			TargetSoftware: ANY,
+			PlatformCPE:    "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
+		},
+	}
+	cpeMatch := nvd.CpeMatch{
+		Criteria:        "cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*",
+		MatchCriteriaID: "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+	}
+	applicationNode := nvd.CpeMatch{
+		Criteria:        "cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*",
+		MatchCriteriaID: "some-uuid",
+		Vulnerable:      true,
+	}
+	tracker := newUniquePkgTracker()
+	for _, c := range candidates {
+		candidate, err := newPkgCandidate(applicationNode, c.PlatformCPE)
+		require.NoError(t, err)
+		tracker.Add(*candidate, cpeMatch)
+	}
+	assert.Len(t, tracker, len(candidates))
+}
+
+func TestPlatformPackageCandidates(t *testing.T) {
+	type testCase struct {
+		name        string
+		config      nvd.Configuration
+		wantChanged bool
+		wantSet     uniquePkgTracker
+	}
+	tests := []testCase{
+		{
+			name: "application X platform",
+			config: nvd.Configuration{
+				Negate: nil,
+				Nodes: []nvd.Node{
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:o:some-vendor:other-platform:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+				},
+				Operator: opRef(nvd.And),
+			},
+			wantChanged: true,
+			wantSet: newUniquePkgTrackerFromSlice(
+				[]pkgCandidate{
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*"),
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*"),
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:other-platform:*:*:*:*:*:*:*:*"),
+					mustNewPackage(t, nvd.CpeMatch{
+						Vulnerable: true,
+						Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+					}, "cpe:2.3:o:some-vendor:other-platform:*:*:*:*:*:*:*:*"),
+				},
+			),
+		},
+		{
+			name: "top-level OR is excluded",
+			config: nvd.Configuration{
+				Operator: opRef(nvd.Or),
+			},
+			wantChanged: false,
+			wantSet:     newUniquePkgTracker(),
+		},
+		{
+			name: "top-level nil op is excluded",
+			config: nvd.Configuration{
+				Operator: nil,
+			},
+			wantChanged: false,
+		},
+		{
+			name: "single hardware node results in exclusion",
+			config: nvd.Configuration{
+				Negate: nil,
+				Nodes: []nvd.Node{
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:some-app:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: true,
+								Criteria:   "cpe:2.3:a:some-vendor:other-app:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+					{
+						CpeMatch: []nvd.CpeMatch{
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:o:some-vendor:some-platform:*:*:*:*:*:*:*:*",
+							},
+							{
+								Vulnerable: false,
+								Criteria:   "cpe:2.3:h:some-vendor:some-device:*:*:*:*:*:*:*:*",
+							},
+						},
+						Negate:   nil,
+						Operator: nvd.Or,
+					},
+				},
+				Operator: opRef(nvd.And),
+			},
+			wantChanged: false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			set := newUniquePkgTracker()
+			result := platformPackageCandidates(set, tc.config)
+			assert.Equal(t, result, tc.wantChanged)
+			if tc.wantSet == nil {
+				tc.wantSet = newUniquePkgTracker()
+			}
+			if diff := cmp.Diff(tc.wantSet.All(), set.All()); diff != "" {
+				t.Errorf("unexpected diff (-want +got)\n%s", diff)
+			}
+		})
+
+	}
+}
+
+func opRef(op nvd.Operator) *nvd.Operator {
+	return &op
+}
+
+func boolRef(b bool) *bool {
+	return &b
+}
+
+func mustNewPackage(t *testing.T, match nvd.CpeMatch, platformCPE string) pkgCandidate {
+	p, err := newPkgCandidate(match, platformCPE)
+	require.NoError(t, err)
+	return *p
 }

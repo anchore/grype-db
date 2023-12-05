@@ -46,10 +46,10 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			cpes.Add(grypeNamespace.Resolver().Normalize(m.Criteria))
 		}
 
-		if p.PlatformCPE != nil {
+		if p.PlatformCPE != "" {
 			qualifiers = []qualifier.Qualifier{platformcpe.Qualifier{
 				Kind: "platform-cpe",
-				CPE:  *p.PlatformCPE,
+				CPE:  p.PlatformCPE,
 			}}
 		}
 
