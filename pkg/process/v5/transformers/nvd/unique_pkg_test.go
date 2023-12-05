@@ -20,12 +20,6 @@ func newUniquePkgTrackerFromSlice(candidates []pkgCandidate) uniquePkgTracker {
 }
 
 func TestFindUniquePkgs(t *testing.T) {
-	boolPtr := func(b bool) *bool {
-		return &b
-	}
-	operatorRef := func(o nvd.Operator) *nvd.Operator {
-		return &o
-	}
 	tests := []struct {
 		name     string
 		nodes    []nvd.Node
@@ -238,10 +232,10 @@ func TestFindUniquePkgs(t *testing.T) {
 		},
 		{
 			name:     "cpe with multiple platforms",
-			operator: operatorRef(nvd.And),
+			operator: opRef(nvd.And),
 			nodes: []nvd.Node{
 				{
-					Negate:   boolPtr(false),
+					Negate:   boolRef(false),
 					Operator: nvd.Or,
 					CpeMatch: []nvd.CpeMatch{
 						{
@@ -272,7 +266,7 @@ func TestFindUniquePkgs(t *testing.T) {
 					},
 				},
 				{
-					Negate:   boolPtr(false),
+					Negate:   boolRef(false),
 					Operator: nvd.Or,
 					CpeMatch: []nvd.CpeMatch{
 						{
@@ -630,6 +624,10 @@ func TestPlatformPackageCandidates(t *testing.T) {
 
 func opRef(op nvd.Operator) *nvd.Operator {
 	return &op
+}
+
+func boolRef(b bool) *bool {
+	return &b
 }
 
 func mustNewPackage(t *testing.T, match nvd.CpeMatch, platformCPE string) pkgCandidate {
