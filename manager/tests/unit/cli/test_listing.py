@@ -109,16 +109,16 @@ def create_tar_gz(built: str, version: int):
             "create-new-db",
             0,
             [
-                "grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
-                "grype/databases/vulnerability-db_v2_2023-08-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
-                "grype/databases/vulnerability-db_v3_2023-08-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
-                "grype/databases/vulnerability-db_v4_2023-08-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
-                "grype/databases/vulnerability-db_v5_2023-08-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
+                "grype/databases/vulnerability-db_v1_2023-12-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
+                "grype/databases/vulnerability-db_v2_2023-12-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
+                "grype/databases/vulnerability-db_v3_2023-12-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
+                "grype/databases/vulnerability-db_v4_2023-12-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
+                "grype/databases/vulnerability-db_v5_2023-12-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
             ],
             [
                 "discovered 5 new database candidates to add to the listing",
-                "new db: grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
-                "downloading file from s3 bucket=testbucket key=grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
+                "new db: grype/databases/vulnerability-db_v1_2023-12-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
+                "downloading file from s3 bucket=testbucket key=grype/databases/vulnerability-db_v1_2023-12-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
                 # note that the download URL isn't right relative to production values (where the existing listing was pulled from)
                 # but instead it's correct relative to the configuration, which specifies a localhost route.
                 "adding new listing entry: Entry(built='2023-08-08T01:33:25Z', version=1, url='http://localhost:4566/testbucket/grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz', checksum='sha256:9ece0b838be60974aee62087cf366b84e5b7cb74e7a665d86de7735aca927d36')",
