@@ -5,6 +5,7 @@ import boto3
 import pytest
 from click.testing import CliRunner
 from moto import mock_s3
+from unittest.mock import patch
 
 from grype_db_manager import cli, utils
 from grype_db_manager import db
@@ -129,10 +130,14 @@ def create_tar_gz(built: str, version: int):
     ],
 )
 @mock_s3
-def test_create_listing(test_dir_path, listing_s3_mock, case_dir, expected_exit_code, extra_dbs: list[str], contains):
+@patch("grype_db_manager.distribution.age_from_basename")
+def test_create_listing(
+    mock_file_age, test_dir_path, listing_s3_mock, case_dir, expected_exit_code, extra_dbs: list[str], contains
+):
     # contains an application config file
     config_dir_path = test_dir_path(f"fixtures/listing/{case_dir}")
     listing_s3_mock(config_dir_path, extra_dbs=extra_dbs)
+    mock_file_age.return_value = 42 # needs to be less than distribution.MAX_DB_AGE
 
     with utils.set_directory(config_dir_path):
         with open("expected-listing.json") as f:
