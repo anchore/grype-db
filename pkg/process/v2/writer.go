@@ -118,7 +118,7 @@ func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.V
 		return
 	}
 	if m == nil {
-		log.WithFields("id", metadata.ID).Debug("unable to find vulnerability metadata from NVD namespace")
+		log.WithFields("id", metadata.ID).Trace("unable to find vulnerability metadata from NVD namespace")
 		return
 	}
 

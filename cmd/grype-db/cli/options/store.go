@@ -21,7 +21,7 @@ func DefaultStore() Store {
 	}
 }
 
-func (o *Store) AddFlags(flags *pflag.FlagSet) {
+func (o *Store) AddFlags(_ *pflag.FlagSet) {
 	// bound options
 	// (none)
 
@@ -29,7 +29,7 @@ func (o *Store) AddFlags(flags *pflag.FlagSet) {
 	// (none)
 }
 
-func (o *Store) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
+func (o *Store) BindFlags(_ *pflag.FlagSet, v *viper.Viper) error {
 	// set default values for bound struct items
 	// (none)
 

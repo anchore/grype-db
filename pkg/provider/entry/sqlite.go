@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/sqlite"
 )
 
 var readOptions = []string{
@@ -155,8 +155,7 @@ func connectionString(path string) (string, error) {
 	return fmt.Sprintf("file:%s?cache=shared", path), nil
 }
 
-type logAdapter struct {
-}
+type logAdapter struct{}
 
 func newLogger() logger.Interface {
 	return logAdapter{}
@@ -166,7 +165,7 @@ func (l logAdapter) LogMode(logger.LogLevel) logger.Interface {
 	return l
 }
 
-func (l logAdapter) Info(_ context.Context, fmt string, v ...interface{}) {
+func (l logAdapter) Info(_ context.Context, _ string, _ ...interface{}) {
 	// unimplemented
 }
 
@@ -178,6 +177,6 @@ func (l logAdapter) Error(_ context.Context, fmt string, v ...interface{}) {
 	log.Errorf("gorm: "+fmt, v...)
 }
 
-func (l logAdapter) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
+func (l logAdapter) Trace(_ context.Context, _ time.Time, _ func() (_ string, _ int64), _ error) {
 	// unimplemented
 }

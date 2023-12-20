@@ -37,7 +37,9 @@
       "Link": "https://alas.aws.amazon.com/AL2/ALAS-2018-1106.html",
       "Metadata": {
         "CVE": [
-          {"Name": "CVE-2018-14648"}
+          {
+            "Name": "CVE-2018-14648"
+          }
         ]
       },
       "Name": "ALAS-2018-1106",

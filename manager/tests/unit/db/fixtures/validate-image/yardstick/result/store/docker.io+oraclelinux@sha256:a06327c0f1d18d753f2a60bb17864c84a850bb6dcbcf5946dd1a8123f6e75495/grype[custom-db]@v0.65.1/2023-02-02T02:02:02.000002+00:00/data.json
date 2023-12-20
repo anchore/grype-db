@@ -1,0 +1,810 @@
+{
+ "matches": [
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12238",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12238.html",
+     "https://linux.oracle.com/cve/CVE-2023-0767.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:3.44.0-7.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss-tools",
+       "version": "0:3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    },
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "nss",
+       "version": "3.44.0-7.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:3.44.0-7.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12238"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "5d161f5b9eb6bc84",
+    "name": "nss-tools",
+    "version": "3.44.0-7.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "MPLv2.0"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-tools:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss-tools:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_tools:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss_tools:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss-tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:nss:nss_tools:3.44.0-7.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/nss-tools@3.44.0-7.0.1.el6_10?arch=x86_64&upstream=nss-3.44.0-7.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "nss",
+      "version": "3.44.0-7.0.1.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-12297",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-12297.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-12297.html",
+     "https://linux.oracle.com/cve/CVE-2023-0286.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.0.1e-59.0.4.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "openssl",
+       "version": "0:1.0.1e-58.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.0.1e-59.0.4.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-12297"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "b8bfb2f8aef1c1a0",
+    "name": "openssl",
+    "version": "1.0.1e-58.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "OpenSSL"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:openssl:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/openssl@1.0.1e-58.0.1.el6_10?arch=x86_64&upstream=openssl-1.0.1e-58.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9246",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9246.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9246.html",
+     "https://linux.oracle.com/cve/CVE-2022-0778.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.0.1e-59.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "openssl",
+       "version": "0:1.0.1e-58.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.0.1e-59.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9246"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "b8bfb2f8aef1c1a0",
+    "name": "openssl",
+    "version": "1.0.1e-58.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "OpenSSL"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:openssl:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/openssl@1.0.1e-58.0.1.el6_10?arch=x86_64&upstream=openssl-1.0.1e-58.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2021-9137",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2021-9137.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2021-9137.html",
+     "https://linux.oracle.com/cve/CVE-2020-1971.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.0.1e-59.0.1.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "openssl",
+       "version": "0:1.0.1e-58.0.1.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.0.1e-59.0.1.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2021-9137"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "b8bfb2f8aef1c1a0",
+    "name": "openssl",
+    "version": "1.0.1e-58.0.1.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "OpenSSL"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:openssl:openssl:1.0.1e-58.0.1.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/openssl@1.0.1e-58.0.1.el6_10?arch=x86_64&upstream=openssl-1.0.1e-58.0.1.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-3550",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+     "https://linux.oracle.com/cve/CVE-2022-0391.html",
+     "https://linux.oracle.com/cve/CVE-2023-24329.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.6.6-68.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "python",
+       "version": "0:2.6.6-68.0.2.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.6.6-68.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-3550"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "9f32045094caf30e",
+    "name": "python",
+    "version": "2.6.6-68.0.2.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "Python"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:python:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/python@2.6.6-68.0.2.el6_10?arch=x86_64&upstream=python-2.6.6-68.0.2.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2023-3550",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2023-3550.html",
+     "https://linux.oracle.com/cve/CVE-2022-0391.html",
+     "https://linux.oracle.com/cve/CVE-2023-24329.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:2.6.6-68.0.3.el6_10"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-indirect-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "python",
+       "version": "2.6.6-68.0.2.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.6.6-68.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-3550"
+     }
+    },
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "python-libs",
+       "version": "0:2.6.6-68.0.2.el6_10"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:2.6.6-68.0.3.el6_10 (rpm)",
+      "vulnerabilityID": "ELSA-2023-3550"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "c040d024fc745b0d",
+    "name": "python-libs",
+    "version": "2.6.6-68.0.2.el6_10",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "Python"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:oracleamerica:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-libs:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python-libs:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_libs:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python_libs:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python-libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*",
+     "cpe:2.3:a:python:python_libs:2.6.6-68.0.2.el6_10:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/python-libs@2.6.6-68.0.2.el6_10?arch=x86_64&upstream=python-2.6.6-68.0.2.el6_10.src.rpm&distro=ol-6.10",
+    "upstreams": [
+     {
+      "name": "python",
+      "version": "2.6.6-68.0.2.el6_10"
+     }
+    ],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9783",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9783.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9783.html",
+     "https://linux.oracle.com/cve/CVE-2022-24903.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:5.8.10-12.0.2.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "rsyslog",
+       "version": "0:5.8.10-12.0.1.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:5.8.10-12.0.2.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9783"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "be6eda67de6eb161",
+    "name": "rsyslog",
+    "version": "5.8.10-12.0.1.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "(GPLv3+ and ASL 2.0)"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:rsyslog:5.8.10-12.0.1.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:rsyslog:rsyslog:5.8.10-12.0.1.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/rsyslog@5.8.10-12.0.1.el6?arch=x86_64&upstream=rsyslog-5.8.10-12.0.1.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9988",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9988.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9988.html",
+     "https://linux.oracle.com/cve/CVE-2022-37434.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.2.3-29.0.3.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "zlib",
+       "version": "0:1.2.3-29.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.2.3-29.0.3.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9988"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "9fbfc334a6cfb07e",
+    "name": "zlib",
+    "version": "1.2.3-29.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "zlib and Boost"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:zlib:1.2.3-29.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:zlib:zlib:1.2.3-29.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/zlib@1.2.3-29.el6?arch=x86_64&upstream=zlib-1.2.3-29.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  },
+  {
+   "vulnerability": {
+    "id": "ELSA-2022-9565",
+    "dataSource": "https://linux.oracle.com/errata/ELSA-2022-9565.html",
+    "namespace": "oracle:distro:oraclelinux:6",
+    "severity": "High",
+    "urls": [
+     "https://linux.oracle.com/errata/ELSA-2022-9565.html",
+     "https://linux.oracle.com/cve/CVE-2018-25032.html"
+    ],
+    "cvss": [],
+    "fix": {
+     "versions": [
+      "0:1.2.3-29.0.1.el6"
+     ],
+     "state": "fixed"
+    },
+    "advisories": []
+   },
+   "relatedVulnerabilities": [],
+   "matchDetails": [
+    {
+     "type": "exact-direct-match",
+     "matcher": "rpm-matcher",
+     "searchedBy": {
+      "distro": {
+       "type": "oraclelinux",
+       "version": "6.10"
+      },
+      "namespace": "oracle:distro:oraclelinux:6",
+      "package": {
+       "name": "zlib",
+       "version": "0:1.2.3-29.el6"
+      }
+     },
+     "found": {
+      "versionConstraint": "< 0:1.2.3-29.0.1.el6 (rpm)",
+      "vulnerabilityID": "ELSA-2022-9565"
+     }
+    }
+   ],
+   "artifact": {
+    "id": "9fbfc334a6cfb07e",
+    "name": "zlib",
+    "version": "1.2.3-29.el6",
+    "type": "rpm",
+    "locations": [
+     {
+      "path": "/var/lib/rpm/Packages",
+      "layerID": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9"
+     }
+    ],
+    "language": "",
+    "licenses": [
+     "zlib and Boost"
+    ],
+    "cpes": [
+     "cpe:2.3:a:oracleamerica:zlib:1.2.3-29.el6:*:*:*:*:*:*:*",
+     "cpe:2.3:a:zlib:zlib:1.2.3-29.el6:*:*:*:*:*:*:*"
+    ],
+    "purl": "pkg:rpm/ol/zlib@1.2.3-29.el6?arch=x86_64&upstream=zlib-1.2.3-29.el6.src.rpm&distro=ol-6.10",
+    "upstreams": [],
+    "metadataType": "RpmMetadata",
+    "metadata": {
+     "epoch": null,
+     "modularityLabel": ""
+    }
+   }
+  }
+ ],
+ "source": {
+  "type": "image",
+  "target": {
+   "userInput": "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+   "imageID": "sha256:c187fee7ec1b25f3114cbe9639cdc1296ee0d43fb117fc557b953b5c362de979",
+   "manifestDigest": "sha256:6ae670f11b7845231975c2ef0da53de11e047856e6757151d7ce3cde3a047ffe",
+   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+   "tags": [],
+   "imageSize": 170647420,
+   "layers": [
+    {
+     "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+     "digest": "sha256:8fb74746fe9039eb3fc7979dc972e42100a1d4092c5196a511b7dd47bee764b9",
+     "size": 170647420
+    }
+   ],
+   "manifest": "eyJzY2hlbWFWZXJzaW9uIjoyLCJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQuZG9ja2VyLmRpc3RyaWJ1dGlvbi5tYW5pZmVzdC52Mitqc29uIiwiY29uZmlnIjp7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuY29udGFpbmVyLmltYWdlLnYxK2pzb24iLCJzaXplIjoxNDc4LCJkaWdlc3QiOiJzaGEyNTY6YzE4N2ZlZTdlYzFiMjVmMzExNGNiZTk2MzljZGMxMjk2ZWUwZDQzZmIxMTdmYzU1N2I5NTNiNWMzNjJkZTk3OSJ9LCJsYXllcnMiOlt7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjoxNzg0MTg2ODgsImRpZ2VzdCI6InNoYTI1Njo4ZmI3NDc0NmZlOTAzOWViM2ZjNzk3OWRjOTcyZTQyMTAwYTFkNDA5MmM1MTk2YTUxMWI3ZGQ0N2JlZTc2NGI5In1dfQ==",
+   "config": "eyJhcmNoaXRlY3R1cmUiOiJhbWQ2NCIsImNvbmZpZyI6eyJIb3N0bmFtZSI6IiIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiIiwiQXR0YWNoU3RkaW4iOmZhbHNlLCJBdHRhY2hTdGRvdXQiOmZhbHNlLCJBdHRhY2hTdGRlcnIiOmZhbHNlLCJUdHkiOmZhbHNlLCJPcGVuU3RkaW4iOmZhbHNlLCJTdGRpbk9uY2UiOmZhbHNlLCJFbnYiOlsiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iXSwiQ21kIjpbIi9iaW4vYmFzaCJdLCJJbWFnZSI6InNoYTI1Njo1NGQ3ZTcxYmUyZjk0NGU4OTIyZmYzZDRjNGZkZjMyODYwNmM1Yjc0Zjk4MGJkYjZkMjhlOGQ0YzVjMzdkYzM2IiwiVm9sdW1lcyI6bnVsbCwiV29ya2luZ0RpciI6IiIsIkVudHJ5cG9pbnQiOm51bGwsIk9uQnVpbGQiOm51bGwsIkxhYmVscyI6bnVsbH0sImNvbnRhaW5lciI6IjQ4M2FhYzU4MmM4OTBhMjM2Y2M2Y2Y1NzcyNDY2Mzg2NWJkMzc0ZjUyZDhlY2ZjMGYyNDc5YzNjOGU1NWU2OWIiLCJjb250YWluZXJfY29uZmlnIjp7Ikhvc3RuYW1lIjoiNDgzYWFjNTgyYzg5IiwiRG9tYWlubmFtZSI6IiIsIlVzZXIiOiIiLCJBdHRhY2hTdGRpbiI6ZmFsc2UsIkF0dGFjaFN0ZG91dCI6ZmFsc2UsIkF0dGFjaFN0ZGVyciI6ZmFsc2UsIlR0eSI6ZmFsc2UsIk9wZW5TdGRpbiI6ZmFsc2UsIlN0ZGluT25jZSI6ZmFsc2UsIkVudiI6WyJQQVRIPS91c3IvbG9jYWwvc2JpbjovdXNyL2xvY2FsL2JpbjovdXNyL3NiaW46L3Vzci9iaW46L3NiaW46L2JpbiJdLCJDbWQiOlsiL2Jpbi9zaCIsIi1jIiwiIyhub3ApICIsIkNNRCBbXCIvYmluL2Jhc2hcIl0iXSwiSW1hZ2UiOiJzaGEyNTY6NTRkN2U3MWJlMmY5NDRlODkyMmZmM2Q0YzRmZGYzMjg2MDZjNWI3NGY5ODBiZGI2ZDI4ZThkNGM1YzM3ZGMzNiIsIlZvbHVtZXMiOm51bGwsIldvcmtpbmdEaXIiOiIiLCJFbnRyeXBvaW50IjpudWxsLCJPbkJ1aWxkIjpudWxsLCJMYWJlbHMiOnt9fSwiY3JlYXRlZCI6IjIwMjEtMDMtMDlUMjA6Mzc6MDUuODQzNjYwNTg3WiIsImRvY2tlcl92ZXJzaW9uIjoiMTkuMDMuMTIiLCJoaXN0b3J5IjpbeyJjcmVhdGVkIjoiMjAyMS0wMy0wOVQyMDozNzowNS4xNzQxMjcyMDVaIiwiY3JlYXRlZF9ieSI6Ii9iaW4vc2ggLWMgIyhub3ApIEFERCBmaWxlOjc1NDllOGY3ZTg0MDhlYzMyZmRjZWMyODNkYmQ0OTU4MzkzZWRmZjBmZTIxNzU0YzdmYjJhYTkzNGM5ZGE2OTEgaW4gLyAifSx7ImNyZWF0ZWQiOiIyMDIxLTAzLTA5VDIwOjM3OjA1Ljg0MzY2MDU4N1oiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgIENNRCBbXCIvYmluL2Jhc2hcIl0iLCJlbXB0eV9sYXllciI6dHJ1ZX1dLCJvcyI6ImxpbnV4Iiwicm9vdGZzIjp7InR5cGUiOiJsYXllcnMiLCJkaWZmX2lkcyI6WyJzaGEyNTY6OGZiNzQ3NDZmZTkwMzllYjNmYzc5NzlkYzk3MmU0MjEwMGExZDQwOTJjNTE5NmE1MTFiN2RkNDdiZWU3NjRiOSJdfX0=",
+   "repoDigests": [
+    "oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
+   ],
+   "architecture": "amd64",
+   "os": "linux"
+  }
+ },
+ "distro": {
+  "name": "oraclelinux",
+  "version": "6.10",
+  "idLike": []
+ },
+ "descriptor": {
+  "name": "grype",
+  "version": "0.65.1",
+  "configuration": {
+   "configPath": "",
+   "verbosity": 0,
+   "output": [
+    "json"
+   ],
+   "file": "",
+   "distro": "",
+   "add-cpes-if-none": false,
+   "output-template-file": "",
+   "quiet": false,
+   "check-for-app-update": false,
+   "only-fixed": false,
+   "only-notfixed": false,
+   "platform": "",
+   "search": {
+    "scope": "Squashed",
+    "unindexed-archives": false,
+    "indexed-archives": true
+   },
+   "ignore": null,
+   "exclude": [],
+   "db": {
+    "cache-dir": "cli-test-data/yardstick/tools/grype[custom-db]/v0.65.1/db/sha256:d83c6ded81ea3ff69aad9b367b9daee5424b74f813a6d49e9e8ba15d210cbfb6",
+    "update-url": "https://toolbox-data.anchore.io/grype/databases/listing.json",
+    "ca-cert": "",
+    "auto-update": false,
+    "validate-by-hash-on-start": false,
+    "validate-age": false,
+    "max-allowed-built-age": 432000000000000
+   },
+   "externalSources": {
+    "enable": false,
+    "maven": {
+     "searchUpstreamBySha1": true,
+     "baseUrl": "https://search.maven.org/solrsearch/select"
+    }
+   },
+   "match": {
+    "java": {
+     "using-cpes": true
+    },
+    "dotnet": {
+     "using-cpes": true
+    },
+    "golang": {
+     "using-cpes": true
+    },
+    "javascript": {
+     "using-cpes": false
+    },
+    "python": {
+     "using-cpes": true
+    },
+    "ruby": {
+     "using-cpes": true
+    },
+    "stock": {
+     "using-cpes": true
+    }
+   },
+   "dev": {
+    "profile-cpu": false,
+    "profile-mem": false
+   },
+   "fail-on-severity": "",
+   "registry": {
+    "insecure-skip-tls-verify": false,
+    "insecure-use-http": false,
+    "auth": []
+   },
+   "log": {
+    "structured": false,
+    "level": "warn",
+    "file": ""
+   },
+   "show-suppressed": false,
+   "by-cve": false,
+   "name": "",
+   "default-image-pull-source": ""
+  },
+  "db": {
+   "built": "2023-08-08T01:33:25Z",
+   "schemaVersion": 5,
+   "location": "cli-test-data/yardstick/tools/grype[custom-db]/v0.65.1/db/sha256:d83c6ded81ea3ff69aad9b367b9daee5424b74f813a6d49e9e8ba15d210cbfb6/5",
+   "checksum": "sha256:d83c6ded81ea3ff69aad9b367b9daee5424b74f813a6d49e9e8ba15d210cbfb6",
+   "error": null
+  },
+  "timestamp": "2023-08-08T09:24:48.359148-04:00"
+ }
+}

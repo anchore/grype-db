@@ -1,15 +1,152 @@
 [tool.poetry]
-name = "grype-db"
+name = "grype-db-manager"
 version = "0.1.0"
-description = ""
-authors = ["Alex Goodman <alex.goodman@anchore.com>"]
-readme = "README.md"
-packages = [{include = "grype_db"}]
+description = "a tool for publishing validated grype databases to S3 for distribution"
+authors = ["Alex Goodman <wagoodman@users.noreply.github.com>"]
+license = "Apache 2.0"
+packages = [{include = "grype_db_manager", from = "manager/src"}]
+repository = "https://github.com/anchore/grype-db"
+exclude = [
+  "manager/tests/**/*"
+]
+
+[tool.poetry.scripts]
+grype-db-manager = "grype_db_manager.cli:run"
+
+# this section enables searching for package data...
+[tool.setuptools.packages.find]
+namespaces = true
+where = ["manager/src"]
+
+# .. once we can search, this section selects which
+# static data to include in the package
+[tool.setuptools.package-data]
+"grype_db_manager.data" = ["*.json"] # the grype-schema-version-mapping.json file
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<=3.13"
+boto3 = ">=1.28.16, <2"
+click = ">=8.1.6, <9"
+dataclass-wizard = ">=0.22.2, <1"
+iso8601 = ">=2.0.0, <3"
+requests = ">=2.31.0, <3"
+semver = ">=3.0.1, <4"
+tabulate = ">=0.9.0, <1"
+zstandard = ">=0.21.0, <1"
+colorlog = "^6.7.0"
+mergedeep = "^1.3.4"
+pyyaml = ">=5.0.1, <7"
+ yardstick = {git = "https://github.com/anchore/yardstick", rev = "dc54ea796677e9c310041514875f56647f52b78d"}
+#yardstick = {path = "../yardstick", develop = true}
+colr = "^0.9.1"
+supports-color = "^0.1.2"
+pyyaml-include = "^1.3.1"
+python-magic = "^0.4.27"
 
+[tool.poetry.group.dev.dependencies]
+black = ">=23.7.0, <24"
+mypy = ">=1.4.1, <2"
+pytest = ">=7.4.0, <8"
+pytest-sugar = ">=0.9.7"
+pytest-unordered = ">=0.5.2"
+pytest-cov = ">=4.1.0"
+pytest-picked = ">=0.5.0"
+pytest-mock = ">=3.11.1"
+pytest-xdist = ">=3.3.1"
+ruff = "0.0.282" # the ruff project is pretty early, even a patch bump tends to break stuff
+types-requests = "^2.31.0.2"
+vunnel = "^0.15.2"
+moto = "^4.1.14"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["manager/tests"]
+cache_dir = ".cache/pytest"
+pythonpath = ["manager/src"]
+norecursedirs = ["data"]
+
+[tool.black]
+line-length = 130
+
+[tool.coverage.run]
+source = ['grype_db_manager']
+omit = [
+  ".*",
+  "*/site-packages/*",
+  "*/venv/*",
+  "*/tests/*",
+  "*/src/grype_db_manager/__main__.py",
+  "*/src/grype_db_manager/cli/__init__.py",
+]
+
+[tool.ruff]
+cache-dir = ".cache/ruff"
+# allow for a wide-birth relative to what black will correct to
+line-length = 150
+select = [
+  "A",   # flake8-builtins
+  "ANN", # flake8-annotations
+  "ARG", # flake8-unused-arguments
+  "B",   # flake8-bugbear
+  "C",   # mccabe
+  "C4",  # flake8-comprehensions
+  "COM", # flake8-commas
+  "DTZ", # flake8-datetimez
+  "E",   # pycodestyle, errors
+  "EM",  # flake8-errmsg
+  # "ERA", # flake8-eradicate  # not all code in comments should be removed
+  "EXE", # flake8-executable
+  "F",   # pyflakes
+  "G",   # flake8-logging-format
+  "I",   # isort
+  "ICN", # flake8-import-conventions
+  "INP", # flake8-no-pep420
+  "ISC", # flake8-implicit-str-concat
+  "PGH", # pygrep-hooks
+  "PIE", # flake8-pie
+  "PL",  # pylint     (this can be broken down into more checks if needed)
+  "PT",  # flake8-pytest-style
+  # "PTH", # flake8-use-pathlib  # the codebase is not ready for this yet, but would be nice to add
+  "Q",   # flake8-quotes
+  "RET", # flake8-return
+  "RSE", # flake8-raise
+  "RUF", # ruff specific rules
+  "S",   # flake8-bandit
+  "SIM", # flake8-simplify
+  "SLF", # flakes8-self
+  "T10", # flake8-debugger
+  "TCH", # flake8-type-checking
+  "TID", # flake8-tidy-imports
+   "TRY", # tryceratops
+  "UP",  # pyupgrade
+  "W",   # pycodestyle, warnings
+  "YTT", # flake8-2020
+]
+
+ignore = [
+  "ANN401", # should allow for typing.Any in *args and **kwargs
+  "ANN002", # don't require type annotations for arbirary *args
+  "ANN003", # don't require type annotations for arbirary **kwargs
+  "ANN101", # annotating self if useless on an instance method
+  "ANN102", # annotating cls if useless on a class method
+  "ANN204", # annotating return type of __init__ and __post_init__ is useless
+  "ARG001", # unused args are ok, as they communicate intent in interfaces, even if not used in impls.
+  "ARG002", # unused args are ok, as they communicate intent in interfaces, even if not used in impls.
+  "G004", # it's ok to use formatted strings for logging
+  "PGH004", # no blanked "noqa" usage, can be improved over time, but not now
+  "PLR2004", # a little too agressive, not allowing any magic numbers
+  "PLW2901", # "Outer for loop variable X overwritten by inner assignment target", not useful in most cases
+  "RUF100", # no blanket "noqa" usage, can be improved over time, but not now
+  "TRY003", # specifying long messages outside the exception class is excellent context! why is this an antipattern?
+  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)` -- not compatible with python 3.9 (even with __future__ import)
+]
+
+extend-exclude = [
+  "**/tests/**",
+]
+
+[tool.ruff.pylint]
+max-args = 8

@@ -1,4 +1,0 @@
-# ignore cache DIRECTORIES, not files (or symlinks)
-cache/
-build/
-.yardstick
