@@ -84,7 +84,7 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
+        uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 #v4.0.0
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -152,13 +152,13 @@ jobs:
           python: false
 
       - name: Restore CLI test-fixture cache
-        uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 #v4.0.0
         with:
           path: ${{ github.workspace }}/test/cli/test-fixtures/cache
           key: ${{ runner.os }}-cli-test-cache-${{ hashFiles('test/cli/test-fixtures/cache.fingerprint') }}
 
       - name: Download snapshot build
-        uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c #v3.3.3
+        uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2 #v4.0.0
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
