@@ -2,7 +2,7 @@ package transformers
 
 import (
 	"github.com/anchore/grype-db/pkg/data"
-	grypeDB "github.com/anchore/grype/grype/db/v1"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v1"
 )
 
 func NewEntries(vs []grypeDB.Vulnerability, metadata grypeDB.VulnerabilityMetadata) []data.Entry {

@@ -9,6 +9,11 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDBv1 "github.com/anchore/grype-db/pkg/db/v1"
+	grypeDBv2 "github.com/anchore/grype-db/pkg/db/v2"
+	grypeDBv3 "github.com/anchore/grype-db/pkg/db/v3"
+	grypeDBv4 "github.com/anchore/grype-db/pkg/db/v4"
+	grypeDBv5 "github.com/anchore/grype-db/pkg/db/v5"
 	v1 "github.com/anchore/grype-db/pkg/process/v1"
 	v2 "github.com/anchore/grype-db/pkg/process/v2"
 	v3 "github.com/anchore/grype-db/pkg/process/v3"
@@ -17,11 +22,6 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDBv1 "github.com/anchore/grype/grype/db/v1"
-	grypeDBv2 "github.com/anchore/grype/grype/db/v2"
-	grypeDBv3 "github.com/anchore/grype/grype/db/v3"
-	grypeDBv4 "github.com/anchore/grype/grype/db/v4"
-	grypeDBv5 "github.com/anchore/grype/grype/db/v5"
 )
 
 type BuildConfig struct {

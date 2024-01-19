@@ -13,9 +13,9 @@ import (
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
-	"github.com/anchore/grype/grype/db"
-	grypeDB "github.com/anchore/grype/grype/db/v4"
-	grypeDBStore "github.com/anchore/grype/grype/db/v4/store"
+	"github.com/anchore/grype-db/pkg/db/curation"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v4"
+	grypeDBStore "github.com/anchore/grype-db/pkg/db/v4/store"
 )
 
 // TODO: add NVDNamespace const to grype.db package?
@@ -73,7 +73,7 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w writer) metadata() (*db.Metadata, error) {
+func (w writer) metadata() (*curation.Metadata, error) {
 	hashStr, err := file.ContentDigest(afero.NewOsFs(), w.dbPath, sha256.New())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash database file (%s): %w", w.dbPath, err)
@@ -84,7 +84,7 @@ func (w writer) metadata() (*db.Metadata, error) {
 		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
 	}
 
-	metadata := db.Metadata{
+	metadata := curation.Metadata{
 		Built:    storeID.BuildTimestamp,
 		Version:  storeID.SchemaVersion,
 		Checksum: "sha256:" + hashStr,
@@ -99,7 +99,7 @@ func (w writer) Close() error {
 		return err
 	}
 
-	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
+	metadataPath := path.Join(filepath.Dir(w.dbPath), curation.MetadataFileName)
 	if err = metadata.Write(metadataPath); err != nil {
 		return err
 	}

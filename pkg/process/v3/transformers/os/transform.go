@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v3"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v3/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDB "github.com/anchore/grype/grype/db/v3"
 )
 
 const (

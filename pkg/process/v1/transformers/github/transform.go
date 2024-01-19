@@ -2,10 +2,10 @@ package github
 
 import (
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v1"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v1/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDB "github.com/anchore/grype/grype/db/v1"
 )
 
 const (

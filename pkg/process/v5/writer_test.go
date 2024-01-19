@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/anchore/grype-db/pkg/data"
-	grypeDB "github.com/anchore/grype/grype/db/v5"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v5"
 )
 
 var _ grypeDB.VulnerabilityMetadataStoreReader = (*mockReader)(nil)

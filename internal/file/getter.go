@@ -1,23 +1,15 @@
 package file
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
-	"io/fs"
-	"math"
 	"net/http"
-	"strings"
-	"time"
 
-	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-getter/helper/url"
 	"github.com/wagoodman/go-progress"
 
-	"github.com/anchore/go-logger"
-	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/internal/stringutil"
 )
 
 var (
@@ -34,52 +26,29 @@ type Getter interface {
 	GetToDir(dst, src string, monitor ...*progress.Manual) error
 }
 
-type hashiGoGetter struct {
+type HashiGoGetter struct {
 	httpGetter getter.HttpGetter
 }
 
 // NewGetter creates and returns a new Getter. Providing an http.Client is optional. If one is provided,
 // it will be used for all HTTP(S) getting; otherwise, go-getter's default getters will be used.
-func NewGetter(httpClient *http.Client) Getter {
-	return &hashiGoGetter{
+func NewGetter(httpClient *http.Client) *HashiGoGetter {
+	return &HashiGoGetter{
 		httpGetter: getter.HttpGetter{
 			Client: httpClient,
 		},
 	}
 }
 
-func NewDefaultGetter() Getter {
-	return NewGetter(cleanhttp.DefaultClient())
-}
-
-func HTTPClientWithCerts(fileSystem fs.FS, caCertPath string) (*http.Client, error) {
-	httpClient := cleanhttp.DefaultClient()
-	if caCertPath != "" {
-		rootCAs := x509.NewCertPool()
-
-		pemBytes, err := fs.ReadFile(fileSystem, caCertPath)
-		if err != nil {
-			return nil, fmt.Errorf("unable to configure root CAs for curator: %w", err)
-		}
-		rootCAs.AppendCertsFromPEM(pemBytes)
-
-		httpClient.Transport.(*http.Transport).TLSClientConfig = &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			RootCAs:    rootCAs,
-		}
-	}
-	return httpClient, nil
-}
-
-func (g hashiGoGetter) GetFile(dst, src string, monitors ...*progress.Manual) error {
+func (g HashiGoGetter) GetFile(dst, src string, monitors ...*progress.Manual) error {
 	if len(monitors) > 1 {
 		return fmt.Errorf("multiple monitors provided, which is not allowed")
 	}
 
-	return getWithRetry(getterClient(dst, src, false, g.httpGetter, monitors))
+	return getterClient(dst, src, false, g.httpGetter, monitors).Get()
 }
 
-func (g hashiGoGetter) GetToDir(dst, src string, monitors ...*progress.Manual) error {
+func (g HashiGoGetter) GetToDir(dst, src string, monitors ...*progress.Manual) error {
 	// though there are multiple getters, only the http/https getter requires extra validation
 	if err := validateHTTPSource(src); err != nil {
 		return err
@@ -88,69 +57,12 @@ func (g hashiGoGetter) GetToDir(dst, src string, monitors ...*progress.Manual) e
 		return fmt.Errorf("multiple monitors provided, which is not allowed")
 	}
 
-	return getWithRetry(getterClient(dst, src, true, g.httpGetter, monitors))
-}
-
-func getWithRetry(client *getter.Client) error {
-	var err error
-	attempt := 1
-	for interval := range retryIntervals() {
-		fields := logger.Fields{
-			"url": client.Src,
-			"to":  client.Dst,
-		}
-
-		if attempt > 1 {
-			fields["attempt"] = attempt
-		}
-
-		log.WithFields(fields).Info("downloading file")
-
-		err = client.Get()
-		if err == nil {
-			break
-		}
-
-		time.Sleep(interval)
-		attempt++
-	}
-	return err
-}
-
-func retryIntervals() <-chan time.Duration {
-	return exponentialBackoffDurations(250*time.Millisecond, 5*time.Second, 2)
-}
-
-func exponentialBackoffDurations(minDuration, maxDuration time.Duration, step float64) <-chan time.Duration {
-	sleepDurations := make(chan time.Duration)
-	go func() {
-		defer close(sleepDurations)
-		for attempt := 0; ; attempt++ {
-			duration := exponentialBackoffDuration(minDuration, maxDuration, step, attempt)
-
-			sleepDurations <- duration
-
-			if duration == maxDuration {
-				break
-			}
-		}
-	}()
-	return sleepDurations
-}
-
-func exponentialBackoffDuration(minDuration, maxDuration time.Duration, step float64, attempt int) time.Duration {
-	duration := time.Duration(float64(minDuration) * math.Pow(step, float64(attempt)))
-	if duration < minDuration {
-		return minDuration
-	} else if duration > maxDuration {
-		return maxDuration
-	}
-	return duration
+	return getterClient(dst, src, true, g.httpGetter, monitors).Get()
 }
 
 func validateHTTPSource(src string) error {
 	// we are ignoring any sources that are not destined to use the http getter object
-	if !hasAnyOfPrefixes(src, "http://", "https://") {
+	if !stringutil.HasAnyOfPrefixes(src, "http://", "https://") {
 		return nil
 	}
 
@@ -159,7 +71,7 @@ func validateHTTPSource(src string) error {
 		return fmt.Errorf("bad URL provided %q: %w", src, err)
 	}
 	// only allow for sources with archive extensions
-	if !hasAnyOfSuffixes(u.Path, archiveExtensions...) {
+	if !stringutil.HasAnyOfSuffixes(u.Path, archiveExtensions...) {
 		return ErrNonArchiveSource
 	}
 	return nil
@@ -229,26 +141,4 @@ func getterDecompressorNames() (names []string) {
 		names = append(names, name)
 	}
 	return names
-}
-
-// hasAnyOfSuffixes returns an indication if the given string has any of the given suffixes.
-func hasAnyOfSuffixes(input string, suffixes ...string) bool {
-	for _, suffix := range suffixes {
-		if strings.HasSuffix(input, suffix) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// hasAnyOfPrefixes returns an indication if the given string has any of the given prefixes.
-func hasAnyOfPrefixes(input string, prefixes ...string) bool {
-	for _, prefix := range prefixes {
-		if strings.HasPrefix(input, prefix) {
-			return true
-		}
-	}
-
-	return false
 }
