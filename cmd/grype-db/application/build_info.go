@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	grypeDB "github.com/anchore/grype/grype/db/v3"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v3"
 )
 
 const valueNotProvided = "[not provided]"

@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v5"
+	"github.com/anchore/grype-db/pkg/db/v5/namespace"
+	"github.com/anchore/grype-db/pkg/db/v5/pkg/qualifier"
+	"github.com/anchore/grype-db/pkg/db/v5/pkg/qualifier/rpmmodularity"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v5/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDB "github.com/anchore/grype/grype/db/v5"
-	"github.com/anchore/grype/grype/db/v5/namespace"
-	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
-	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/rpmmodularity"
 	"github.com/anchore/grype/grype/distro"
 )
 

@@ -2,8 +2,8 @@ package matchexclusions
 
 import (
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v5"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDB "github.com/anchore/grype/grype/db/v5"
 )
 
 func Transform(matchExclusion unmarshal.MatchExclusion) ([]data.Entry, error) {

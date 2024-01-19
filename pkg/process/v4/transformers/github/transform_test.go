@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	grypeDB "github.com/anchore/grype-db/pkg/db/v4"
+	"github.com/anchore/grype-db/pkg/db/v4/namespace"
+	"github.com/anchore/grype-db/pkg/db/v4/namespace/language"
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDB "github.com/anchore/grype/grype/db/v4"
-	"github.com/anchore/grype/grype/db/v4/namespace"
-	"github.com/anchore/grype/grype/db/v4/namespace/language"
 	syftPkg "github.com/anchore/syft/syft/pkg"
 )
 

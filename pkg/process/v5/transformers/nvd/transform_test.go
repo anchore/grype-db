@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	grypeDB "github.com/anchore/grype-db/pkg/db/v5"
+	"github.com/anchore/grype-db/pkg/db/v5/pkg/qualifier"
+	"github.com/anchore/grype-db/pkg/db/v5/pkg/qualifier/platformcpe"
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDB "github.com/anchore/grype/grype/db/v5"
-	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
-	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
 )
 
 func TestUnmarshalNVDVulnerabilitiesEntries(t *testing.T) {

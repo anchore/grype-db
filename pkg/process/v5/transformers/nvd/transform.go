@@ -3,15 +3,16 @@ package nvd
 import (
 	"sort"
 
-	"github.com/anchore/grype-db/internal"
+	"github.com/scylladb/go-set/strset"
+
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v5"
+	"github.com/anchore/grype-db/pkg/db/v5/namespace"
+	"github.com/anchore/grype-db/pkg/db/v5/pkg/qualifier"
+	"github.com/anchore/grype-db/pkg/db/v5/pkg/qualifier/platformcpe"
 	"github.com/anchore/grype-db/pkg/process/v5/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
-	grypeDB "github.com/anchore/grype/grype/db/v5"
-	"github.com/anchore/grype/grype/db/v5/namespace"
-	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
-	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
@@ -41,7 +42,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	for _, p := range uniquePkgs.All() {
 		var qualifiers []qualifier.Qualifier
 		matches := uniquePkgs.Matches(p)
-		cpes := internal.NewStringSet()
+		cpes := strset.New()
 		for _, m := range matches {
 			cpes.Add(grypeNamespace.Resolver().Normalize(m.Criteria))
 		}
@@ -53,7 +54,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			}}
 		}
 
-		orderedCPEs := cpes.ToSlice()
+		orderedCPEs := cpes.List()
 		sort.Strings(orderedCPEs)
 
 		// create vulnerability entry

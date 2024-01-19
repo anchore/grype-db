@@ -3,13 +3,14 @@ package nvd
 import (
 	"fmt"
 
-	"github.com/anchore/grype-db/internal"
+	"github.com/scylladb/go-set/strset"
+
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v4"
+	"github.com/anchore/grype-db/pkg/db/v4/namespace"
 	"github.com/anchore/grype-db/pkg/process/v4/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
-	grypeDB "github.com/anchore/grype/grype/db/v4"
-	"github.com/anchore/grype/grype/db/v4/namespace"
 )
 
 const (
@@ -56,7 +57,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	var allVulns []grypeDB.Vulnerability
 	for _, p := range uniquePkgs.All() {
 		matches := uniquePkgs.Matches(p)
-		cpes := internal.NewStringSet()
+		cpes := strset.New()
 		for _, m := range matches {
 			cpes.Add(grypeNamespace.Resolver().Normalize(m.Criteria))
 		}
@@ -68,7 +69,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			VersionFormat:     "unknown",
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
-			CPEs:              cpes.ToSlice(),
+			CPEs:              cpes.List(),
 			Fix: grypeDB.Fix{
 				State: grypeDB.UnknownFixState,
 			},

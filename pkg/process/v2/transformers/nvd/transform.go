@@ -3,12 +3,13 @@ package nvd
 import (
 	"strings"
 
-	"github.com/anchore/grype-db/internal"
+	"github.com/scylladb/go-set/strset"
+
 	"github.com/anchore/grype-db/pkg/data"
+	grypeDB "github.com/anchore/grype-db/pkg/db/v2"
 	"github.com/anchore/grype-db/pkg/process/v2/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
-	grypeDB "github.com/anchore/grype/grype/db/v2"
 )
 
 const (
@@ -36,7 +37,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	// duplicate the vulnerabilities based on the set of unique packages the vulnerability is for
 	for _, p := range uniquePkgs.All() {
 		matches := uniquePkgs.Matches(p)
-		cpes := internal.NewStringSet()
+		cpes := strset.New()
 		for _, m := range matches {
 			cpes.Add(m.Criteria)
 		}
@@ -50,7 +51,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			PackageName:          p.Product,
 			Namespace:            "nvd", // should the vendor be here? or in other metadata?
 			ProxyVulnerabilities: []string{},
-			CPEs:                 cpes.ToSlice(),
+			CPEs:                 cpes.List(),
 		}
 
 		allVulns = append(allVulns, vuln)
