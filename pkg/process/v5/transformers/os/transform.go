@@ -47,6 +47,22 @@ func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 	return ns, nil
 }
 
+func buildPackageQualifiers(fixedInEntry unmarshal.OSFixedIn) (qualifiers []qualifier.Qualifier) {
+	if fixedInEntry.VersionFormat == "rpm" {
+		module := ""
+		if fixedInEntry.Module != nil {
+			module = *fixedInEntry.Module
+		}
+
+		qualifiers = []qualifier.Qualifier{rpmmodularity.Qualifier{
+			Kind:   "rpm-modularity",
+			Module: module,
+		}}
+	}
+
+	return qualifiers
+}
+
 func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	var allVulns []grypeDB.Vulnerability
 
@@ -64,19 +80,10 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	// separate vulnerability entries (one for each name|namespace combo) while merging
 	// constraint ranges as they are found.
 	for idx, fixedInEntry := range vulnerability.Vulnerability.FixedIn {
-		var qualifiers []qualifier.Qualifier
-
-		if fixedInEntry.Module != nil {
-			qualifiers = []qualifier.Qualifier{rpmmodularity.Qualifier{
-				Kind:   "rpm-modularity",
-				Module: *fixedInEntry.Module,
-			}}
-		}
-
 		// create vulnerability entry
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                     vulnerability.Vulnerability.Name,
-			PackageQualifiers:      qualifiers,
+			PackageQualifiers:      buildPackageQualifiers(fixedInEntry),
 			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VersionFormat, vulnerability.Vulnerability.Name),
 			VersionFormat:          fixedInEntry.VersionFormat,
 			PackageName:            grypeNamespace.Resolver().Normalize(fixedInEntry.Name),

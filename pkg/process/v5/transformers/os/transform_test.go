@@ -52,7 +52,11 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 						},
 					},
 					PackageName: "389-ds-base",
-					Namespace:   "amazon:distro:amazonlinux:2",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
+					Namespace: "amazon:distro:amazonlinux:2",
 					Fix: grypeDB.Fix{
 						Versions: []string{"1.3.8.4-15.amzn2.0.1"},
 						State:    grypeDB.FixedState,
@@ -69,7 +73,11 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 						},
 					},
 					PackageName: "389-ds-base-debuginfo",
-					Namespace:   "amazon:distro:amazonlinux:2",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
+					Namespace: "amazon:distro:amazonlinux:2",
 					Fix: grypeDB.Fix{
 						Versions: []string{"1.3.8.4-15.amzn2.0.1"},
 						State:    grypeDB.FixedState,
@@ -86,7 +94,11 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 						},
 					},
 					PackageName: "389-ds-base-devel",
-					Namespace:   "amazon:distro:amazonlinux:2",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
+					Namespace: "amazon:distro:amazonlinux:2",
 					Fix: grypeDB.Fix{
 						Versions: []string{"1.3.8.4-15.amzn2.0.1"},
 						State:    grypeDB.FixedState,
@@ -103,7 +115,11 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 						},
 					},
 					PackageName: "389-ds-base-libs",
-					Namespace:   "amazon:distro:amazonlinux:2",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
+					Namespace: "amazon:distro:amazonlinux:2",
 					Fix: grypeDB.Fix{
 						Versions: []string{"1.3.8.4-15.amzn2.0.1"},
 						State:    grypeDB.FixedState,
@@ -120,7 +136,11 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 						},
 					},
 					PackageName: "389-ds-base-snmp",
-					Namespace:   "amazon:distro:amazonlinux:2",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
+					Namespace: "amazon:distro:amazonlinux:2",
 					Fix: grypeDB.Fix{
 						Versions: []string{"1.3.8.4-15.amzn2.0.1"},
 						State:    grypeDB.FixedState,
@@ -225,8 +245,12 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 			fixture:    "test-fixtures/rhel-8.json",
 			vulns: []grypeDB.Vulnerability{
 				{
-					ID:                "CVE-2020-6819",
-					PackageName:       "firefox",
+					ID:          "CVE-2020-6819",
+					PackageName: "firefox",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "< 0:68.6.1-1.el8_1",
 					VersionFormat:     "rpm",
 					Namespace:         "redhat:distro:redhat:8",
@@ -248,8 +272,12 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 					},
 				},
 				{
-					ID:                "CVE-2020-6819",
-					PackageName:       "thunderbird",
+					ID:          "CVE-2020-6819",
+					PackageName: "thunderbird",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "< 0:68.7.0-1.el8_1",
 					VersionFormat:     "rpm",
 					Namespace:         "redhat:distro:redhat:8",
@@ -447,8 +475,12 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 			fixture:    "test-fixtures/ol-8.json",
 			vulns: []grypeDB.Vulnerability{
 				{
-					ID:                "ELSA-2020-2550",
-					PackageName:       "libexif",
+					ID:          "ELSA-2020-2550",
+					PackageName: "libexif",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "< 0:0.6.21-17.el8_2",
 					VersionFormat:     "rpm",
 					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
@@ -464,8 +496,12 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ELSA-2020-2550",
-					PackageName:       "libexif-devel",
+					ID:          "ELSA-2020-2550",
+					PackageName: "libexif-devel",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "< 0:0.6.21-17.el8_2",
 					VersionFormat:     "rpm",
 					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
@@ -481,8 +517,12 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ELSA-2020-2550",
-					PackageName:       "libexif-dummy",
+					ID:          "ELSA-2020-2550",
+					PackageName: "libexif-dummy",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "",
 					VersionFormat:     "rpm",
 					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
@@ -680,8 +720,12 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 			fixture:    "test-fixtures/amazon-multiple-kernel-advisories.json",
 			vulns: []grypeDB.Vulnerability{
 				{
-					ID:                "ALAS-2021-1704",
-					PackageName:       "kernel-headers",
+					ID:          "ALAS-2021-1704",
+					PackageName: "kernel-headers",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "< 4.14.246-187.474.amzn2",
 					VersionFormat:     "rpm",
 					Namespace:         "amazon:distro:amazonlinux:2",
@@ -705,8 +749,12 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ALAS-2021-1704",
-					PackageName:       "kernel",
+					ID:          "ALAS-2021-1704",
+					PackageName: "kernel",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: "< 4.14.246-187.474.amzn2",
 					VersionFormat:     "rpm",
 					Namespace:         "amazon:distro:amazonlinux:2",
@@ -730,8 +778,12 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ALASKERNEL-5.4-2022-007",
-					PackageName:       "kernel-headers",
+					ID:          "ALASKERNEL-5.4-2022-007",
+					PackageName: "kernel-headers",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: ">= 5.4, < 5.4.144-69.257.amzn2",
 					VersionFormat:     "rpm",
 					Namespace:         "amazon:distro:amazonlinux:2",
@@ -751,8 +803,12 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ALASKERNEL-5.4-2022-007",
-					PackageName:       "kernel",
+					ID:          "ALASKERNEL-5.4-2022-007",
+					PackageName: "kernel",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: ">= 5.4, < 5.4.144-69.257.amzn2",
 					VersionFormat:     "rpm",
 					Namespace:         "amazon:distro:amazonlinux:2",
@@ -772,8 +828,12 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ALASKERNEL-5.10-2022-005",
-					PackageName:       "kernel-headers",
+					ID:          "ALASKERNEL-5.10-2022-005",
+					PackageName: "kernel-headers",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: ">= 5.10, < 5.10.62-55.141.amzn2",
 					VersionFormat:     "rpm",
 					Namespace:         "amazon:distro:amazonlinux:2",
@@ -793,8 +853,12 @@ func TestParseVulnerabilitiesAllEntries(t *testing.T) {
 					},
 				},
 				{
-					ID:                "ALASKERNEL-5.10-2022-005",
-					PackageName:       "kernel",
+					ID:          "ALASKERNEL-5.10-2022-005",
+					PackageName: "kernel",
+					PackageQualifiers: []qualifier.Qualifier{rpmmodularity.Qualifier{
+						Kind:   "rpm-modularity",
+						Module: "",
+					}},
 					VersionConstraint: ">= 5.10, < 5.10.62-55.141.amzn2",
 					VersionFormat:     "rpm",
 					Namespace:         "amazon:distro:amazonlinux:2",
