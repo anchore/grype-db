@@ -4,12 +4,12 @@ import (
 	"os"
 	"testing"
 
+	osvModels "github.com/google/osv-scanner/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/data"
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
-	osvModels "github.com/google/osv-scanner/pkg/models"
 )
 
 func mockOSVProcessorTransform(vulnerability osvModels.Vulnerability) ([]data.Entry, error) {

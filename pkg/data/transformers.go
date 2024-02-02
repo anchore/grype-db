@@ -1,9 +1,9 @@
 package data
 
 import (
-	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-
 	osvModels "github.com/google/osv-scanner/pkg/models"
+
+	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
 // Transformers are functions that know how ta take individual data shapes defined in the unmarshal package and
