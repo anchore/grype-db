@@ -33,7 +33,7 @@ func (p nvdProcessor) Process(reader io.Reader) ([]data.Entry, error) {
 			continue
 		}
 
-		transformedEntries, err := p.transformer(entry.Cve)
+		transformedEntries, err := p.transformer(unmarshal.NVDVulnerability{CveItem: entry.Cve})
 		if err != nil {
 			return nil, err
 		}
