@@ -1,7 +1,9 @@
 package nvd
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/pkg/data"
@@ -84,6 +86,8 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 		Cvss:         getCvss(allCVSS...),
 	}
 
+	allVulns = append(allVulns, processAdditionalEntries(vulnerability)...)
+
 	return transformers.NewEntries(allVulns, metadata), nil
 }
 
@@ -103,4 +107,55 @@ func getCvss(cvss ...nvd.CvssSummary) []grypeDB.Cvss {
 		})
 	}
 	return results
+}
+
+func processAdditionalEntries(vulnerability unmarshal.NVDVulnerability) []grypeDB.Vulnerability {
+	var result []grypeDB.Vulnerability
+	for _, entry := range vulnerability.AdditionalEntries {
+		ns, err := namespaceFromPURL(entry.Package.Identifier)
+		if err != nil {
+			// TODO: logging?
+			continue
+		}
+		fix := grypeDB.Fix{
+			State: grypeDB.UnknownFixState,
+		}
+		// TODO: WILL: loop, not if; handle multiple entries
+		if entry.Affected[0].Patched != "" {
+			fix = grypeDB.Fix{
+				State:    grypeDB.FixedState,
+				Versions: []string{entry.Affected[0].Patched},
+			}
+		}
+		// TODO: do I need an iteration per version constraint? I don't think so.
+		result = append(result, grypeDB.Vulnerability{
+			ID: vulnerability.ID,
+			//PackageQualifiers: qualifiers, // TODO: WILL: actual package qualifiers
+			VersionConstraint: entry.Affected[0].Constraint,
+			VersionFormat:     entry.Affected[0].Type,
+			PackageName:       packageNameFromPurl(entry.Package.Identifier),
+			Namespace:         ns.String(),
+			Fix:               fix,
+		})
+	}
+	return result
+}
+
+func namespaceFromPURL(purl string) (namespace.Namespace, error) {
+	// TODO: WILL: more sustainable way to do this
+	if strings.HasPrefix(purl, "pkg:maven") {
+		return namespace.FromString("nvd:language:java")
+	}
+	return nil, fmt.Errorf("unable to make namespace from %s", purl)
+}
+
+func packageNameFromPurl(purl string) string {
+	// TODO: WILL: sustainable / correct way to do this
+	if strings.HasPrefix(purl, "pkg:maven") {
+		parts := strings.Split(purl, "/")
+		if len(parts) == 3 {
+			return fmt.Sprintf("%s:%s", parts[1], parts[2])
+		}
+	}
+	return ""
 }
