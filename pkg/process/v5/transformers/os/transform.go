@@ -2,6 +2,7 @@ package os
 
 import (
 	"fmt"
+	"github.com/anchore/grype/grype/db/v5/purlvulnerability"
 	"strings"
 
 	"github.com/anchore/grype-db/pkg/data"
@@ -106,7 +107,8 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 		Cvss:         getCvss(vulnerability),
 	}
 
-	return transformers.NewEntries(allVulns, metadata), nil
+	// TODO: DATA OVERRIDES: check for overrides and populate purlvulnerabilities
+	return transformers.NewEntries(allVulns, purlvulnerability.Vulnerabilities{}, metadata), nil
 }
 
 func getLinks(entry unmarshal.OSVulnerability) []string {

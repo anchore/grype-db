@@ -2,6 +2,7 @@ package msrc
 
 import (
 	"fmt"
+	"github.com/anchore/grype/grype/db/v5/purlvulnerability"
 
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
@@ -61,7 +62,7 @@ func Transform(vulnerability unmarshal.MSRCVulnerability) ([]data.Entry, error) 
 		},
 	}
 
-	return transformers.NewEntries(allVulns, metadata), nil
+	return transformers.NewEntries(allVulns, purlvulnerability.Vulnerabilities{}, metadata), nil
 }
 
 func getFix(entry unmarshal.MSRCVulnerability) grypeDB.Fix {

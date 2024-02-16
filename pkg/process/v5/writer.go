@@ -52,6 +52,7 @@ func (w writer) Write(entries ...data.Entry) error {
 			return fmt.Errorf("wrong schema version: want %+v got %+v", grypeDB.SchemaVersion, entry.DBSchemaVersion)
 		}
 
+		// TODO: DATA OVERRIDES: more branches here for the new tables
 		switch row := entry.Data.(type) {
 		case grypeDB.Vulnerability:
 			if err := w.store.AddVulnerability(row); err != nil {
