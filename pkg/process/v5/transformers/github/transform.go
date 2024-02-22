@@ -2,7 +2,6 @@ package github
 
 import (
 	"fmt"
-	"github.com/anchore/grype/grype/db/v5/purlvulnerability"
 	"strings"
 
 	"github.com/anchore/grype-db/pkg/data"
@@ -98,8 +97,7 @@ func Transform(vulnerability unmarshal.GitHubAdvisory) ([]data.Entry, error) {
 		Cvss:         getCvss(vulnerability),
 	}
 
-	// TODO: DATA OVERRIDES: check for overrides and populate purlvulnerabilities
-	return transformers.NewEntries(allVulns, purlvulnerability.Vulnerabilities{}, metadata), nil
+	return transformers.NewEntries(allVulns, metadata), nil
 }
 
 func getFix(entry unmarshal.GitHubAdvisory, idx int) grypeDB.Fix {

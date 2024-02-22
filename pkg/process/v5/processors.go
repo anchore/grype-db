@@ -17,6 +17,5 @@ func Processors() []data.Processor {
 		processors.NewNVDProcessor(nvd.Transform),
 		processors.NewOSProcessor(os.Transform),
 		processors.NewMatchExclusionProcessor(matchexclusions.Transform),
-		// TODO: DATA OVERRIDES: add new processors for the new types
 	}
 }

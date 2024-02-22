@@ -3,7 +3,6 @@ package v4
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/anchore/grype/grype/db/v5/purlvulnerability"
 	"path"
 	"path/filepath"
 	"strings"
@@ -47,14 +46,6 @@ func NewWriter(directory string, dataAge time.Time) (data.Writer, error) {
 }
 
 func (w writer) Write(entries ...data.Entry) error {
-	// TODO: this needs to be re-arranged so that we can
-	// have foreign key from the purlvulnerability to the metadata
-	// Maybe we can enforce the invariant that entries[0] is the metadata (coincidentally true today)
-	// and have the AddVulnerabilityMetadata return the key?
-	// HOWEVER, the vulnerability_metadata table has no keys besides the compound key of
-	// (id, namespace)
-	// maybe we should make a new intersect table or something?
-	// also, sqlite doesn't enforce referential integrity by default
 	for _, entry := range entries {
 		if entry.DBSchemaVersion != grypeDB.SchemaVersion {
 			return fmt.Errorf("wrong schema version: want %+v got %+v", grypeDB.SchemaVersion, entry.DBSchemaVersion)
@@ -74,8 +65,6 @@ func (w writer) Write(entries ...data.Entry) error {
 			if err := w.store.AddVulnerabilityMatchExclusion(row); err != nil {
 				return fmt.Errorf("unable to write vulnerability match exclusion to store: %w", err)
 			}
-		case purlvulnerability.Generic:
-
 		default:
 			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
 		}

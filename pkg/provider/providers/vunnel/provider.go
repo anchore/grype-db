@@ -182,7 +182,6 @@ func GenerateConfigs(root string, cfg Config) ([]provider.Config, error) {
 				Name: line,
 				Kind: provider.VunnelKind,
 			},
-			// TODO: WILL: What happened to the config field? How come it gets ignored?
 		})
 	}
 

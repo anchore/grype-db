@@ -2,8 +2,6 @@ package nvd
 
 import (
 	"fmt"
-	"github.com/anchore/grype/grype/db/v5/purlvulnerability"
-	"github.com/anchore/packageurl-go"
 	"sort"
 	"strings"
 
@@ -88,7 +86,9 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 		Cvss:         getCvss(allCVSS...),
 	}
 
-	return transformers.NewEntries(allVulns, processAdditionalEntries(vulnerability), metadata), nil
+	allVulns = append(allVulns, processAdditionalEntries(vulnerability)...)
+
+	return transformers.NewEntries(allVulns, metadata), nil
 }
 
 func getCvss(cvss ...nvd.CvssSummary) []grypeDB.Cvss {
@@ -109,108 +109,36 @@ func getCvss(cvss ...nvd.CvssSummary) []grypeDB.Cvss {
 	return results
 }
 
-func processAdditionalEntries(vulnerability unmarshal.NVDVulnerability) purlvulnerability.Vulnerabilities {
-	var result purlvulnerability.Vulnerabilities
+func processAdditionalEntries(vulnerability unmarshal.NVDVulnerability) []grypeDB.Vulnerability {
+	var result []grypeDB.Vulnerability
 	for _, entry := range vulnerability.AdditionalEntries {
-		// TODO: DATA OVERRIDES: new vulnerability types! Need generic return value? Or a different strategy?
-		//ns, err := namespaceFromPURL(entry.Package.Identifier)
-		//if err != nil {
-		//	// TODO: logging?
-		//	continue
-		//}
-		//fix := grypeDB.Fix{
-		//	State: grypeDB.UnknownFixState,
-		//}
-		//// TODO: WILL: loop, not if; handle multiple entries
-		//if entry.Affected[0].Patched != "" {
-		//	fix = grypeDB.Fix{
-		//		State:    grypeDB.FixedState,
-		//		Versions: []string{entry.Affected[0].Patched},
-		//	}
-		//}
-		//// TODO: do I need an iteration per version constraint? I don't think so.
-		//result = append(result, grypeDB.Vulnerability{
-		//	ID: vulnerability.ID,
-		//	//PackageQualifiers: qualifiers, // TODO: WILL: actual package qualifiers
-		//	VersionConstraint: entry.Affected[0].Constraint,
-		//	VersionFormat:     entry.Affected[0].Type,
-		//	PackageName:       packageNameFromPurl(entry.Package.Identifier),
-		//	Namespace:         ns.String(),
-		//	Fix:               fix,
-		//})
-		purlVuln, err := purlVulnerabilityFromAdditionalVulnerability(entry, vulnerability.ID)
+		ns, err := namespaceFromPURL(entry.Package.Identifier)
 		if err != nil {
+			// TODO: logging?
 			continue
-			// TODO: DATA OVERRIDES: do something smart
 		}
-		result = purlvulnerability.Merge(result, purlVuln)
+		fix := grypeDB.Fix{
+			State: grypeDB.UnknownFixState,
+		}
+		// TODO: WILL: loop, not if; handle multiple entries
+		if entry.Affected[0].Patched != "" {
+			fix = grypeDB.Fix{
+				State:    grypeDB.FixedState,
+				Versions: []string{entry.Affected[0].Patched},
+			}
+		}
+		// TODO: do I need an iteration per version constraint? I don't think so.
+		result = append(result, grypeDB.Vulnerability{
+			ID: vulnerability.ID,
+			//PackageQualifiers: qualifiers, // TODO: WILL: actual package qualifiers
+			VersionConstraint: entry.Affected[0].Constraint,
+			VersionFormat:     entry.Affected[0].Type,
+			PackageName:       packageNameFromPurl(entry.Package.Identifier),
+			Namespace:         ns.String(),
+			Fix:               fix,
+		})
 	}
 	return result
-}
-
-func purlVulnerabilityFromAdditionalVulnerability(entry unmarshal.AdditionalEntry, cveID string) (purlvulnerability.Vulnerabilities, error) {
-	var result purlvulnerability.Vulnerabilities
-	purl, err := packageurl.FromString(entry.Package.Identifier)
-	if err != nil {
-		return result, err
-	}
-	if purl.Type == "maven" {
-		for _, v := range entry.Affected {
-			var repositoryQualifier string
-			qMap := purl.Qualifiers.Map()
-			repositoryQualifier = qMap["repository"]
-			if entry.Package.Qualifiers != nil && entry.Package.Qualifiers["respoitory"] != "" {
-				repositoryQualifier = entry.Package.Qualifiers["repository"]
-			}
-			mavenVuln := purlvulnerability.Maven{
-				ID:                     cveID,
-				PackageNamespace:       purl.Namespace,
-				PackageName:            purl.Name,
-				VersionConstraint:      v.Constraint,
-				VersionType:            v.Type,
-				FixVersion:             v.Patched,
-				ArtifactStatus:         artifactStatusFromVersionConstraint(v),
-				RepositoryURLQualifier: repositoryQualifier,
-			}
-			result.Maven = append(result.Maven, mavenVuln)
-		}
-	}
-	if purl.Type == "generic" {
-		for _, v := range entry.Affected {
-			var repositoryQualifier string
-			qMap := purl.Qualifiers.Map()
-			repositoryQualifier = qMap["repository"]
-			if entry.Package.Qualifiers != nil && entry.Package.Qualifiers["respoitory"] != "" {
-				repositoryQualifier = entry.Package.Qualifiers["repository"]
-			}
-			vendorQualifier := qMap["vendor"]
-			if entry.Package.Qualifiers != nil && entry.Package.Qualifiers["vendor"] != "" {
-				vendorQualifier = entry.Package.Qualifiers["vendor"]
-			}
-
-			genericVuln := purlvulnerability.Generic{
-				ID:                  cveID,
-				PackageName:         purl.Name,
-				VersionConstraint:   v.Constraint,
-				FixVersion:          v.Patched,
-				ArtifactStatus:      artifactStatusFromVersionConstraint(v),
-				RepositoryQualifier: repositoryQualifier,
-				VendorQualifier:     vendorQualifier,
-			}
-			result.Generic = append(result.Generic, genericVuln)
-		}
-	}
-	return result, nil
-}
-
-func artifactStatusFromVersionConstraint(v unmarshal.VersionIdentifier) string {
-	// TODO: DATA OVERRIDES: this is incomplete
-	switch v.Patched {
-	case "":
-		return "not-fixed"
-	default:
-		return "fixed"
-	}
 }
 
 func namespaceFromPURL(purl string) (namespace.Namespace, error) {
