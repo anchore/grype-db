@@ -135,6 +135,7 @@ func processAdditionalEntries(vulnerability unmarshal.NVDVulnerability) []grypeD
 			VersionFormat:     entry.Affected[0].Type,
 			PackageName:       packageNameFromPurl(entry.Package.Identifier),
 			Namespace:         ns.String(),
+			MetadataNamespace: "nvd:cpe", // TODO: WILL: stop hard-coding
 			Fix:               fix,
 		})
 	}
