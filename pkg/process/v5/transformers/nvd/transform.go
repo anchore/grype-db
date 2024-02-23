@@ -147,6 +147,10 @@ func namespaceFromPURL(purl string) (namespace.Namespace, error) {
 	if strings.HasPrefix(purl, "pkg:maven") {
 		return namespace.FromString("nvd:language:java")
 	}
+
+	if strings.HasPrefix(purl, "pkg:generic") {
+		return namespace.FromString("nvd:generic")
+	}
 	return nil, fmt.Errorf("unable to make namespace from %s", purl)
 }
 
@@ -156,6 +160,13 @@ func packageNameFromPurl(purl string) string {
 		parts := strings.Split(purl, "/")
 		if len(parts) == 3 {
 			return fmt.Sprintf("%s:%s", parts[1], parts[2])
+		}
+	}
+
+	if strings.HasPrefix(purl, "pkg:generic") {
+		parts := strings.Split(purl, "/")
+		if len(parts) > 1 {
+			return parts[1]
 		}
 	}
 	return ""
