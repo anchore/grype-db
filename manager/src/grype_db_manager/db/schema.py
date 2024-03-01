@@ -8,6 +8,8 @@ from importlib.resources import files
 import mergedeep
 from dataclass_wizard import asdict, fromdict
 
+_mapping_file_content = None
+
 
 @dataclass
 class SchemaEntry:
@@ -35,10 +37,24 @@ class SchemaMapping:
         return supported
 
 
+def register_mapping(file: str):
+    with open(file, "r") as f:
+        global _mapping_file_content
+        _mapping_file_content = f.read()
+
+
 @lru_cache
+def _mapping():
+    if _mapping_file_content is None:
+        content = files("grype_db_manager.data").joinpath("schema-info.json").read_text()
+    else:
+        content = _mapping_file_content
+    return json.loads(content)
+
+
+
 def _load() -> SchemaMapping:
-    content = files("grype_db_manager.data").joinpath("schema-info.json").read_text()
-    mapping_object = json.loads(content)
+    mapping_object = _mapping()
 
     # we need a full default application config first then merge the loaded config on top.
     # Why? dataclass_wizard.fromdict() will create instances from the dataclass default
