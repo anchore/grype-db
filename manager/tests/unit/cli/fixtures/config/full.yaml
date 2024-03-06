@@ -22,6 +22,8 @@ distribution:
   s3-endpoint-url: http://localhost:4566
   download-url-prefix: http://localhost:4566/testbucket
 
+schemaMappingFile: "mapping.json"
+
 validate:
   listing:
     image: "centos:8.2.2004"

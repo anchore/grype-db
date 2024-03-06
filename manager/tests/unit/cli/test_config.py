@@ -58,6 +58,7 @@ grypeDb:
   version: latest
 log:
   level: INFO
+schemaMappingFile: ''
 validate:
   db:
     defaultMaxYear: 2021
@@ -104,6 +105,7 @@ grypeDb:
   version: file://.
 log:
   level: INFO
+schemaMappingFile: mapping.json
 validate:
   db:
     defaultMaxYear: 2021
