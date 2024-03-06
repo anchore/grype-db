@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass, field
 from functools import lru_cache
 from importlib.resources import files
+from typing import Any
 
 import mergedeep
 from dataclass_wizard import asdict, fromdict
@@ -37,20 +38,20 @@ class SchemaMapping:
         return supported
 
 
-def register_mapping(file: str):
-    with open(file, "r") as f:
-        global _mapping_file_content
+def register_mapping(file: str) -> None:
+    with open(file) as f:
+        global _mapping_file_content  # noqa: PLW0603
         _mapping_file_content = f.read()
 
 
 @lru_cache
-def _mapping():
-    if _mapping_file_content is None:
-        content = files("grype_db_manager.data").joinpath("schema-info.json").read_text()
-    else:
-        content = _mapping_file_content
+def _mapping() -> dict[str, Any]:
+    content = (
+        files("grype_db_manager.data").joinpath("schema-info.json").read_text()
+        if _mapping_file_content is None
+        else _mapping_file_content
+    )
     return json.loads(content)
-
 
 
 def _load() -> SchemaMapping:
