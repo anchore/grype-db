@@ -462,11 +462,9 @@ class GrypeDB:
 
         env = dict(  # noqa: PIE804
             **os.environ.copy(),
-            **{
-                "GRYPE_DB_VUNNEL_ROOT": provider_root_dir,
-                "GRYPE_DB_CONFIG": config,
-                "GRYPE_DB_LOG_LEVEL": level,
-            },
+            GRYPE_DB_VUNNEL_ROOT=provider_root_dir,
+            GRYPE_DB_CONFIG=config,
+            GRYPE_DB_LOG_LEVEL=level,
         )
 
         ret = subprocess.check_call(cmd, env=env, shell=True)  # noqa: S602

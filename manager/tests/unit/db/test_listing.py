@@ -85,7 +85,7 @@ def test_listing_add_sorts_by_date():
     ),
 )
 def test_listing_url(s3_path, expected):
-    assert expected == db.Listing.url(s3_path)
+    assert expected == db.Listing.url(s3_path, "listing.json")
 
 
 def test_listing_basenames():
