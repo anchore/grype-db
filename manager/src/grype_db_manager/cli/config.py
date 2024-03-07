@@ -82,6 +82,14 @@ class Validate:
 
 
 @dataclass()
+class ListingReplica:
+    listing_file_name: str = "listing.json"
+    s3_path: str | None = None
+    s3_bucket: str | None = None
+    aws_region: str | None = None
+
+
+@dataclass()
 class Distribution:
     listing_file_name: str = "listing.json"
     s3_path: str | None = None
@@ -89,6 +97,7 @@ class Distribution:
     s3_endpoint_url: str | None = None
     download_url_prefix: str | None = None
     aws_region: str | None = None
+    listing_replicas: list[ListingReplica] = field(default_factory=list)
 
 
 @dataclass

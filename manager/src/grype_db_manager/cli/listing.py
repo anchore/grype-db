@@ -25,7 +25,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
     download_url_prefix = cfg.distribution.download_url_prefix
 
     # get existing listing file...
-    the_listing = db.listing.fetch(bucket=s3_bucket, path=s3_path, create_if_missing=ignore_missing_listing)
+    the_listing = db.listing.fetch(bucket=s3_bucket, path=s3_path, filename=cfg.distribution.listing_file_name, create_if_missing=ignore_missing_listing)
 
     # look for existing DBs in S3
     existing_paths_by_basename = distribution.existing_dbs_in_s3(
@@ -131,18 +131,39 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
+    filename = cfg.distribution.listing_file_name
 
     with open(listing_file) as f:
         the_listing = db.Listing.from_json(f.read())
 
+    # upload the primary listing file
     s3utils.upload(
         bucket=s3_bucket,
-        key=the_listing.url(s3_path),
+        key=the_listing.url(s3_path, filename),
         contents=the_listing.to_json(),
         CacheControl=f"public,max-age={ttl_seconds}",
     )
 
     click.echo(f"{listing_file} uploaded to s3://{s3_bucket}/{s3_path}")
+
+    # upload to replicas
+    for replica in cfg.distribution.listing_replicas:
+        replica_s3_bucket = replica.s3_bucket or s3_bucket
+        replica_s3_path = replica.s3_path or s3_path
+        replica_filename = replica.listing_file_name or filename
+
+        if not replica_s3_bucket or not replica_s3_path:
+            logging.warning(f"skipping replica upload for {replica} because s3_bucket and s3_path are required")
+            continue
+
+        s3utils.upload(
+            bucket=replica_s3_bucket,
+            key=the_listing.url(replica_s3_path, replica_filename),
+            contents=the_listing.to_json(),
+            CacheControl=f"public,max-age={ttl_seconds}",
+        )
+
+        click.echo(f"{listing_file} uploaded to s3://{replica_s3_bucket}/{replica_s3_path}")
 
 
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
