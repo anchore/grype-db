@@ -140,8 +140,8 @@ class Listing:
                 logging.info(f"    entry: {entry}")
 
     @staticmethod
-    def url(path: str) -> str:
-        url = os.path.normpath("/".join([path, LISTING_FILENAME]).lstrip("/"))
+    def url(path: str, filename: str) -> str:
+        url = os.path.normpath("/".join([path, filename]).lstrip("/"))
         return urlunparse(urlparse(url))  # normalize the url
 
     def basenames(self) -> set[str]:
@@ -171,7 +171,7 @@ def empty_listing() -> Listing:
     return Listing(available={})
 
 
-def fetch(bucket: str, path: str, create_if_missing: bool = False) -> Listing:
+def fetch(bucket: str, path: str, filename: str, create_if_missing: bool = False) -> Listing:
     if not path or not bucket:
         if create_if_missing:
             logging.warning("no path or bucket specified, creating empty listing")
@@ -180,7 +180,7 @@ def fetch(bucket: str, path: str, create_if_missing: bool = False) -> Listing:
         raise ValueError(msg)
 
     logging.info(f"fetching existing listing from s3://{bucket}/{path}")
-    listing_path = Listing.url(path)
+    listing_path = Listing.url(path, filename)
     try:
         listing_contents = s3utils.get_s3_object_contents(
             bucket=bucket,
