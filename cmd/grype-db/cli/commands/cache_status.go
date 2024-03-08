@@ -121,13 +121,13 @@ func cacheStatus(cfg cacheStatusConfig) error {
 
 		if sd != nil {
 			name = sd.Provider
-			count, err = entry.Count(sd.Store, sd.ResultPaths())
+			counter := func() (int64, error) {
+				return entry.Count(sd.Store, sd.ResultPaths())
+			}
+			err := validateCount(cfg, counter)
 			if err != nil {
 				isValid = false
-				validMsg = fmt.Sprintf("INVALID (unable to count entries: %s)", err.Error())
-			} else if count <= cfg.minRows {
-				isValid = false
-				validMsg = fmt.Sprintf("INVALID (data has %d rows, must have more than %d)", count, cfg.minRows)
+				validMsg = fmt.Sprintf("INVALID (%s)", err.Error())
 			}
 		}
 
@@ -148,6 +148,17 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		os.Exit(1)
 	}
 
+	return nil
+}
+
+func validateCount(cfg cacheStatusConfig, counter func() (int64, error)) error {
+	count, err := counter()
+	if err != nil {
+		return fmt.Errorf("unable to count entries: %w", err)
+	}
+	if count <= cfg.minRows {
+		return fmt.Errorf("data has %d rows, must have more than %d", count, cfg.minRows)
+	}
 	return nil
 }
 
