@@ -25,9 +25,15 @@ type cacheStatusConfig struct {
 		options.Store     `yaml:",inline" mapstructure:",squash"`
 		options.Selection `yaml:",inline" mapstructure:",squash"`
 	} `yaml:"provider" json:"provider" mapstructure:"provider"`
+	minRows int64 `yaml:"min-rows" mapstructure:"min-rows"`
 }
 
 func (o *cacheStatusConfig) AddFlags(flags *pflag.FlagSet) {
+	flags.Int64VarP(
+		&o.minRows,
+		"min-rows", "", o.minRows,
+		"fail validation unless more than this many rows are present in the provider results",
+	)
 	options.AddAllFlags(flags, &o.Provider.Store, &o.Provider.Selection)
 }
 
@@ -119,6 +125,9 @@ func cacheStatus(cfg cacheStatusConfig) error {
 			if err != nil {
 				isValid = false
 				validMsg = fmt.Sprintf("INVALID (unable to count entries: %s)", err.Error())
+			} else if count <= cfg.minRows {
+				isValid = false
+				validMsg = fmt.Sprintf("INVALID (data has %d rows, must have more than %d)", count, cfg.minRows)
 			}
 		}
 
