@@ -95,7 +95,7 @@ func runBuild(cfg buildConfig) error {
 		SchemaVersion: cfg.SchemaVersion,
 		Directory:     cfg.Directory,
 		States:        states,
-		Timestamp:     latestTimestamp(states),
+		Timestamp:     earliestTimestamp(states),
 	})
 }
 
@@ -129,12 +129,12 @@ func providerStates(skipValidation bool, providers []provider.Provider) ([]provi
 	return states, nil
 }
 
-func latestTimestamp(states []provider.State) time.Time {
-	var latest time.Time
+func earliestTimestamp(states []provider.State) time.Time {
+	earliest := states[0].Timestamp
 	for _, s := range states {
-		if s.Timestamp.After(latest) {
-			latest = s.Timestamp
+		if s.Timestamp.Before(earliest) {
+			earliest = s.Timestamp
 		}
 	}
-	return latest
+	return earliest
 }
