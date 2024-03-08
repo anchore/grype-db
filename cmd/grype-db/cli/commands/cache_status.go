@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gookit/color"
@@ -78,11 +79,15 @@ func cacheStatus(cfg cacheStatusConfig) error {
 	var errs []error
 
 	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
+	providersExplicitlyRequested := allowableProviders.Size() > 0
 
 	for _, name := range providerNames {
-		if allowableProviders.Size() > 0 && !allowableProviders.Has(name) {
+		if providersExplicitlyRequested && !allowableProviders.Has(name) {
 			log.WithFields("provider", name).Trace("skipping...")
 			continue
+		}
+		if providersExplicitlyRequested {
+			allowableProviders.Remove(name)
 		}
 
 		workspace := provider.NewWorkspace(cfg.Provider.Root, name)
@@ -142,6 +147,11 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		}
 
 		fmt.Printf("    └── status:  %s\n", statusFmt.Sprint(validMsg))
+	}
+
+	if providersExplicitlyRequested && allowableProviders.Size() > 0 {
+		success = false
+		fmt.Printf("INVALID (provider(s) %s explicitly requested, but not found)\n", strings.Join(allowableProviders.List(), ", "))
 	}
 
 	if !success {
