@@ -159,7 +159,7 @@ func validateCount(cfg cacheStatusConfig, counter func() (int64, error)) (int64,
 
 // validateRequestedProviders takes the set of providers found on disk, and the set of providers
 // requested at the command line. It returns the subset of providers on disk that were requested.
-// If providers were requested that are not present on disk, it returns an error.\
+// If providers were requested that are not present on disk, it returns an error.
 // If no providers are explicitly requested, it returns the entire set.
 func validateRequestedProviders(providersOnDisk []string, requestedProviders []string) ([]string, error) {
 	if len(requestedProviders) == 0 {
