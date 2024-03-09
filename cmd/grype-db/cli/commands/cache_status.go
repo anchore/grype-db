@@ -14,7 +14,6 @@ import (
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 )
@@ -70,26 +69,12 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		return err
 	}
 
-	if len(providerNames) == 0 {
-		fmt.Println("no provider state cache found")
-		return nil
-	}
+	providerNames, missingProvidersErr := validateRequestedProviders(providerNames, cfg.Provider.IncludeFilter)
 
 	var sds []*provider.State
 	var errs []error
 
-	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
-	providersExplicitlyRequested := allowableProviders.Size() > 0
-
 	for _, name := range providerNames {
-		if providersExplicitlyRequested && !allowableProviders.Has(name) {
-			log.WithFields("provider", name).Trace("skipping...")
-			continue
-		}
-		if providersExplicitlyRequested {
-			allowableProviders.Remove(name)
-		}
-
 		workspace := provider.NewWorkspace(cfg.Provider.Root, name)
 		sd, err := workspace.ReadState()
 		if err != nil {
@@ -129,7 +114,7 @@ func cacheStatus(cfg cacheStatusConfig) error {
 			counter := func() (int64, error) {
 				return entry.Count(sd.Store, sd.ResultPaths())
 			}
-			err := validateCount(cfg, counter)
+			count, err = validateCount(cfg, counter)
 			if err != nil {
 				isValid = false
 				validMsg = fmt.Sprintf("INVALID (%s)", err.Error())
@@ -149,9 +134,9 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		fmt.Printf("    └── status:  %s\n", statusFmt.Sprint(validMsg))
 	}
 
-	if providersExplicitlyRequested && allowableProviders.Size() > 0 {
+	if missingProvidersErr != nil {
 		success = false
-		fmt.Printf("INVALID (provider(s) %s explicitly requested, but not found)\n", strings.Join(allowableProviders.List(), ", "))
+		fmt.Printf("INVALID (%s)\n", missingProvidersErr.Error())
 	}
 
 	if !success {
@@ -161,15 +146,37 @@ func cacheStatus(cfg cacheStatusConfig) error {
 	return nil
 }
 
-func validateCount(cfg cacheStatusConfig, counter func() (int64, error)) error {
+func validateCount(cfg cacheStatusConfig, counter func() (int64, error)) (int64, error) {
 	count, err := counter()
 	if err != nil {
-		return fmt.Errorf("unable to count entries: %w", err)
+		return 0, fmt.Errorf("unable to count entries: %w", err)
 	}
 	if count <= cfg.minRows {
-		return fmt.Errorf("data has %d rows, must have more than %d", count, cfg.minRows)
+		return 0, fmt.Errorf("data has %d rows, must have more than %d", count, cfg.minRows)
 	}
-	return nil
+	return count, nil
+}
+
+// validateRequestedProviders takes the set of providers found on disk, and the set of providers
+// requested at the command line. It returns the subset of providers on disk that were requested.
+// If providers were requested that are not present on disk, it returns an error.\
+// If no providers are explicitly requested, it returns the entire set.
+func validateRequestedProviders(providersOnDisk []string, requestedProviders []string) ([]string, error) {
+	if len(requestedProviders) == 0 {
+		return providersOnDisk, nil
+	}
+	var result []string
+	requestedSet := strset.New(requestedProviders...)
+	for _, p := range providersOnDisk {
+		if requestedSet.Has(p) {
+			result = append(result, p)
+			requestedSet.Remove(p)
+		}
+	}
+	if requestedSet.Size() > 0 {
+		return nil, fmt.Errorf("providers requested but not present on disk: %s", strings.Join(requestedSet.List(), ", "))
+	}
+	return result, nil
 }
 
 func readProviderNamesFromRoot(root string) ([]string, error) {
