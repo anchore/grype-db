@@ -8,3 +8,8 @@ providers:
   ubuntu:
     # there is a lot of IO when running git log commands in this provider, so some concurrency helps here
     max_workers: 10
+
+  nvd:
+    # apply community-provided overrides to the NVD data
+    # sourced from the https://github.com/anchore/nvd-data-overrides repo
+    overrides_enabled: true
