@@ -21,6 +21,13 @@ distribution:
   aws-region: us-west-2
   s3-endpoint-url: http://localhost:4566
   download-url-prefix: http://localhost:4566/testbucket
+  listing_replicas:
+    - awsRegion: us-west-2
+      listingFileName: listing.json
+      s3Bucket: testbucket
+      s3Path: grype/databases
+      
+schemaMappingFile: "mapping.json"
 
 validate:
   listing:

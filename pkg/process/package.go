@@ -1,8 +1,6 @@
 package process
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"net/url"
 	"os"
@@ -17,10 +15,8 @@ import (
 	"github.com/anchore/grype/grype/db"
 )
 
-func randomString() (string, error) {
-	b := make([]byte, 10)
-	_, err := rand.Read(b)
-	return hex.EncodeToString(b), err
+func secondsSinceEpoch() int64 {
+	return time.Now().UTC().Unix()
 }
 
 func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
@@ -41,10 +37,11 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 		return err
 	}
 
-	trailer, err := randomString()
-	if err != nil {
-		return fmt.Errorf("unable to create random archive trailer: %w", err)
-	}
+	// we need a well-ordered string to append to the archive name to ensure uniqueness (to avoid overwriting
+	// existing archives in the CDN) as well as to ensure that multiple archives created in the same day are
+	// put in the correct order in the listing file. The DB timestamp represents the age of the data in the DB
+	// not when the DB was created. The trailer represents the time the DB was packaged.
+	trailer := fmt.Sprintf("%d", secondsSinceEpoch())
 
 	// TODO (alex): supporting tar.zst
 	// var extension = "tar.zst"

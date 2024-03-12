@@ -363,7 +363,12 @@ class DBManager:
 
 class GrypeDB:
     def __init__(self, bin_path: str, config_path: str = ""):
-        self.version = os.path.basename(bin_path).removeprefix("grype-db-")
+        if bin_path:
+            self.version = os.path.basename(bin_path).removeprefix("grype-db-")
+        else:
+            logging.info("using existing grype-db that is on path")
+            self.version = ""
+
         self.bin_path = bin_path
         self.config_path = config_path
 
@@ -383,11 +388,14 @@ class GrypeDB:
 
     @classmethod
     def install(cls, version: str, config_path: str, root_dir: str) -> GrypeDB:
-        bin_path = _install_grype_db(
-            input_version=version,
-            bin_dir=os.path.join(root_dir, BIN_DIR),
-            clone_dir=os.path.join(root_dir, CLONE_DIR),
-        )
+        bin_path = None
+        if version != "disabled":
+            bin_path = _install_grype_db(
+                input_version=version,
+                bin_dir=os.path.join(root_dir, BIN_DIR),
+                clone_dir=os.path.join(root_dir, CLONE_DIR),
+            )
+
         return cls(bin_path=bin_path, config_path=config_path)
 
     def build_and_package(self, schema_version: int, provider_root_dir: str, root_dir: str) -> str:
@@ -443,7 +451,7 @@ class GrypeDB:
         )
 
     def run(self, *args, provider_root_dir: str, config: str) -> int:
-        cmd = " ".join([self.bin_path, *args])
+        cmd = " ".join([self.bin_path, *args]) if self.bin_path else " ".join(["grype-db", *args])
         level = logging.getLevelName(logging.getLogger().getEffectiveLevel())
         if level == "TRACE":
             # trace is not supported in grype-db yet
@@ -454,11 +462,9 @@ class GrypeDB:
 
         env = dict(  # noqa: PIE804
             **os.environ.copy(),
-            **{
-                "GRYPE_DB_VUNNEL_ROOT": provider_root_dir,
-                "GRYPE_DB_CONFIG": config,
-                "GRYPE_DB_LOG_LEVEL": level,
-            },
+            GRYPE_DB_VUNNEL_ROOT=provider_root_dir,
+            GRYPE_DB_CONFIG=config,
+            GRYPE_DB_LOG_LEVEL=level,
         )
 
         ret = subprocess.check_call(cmd, env=env, shell=True)  # noqa: S602

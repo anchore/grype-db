@@ -50,6 +50,7 @@ distribution:
   awsRegion: null
   downloadUrlPrefix: null
   listingFileName: listing.json
+  listingReplicas: []
   s3Bucket: null
   s3EndpointUrl: null
   s3Path: null
@@ -58,6 +59,7 @@ grypeDb:
   version: latest
 log:
   level: INFO
+schemaMappingFile: ''
 validate:
   db:
     defaultMaxYear: 2021
@@ -96,6 +98,11 @@ distribution:
   awsRegion: us-west-2
   downloadUrlPrefix: http://localhost:4566/testbucket
   listingFileName: listing.json
+  listingReplicas:
+    - awsRegion: us-west-2
+      listingFileName: listing.json
+      s3Bucket: testbucket
+      s3Path: grype/databases
   s3Bucket: testbucket
   s3EndpointUrl: http://localhost:4566
   s3Path: grype/databases
@@ -104,6 +111,7 @@ grypeDb:
   version: file://.
 log:
   level: INFO
+schemaMappingFile: mapping.json
 validate:
   db:
     defaultMaxYear: 2021

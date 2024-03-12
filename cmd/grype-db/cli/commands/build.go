@@ -86,38 +86,55 @@ func runBuild(cfg buildConfig) error {
 		pvdrs = pvdrs.Filter(cfg.Provider.IncludeFilter...)
 	}
 
-	var states []provider.State
-	stateTimestamp := time.Now()
-	log.Debug("reading all provider state")
-	for _, p := range pvdrs {
-		log.WithFields("provider", p.ID().Name).Debug("reading state")
-
-		sd, err := p.State()
-		if err != nil {
-			return fmt.Errorf("unable to read provider state: %w", err)
-		}
-
-		if !cfg.SkipValidation {
-			log.WithFields("provider", p.ID().Name).Trace("validating state")
-			if err := sd.Verify(); err != nil {
-				return fmt.Errorf("invalid provider state: %w", err)
-			}
-		}
-
-		if sd.Timestamp.Before(stateTimestamp) {
-			stateTimestamp = sd.Timestamp
-		}
-		states = append(states, *sd)
-	}
-
-	if !cfg.SkipValidation {
-		log.Debugf("state validated for all providers")
+	states, err := providerStates(cfg.SkipValidation, pvdrs)
+	if err != nil {
+		return fmt.Errorf("unable to get provider states: %w", err)
 	}
 
 	return process.Build(process.BuildConfig{
 		SchemaVersion: cfg.SchemaVersion,
 		Directory:     cfg.Directory,
 		States:        states,
-		Timestamp:     stateTimestamp,
+		Timestamp:     earliestTimestamp(states),
 	})
+}
+
+func providerStates(skipValidation bool, providers []provider.Provider) ([]provider.State, error) {
+	var states []provider.State
+	log.Debug("reading all provider state")
+
+	if len(providers) == 0 {
+		return nil, fmt.Errorf("no providers configured")
+	}
+
+	for _, p := range providers {
+		log.WithFields("provider", p.ID().Name).Debug("reading state")
+
+		sd, err := p.State()
+		if err != nil {
+			return nil, fmt.Errorf("unable to read provider state: %w", err)
+		}
+
+		if !skipValidation {
+			log.WithFields("provider", p.ID().Name).Trace("validating state")
+			if err := sd.Verify(); err != nil {
+				return nil, fmt.Errorf("invalid provider state: %w", err)
+			}
+		}
+		states = append(states, *sd)
+	}
+	if !skipValidation {
+		log.Debugf("state validated for all providers")
+	}
+	return states, nil
+}
+
+func earliestTimestamp(states []provider.State) time.Time {
+	earliest := states[0].Timestamp
+	for _, s := range states {
+		if s.Timestamp.Before(earliest) {
+			earliest = s.Timestamp
+		}
+	}
+	return earliest
 }

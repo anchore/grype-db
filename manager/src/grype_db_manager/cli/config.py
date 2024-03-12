@@ -82,6 +82,14 @@ class Validate:
 
 
 @dataclass()
+class ListingReplica:
+    listing_file_name: str = "listing.json"
+    s3_path: str | None = None
+    s3_bucket: str | None = None
+    aws_region: str | None = None
+
+
+@dataclass()
 class Distribution:
     listing_file_name: str = "listing.json"
     s3_path: str | None = None
@@ -89,6 +97,7 @@ class Distribution:
     s3_endpoint_url: str | None = None
     download_url_prefix: str | None = None
     aws_region: str | None = None
+    listing_replicas: list[ListingReplica] = field(default_factory=list)
 
 
 @dataclass
@@ -102,7 +111,7 @@ class Data:
 class Application:
     data: Data = field(default_factory=Data)
     log: Log = field(default_factory=Log)
-
+    schema_mapping_file: str = ""  # default is to use built-in schema mapping
     grype_db: GrypeDB = field(default_factory=GrypeDB)
     validate: Validate = field(default_factory=Validate)
     distribution: Distribution = field(default_factory=Distribution)
@@ -253,6 +262,10 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
         else:
             # in case this is used back-to-back with a grype-db-manager run, reset the region
             s3utils.ClientFactory.set_region_name(None)
+
+        # ensure we're using the correct schema mapping file
+        if cfg.schema_mapping_file:
+            db.schema.register_mapping(cfg.schema_mapping_file)
 
     return cfg
 

@@ -46,7 +46,7 @@ format: virtual-env-check  ## Format all code (black)
 
 .PHONY: unit
 unit: virtual-env-check  ## Run unit tests
-	pytest --cov-fail-under=$(COVERAGE_THRESHOLD) --config-file ../pyproject.toml --cov-report html --cov grype_db_manager -v tests/unit/
+	pytest --cov-fail-under=$(COVERAGE_THRESHOLD) --config-file ../pyproject.toml --cov-report html --cov grype_db_manager -vv tests/unit/
 
 .PHONY: cli
 cli: virtual-env-check  ## Run cli tests
