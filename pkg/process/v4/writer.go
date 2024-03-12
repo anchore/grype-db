@@ -111,6 +111,7 @@ func (w writer) Close() error {
 }
 
 func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.VulnerabilityMetadataStoreReader) {
+	metadata.Severity = string(data.ParseSeverity(metadata.Severity))
 	if metadata.Severity != "" && strings.ToLower(metadata.Severity) != "unknown" {
 		return
 	}
@@ -131,8 +132,8 @@ func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.V
 	}
 
 	newSeverity := string(data.ParseSeverity(m.Severity))
-
-	log.WithFields("id", metadata.ID, "namespace", metadata.Namespace, "from", metadata.Severity, "to", newSeverity).Trace("overriding irrelevant severity with data from NVD record")
-
+	if newSeverity != metadata.Severity {
+		log.WithFields("id", metadata.ID, "namespace", metadata.Namespace, "sev-from", metadata.Severity, "sev-to", newSeverity).Trace("overriding irrelevant severity with data from NVD record")
+	}
 	metadata.Severity = newSeverity
 }
