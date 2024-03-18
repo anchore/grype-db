@@ -8,6 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.4.0
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
+	github.com/anchore/go-sync v0.0.0-20240306202715-2d96aff4e511
 	github.com/anchore/grype v0.74.7
 	github.com/anchore/syft v0.105.1
 	github.com/bmatcuk/doublestar/v4 v4.6.1
