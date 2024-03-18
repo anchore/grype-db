@@ -6,7 +6,7 @@ import logging
 import os
 import tempfile
 from typing import TYPE_CHECKING
-from urllib.parse import urljoin, urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 
 import iso8601
 
@@ -67,8 +67,7 @@ def listing_entries_dbs_in_s3(
             meta = metadata.from_archive(path=local_path)
 
             # create a new listing entry and add it to the listing
-            path_part = os.path.join(s3_path, basename)
-            url = urljoin(download_url_prefix, path_part)
+            url = os.path.join(download_url_prefix, s3_path, basename)
             url = urlunparse(urlparse(url))  # normalize the url
 
             yield listing.Entry(

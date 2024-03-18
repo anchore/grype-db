@@ -20,7 +20,7 @@ for script in $files; do
 done
 echo
 
-# run all scripts in the current directory named case-*.sh and exit on first failure
+# run all scripts in the current directory named workflow-*.sh and exit on first failure
 status=0
 for script in $files; do
     bash -c "./$script" || { status=1; break; }
