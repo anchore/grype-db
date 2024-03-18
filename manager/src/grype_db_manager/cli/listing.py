@@ -22,7 +22,7 @@ def group(_: config.Application) -> None:
 def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str:
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
-    download_url_prefix = cfg.distribution.download_url_prefix.removesuffix("/")
+    download_url_prefix = cfg.distribution.download_url_prefix
 
     # get existing listing file...
     the_listing = db.listing.fetch(
