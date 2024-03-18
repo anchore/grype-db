@@ -6,7 +6,7 @@ import logging
 import os
 import tempfile
 from typing import TYPE_CHECKING
-from urllib.parse import urlparse, urlunparse, urljoin
+from urllib.parse import urljoin, urlparse, urlunparse
 
 import iso8601
 
