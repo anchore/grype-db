@@ -6,4 +6,4 @@ distribution:
   s3-path: grype/databases
   s3-bucket: testbucket
   aws-region: us-west-2
-  download-url-prefix: http://localhost:4566/testbucket
+  download-url-prefix: http://localhost:4566/testbucket/ # assert that trailing / is trimmed

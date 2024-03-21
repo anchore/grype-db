@@ -67,7 +67,7 @@ def listing_entries_dbs_in_s3(
             meta = metadata.from_archive(path=local_path)
 
             # create a new listing entry and add it to the listing
-            url = f"{download_url_prefix}/{s3_path}/{basename}"
+            url = f"{download_url_prefix.strip('/')}/{s3_path.strip('/')}/{basename.strip('/')}"
             url = urlunparse(urlparse(url))  # normalize the url
 
             yield listing.Entry(
