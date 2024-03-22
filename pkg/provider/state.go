@@ -26,6 +26,7 @@ type State struct {
 	Timestamp        time.Time `json:"timestamp"`
 	Listing          *File     `json:"listing"`
 	Store            string    `json:"store"`
+	Stale            bool      `json:"stale"`
 	resultFileStates []File
 }
 
@@ -89,6 +90,18 @@ func ReadState(location string) (*State, error) {
 	log.WithFields("duration", time.Since(start), "entries", len(sd.resultFileStates)).Trace("loaded result listing file")
 
 	return &sd, nil
+}
+
+func WriteState(location string, sd *State) error {
+	by, err := json.MarshalIndent(sd, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(location, by, 0644) // nolint:gosec
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (sd State) ResultPath(filename string) string {
