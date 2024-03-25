@@ -145,44 +145,52 @@ func archiveProvider(cfg cacheBackupConfig, root string, name string, writer *ta
 
 	return filepath.Walk(name,
 		func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-			if cfg.Results.ResultsOnly {
-				if strings.Compare(path, name+"/metadata.json") == 0 {
-					log.WithFields("file", name+"/metadata.json").Debug("Marking metadata stale")
-
-					// Mark metadata stale
-					var state provider.State
-					f, err := os.Open(path)
-					if err != nil {
-						return err
-					}
-					defer f.Close()
-
-					err = json.NewDecoder(f).Decode(&state)
-					if err != nil {
-						return err
-					}
-
-					state.Stale = true
-					// Stream this to the archive
-					stateJSON, err := json.MarshalIndent(state, "", "  ")
-					if err != nil {
-						return err
-					}
-
-					return addBytesToArchive(writer, path, stateJSON, info)
-				}
-				if strings.HasPrefix(path, name+"/input") {
-					log.WithFields("path", path).Debug("Skipping input directory")
-					return nil
-				}
-			}
-
-			return addToArchive(writer, path)
+			return pathWalker(path, info, err, cfg, name, writer)
 		},
 	)
+}
+
+func pathWalker(path string, info os.FileInfo, err error, cfg cacheBackupConfig, name string, writer *tar.Writer) error {
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+	if cfg.Results.ResultsOnly {
+		if strings.Compare(path, name+"/metadata.json") == 0 {
+			log.WithFields("file", name+"/metadata.json").Debug("Marking metadata stale")
+
+			// Mark metadata stale
+			var state provider.State
+			f, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			err = json.NewDecoder(f).Decode(&state)
+			if err != nil {
+				return err
+			}
+
+			state.Stale = true
+			// Stream this to the archive
+			stateJSON, err := json.MarshalIndent(state, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			return addBytesToArchive(writer, path, stateJSON, info)
+		}
+		if strings.HasPrefix(path, name+"/input") {
+			log.WithFields("path", path).Debug("Skipping input directory")
+			return nil
+		}
+	}
+
+	return addToArchive(writer, path)
 }
 
 func addToArchive(writer *tar.Writer, filename string) error {

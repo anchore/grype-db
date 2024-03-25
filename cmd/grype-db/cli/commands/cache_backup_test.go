@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"os"
 	"path"
 	"testing"
 
@@ -96,6 +98,46 @@ func Test_archiveProvider(t *testing.T) {
 			assert.Equalf(t, tt.wantStateStale, state.Stale, "state had wrong staleness")
 			setDiff := strset.SymmetricDifference(tt.wantNames, foundNames)
 			assert.True(t, setDiff.IsEmpty())
+		})
+	}
+}
+
+func Test_pathWalker(t *testing.T) {
+	type args struct {
+		path   string
+		info   os.FileInfo
+		err    error
+		cfg    cacheBackupConfig
+		name   string
+		writer *tar.Writer
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "passed in error is return",
+			args: args{
+				err: fmt.Errorf("surprising error"),
+			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				if err == nil {
+					t.Errorf("expected 'surprising error' but was nil")
+					return false
+				}
+				if err.Error() != "surprising error" {
+					t.Errorf("wanted %q but was %q", "surprising error", err.Error())
+					return false
+				}
+				return true
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.wantErr(t, pathWalker(tt.args.path, tt.args.info, tt.args.err, tt.args.cfg, tt.args.name, tt.args.writer),
+				fmt.Sprintf("pathWalker(%v, %v, %v, %v, %v, %v)", tt.args.path, tt.args.info, tt.args.err, tt.args.cfg, tt.args.name, tt.args.writer))
 		})
 	}
 }
