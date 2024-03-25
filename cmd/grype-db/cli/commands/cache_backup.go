@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/klauspost/compress/zstd"
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -81,18 +82,25 @@ func cacheBackup(cfg cacheBackupConfig) error {
 		return err
 	}
 
-	gw := gzip.NewWriter(archive)
-	defer func(gw *gzip.Writer) {
-		if err := gw.Close(); err != nil {
-			log.Errorf("unable to close gzip writer: %w", err)
+	var compressionWriter io.WriteCloser
+	switch {
+	case strings.HasSuffix(cfg.CacheArchive.Path, ".tar.gz"):
+		compressionWriter = gzip.NewWriter(archive)
+	case strings.HasSuffix(cfg.CacheArchive.Path, ".tar.zst"):
+		// adding zstd.WithWindowSize(zstd.MaxWindowSize), zstd.WithAllLitEntropyCompression(true)
+		// will have slightly better results, but use a lot more memory
+		compressionWriter, err = zstd.NewWriter(archive, zstd.WithEncoderLevel(zstd.SpeedBestCompression))
+		if err != nil {
+			return fmt.Errorf("unable to get compression stream: %w", err)
 		}
-	}(gw)
-	tw := tar.NewWriter(gw)
-	defer func(tw *tar.Writer) {
-		if err := tw.Close(); err != nil {
-			log.Errorf("unable to close tar writer: %w", err)
-		}
-	}(tw)
+	default:
+		return fmt.Errorf("archive name has an unsupported suffix (only .tar.gz and .tar.zst supported): %q", cfg.CacheArchive.Path)
+	}
+
+	defer compressionWriter.Close()
+
+	tarWriter := tar.NewWriter(compressionWriter)
+	defer tarWriter.Close()
 
 	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
@@ -119,7 +127,7 @@ func cacheBackup(cfg cacheBackupConfig) error {
 		}
 
 		log.WithFields("provider", name).Debug("archiving data")
-		if err := archiveProvider(cfg, cfg.Provider.Root, name, tw); err != nil {
+		if err := archiveProvider(cfg, cfg.Provider.Root, name, tarWriter); err != nil {
 			return err
 		}
 	}
