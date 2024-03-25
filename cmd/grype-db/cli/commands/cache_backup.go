@@ -151,8 +151,16 @@ func archiveProvider(cfg cacheBackupConfig, root string, name string, writer *ta
 			if cfg.Results.ResultsOnly {
 				if strings.Compare(path, name+"/metadata.json") == 0 {
 					log.WithFields("file", name+"/metadata.json").Debug("Marking metadata stale")
+
 					// Mark metadata stale
-					state, err := provider.ReadState(path)
+					var state provider.State
+					f, err := os.Open(path)
+					if err != nil {
+						return err
+					}
+					defer f.Close()
+
+					err = json.NewDecoder(f).Decode(&state)
 					if err != nil {
 						return err
 					}
