@@ -3,10 +3,13 @@ package commands
 import (
 	"archive/tar"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
@@ -27,14 +30,18 @@ type cacheBackupConfig struct {
 		options.Store     `yaml:",inline" mapstructure:",squash"`
 		options.Selection `yaml:",inline" mapstructure:",squash"`
 	} `yaml:"provider" json:"provider" mapstructure:"provider"`
+	options.Results `yaml:"results" json:"results" mapstructure:"results"`
 }
 
 func (o *cacheBackupConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection)
+	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection, &o.Results)
 }
 
 func (o *cacheBackupConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
-	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection)
+	if err := options.Bind(v, "results.results-only", flags.Lookup("results-only")); err != nil {
+		return err
+	}
+	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection, &o.Results)
 }
 
 func CacheBackup(app *application.Application) *cobra.Command {
@@ -43,6 +50,7 @@ func CacheBackup(app *application.Application) *cobra.Command {
 	}
 	cfg.Provider.Store = options.DefaultStore()
 	cfg.Provider.Selection = options.DefaultSelection()
+	cfg.Results = options.DefaultResults()
 
 	cmd := &cobra.Command{
 		Use:     "backup",
@@ -111,7 +119,7 @@ func cacheBackup(cfg cacheBackupConfig) error {
 		}
 
 		log.WithFields("provider", name).Debug("archiving data")
-		if err := archiveProvider(cfg.Provider.Root, name, tw); err != nil {
+		if err := archiveProvider(cfg, cfg.Provider.Root, name, tw); err != nil {
 			return err
 		}
 	}
@@ -121,7 +129,7 @@ func cacheBackup(cfg cacheBackupConfig) error {
 	return nil
 }
 
-func archiveProvider(root string, name string, writer *tar.Writer) error {
+func archiveProvider(cfg cacheBackupConfig, root string, name string, writer *tar.Writer) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -138,17 +146,52 @@ func archiveProvider(root string, name string, writer *tar.Writer) error {
 
 	return filepath.Walk(name,
 		func(path string, info os.FileInfo, err error) error {
+			return pathWalker(path, info, err, cfg, name, writer)
+		},
+	)
+}
+
+func pathWalker(p string, info os.FileInfo, err error, cfg cacheBackupConfig, name string, writer *tar.Writer) error {
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+	if cfg.Results.ResultsOnly {
+		if strings.Compare(p, path.Join(name, "metadata.json")) == 0 {
+			log.WithFields("file", path.Join(name, "metadata.json")).Debug("Marking metadata stale")
+
+			// Mark metadata stale
+			var state provider.State
+			f, err := os.Open(p)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			err = json.NewDecoder(f).Decode(&state)
 			if err != nil {
 				return err
 			}
 
-			if info.IsDir() {
-				return nil
+			state.Stale = true
+			// Stream this to the archive
+			stateJSON, err := json.MarshalIndent(state, "", "  ")
+			if err != nil {
+				return err
 			}
 
-			return addToArchive(writer, path)
-		},
-	)
+			return addBytesToArchive(writer, p, stateJSON, info)
+		}
+		if strings.HasPrefix(p, path.Join(name, "input")) {
+			log.WithFields("path", p).Debug("Skipping input directory")
+			return nil
+		}
+	}
+
+	return addToArchive(writer, p)
 }
 
 func addToArchive(writer *tar.Writer, filename string) error {
@@ -182,6 +225,32 @@ func addToArchive(writer *tar.Writer, filename string) error {
 	}
 
 	_, err = io.Copy(writer, file)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func addBytesToArchive(writer *tar.Writer, filename string, bytes []byte, info os.FileInfo) error {
+	log.WithFields("path", filename).Trace("adding stream to archive")
+
+	header, err := tar.FileInfoHeader(info, info.Name())
+	if err != nil {
+		return err
+	}
+	header.Name = filename
+	header.Size = int64(len(bytes))
+	err = writer.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(bytes)
+	if err != nil {
+		return err
+	}
+	err = writer.Flush()
 	if err != nil {
 		return err
 	}
