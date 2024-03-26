@@ -112,7 +112,7 @@ func populate(tarName, dbDir string) error {
 
 	defer func() {
 		if err = os.Chdir(originalDir); err != nil {
-			log.Errorf("unable to cd to original dir: %w", err)
+			log.Errorf("unable to cd to original dir: %v", err)
 		}
 	}()
 
