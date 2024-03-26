@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/internal/tar"
+	"github.com/anchore/grype-db/internal/tarutil"
 	"github.com/anchore/grype/grype/db"
 )
 
@@ -128,7 +128,7 @@ func populate(tarName, dbDir string) error {
 		}
 	}
 
-	if err = tar.Populate(tarName, files...); err != nil {
+	if err = tarutil.PopulateWithPaths(tarName, files...); err != nil {
 		return fmt.Errorf("unable to create db archive: %w", err)
 	}
 
