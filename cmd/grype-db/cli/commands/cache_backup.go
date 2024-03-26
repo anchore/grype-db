@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -150,7 +151,7 @@ func archiveProvider(cfg cacheBackupConfig, root string, name string, writer *ta
 	)
 }
 
-func pathWalker(path string, info os.FileInfo, err error, cfg cacheBackupConfig, name string, writer *tar.Writer) error {
+func pathWalker(p string, info os.FileInfo, err error, cfg cacheBackupConfig, name string, writer *tar.Writer) error {
 	if err != nil {
 		return err
 	}
@@ -159,12 +160,12 @@ func pathWalker(path string, info os.FileInfo, err error, cfg cacheBackupConfig,
 		return nil
 	}
 	if cfg.Results.ResultsOnly {
-		if strings.Compare(path, name+"/metadata.json") == 0 {
-			log.WithFields("file", name+"/metadata.json").Debug("Marking metadata stale")
+		if strings.Compare(p, path.Join(name, "metadata.json")) == 0 {
+			log.WithFields("file", path.Join(name, "metadata.json")).Debug("Marking metadata stale")
 
 			// Mark metadata stale
 			var state provider.State
-			f, err := os.Open(path)
+			f, err := os.Open(p)
 			if err != nil {
 				return err
 			}
@@ -182,15 +183,15 @@ func pathWalker(path string, info os.FileInfo, err error, cfg cacheBackupConfig,
 				return err
 			}
 
-			return addBytesToArchive(writer, path, stateJSON, info)
+			return addBytesToArchive(writer, p, stateJSON, info)
 		}
-		if strings.HasPrefix(path, name+"/input") {
-			log.WithFields("path", path).Debug("Skipping input directory")
+		if strings.HasPrefix(p, path.Join(name, "input")) {
+			log.WithFields("path", p).Debug("Skipping input directory")
 			return nil
 		}
 	}
 
-	return addToArchive(writer, path)
+	return addToArchive(writer, p)
 }
 
 func addToArchive(writer *tar.Writer, filename string) error {

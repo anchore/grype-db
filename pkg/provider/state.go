@@ -92,18 +92,6 @@ func ReadState(location string) (*State, error) {
 	return &sd, nil
 }
 
-func WriteState(location string, sd *State) error {
-	by, err := json.MarshalIndent(sd, "", "  ")
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(location, by, 0644) // nolint:gosec
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (sd State) ResultPath(filename string) string {
 	return filepath.Join(sd.root, filename)
 }
