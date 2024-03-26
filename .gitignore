@@ -25,6 +25,7 @@ listing.json
 !**/test-fixtures/**/*.db
 *.tar
 *tar.gz
+*tar.zst
 .idea/
 *.log
 .images
