@@ -11,6 +11,7 @@
 /bin
 .yardstick
 .grype-db-manager
+/tmp
 
 /grype-db
 /build
@@ -24,6 +25,7 @@ listing.json
 !**/test-fixtures/**/*.db
 *.tar
 *tar.gz
+*tar.zst
 .idea/
 *.log
 .images
