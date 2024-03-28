@@ -62,7 +62,7 @@ func CacheRestore(app *application.Application) *cobra.Command {
 		Short:   "restore provider cache from a backup archive",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return cacheRestore(cfg)
 			}))

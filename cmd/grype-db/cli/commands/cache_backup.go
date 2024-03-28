@@ -55,7 +55,7 @@ func CacheBackup(app *application.Application) *cobra.Command {
 		Short:   "backup provider cache to an archive",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return cacheBackup(cfg)
 			}))

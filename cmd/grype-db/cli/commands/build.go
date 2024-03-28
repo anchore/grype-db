@@ -45,7 +45,7 @@ func Build(app *application.Application) *cobra.Command {
 		Short:   "build a SQLite DB from the vulnerability feeds data for a particular schema version",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return runBuild(cfg)
 			}))

@@ -47,7 +47,7 @@ func ListProviders(app *application.Application) *cobra.Command {
 		Short: "list all configured providers",
 		Args: chainArgs(
 			cobra.NoArgs,
-			func(cmd *cobra.Command, args []string) error {
+			func(_ *cobra.Command, _ []string) error {
 				allowableOutputs := strset.New(cfg.Format.AllowableFormats...)
 				if !allowableOutputs.Has(cfg.Format.Output) {
 					return fmt.Errorf("invalid output format: %s (allowable: %s)", cfg.Format.Output, strings.Join(cfg.Format.AllowableFormats, ", "))
@@ -56,7 +56,7 @@ func ListProviders(app *application.Application) *cobra.Command {
 			},
 		),
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return runListProviders(cfg)
 			}))
