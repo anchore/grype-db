@@ -27,7 +27,7 @@ func commonConfiguration(app *application.Application, cmd *cobra.Command, opts 
 
 		if app != nil {
 			// we want to be able to attach config binding information to the help output
-			cmd.SetHelpFunc(func(passCmd *cobra.Command, args []string) {
+			cmd.SetHelpFunc(func(_ *cobra.Command, args []string) {
 				_ = app.Setup(opts)(cmd, args)
 				cmd.Parent().HelpFunc()(cmd, args)
 			})

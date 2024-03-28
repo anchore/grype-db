@@ -51,7 +51,7 @@ func CacheStatus(app *application.Application) *cobra.Command {
 		Short:   "verify the status of the existing provider cache",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return cacheStatus(cfg)
 			}))

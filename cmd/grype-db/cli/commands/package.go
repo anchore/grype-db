@@ -39,7 +39,7 @@ func Package(app *application.Application) *cobra.Command {
 		Short:   "package the already built database file into an archive ready for upload and serving",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			if cfg.OverrideArchiveExtension != "" {
 				if !strset.New("tar.gz", "tar.zst").Has(cfg.OverrideArchiveExtension) {
 					return fmt.Errorf("archive-extension must be 'tar.gz' or 'tar.zst'")

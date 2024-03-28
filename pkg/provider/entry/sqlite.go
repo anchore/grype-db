@@ -88,7 +88,7 @@ func sqliteOpeners(resultPaths []string) (<-chan Opener, int64, error) {
 		var models []results
 
 		current := 0
-		check := db.FindInBatches(&models, 100, func(tx *gorm.DB, batch int) error {
+		check := db.FindInBatches(&models, 100, func(_ *gorm.DB, _ int) error {
 			for _, result := range models {
 				openers <- bytesOpener{
 					contents: result.Record,
