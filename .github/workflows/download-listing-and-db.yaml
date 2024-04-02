@@ -1,0 +1,12 @@
+name: "Download listing file and db"
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # run every 30 minutes
+  workflow_dispatch:
+
+jobs:
+  Download-listing-and-db:
+    runs-on: ubuntu-latest
+    steps:
+      - run: .github/scripts/download-listing-and-db.sh
