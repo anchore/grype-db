@@ -44,7 +44,7 @@ pyyaml-include = "^1.3.1"
 python-magic = "^0.4.27"
 
 [tool.poetry.group.dev.dependencies]
-black = ">=23.7.0, <24"
+black = ">=23.7.0,<25"
 mypy = ">=1.4.1, <2"
 pytest = ">=7.4.0, <8"
 pytest-sugar = ">=0.9.7"
