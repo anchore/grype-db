@@ -7,10 +7,10 @@ test_download() {
   url=$1
 
   # download with IPv6
-  curl -vsL6 -w "@$timing_file" $url -o /dev/null
+  curl -vsL6 -w "@$timing_file" --max-time 30 $url -o /dev/null
 
   # download with IPv4
-  curl -vsL4 -w "@$timing_file" $url -o /dev/null
+  curl -vsL4 -w "@$timing_file" --max-time 120 $url -o /dev/null
 }
 
 test_download https://toolbox-data.anchore.io/grype/databases/listing.json
