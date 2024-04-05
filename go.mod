@@ -8,8 +8,8 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.4.0
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.74.7
-	github.com/anchore/syft v0.105.1
+	github.com/anchore/grype v0.75.0
+	github.com/anchore/syft v1.1.1
 	github.com/dustin/go-humanize v1.0.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-test/deep v1.1.0
@@ -27,7 +27,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/profile v1.7.0
 	github.com/scylladb/go-set v1.0.3-0.20200225121959-cc7b2070d91e
-	github.com/sergi/go-diff v1.3.1
+	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -58,23 +58,26 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
+	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/anchore/clio v0.0.0-20240209204744-cb94e40a4f65 // indirect
 	github.com/anchore/fangs v0.0.0-20231201140849-5075d28d6d8b // indirect
+	github.com/anchore/go-collections v0.0.0-20240216171411-9321230ce537 // indirect
 	github.com/anchore/go-macholibre v0.0.0-20220308212642-53e6d0aaf6fb // indirect
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
-	github.com/anchore/packageurl-go v0.1.1-0.20240202171727-877e1747d426 // indirect
-	github.com/anchore/stereoscope v0.0.2-0.20240216182029-6171ee21e1d5 // indirect
+	github.com/anchore/packageurl-go v0.1.1-0.20240312213626-055233e539b4 // indirect
+	github.com/anchore/stereoscope v0.0.2-0.20240229175558-fe426d1b1c84 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/aquasecurity/go-pep440-version v0.0.0-20210121094942-22b2f8951d46 // indirect
 	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492 // indirect
 	github.com/aws/aws-sdk-go v1.44.288 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/becheran/wildmatch-go v1.0.0 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bmatcuk/doublestar/v2 v2.0.4 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
+	github.com/charmbracelet/lipgloss v0.10.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
 	github.com/containerd/containerd v1.7.11 // indirect
@@ -87,16 +90,17 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deitch/magic v0.0.0-20230404182410-1ff89d7342da // indirect
-	github.com/distribution/reference v0.5.0 // indirect
+	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/cli v24.0.0+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v25.0.5+incompatible // indirect
+	github.com/docker/docker v26.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
+	github.com/elliotchance/phpserialize v1.4.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/facebookincubator/nvdtools v0.1.5 // indirect
 	github.com/felixge/fgprof v0.9.3 // indirect
@@ -107,7 +111,7 @@ require (
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-git/go-git/v5 v5.11.0 // indirect
+	github.com/go-git/go-git/v5 v5.12.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-restruct/restruct v1.2.0-alpha // indirect
@@ -115,7 +119,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-containerregistry v0.19.0 // indirect
+	github.com/google/go-containerregistry v0.19.1 // indirect
 	github.com/google/licensecheck v0.3.1 // indirect
 	github.com/google/pprof v0.0.0-20221118152302-e6195bd50e26 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
@@ -138,7 +142,8 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f // indirect
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d // indirect
-	github.com/knqyf263/go-rpmdb v0.0.0-20230301153543-ba94b245509b // indirect
+	github.com/knqyf263/go-rpmdb v0.1.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -151,10 +156,13 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
-	github.com/moby/sys/mountinfo v0.6.2 // indirect
+	github.com/moby/sys/mountinfo v0.7.1 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/signal v0.7.0 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
@@ -171,7 +179,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rivo/uniseg v0.4.6 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/saferwall/pe v1.5.2 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -179,7 +187,7 @@ require (
 	github.com/sassoftware/go-rpmutils v0.3.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/skeema/knownhosts v1.2.1 // indirect
+	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spdx/tools-golang v0.5.3 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
@@ -203,13 +211,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20231108232855-2478ac86f678 // indirect
-	golang.org/x/mod v0.15.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/mod v0.16.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/term v0.17.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
@@ -226,7 +234,7 @@ require (
 	modernc.org/libc v1.41.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
-	modernc.org/sqlite v1.29.2 // indirect
+	modernc.org/sqlite v1.29.5 // indirect
 )
 
 replace github.com/mholt/archiver/v3 v3.5.1 => github.com/anchore/archiver/v3 v3.5.2
