@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import ast
 import collections
 import logging
-import ast
 from dataclasses import InitVar, dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -266,7 +266,7 @@ def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_ima
 
 def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grypedb.DBInfo) -> bool:
     # all existing requests should be for the same db we are validating...
-    db_detail_strings= {
+    db_detail_strings = {
         s.config.detail.get("db", "")
         for s in result_set_object.state
         if s.config and s.request.tool.startswith("grype") and s.request.label == "custom-db"
@@ -281,7 +281,7 @@ def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grype
     if not db_details:
         logging.warning("result-set has no db checksums")
         return True
-    
+
     checksum = db_details[0].get("checksum", "")
     if db_info.db_checksum not in checksum:
         logging.warning(
@@ -291,13 +291,15 @@ def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grype
 
     return False
 
-def strings_to_dicts(string_slice):
+
+def strings_to_dicts(string_list: list[str]) -> list[dict]:
     dicts = []
-    for string in string_slice:
+    for string in string_list:
         # Assuming strings are in a valid dictionary format like "{'key': 'value'}"
         dictionary = ast.literal_eval(string)  # Using ast.literal_eval() to safely evaluate string
         dicts.append(dictionary)
     return dicts
+
 
 def validate_image(
     cfg: ycfg.Application,
