@@ -266,7 +266,7 @@ def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_ima
 def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grypedb.DBInfo) -> bool:
     # all existing requests should be for the same db we are validating...
     db_checksums = {
-        s.config.detail.get("db", {}).get("checksum", "")
+        s.config.detail["db"].get("checksum", "") # type: ignore[attr-defined]
         for s in result_set_object.state
         if s.config and s.request.tool.startswith("grype") and s.request.label == "custom-db"
     }
