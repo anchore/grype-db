@@ -272,33 +272,32 @@ def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grype
         if s.config and s.request.tool.startswith("grype") and s.request.label == "custom-db"
     }
 
-    db_details = strings_to_dicts(db_detail_strings)
+    db_checksums = checksums_from_detail(db_detail_strings)
 
-    if len(db_details) > 1:
+    if len(db_checksums) > 1:
         logging.warning("result-set has multiple db checksums")
         return True
 
-    if not db_details:
+    if not db_checksums:
         logging.warning("result-set has no db checksums")
         return True
 
-    checksum = db_details[0].get("checksum", "")
-    if db_info.db_checksum not in checksum:
+    if db_info.db_checksum not in db_checksums:
         logging.warning(
-            f"result-set was captured for a different db: expected={db_info.db_checksum} actual={checksum}",
+            f"result-set was captured for a different db: expected={db_info.db_checksum} actual={next(iter(db_checksums))}",
         )
         return True
 
     return False
 
 
-def strings_to_dicts(string_list: list[str]) -> list[dict]:
-    dicts = []
-    for string in string_list:
+def checksums_from_detail(detail_list: list[str]) -> list[str]:
+    checksums = []
+    for string in detail_list:
         # Assuming strings are in a valid dictionary format like "{'key': 'value'}"
         dictionary = ast.literal_eval(string)  # Using ast.literal_eval() to safely evaluate string
-        dicts.append(dictionary)
-    return dicts
+        checksums.append(dictionary.get("checksum", ""))
+    return checksums 
 
 
 def validate_image(
