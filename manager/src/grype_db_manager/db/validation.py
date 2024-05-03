@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 import collections
 import logging
 from dataclasses import InitVar, dataclass, field
