@@ -55,7 +55,6 @@ pytest-mock = ">=3.11.1"
 pytest-xdist = ">=3.3.1"
 ruff = "0.0.282" # the ruff project is pretty early, even a patch bump tends to break stuff
 types-requests = "^2.31.0.2"
-vunnel = "^0.22.2"
 moto = "^4.1.14"
 
 [build-system]
