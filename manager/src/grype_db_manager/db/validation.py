@@ -266,13 +266,11 @@ def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_ima
 
 def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grypedb.DBInfo) -> bool:
     # all existing requests should be for the same db we are validating...
-    db_detail_strings = {
-        s.config.detail.get("db", "")
+    db_checksums = {
+        s.config.detail.get("db", {}).get("checksum", "")
         for s in result_set_object.state
         if s.config and s.request.tool.startswith("grype") and s.request.label == "custom-db"
     }
-
-    db_checksums = checksums_from_detail(db_detail_strings)
 
     if len(db_checksums) > 1:
         logging.warning("result-set has multiple db checksums")
@@ -289,15 +287,6 @@ def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grype
         return True
 
     return False
-
-
-def checksums_from_detail(detail_list: list[str]) -> list[str]:
-    checksums = []
-    for string in detail_list:
-        # Assuming strings are in a valid dictionary format like "{'key': 'value'}"
-        dictionary = ast.literal_eval(string)  # Using ast.literal_eval() to safely evaluate string
-        checksums.append(dictionary.get("checksum", ""))
-    return checksums 
 
 
 def validate_image(
