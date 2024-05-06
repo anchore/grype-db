@@ -43,7 +43,7 @@ func Build(cfg BuildConfig) error {
 		return err
 	}
 
-	writer, err := getWriter(cfg.SchemaVersion, cfg.Timestamp, cfg.Directory, cfg.States)
+	writer, err := getWriter(cfg.SchemaVersion, cfg.Timestamp, cfg.Directory)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func getProcessors(schemaVersion int) ([]data.Processor, error) {
 	}
 }
 
-func getWriter(schemaVersion int, dataAge time.Time, directory string, states provider.States) (data.Writer, error) {
+func getWriter(schemaVersion int, dataAge time.Time, directory string) (data.Writer, error) {
 	switch schemaVersion {
 	case grypeDBv1.SchemaVersion:
 		return v1.NewWriter(directory, dataAge)
@@ -117,7 +117,7 @@ func getWriter(schemaVersion int, dataAge time.Time, directory string, states pr
 	case grypeDBv4.SchemaVersion:
 		return v4.NewWriter(directory, dataAge)
 	case grypeDBv5.SchemaVersion:
-		return v5.NewWriter(directory, dataAge, states)
+		return v5.NewWriter(directory, dataAge)
 	default:
 		return nil, fmt.Errorf("unable to create writer: unsupported schema version: %+v", schemaVersion)
 	}

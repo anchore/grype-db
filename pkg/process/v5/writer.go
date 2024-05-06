@@ -13,7 +13,6 @@ import (
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
-	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype/grype/db"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	grypeDBStore "github.com/anchore/grype/grype/db/v5/store"
@@ -27,10 +26,9 @@ var _ data.Writer = (*writer)(nil)
 type writer struct {
 	dbPath string
 	store  grypeDB.Store
-	states provider.States
 }
 
-func NewWriter(directory string, dataAge time.Time, states provider.States) (data.Writer, error) {
+func NewWriter(directory string, dataAge time.Time) (data.Writer, error) {
 	dbPath := path.Join(directory, grypeDB.VulnerabilityStoreFileName)
 	theStore, err := grypeDBStore.New(dbPath, true)
 	if err != nil {
@@ -44,7 +42,6 @@ func NewWriter(directory string, dataAge time.Time, states provider.States) (dat
 	return &writer{
 		dbPath: dbPath,
 		store:  theStore,
-		states: states,
 	}, nil
 }
 
@@ -93,15 +90,6 @@ func (w writer) metadata() (*db.Metadata, error) {
 		Version:  storeID.SchemaVersion,
 		Checksum: "sha256:" + hashStr,
 	}
-
-	// Set provider time from states
-	for _, state := range w.states {
-		metadata.Providers = append(metadata.Providers, db.Provider{
-			Name:              state.Provider,
-			LastSuccessfulRun: state.Timestamp,
-		})
-	}
-
 	return &metadata, nil
 }
 
