@@ -2,7 +2,9 @@ package v5
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -13,22 +15,36 @@ import (
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype/grype/db"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	grypeDBStore "github.com/anchore/grype/grype/db/v5/store"
 )
 
 // TODO: add NVDNamespace const to grype.db package?
-const nvdNamespace = "nvd:cpe"
+const (
+	nvdNamespace             = "nvd:cpe"
+	providerMetadataFileName = "provider-metadata.json"
+)
 
 var _ data.Writer = (*writer)(nil)
 
 type writer struct {
 	dbPath string
 	store  grypeDB.Store
+	states provider.States
 }
 
-func NewWriter(directory string, dataAge time.Time) (data.Writer, error) {
+type ProviderMetadata struct {
+	Providers []Provider `json:"providers"`
+}
+
+type Provider struct {
+	Name              string    `json:"name"`
+	LastSuccessfulRun time.Time `json:"lastSuccessfulRun"`
+}
+
+func NewWriter(directory string, dataAge time.Time, states provider.States) (data.Writer, error) {
 	dbPath := path.Join(directory, grypeDB.VulnerabilityStoreFileName)
 	theStore, err := grypeDBStore.New(dbPath, true)
 	if err != nil {
@@ -42,6 +58,7 @@ func NewWriter(directory string, dataAge time.Time) (data.Writer, error) {
 	return &writer{
 		dbPath: dbPath,
 		store:  theStore,
+		states: states,
 	}, nil
 }
 
@@ -93,6 +110,24 @@ func (w writer) metadata() (*db.Metadata, error) {
 	return &metadata, nil
 }
 
+func NewProviderMetadata() ProviderMetadata {
+	return ProviderMetadata{
+		Providers: make([]Provider, 0),
+	}
+}
+
+func (w writer) ProviderMetadata() *ProviderMetadata {
+	metadata := NewProviderMetadata()
+	// Set provider time from states
+	for _, state := range w.states {
+		metadata.Providers = append(metadata.Providers, Provider{
+			Name:              state.Provider,
+			LastSuccessfulRun: state.Timestamp,
+		})
+	}
+	return &metadata
+}
+
 func (w writer) Close() error {
 	w.store.Close()
 	metadata, err := w.metadata()
@@ -105,8 +140,14 @@ func (w writer) Close() error {
 		return err
 	}
 
+	providerMetadataPath := path.Join(filepath.Dir(w.dbPath), providerMetadataFileName)
+	if err = w.ProviderMetadata().Write(providerMetadataPath); err != nil {
+		return err
+	}
+
 	log.WithFields("path", w.dbPath).Info("database created")
 	log.WithFields("path", metadataPath).Debug("database metadata created")
+	log.WithFields("path", providerMetadataPath).Debug("provider metadata created")
 
 	return nil
 }
@@ -137,4 +178,16 @@ func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.V
 		log.WithFields("id", metadata.ID, "namespace", metadata.Namespace, "sev-from", metadata.Severity, "sev-to", newSeverity).Trace("overriding irrelevant severity with data from NVD record")
 	}
 	metadata.Severity = newSeverity
+}
+
+func (p ProviderMetadata) Write(path string) error {
+	providerMetadataJSON, err := json.MarshalIndent(p, "", "  ")
+	if err != nil {
+		return fmt.Errorf("unable to marshal provider metadata: %w", err)
+	}
+	//nolint:gosec
+	if err = os.WriteFile(path, providerMetadataJSON, 0644); err != nil {
+		return fmt.Errorf("unable to write provider metadata: %w", err)
+	}
+	return nil
 }
