@@ -126,6 +126,7 @@ expected_namespaces = [
     "ubuntu:distro:ubuntu:22.10",
     "ubuntu:distro:ubuntu:23.04",
     "ubuntu:distro:ubuntu:23.10",
+    "ubuntu:distro:ubuntu:24.04",
     "wolfi:distro:wolfi:rolling",
 ]
 
@@ -223,6 +224,7 @@ v3_expected_namespaces = [
     "ubuntu:22.10",
     "ubuntu:23.04",
     "ubuntu:23.10",
+    "ubuntu:24.04",
     "wolfi:rolling",
 ]
 
