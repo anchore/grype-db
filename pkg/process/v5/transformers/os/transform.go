@@ -84,7 +84,7 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                     vulnerability.Vulnerability.Name,
 			PackageQualifiers:      buildPackageQualifiers(fixedInEntry),
-			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VersionFormat, vulnerability.Vulnerability.Name),
+			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VulnerableRange, fixedInEntry.VersionFormat, vulnerability.Vulnerability.Name),
 			VersionFormat:          fixedInEntry.VersionFormat,
 			PackageName:            grypeNamespace.Resolver().Normalize(fixedInEntry.Name),
 			Namespace:              entryNamespace,
@@ -215,16 +215,19 @@ func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
 	return constraint
 }
 
-func enforceConstraint(constraint, format, vulnerabilityID string) string {
-	constraint = common.CleanConstraint(constraint)
-	if len(constraint) == 0 {
+func enforceConstraint(fixedVersion, vulnerableRange, format, vulnerabilityID string) string {
+	if len(vulnerableRange) > 0 && !strings.HasSuffix(vulnerabilityID, "ALASKERNEL") {
+		return vulnerableRange
+	}
+	fixedVersion = common.CleanConstraint(fixedVersion)
+	if len(fixedVersion) == 0 {
 		return ""
 	}
 	switch strings.ToLower(format) {
 	case "semver":
-		return common.EnforceSemVerConstraint(constraint)
+		return common.EnforceSemVerConstraint(fixedVersion)
 	default:
 		// the passed constraint is a fixed version
-		return deriveConstraintFromFix(constraint, vulnerabilityID)
+		return deriveConstraintFromFix(fixedVersion, vulnerabilityID)
 	}
 }
