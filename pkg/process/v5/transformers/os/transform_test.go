@@ -626,6 +626,45 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 				Description:  "A flaw was found in PostgreSQL, where some PostgreSQL extensions did not use the search_path safely in their installation script. This flaw allows an attacker with sufficient privileges to trick an administrator into executing a specially crafted script during the extension's installation or update. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.",
 			},
 		},
+		{
+			name:       "mariner entry with version range",
+			numEntries: 1,
+			fixture:    "test-fixtures/mariner-range.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-29404",
+					PackageName: "golang",
+					Namespace:   "mariner:distro:mariner:2.0",
+					PackageQualifiers: []qualifier.Qualifier{
+						rpmmodularity.Qualifier{
+							Kind:   "rpm-modularity",
+							Module: "",
+						},
+					},
+					VersionConstraint: "> 0:1.19.0.cm2, < 0:1.20.7-1.cm2",
+					VersionFormat:     "rpm",
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2023-29404",
+							Namespace: "nvd:cpe",
+						},
+					},
+					Fix: grypeDB.Fix{
+						Versions: []string{"0:1.20.7-1.cm2"},
+						State:    grypeDB.FixedState,
+					},
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-29404",
+				Namespace:    "mariner:distro:mariner:2.0",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-29404",
+				RecordSource: "vulnerabilities:mariner:2.0",
+				Severity:     "Critical",
+				URLs:         []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-29404"},
+				Description:  "CVE-2023-29404 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
+			},
+		},
 	}
 
 	for _, test := range tests {
