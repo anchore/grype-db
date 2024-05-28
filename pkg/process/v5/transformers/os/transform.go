@@ -216,7 +216,7 @@ func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
 }
 
 func enforceConstraint(fixedVersion, vulnerableRange, format, vulnerabilityID string) string {
-	if len(vulnerableRange) > 0 && !strings.HasSuffix(vulnerabilityID, "ALASKERNEL") {
+	if len(vulnerableRange) > 0 {
 		return vulnerableRange
 	}
 	fixedVersion = common.CleanConstraint(fixedVersion)
