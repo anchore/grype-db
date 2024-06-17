@@ -1,7 +1,6 @@
 module github.com/anchore/grype-db
 
-go 1.21.1
-toolchain go1.22.4
+go 1.22.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
