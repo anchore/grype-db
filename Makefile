@@ -162,7 +162,7 @@ check-licenses:
 .PHONY: unit
 unit: ## Run Go unit tests (with coverage)
 	$(call title,Running Go unit tests)
-	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
+	GOEXPERIMENT=nocoverageredesign go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: unit-python
