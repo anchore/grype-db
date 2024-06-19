@@ -251,8 +251,10 @@ github.com/anchore/go-testutils v0.0.0-20200925183923-d5f45b0d3c04 h1:VzprUTpc0v
 github.com/anchore/go-testutils v0.0.0-20200925183923-d5f45b0d3c04/go.mod h1:6dK64g27Qi1qGQZ67gFmBFvEHScy0/C8qhQhNe5B5pQ=
 github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 h1:rmZG77uXgE+o2gozGEBoUMpX27lsku+xrMwlmBZJtbg=
 github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4/go.mod h1:Bkc+JYWjMCF8OyZ340IMSIi2Ebf3uwByOk6ho4wne1E=
-github.com/anchore/grype v0.78.1-0.20240619040737-6ddacf733b77 h1:dy6Rqw1t+zL+CR8to8INp6U/ejFAIgjZ7tLtxmpbsPc=
-github.com/anchore/grype v0.78.1-0.20240619040737-6ddacf733b77/go.mod h1:U31w+0TBIxEechXErrdi9+1ujEr5JT8oaeHxtbeEt6E=
+github.com/anchore/grype v0.78.1-0.20240619064457-7336ef04ee25 h1:w0jXyeGwOH/NijBOFs5nZtLEY83M77U/F56J9FwRvCY=
+github.com/anchore/grype v0.78.1-0.20240619064457-7336ef04ee25/go.mod h1:U31w+0TBIxEechXErrdi9+1ujEr5JT8oaeHxtbeEt6E=
+github.com/anchore/grype v0.78.1-0.20240619070427-693371661383 h1:00SnT/+R60Vo72gJqmti9lO7rOVpVFBoeGY793dX+F0=
+github.com/anchore/grype v0.78.1-0.20240619070427-693371661383/go.mod h1:U31w+0TBIxEechXErrdi9+1ujEr5JT8oaeHxtbeEt6E=
 github.com/anchore/packageurl-go v0.1.1-0.20240507183024-848e011fc24f h1:B/E9ixKNCasntpoch61NDaQyGPDXLEJlL+B9B/PbdbA=
 github.com/anchore/packageurl-go v0.1.1-0.20240507183024-848e011fc24f/go.mod h1:Blo6OgJNiYF41ufcgHKkbCKF2MDOMlrqhXv/ij6ocR4=
 github.com/anchore/stereoscope v0.0.3-0.20240501181043-2e9894674185 h1:SuViDJ27nZ+joGdKbAkxAlm7tYMt9NTxTZZ05po4hls=
