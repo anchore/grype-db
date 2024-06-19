@@ -3,6 +3,9 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/anchore/grype/grype"
+	"github.com/anchore/stereoscope"
+	"github.com/anchore/syft/syft"
 	"io"
 	"os"
 	"strings"
@@ -100,6 +103,9 @@ func (a *Application) Setup(opts options.Interface) func(cmd *cobra.Command, arg
 		// setup the event bus (before any publishers in the workers run)...
 		b := partybus.NewBus()
 		bus.SetPublisher(b)
+		grype.SetBus(b)
+		syft.SetBus(b)
+		stereoscope.SetBus(b)
 		a.subscription = b.Subscribe()
 
 		return nil
@@ -169,6 +175,9 @@ func setupLogger(app *Config) error {
 	}
 
 	log.Set(l)
+	grype.SetLogger(l)
+	syft.SetLogger(l)
+	stereoscope.SetLogger(l)
 
 	return nil
 }

@@ -6,6 +6,8 @@
 !/data/yardstick/labels
 !/data/vulnerability-match-labels
 
+/go.work*
+
 # default data directories
 /vunnel
 /bin

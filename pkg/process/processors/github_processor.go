@@ -2,6 +2,7 @@
 package processors
 
 import (
+	"github.com/anchore/grype-db/pkg/provider"
 	"io"
 	"strings"
 
@@ -20,7 +21,7 @@ func NewGitHubProcessor(transformer data.GitHubTransformer) data.Processor {
 	}
 }
 
-func (p githubProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func (p githubProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.GitHubAdvisoryEntries(reader)

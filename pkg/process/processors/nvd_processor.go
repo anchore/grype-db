@@ -1,6 +1,7 @@
 package processors
 
 import (
+	"github.com/anchore/grype-db/pkg/provider"
 	"io"
 	"strings"
 
@@ -19,7 +20,7 @@ func NewNVDProcessor(transformer data.NVDTransformer) data.Processor {
 	}
 }
 
-func (p nvdProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func (p nvdProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.NvdVulnerabilityEntries(reader)

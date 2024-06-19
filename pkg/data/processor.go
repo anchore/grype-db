@@ -1,10 +1,13 @@
 package data
 
-import "io"
+import (
+	"github.com/anchore/grype-db/pkg/provider"
+	"io"
+)
 
 // Processor takes individual feed group cache files (for select feed groups) and is responsible to producing
 // data.Entry objects to be written to the DB.
 type Processor interface {
 	IsSupported(schemaURL string) bool
-	Process(reader io.Reader) ([]Entry, error)
+	Process(reader io.Reader, state provider.State) ([]Entry, error)
 }
