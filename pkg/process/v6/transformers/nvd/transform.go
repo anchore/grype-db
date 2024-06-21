@@ -60,13 +60,23 @@ func getAffecteds(vulnerability unmarshal.NVDVulnerability) *[]grypeDB.Affected 
 
 	var affs []grypeDB.Affected
 	for _, p := range uniquePkgs.All() {
+
+		matches := uniquePkgs.Matches(p)
+		cpes := internal.NewStringSet()
+		for _, m := range matches {
+			cpes.Add(strings.ToLower(m.Criteria)) // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
+		}
+
 		affs = append(affs, grypeDB.Affected{
-			Package:  getPackage(p, &uniquePkgs),
+			Packages: getPackages(p),
 			Versions: nil, // TODO: this might be the spot to use this...
 			//ExcludeVersions: nil,
 			//Severities:      nil,
 			Range: getRanges(uniquePkgs.Matches(p)),
 			//Digests:         nil,
+			Cpes: getCPEs(cpes.ToSlice()),
+			//Digests:                         nil,
+			PackageQualifierPlatformCpes: getPlatformCpes(p.PlatformCPE),
 		})
 	}
 	return &affs
@@ -123,24 +133,18 @@ func getRangesEvents(matches []nvd.CpeMatch) *[]grypeDB.RangeEvent {
 	return &results
 }
 
-func getPackage(p pkgCandidate, uniquePkgs *uniquePkgTracker) *grypeDB.Package {
+func getPackages(p pkgCandidate) *[]grypeDB.Package {
 	if p.Product == "" {
 		return nil
 	}
 
-	matches := uniquePkgs.Matches(p)
-	cpes := internal.NewStringSet()
-	for _, m := range matches {
-		cpes.Add(strings.ToLower(m.Criteria)) // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
-	}
+	return &[]grypeDB.Package{
+		{
+			//Ecosystem: "", // TODO: does this hint that ecosystem should be nullable?
+			PackageName: strings.ToLower(p.Product), // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
+			//Purls:                           nil, // TODO: fill me in!
 
-	return &grypeDB.Package{
-		//Ecosystem: "", // TODO: does this hint that ecosystem should be nullable?
-		PackageName: strings.ToLower(p.Product), // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
-		//Purls:                           nil, // TODO: fill me in!
-		Cpes: getCPEs(cpes.ToSlice()),
-		//Digests:                         nil,
-		PackageQualifierPlatformCpes: getPlatformCpes(p.PlatformCPE),
+		},
 	}
 }
 

@@ -65,13 +65,17 @@ func getAffecteds(vuln unmarshal.OSVulnerability) *[]grypeDB.Affected {
 	for group, fixedIns := range groups {
 		// TODO: add purls!
 		afs = append(afs, grypeDB.Affected{
-			Package: getAffectedPackage(group),
+			Packages: getPackages(group),
 			//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
 			//Versions:          getAffectedVersions(af), // TODO: do this later... there is no upstream support for this...
 			//ExcludeVersions:   nil, // TODO...
 			//Severities:        getAffectedSeverities(af) // TODO: this should be EMPTY if a top level severity exists (which is might)
 			Range: getRange(fixedIns),
 			//Digests:           nil, // TODO...
+
+			OperatingSystem: getOperatingSystem(group.osName, group.osVersion),
+			//PackageQualifierPlatformCpes:   nil, // TODO...
+			PackageQualifierRpmModularities: getPackageQualifierRPMModularity(group.module),
 		})
 	}
 	return &afs
@@ -154,15 +158,12 @@ func strPtr(s string) *string {
 	return &s
 }
 
-func getAffectedPackage(group groupIndex) *grypeDB.Package {
-	return &grypeDB.Package{
-		Ecosystem:   "",
-		PackageName: group.name,
-		//Purl:                          "",// TODO: support purl at write time...
-		//OperatingSystemID:             nil,
-		OperatingSystem: getOperatingSystem(group.osName, group.osVersion),
-		//PackageQualifierPlatformCpes:   nil, // TODO...
-		PackageQualifierRpmModularities: getPackageQualifierRPMModularity(group.module),
+func getPackages(group groupIndex) *[]grypeDB.Package {
+	return &[]grypeDB.Package{
+		{
+			Ecosystem:   strPtr(normalizeOsName(group.osName)), // TODO: is this correct?
+			PackageName: group.name,
+		},
 	}
 }
 
@@ -170,12 +171,15 @@ func getOSInfo(group string) (string, string) {
 	// Currently known enterprise feed groups are expected to be of the form {distroID}:{version}
 	feedGroupComponents := strings.Split(group, ":")
 
-	feedGroupDistroID := feedGroupComponents[0]
-	d, ok := distro.IDMapping[feedGroupDistroID]
+	return normalizeOsName(feedGroupComponents[0]), feedGroupComponents[1]
+}
+
+func normalizeOsName(name string) string {
+	d, ok := distro.IDMapping[name]
 	if !ok {
 		// TODO: log error? return error?
 
-		return "", ""
+		return name
 	}
 
 	distroName := d.String()
@@ -186,7 +190,7 @@ func getOSInfo(group string) (string, string) {
 	case distro.AmazonLinux:
 		distroName = "amazon"
 	}
-	return distroName, feedGroupComponents[1]
+	return distroName
 }
 
 func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {

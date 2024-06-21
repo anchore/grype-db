@@ -96,7 +96,7 @@ func getAffecteds(vuln unmarshal.GitHubAdvisory) *[]grypeDB.Affected {
 	for group, fixedIns := range groups {
 		// TODO: add purls!
 		afs = append(afs, grypeDB.Affected{
-			Package: getAffectedPackage(group),
+			Packages: getPackages(group),
 			//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
 			//Versions:          getAffectedVersions(af), // TODO: do this later... there is no upstream support for this...
 			//ExcludeVersions:   nil, // TODO...
@@ -128,10 +128,12 @@ func groupFixedIns(vuln unmarshal.GitHubAdvisory) map[groupIndex][]unmarshal.Git
 
 }
 
-func getAffectedPackage(group groupIndex) *grypeDB.Package {
-	return &grypeDB.Package{
-		PackageName: group.name,
-		Ecosystem:   group.ecosystem,
+func getPackages(group groupIndex) *[]grypeDB.Package {
+	return &[]grypeDB.Package{
+		{
+			PackageName: group.name,
+			Ecosystem:   strPtr(group.ecosystem),
+		},
 	}
 }
 
