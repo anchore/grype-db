@@ -1,6 +1,7 @@
 package os
 
 import (
+	"encoding/json"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -8,6 +9,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/distro"
+	"gorm.io/datatypes"
 	"strings"
 )
 
@@ -42,9 +44,9 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 		//SummaryDigest: "",                // TODO: need access to digest store too
 		DetailDigest: strRef(descriptionDigest), // TODO: need access to digest store too
 		References:   getReferences(vulnerability),
-		Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
-		Aliases:      getAliases(vulnerability),
-		Severities:   getSeverities(vulnerability),
+		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
+		Aliases:    getAliases(vulnerability),
+		Severities: getSeverities(vulnerability),
 		//DbSpecificNvd: nil, // TODO: N/A for OS, are the others we should be considering though per distro?
 		Affected: getAffecteds(vulnerability),
 	}
@@ -75,7 +77,8 @@ func getAffecteds(vuln unmarshal.OSVulnerability) *[]grypeDB.Affected {
 
 			OperatingSystem: getOperatingSystem(group.osName, group.osVersion),
 			//PackageQualifierPlatformCpes:   nil, // TODO...
-			PackageQualifierRpmModularities: getPackageQualifierRPMModularity(group.module),
+			PackageQualifier: getPackageQualifiers(group.module),
+			//PackageQualifierRpmModularities: getPackageQualifierRPMModularity(group.module),
 		})
 	}
 	return &afs
@@ -213,6 +216,24 @@ func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {
 	}
 }
 
+func getPackageQualifiers(module string) *datatypes.JSON {
+	// TODO convert to single when model is updated
+	if module == "" {
+		return nil
+	}
+	obj := grypeDB.PackageQualifierRpmModularity{
+		Module: module,
+	}
+
+	by, err := json.Marshal(obj)
+	if err != nil {
+		panic(err) // TODO
+	}
+
+	ret := datatypes.JSON(by)
+	return &ret
+}
+
 func getPackageQualifierRPMModularity(module string) *[]grypeDB.PackageQualifierRpmModularity {
 	// TODO convert to single when model is updated
 	if module == "" {
@@ -246,7 +267,7 @@ func getAliases(vuln unmarshal.OSVulnerability) *[]grypeDB.Alias {
 	return &aliases
 }
 
-func getSeverities(vuln unmarshal.OSVulnerability) *[]grypeDB.Severity {
+func getSeverities(vuln unmarshal.OSVulnerability) *datatypes.JSONSlice[grypeDB.Severity] {
 	var severities []grypeDB.Severity
 
 	// TODO: should we clean this here or not?
@@ -266,5 +287,8 @@ func getSeverities(vuln unmarshal.OSVulnerability) *[]grypeDB.Severity {
 			// TODO: source?
 		})
 	}
-	return &severities
+
+	ret := datatypes.JSONSlice[grypeDB.Severity](severities)
+
+	return &ret
 }

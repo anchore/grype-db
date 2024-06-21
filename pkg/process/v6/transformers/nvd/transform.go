@@ -1,6 +1,7 @@
 package nvd
 
 import (
+	"encoding/json"
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -10,6 +11,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/syft/syft/cpe"
+	"gorm.io/datatypes"
 	"sort"
 	"strings"
 )
@@ -47,9 +49,10 @@ func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) (
 		References:    getReferences(vulnerability),
 		//Related:       nil,
 		//Aliases:       nil,
-		Severities:    getSeverities(vulnerability),
-		DbSpecificNvd: getDBSpecific(vulnerability),
-		Affected:      getAffecteds(vulnerability),
+		Severities: getSeverities(vulnerability),
+		//DbSpecificNvd: getDBSpecific(vulnerability),
+		DbSpecific: getDBSpecific(vulnerability),
+		Affected:   getAffecteds(vulnerability),
 	}
 
 	return transformers.NewEntries(vuln, blobs...), nil
@@ -76,7 +79,8 @@ func getAffecteds(vulnerability unmarshal.NVDVulnerability) *[]grypeDB.Affected 
 			//Digests:         nil,
 			Cpes: getCPEs(cpes.ToSlice()),
 			//Digests:                         nil,
-			PackageQualifierPlatformCpes: getPlatformCpes(p.PlatformCPE),
+			//PackageQualifierPlatformCpes: getPlatformCpes(p.PlatformCPE),
+			PackageQualifier: getPackageQualifiers(p.PlatformCPE),
 		})
 	}
 	return &affs
@@ -148,6 +152,27 @@ func getPackages(p pkgCandidate) *[]grypeDB.Package {
 	}
 }
 
+func getPackageQualifiers(in string) *datatypes.JSON {
+	if in == "" {
+		return nil
+
+	}
+
+	obj := []grypeDB.PackageQualifierPlatformCpe{
+		{
+			Cpe: in,
+		},
+	}
+
+	by, err := json.Marshal(obj)
+	if err != nil {
+		panic(err) // TODO
+	}
+
+	ret := datatypes.JSON(by)
+	return &ret
+}
+
 func getPlatformCpes(in string) *[]grypeDB.PackageQualifierPlatformCpe {
 	if in == "" {
 		return nil
@@ -191,7 +216,7 @@ func getCPEs(ins []string) *[]grypeDB.Cpe {
 	return &cpes
 }
 
-func getDBSpecific(vuln unmarshal.NVDVulnerability) *[]grypeDB.DbSpecificNvd {
+func getDBSpecific(vuln unmarshal.NVDVulnerability) *datatypes.JSON {
 	name := getStr(vuln.CisaVulnerabilityName)
 	exploitAdd := getStr(vuln.CisaExploitAdd)
 	actionDue := getStr(vuln.CisaActionDue)
@@ -202,15 +227,22 @@ func getDBSpecific(vuln unmarshal.NVDVulnerability) *[]grypeDB.DbSpecificNvd {
 		return nil
 	}
 
-	return &[]grypeDB.DbSpecificNvd{
-		{
-			VulnStatus:            vulnStatus,
-			CisaExploitAdd:        exploitAdd,
-			CisaActionDue:         actionDue,
-			CisaRequiredAction:    requiredAction,
-			CisaVulnerabilityName: name,
-		},
+	obj := grypeDB.DbSpecificNvd{
+		VulnStatus:            vulnStatus,
+		CisaExploitAdd:        exploitAdd,
+		CisaActionDue:         actionDue,
+		CisaRequiredAction:    requiredAction,
+		CisaVulnerabilityName: name,
 	}
+
+	by, err := json.Marshal(obj)
+	if err != nil {
+		panic(err) // TODO
+	}
+
+	ret := datatypes.JSON(by)
+
+	return &ret
 }
 
 func getStr(s *string) string {
@@ -220,7 +252,7 @@ func getStr(s *string) string {
 	return *s
 }
 
-func getSeverities(vuln unmarshal.NVDVulnerability) *[]grypeDB.Severity {
+func getSeverities(vuln unmarshal.NVDVulnerability) *datatypes.JSONSlice[grypeDB.Severity] {
 	sevs := nvd.CvssSummaries(vuln.CVSS()).Sorted()
 	var results []grypeDB.Severity
 	for i, sev := range sevs {
@@ -235,7 +267,10 @@ func getSeverities(vuln unmarshal.NVDVulnerability) *[]grypeDB.Severity {
 			Priority: strRef(priority),
 		})
 	}
-	return &results
+
+	ret := datatypes.JSONSlice[grypeDB.Severity](results)
+
+	return &ret
 }
 
 func strRef(s string) *string {

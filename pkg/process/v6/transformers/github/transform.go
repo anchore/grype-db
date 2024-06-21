@@ -7,6 +7,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"gorm.io/datatypes"
 	"regexp"
 	"strings"
 )
@@ -42,9 +43,9 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 		//SummaryDigest: "",                // TODO: need access to digest store too
 		DetailDigest: &descriptionDigest, // TODO: need access to digest store too
 		References:   getReferences(vulnerability),
-		Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
-		Aliases:      getAliases(vulnerability),
-		Severities:   getSeverities(vulnerability),
+		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
+		Aliases:    getAliases(vulnerability),
+		Severities: getSeverities(vulnerability),
 		//DbSpecificNvd: nil, // TODO: N/A for OS, are the others we should be considering though per distro?
 		Affected: getAffecteds(vulnerability),
 	}
@@ -233,7 +234,7 @@ func strPtr(s string) *string {
 	return &s
 }
 
-func getSeverities(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Severity {
+func getSeverities(vulnerability unmarshal.GitHubAdvisory) *datatypes.JSONSlice[grypeDB.Severity] {
 	var severities []grypeDB.Severity
 
 	cleanSeverity := strings.ToLower(strings.TrimSpace(vulnerability.Advisory.Severity))
@@ -255,7 +256,9 @@ func getSeverities(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Severity {
 		})
 	}
 
-	return &severities
+	ret := datatypes.JSONSlice[grypeDB.Severity](severities)
+
+	return &ret
 }
 
 func getAliases(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Alias {
