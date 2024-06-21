@@ -259,6 +259,8 @@ github.com/anchore/grype v0.78.1-0.20240621131106-27b426802295 h1:1dQAhDN+Zk7mWf
 github.com/anchore/grype v0.78.1-0.20240621131106-27b426802295/go.mod h1:U31w+0TBIxEechXErrdi9+1ujEr5JT8oaeHxtbeEt6E=
 github.com/anchore/grype v0.78.1-0.20240621160448-0f7c19811e4d h1:5STmy30nNwTWppAEZJQduYmPg8BmbinNVVWAszFEhaE=
 github.com/anchore/grype v0.78.1-0.20240621160448-0f7c19811e4d/go.mod h1:U31w+0TBIxEechXErrdi9+1ujEr5JT8oaeHxtbeEt6E=
+github.com/anchore/grype v0.78.1-0.20240621213452-536bd2f6af6e h1:9nc3/AN+fKIvDfm8RBAivKtuEstv2SwnQ/aWVx9KEqs=
+github.com/anchore/grype v0.78.1-0.20240621213452-536bd2f6af6e/go.mod h1:Uz5cO4fklHDsxKGav5k8E8m5mXefWpmzNK7urmdoU7k=
 github.com/anchore/packageurl-go v0.1.1-0.20240507183024-848e011fc24f h1:B/E9ixKNCasntpoch61NDaQyGPDXLEJlL+B9B/PbdbA=
 github.com/anchore/packageurl-go v0.1.1-0.20240507183024-848e011fc24f/go.mod h1:Blo6OgJNiYF41ufcgHKkbCKF2MDOMlrqhXv/ij6ocR4=
 github.com/anchore/stereoscope v0.0.3-0.20240501181043-2e9894674185 h1:SuViDJ27nZ+joGdKbAkxAlm7tYMt9NTxTZZ05po4hls=

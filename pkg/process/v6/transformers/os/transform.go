@@ -67,7 +67,7 @@ func getAffecteds(vuln unmarshal.OSVulnerability) *[]grypeDB.Affected {
 	for group, fixedIns := range groups {
 		// TODO: add purls!
 		afs = append(afs, grypeDB.Affected{
-			Packages: getPackages(group),
+			Package: getPackage(group),
 			//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
 			//Versions:          getAffectedVersions(af), // TODO: do this later... there is no upstream support for this...
 			//ExcludeVersions:   nil, // TODO...
@@ -161,12 +161,10 @@ func strPtr(s string) *string {
 	return &s
 }
 
-func getPackages(group groupIndex) *[]grypeDB.Package {
-	return &[]grypeDB.Package{
-		{
-			Ecosystem:   strPtr(normalizeOsName(group.osName)), // TODO: is this correct?
-			PackageName: group.name,
-		},
+func getPackage(group groupIndex) *grypeDB.Package {
+	return &grypeDB.Package{
+		Ecosystem: strPtr(normalizeOsName(group.osName)), // TODO: is this correct?
+		Name:      group.name,
 	}
 }
 

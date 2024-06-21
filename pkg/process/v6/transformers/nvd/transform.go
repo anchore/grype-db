@@ -71,7 +71,7 @@ func getAffecteds(vulnerability unmarshal.NVDVulnerability) *[]grypeDB.Affected 
 		}
 
 		affs = append(affs, grypeDB.Affected{
-			Packages: getPackages(p),
+			Package:  getPackage(p),
 			Versions: nil, // TODO: this might be the spot to use this...
 			//ExcludeVersions: nil,
 			//Severities:      nil,
@@ -137,18 +137,16 @@ func getRangesEvents(matches []nvd.CpeMatch) *[]grypeDB.RangeEvent {
 	return &results
 }
 
-func getPackages(p pkgCandidate) *[]grypeDB.Package {
+func getPackage(p pkgCandidate) *grypeDB.Package {
 	if p.Product == "" {
 		return nil
 	}
 
-	return &[]grypeDB.Package{
-		{
-			//Ecosystem: "", // TODO: does this hint that ecosystem should be nullable?
-			PackageName: strings.ToLower(p.Product), // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
-			//Purls:                           nil, // TODO: fill me in!
+	return &grypeDB.Package{
+		//Ecosystem: "", // TODO: does this hint that ecosystem should be nullable?
+		Name: strings.ToLower(p.Product), // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
+		//Purls:                           nil, // TODO: fill me in!
 
-		},
 	}
 }
 
@@ -186,7 +184,7 @@ func getPlatformCpes(in string) *[]grypeDB.PackageQualifierPlatformCpe {
 	}
 }
 
-func getCPEs(ins []string) *[]grypeDB.Cpe {
+func getCPEs(ins []string) *datatypes.JSONSlice[grypeDB.Cpe] {
 	if len(ins) == 0 {
 		return nil
 	}
@@ -213,7 +211,9 @@ func getCPEs(ins []string) *[]grypeDB.Cpe {
 		})
 	}
 
-	return &cpes
+	ret := datatypes.JSONSlice[grypeDB.Cpe](cpes)
+
+	return &ret
 }
 
 func getDBSpecific(vuln unmarshal.NVDVulnerability) *datatypes.JSON {
