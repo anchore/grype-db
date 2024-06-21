@@ -114,7 +114,7 @@ func getWriter(schemaVersion int, dataAge time.Time, directory string, states pr
 
 func build(results []providerResults, writer data.Writer, processors ...data.Processor) error {
 	for _, result := range results {
-		log.WithFields("provider", result.provider.Provider, "count", result.count).Debug("processing provider records")
+		log.WithFields("provider", result.provider.Provider, "count", result.count).Info("processing provider records")
 		idx := 0
 		for opener := range result.openers {
 			idx++

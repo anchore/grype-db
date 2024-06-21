@@ -1,8 +1,6 @@
 package os
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -19,7 +17,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 	cleanDescription := strings.TrimSpace(vulnerability.Vulnerability.Description)
 	var descriptionDigest string
 	if cleanDescription != "" {
-		descriptionDigest = digest(cleanDescription)
+		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
 		blobs = append(blobs, grypeDB.Blob{
 			Digest: descriptionDigest,
 			Value:  cleanDescription,
@@ -42,7 +40,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		DetailDigest: descriptionDigest, // TODO: need access to digest store too
+		DetailDigest: strRef(descriptionDigest), // TODO: need access to digest store too
 		References:   getReferences(vulnerability),
 		Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:      getAliases(vulnerability),
@@ -51,13 +49,21 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 		Affected: getAffecteds(vulnerability),
 	}
 
-	return transformers.NewEntries(vuln), nil
+	return transformers.NewEntries(vuln, blobs...), nil
+}
+
+func strRef(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func getAffecteds(vuln unmarshal.OSVulnerability) *[]grypeDB.Affected {
 	var afs []grypeDB.Affected
 	groups := groupFixedIns(vuln)
 	for group, fixedIns := range groups {
+		// TODO: add purls!
 		afs = append(afs, grypeDB.Affected{
 			Package: getAffectedPackage(group),
 			//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
@@ -133,8 +139,8 @@ func getRangeEvents(fixedIns []unmarshal.OSFixedIn) *[]grypeDB.RangeEvent {
 			rangeEvents = append(rangeEvents, grypeDB.RangeEvent{
 				//Type:       "", // TODO
 				//Repo:       "", // TODO
-				Introduced: "0",
-				Fixed:      ver,
+				Introduced: strPtr("0"),
+				Fixed:      &ver,
 				//LastAffected: "",  // TODO
 				//Limit:        "",  // TODO
 				State: fixState, // TODO: enum this relative to OSV
@@ -142,6 +148,10 @@ func getRangeEvents(fixedIns []unmarshal.OSFixedIn) *[]grypeDB.RangeEvent {
 		}
 	}
 	return &rangeEvents
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 func getAffectedPackage(group groupIndex) *grypeDB.Package {
@@ -211,12 +221,6 @@ func getPackageQualifierRPMModularity(module string) *[]grypeDB.PackageQualifier
 	}
 }
 
-func digest(content string) string {
-	sh := sha256.New()
-	sh.Write([]byte(content))
-	return fmt.Sprintf("sha256:%x", sh.Sum(nil))
-}
-
 func getReferences(vuln unmarshal.OSVulnerability) *[]grypeDB.Reference {
 	// TODO: should we collect entries from the fixed ins? or should there be references for affected (an OSV difference)
 	return &[]grypeDB.Reference{
@@ -246,7 +250,7 @@ func getSeverities(vuln unmarshal.OSVulnerability) *[]grypeDB.Severity {
 		severities = append(severities, grypeDB.Severity{
 			Type:     "string", // TODO: where should we get these values for each source?
 			Score:    vuln.Vulnerability.Severity,
-			Priority: "primary", // TODO: enum this
+			Priority: strPtr("primary"), // TODO: enum this
 			// TODO Source?
 		})
 	}
@@ -254,7 +258,7 @@ func getSeverities(vuln unmarshal.OSVulnerability) *[]grypeDB.Severity {
 		severities = append(severities, grypeDB.Severity{
 			Type:     "CVSS",                      // TODO: add version to this (different field already)
 			Score:    vendorSeverity.VectorString, // TODO: this isn't really the score... this is a little odd
-			Priority: "secondary",                 // TODO: I don't think this is always true
+			Priority: strPtr("secondary"),         // TODO: I don't think this is always true
 			// TODO: source?
 		})
 	}

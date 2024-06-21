@@ -19,13 +19,7 @@ type GitHubAdvisory struct {
 			VectorString string `json:"vector_string"`
 			Version      string `json:"version"`
 		} `json:"CVSS"`
-		FixedIn []struct {
-			Ecosystem  string `json:"ecosystem"`
-			Identifier string `json:"identifier"`
-			Name       string `json:"name"`
-			Namespace  string `json:"namespace"`
-			Range      string `json:"range"`
-		} `json:"FixedIn"`
+		FixedIn  []GithubFixedIn `json:"FixedIn"`
 		Metadata struct {
 			CVE []string `json:"CVE"`
 		} `json:"Metadata"`
@@ -46,4 +40,12 @@ func (g GitHubAdvisory) IsEmpty() bool {
 
 func GitHubAdvisoryEntries(reader io.Reader) ([]GitHubAdvisory, error) {
 	return unmarshalSingleOrMulti[GitHubAdvisory](reader)
+}
+
+type GithubFixedIn struct {
+	Ecosystem  string `json:"ecosystem"`
+	Identifier string `json:"identifier"`
+	Name       string `json:"name"`
+	Namespace  string `json:"namespace"`
+	Range      string `json:"range"`
 }

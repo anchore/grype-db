@@ -40,13 +40,13 @@ type Vulnerability struct {
 }
 
 type CveItem struct {
-	ID string `json:"id"`
-	// CisaActionDue         *string         `json:"cisaActionDue,omitempty"`
-	// CisaExploitAdd        *string         `json:"cisaExploitAdd,omitempty"`
-	// CisaRequiredAction    *string         `json:"cisaRequiredAction,omitempty"`
-	// CisaVulnerabilityName *string         `json:"cisaVulnerabilityName,omitempty"`
-	Configurations []Configuration `json:"configurations,omitempty"`
-	Descriptions   []LangString    `json:"descriptions"`
+	ID                    string          `json:"id"`
+	CisaActionDue         *string         `json:"cisaActionDue,omitempty"`
+	CisaExploitAdd        *string         `json:"cisaExploitAdd,omitempty"`
+	CisaRequiredAction    *string         `json:"cisaRequiredAction,omitempty"`
+	CisaVulnerabilityName *string         `json:"cisaVulnerabilityName,omitempty"`
+	Configurations        []Configuration `json:"configurations,omitempty"`
+	Descriptions          []LangString    `json:"descriptions"`
 	// EvaluatorComment      *string         `json:"evaluatorComment,omitempty"`
 	// EvaluatorImpact       *string         `json:"evaluatorImpact,omitempty"`
 	// EvaluatorSolution     *string         `json:"evaluatorSolution,omitempty"`
