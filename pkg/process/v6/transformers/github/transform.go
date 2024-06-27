@@ -8,22 +8,11 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"gorm.io/datatypes"
-	"regexp"
 	"strings"
 )
 
 func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
-
-	cleanDescription := strings.TrimSpace(vulnerability.Advisory.Summary)
-	var descriptionDigest string
-	if cleanDescription != "" {
-		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
-		blobs = append(blobs, grypeDB.Blob{
-			Digest: descriptionDigest,
-			Value:  cleanDescription,
-		})
-	}
 
 	vuln := grypeDB.Vulnerability{
 		ProviderID: state.Provider,
@@ -41,8 +30,8 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		DetailDigest: &descriptionDigest, // TODO: need access to digest store too
-		References:   getReferences(vulnerability),
+		Detail:     vulnerability.Advisory.Summary, // TODO: need access to digest store too
+		References: getReferences(vulnerability),
 		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:    getAliases(vulnerability),
 		Severities: getSeverities(vulnerability),
@@ -95,18 +84,48 @@ func getAffecteds(vuln unmarshal.GitHubAdvisory) *[]grypeDB.Affected {
 	var afs []grypeDB.Affected
 	groups := groupFixedIns(vuln)
 	for group, fixedIns := range groups {
-		// TODO: add purls!
-		afs = append(afs, grypeDB.Affected{
-			Package: getPackage(group),
-			//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
-			//Versions:          getAffectedVersions(af), // TODO: do this later... there is no upstream support for this...
-			//ExcludeVersions:   nil, // TODO...
-			//Severities:        getAffectedSeverities(af) // TODO: this should be EMPTY if a top level severity exists (which is might)
-			Range: getRange(fixedIns),
-			//Digests:           nil, // TODO...
-		})
+
+		for idx, fixedInEntry := range fixedIns {
+			constraint := common.EnforceSemVerConstraint(fixedInEntry.Range)
+
+			var versionFormat string
+			switch vuln.Advisory.Namespace {
+			case "pip":
+				versionFormat = "python"
+			default:
+				versionFormat = "unknown"
+			}
+
+			afs = append(afs, grypeDB.Affected{
+				Package: getPackage(group),
+				//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
+				//Versions:          getAffectedVersions(af), // TODO: do this later... there is no upstream support for this...
+				//ExcludeVersions:   nil, // TODO...
+				//Severities:        getAffectedSeverities(af) // TODO: this should be EMPTY if a top level severity exists (which is might)
+				VersionConstraint: constraint,
+				VersionFormat:     versionFormat, //Digests:           nil, // TODO...
+				Fix:               getFix(vuln, idx),
+			})
+		}
+
 	}
 	return &afs
+}
+
+func getFix(entry unmarshal.GitHubAdvisory, idx int) *grypeDB.Fix {
+	fixedInEntry := entry.Advisory.FixedIn[idx]
+
+	fixedInVersion := common.CleanFixedInVersion(fixedInEntry.Identifier)
+
+	fixState := "not-fixed" // TODO enum
+	if len(fixedInVersion) > 0 {
+		fixState = "fixed" // TODO enum
+	}
+
+	return &grypeDB.Fix{
+		Version: fixedInVersion,
+		State:   fixState,
+	}
 }
 
 type groupIndex struct {
@@ -131,105 +150,9 @@ func groupFixedIns(vuln unmarshal.GitHubAdvisory) map[groupIndex][]unmarshal.Git
 
 func getPackage(group groupIndex) *grypeDB.Package {
 	return &grypeDB.Package{
-		Name:      group.name,
-		Ecosystem: strPtr(group.ecosystem),
+		Name: group.name,
+		Type: group.ecosystem,
 	}
-}
-
-func getRange(fixedIns []unmarshal.GithubFixedIn) *[]grypeDB.Range {
-
-	return &[]grypeDB.Range{
-		{
-			Type: "SEMVER",
-			// TODO: enum
-			//Repo:   "", // TODO
-			Events: getRangeEvents(fixedIns),
-		},
-	}
-}
-
-func getRangeEvents(fixedIns []unmarshal.GithubFixedIn) *[]grypeDB.RangeEvent {
-	var events []grypeDB.RangeEvent
-	for _, fixedIn := range fixedIns {
-
-		var fixedInVersions []string
-		fixedInVersion := common.CleanFixedInVersion(fixedIn.Identifier)
-		if fixedInVersion != "" {
-			fixedInVersions = append(fixedInVersions, fixedInVersion)
-		}
-
-		versionPairs := parseVersionPairs(fixedIn.Range)
-
-		introduced := getIntroduced(versionPairs)
-		fixed := getFixed(versionPairs)
-		lastAffected := getLastAffected(versionPairs)
-
-		fixState := "not fixed" // TODO enum this
-		if fixed != "" {
-			fixState = "fixed" // TODO enum this
-		}
-
-		events = append(events, grypeDB.RangeEvent{
-			Introduced:   strPtr(introduced),
-			Fixed:        strPtr(fixed),
-			LastAffected: strPtr(lastAffected),
-			State:        fixState,
-		})
-	}
-	return &events
-}
-
-var versionPairPattern = regexp.MustCompile(`([<>=]+)\s*[^\s><=]+`)
-
-func parseVersionPairs(input string) []string {
-	// split into sections of [operator][version] pairs
-	// for example, input:
-	//  ">= 2.3.19 < 2.3.20.3"
-	// should be split into:
-	// [">= 2.3.19", "< 2.3.20.3"]
-
-	var pairs []string
-	for _, match := range versionPairPattern.FindAllString(input, -1) {
-		pairs = append(pairs, match)
-	}
-
-	return pairs
-
-}
-
-func getIntroduced(versionPairs []string) string {
-	for _, pair := range versionPairs {
-		if strings.HasPrefix(pair, ">=") {
-			return strings.TrimSpace(strings.TrimPrefix(pair, ">="))
-		}
-	}
-	return "0"
-}
-
-func getFixed(versionPairs []string) string {
-	for _, pair := range versionPairs {
-		if strings.HasPrefix(pair, "<") && !strings.Contains(pair, "=") {
-			return strings.TrimSpace(strings.TrimPrefix(pair, "<"))
-		}
-	}
-	return ""
-}
-
-func getLastAffected(versionPairs []string) string {
-	for _, pair := range versionPairs {
-		if strings.HasPrefix(pair, "<=") {
-			return strings.TrimSpace(strings.TrimPrefix(pair, "<="))
-		}
-	}
-	return ""
-
-}
-
-func strPtr(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
 }
 
 func getSeverities(vulnerability unmarshal.GitHubAdvisory) *datatypes.JSONSlice[grypeDB.Severity] {

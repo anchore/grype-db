@@ -1,7 +1,7 @@
 package os
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -15,16 +15,6 @@ import (
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
-
-	cleanDescription := strings.TrimSpace(vulnerability.Vulnerability.Description)
-	var descriptionDigest string
-	if cleanDescription != "" {
-		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
-		blobs = append(blobs, grypeDB.Blob{
-			Digest: descriptionDigest,
-			Value:  cleanDescription,
-		})
-	}
 
 	vuln := grypeDB.Vulnerability{
 		ProviderID: state.Provider,
@@ -42,8 +32,8 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		DetailDigest: strRef(descriptionDigest), // TODO: need access to digest store too
-		References:   getReferences(vulnerability),
+		Detail:     vulnerability.Vulnerability.Description, // TODO: need access to digest store too
+		References: getReferences(vulnerability),
 		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:    getAliases(vulnerability),
 		Severities: getSeverities(vulnerability),
@@ -54,34 +44,80 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 	return transformers.NewEntries(vuln, blobs...), nil
 }
 
-func strRef(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
-
 func getAffecteds(vuln unmarshal.OSVulnerability) *[]grypeDB.Affected {
 	var afs []grypeDB.Affected
 	groups := groupFixedIns(vuln)
 	for group, fixedIns := range groups {
 		// TODO: add purls!
-		afs = append(afs, grypeDB.Affected{
-			Package: getPackage(group),
-			//AffectedCpe:       getAffectedCPE(af), // TODO: this might not need to be done? unsure...
-			//Versions:          getAffectedVersions(af), // TODO: do this later... there is no upstream support for this...
-			//ExcludeVersions:   nil, // TODO...
-			//Severities:        getAffectedSeverities(af) // TODO: this should be EMPTY if a top level severity exists (which is might)
-			Range: getRange(fixedIns),
-			//Digests:           nil, // TODO...
+		for idx, fixedInEntry := range fixedIns {
+			afs = append(afs, grypeDB.Affected{
+				Package:           getPackage(group),
+				VersionConstraint: enforceConstraint(fixedInEntry.Version, fixedInEntry.VulnerableRange, fixedInEntry.VersionFormat, vuln.Vulnerability.Name),
+				VersionFormat:     fixedInEntry.VersionFormat,
+				OperatingSystem:   getOperatingSystem(group.osName, group.osVersion),
+				RpmModularity:     group.module,
+				Fix:               getFix(vuln, idx),
+			})
+		}
 
-			OperatingSystem: getOperatingSystem(group.osName, group.osVersion),
-			//PackageQualifierPlatformCpes:   nil, // TODO...
-			PackageQualifier: getPackageQualifiers(group.module),
-			//PackageQualifierRpmModularities: getPackageQualifierRPMModularity(group.module),
-		})
 	}
 	return &afs
+}
+
+func getFix(entry unmarshal.OSVulnerability, idx int) *grypeDB.Fix {
+	fixedInEntry := entry.Vulnerability.FixedIn[idx]
+
+	fixedInVersion := common.CleanFixedInVersion(fixedInEntry.Version)
+
+	fixState := "not-fixed" // TODO enum
+	if len(fixedInVersion) > 0 {
+		fixState = "fixed" // TODO enum
+	} else if fixedInEntry.VendorAdvisory.NoAdvisory {
+		fixState = "wont-fix" // TODO: enum
+	}
+
+	return &grypeDB.Fix{
+		Version: fixedInVersion,
+		State:   fixState,
+	}
+}
+
+func enforceConstraint(fixedVersion, vulnerableRange, format, vulnerabilityID string) string {
+	if len(vulnerableRange) > 0 {
+		return vulnerableRange
+	}
+	fixedVersion = common.CleanConstraint(fixedVersion)
+	if len(fixedVersion) == 0 {
+		return ""
+	}
+	switch strings.ToLower(format) {
+	case "semver":
+		return common.EnforceSemVerConstraint(fixedVersion)
+	default:
+		// the passed constraint is a fixed version
+		return deriveConstraintFromFix(fixedVersion, vulnerabilityID)
+	}
+}
+
+func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
+	constraint := fmt.Sprintf("< %s", fixVersion)
+
+	if strings.HasPrefix(vulnerabilityID, "ALASKERNEL-") {
+		// Amazon advisories of the form ALASKERNEL-5.4-2023-048 should be interpreted as only applying to
+		// the 5.4.x kernel line since Amazon issue a separate advisory per affected line, thus the constraint
+		// should be >= 5.4, < {fix version}.  In the future the vunnel schema for OS vulns should be enhanced
+		// to emit actual constraints rather than fixed-in entries (tracked in https://github.com/anchore/vunnel/issues/266)
+		// at which point this workaround in grype-db can be removed.
+
+		components := strings.Split(vulnerabilityID, "-")
+
+		if len(components) == 4 {
+			base := components[1]
+			constraint = fmt.Sprintf(">= %s, < %s", base, fixVersion)
+		}
+	}
+
+	return constraint
 }
 
 type groupIndex struct {
@@ -113,58 +149,10 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 
 }
 
-func getRange(fixedIns []unmarshal.OSFixedIn) *[]grypeDB.Range {
-	// TODO: do we ever know about multiple ranges?
-	return &[]grypeDB.Range{
-		{
-			Type: "SEMVER", // TODO: enum
-			//Repo:   "", // TODO
-			Events: getRangeEvents(fixedIns),
-		},
-	}
-}
-
-func getRangeEvents(fixedIns []unmarshal.OSFixedIn) *[]grypeDB.RangeEvent {
-	var rangeEvents []grypeDB.RangeEvent
-	for _, fixedInEntry := range fixedIns {
-
-		var fixedInVersions []string
-		fixedInVersion := common.CleanFixedInVersion(fixedInEntry.Version)
-		if fixedInVersion != "" {
-			fixedInVersions = append(fixedInVersions, fixedInVersion)
-		}
-
-		fixState := "not fixed" // TODO enum this
-		if len(fixedInVersions) > 0 {
-			fixState = "fixed" // TODO enum this
-		} else if fixedInEntry.VendorAdvisory.NoAdvisory {
-			fixState = "wont fix" // TODO enum this
-		}
-
-		// TODO: this topology seems problematic
-		for _, ver := range fixedInVersions {
-			rangeEvents = append(rangeEvents, grypeDB.RangeEvent{
-				//Type:       "", // TODO
-				//Repo:       "", // TODO
-				Introduced: strPtr("0"),
-				Fixed:      &ver,
-				//LastAffected: "",  // TODO
-				//Limit:        "",  // TODO
-				State: fixState, // TODO: enum this relative to OSV
-			})
-		}
-	}
-	return &rangeEvents
-}
-
-func strPtr(s string) *string {
-	return &s
-}
-
 func getPackage(group groupIndex) *grypeDB.Package {
 	return &grypeDB.Package{
-		Ecosystem: strPtr(normalizeOsName(group.osName)), // TODO: is this correct?
-		Name:      group.name,
+		Type: normalizeOsName(group.osName), // TODO: is this correct?
+		Name: group.name,
 	}
 }
 
@@ -214,36 +202,6 @@ func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {
 	}
 }
 
-func getPackageQualifiers(module string) *datatypes.JSON {
-	// TODO convert to single when model is updated
-	if module == "" {
-		return nil
-	}
-	obj := grypeDB.PackageQualifierRpmModularity{
-		Module: module,
-	}
-
-	by, err := json.Marshal(obj)
-	if err != nil {
-		panic(err) // TODO
-	}
-
-	ret := datatypes.JSON(by)
-	return &ret
-}
-
-func getPackageQualifierRPMModularity(module string) *[]grypeDB.PackageQualifierRpmModularity {
-	// TODO convert to single when model is updated
-	if module == "" {
-		return nil
-	}
-	return &[]grypeDB.PackageQualifierRpmModularity{
-		{
-			Module: module,
-		},
-	}
-}
-
 func getReferences(vuln unmarshal.OSVulnerability) *[]grypeDB.Reference {
 	// TODO: should we collect entries from the fixed ins? or should there be references for affected (an OSV difference)
 	return &[]grypeDB.Reference{
@@ -271,17 +229,17 @@ func getSeverities(vuln unmarshal.OSVulnerability) *datatypes.JSONSlice[grypeDB.
 	// TODO: should we clean this here or not?
 	if vuln.Vulnerability.Severity != "" && strings.ToLower(vuln.Vulnerability.Severity) != "unknown" {
 		severities = append(severities, grypeDB.Severity{
-			Type:     "string", // TODO: where should we get these values for each source?
-			Score:    vuln.Vulnerability.Severity,
-			Priority: strPtr("primary"), // TODO: enum this
+			Type:  "string", // TODO: where should we get these values for each source?
+			Score: vuln.Vulnerability.Severity,
+			Rank:  1, // TODO: enum this
 			// TODO Source?
 		})
 	}
 	for _, vendorSeverity := range vuln.Vulnerability.CVSS {
 		severities = append(severities, grypeDB.Severity{
-			Type:     "CVSS",                      // TODO: add version to this (different field already)
-			Score:    vendorSeverity.VectorString, // TODO: this isn't really the score... this is a little odd
-			Priority: strPtr("secondary"),         // TODO: I don't think this is always true
+			Type:  "CVSS",                      // TODO: add version to this (different field already)
+			Score: vendorSeverity.VectorString, // TODO: this isn't really the score... this is a little odd
+			Rank:  2,                           // TODO: I don't think this is always true
 			// TODO: source?
 		})
 	}
