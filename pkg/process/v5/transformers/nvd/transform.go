@@ -1,6 +1,8 @@
 package nvd
 
 import (
+	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/syft/syft/cpe"
 	"sort"
 
 	"github.com/anchore/grype-db/internal"
@@ -38,13 +40,24 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 
 	// duplicate the vulnerabilities based on the set of unique packages the vulnerability is for
 	var allVulns []grypeDB.Vulnerability
+	//var cpeCount int
+	//var variantCount int
 	for _, p := range uniquePkgs.All() {
 		var qualifiers []qualifier.Qualifier
 		matches := uniquePkgs.Matches(p)
 		cpes := internal.NewStringSet()
+		//variantCount++
+
 		for _, m := range matches {
-			cpes.Add(grypeNamespace.Resolver().Normalize(m.Criteria))
+			atts, err := cpe.NewAttributes(grypeNamespace.Resolver().Normalize(m.Criteria))
+			if err != nil {
+				log.WithFields("cpe", m.Criteria, "error", err).Warn("unable to create CPE attributes from criteria")
+				continue
+			}
+			atts.Version = cpe.Any
+			cpes.Add(atts.String())
 		}
+		//cpeCount += len(cpes)
 
 		if p.PlatformCPE != "" {
 			qualifiers = []qualifier.Qualifier{platformcpe.Qualifier{
@@ -70,6 +83,9 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			},
 		})
 	}
+
+	//fmt.Println("variantCount: ", variantCount)
+	//fmt.Println("cpeCount: ", cpeCount)
 
 	// create vulnerability metadata entry (a single entry keyed off of the vulnerability ID)
 	allCVSS := vulnerability.CVSS()

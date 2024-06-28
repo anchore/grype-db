@@ -587,6 +587,21 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "multiple platforms some are application",
+			numEntries: 2,
+			fixture:    "test-fixtures/cve-2010-3804.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:        "CVE-2010-3804",
+					Namespace: "nvd:cpe",
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:        "CVE-2010-3804",
+				Namespace: "nvd:cpe",
+			},
+		},
 	}
 
 	for _, test := range tests {
