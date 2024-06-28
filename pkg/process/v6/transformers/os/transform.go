@@ -9,12 +9,21 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/distro"
-	"gorm.io/datatypes"
 	"strings"
 )
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
+
+	cleanDescription := strings.TrimSpace(vulnerability.Vulnerability.Description)
+	var descriptionDigest string
+	if cleanDescription != "" {
+		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
+		blobs = append(blobs, grypeDB.Blob{
+			Digest: descriptionDigest,
+			Value:  cleanDescription,
+		})
+	}
 
 	vuln := grypeDB.Vulnerability{
 		ProviderID: state.Provider,
@@ -32,8 +41,8 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		Detail:     vulnerability.Vulnerability.Description, // TODO: need access to digest store too
-		References: getReferences(vulnerability),
+		DetailDigest: descriptionDigest, // TODO: need access to digest store too
+		References:   getReferences(vulnerability),
 		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:    getAliases(vulnerability),
 		Severities: getSeverities(vulnerability),
@@ -223,7 +232,7 @@ func getAliases(vuln unmarshal.OSVulnerability) *[]grypeDB.Alias {
 	return &aliases
 }
 
-func getSeverities(vuln unmarshal.OSVulnerability) *datatypes.JSONSlice[grypeDB.Severity] {
+func getSeverities(vuln unmarshal.OSVulnerability) *[]grypeDB.Severity {
 	var severities []grypeDB.Severity
 
 	// TODO: should we clean this here or not?
@@ -244,7 +253,5 @@ func getSeverities(vuln unmarshal.OSVulnerability) *datatypes.JSONSlice[grypeDB.
 		})
 	}
 
-	ret := datatypes.JSONSlice[grypeDB.Severity](severities)
-
-	return &ret
+	return &severities
 }

@@ -2,7 +2,6 @@ package nvd
 
 import (
 	"encoding/json"
-	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -12,12 +11,21 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/syft/syft/cpe"
 	"gorm.io/datatypes"
-	"sort"
 	"strings"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
+
+	cleanDescription := strings.TrimSpace(vulnerability.Description())
+	var descriptionDigest string
+	if cleanDescription != "" {
+		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
+		blobs = append(blobs, grypeDB.Blob{
+			Digest: descriptionDigest,
+			Value:  cleanDescription,
+		})
+	}
 
 	vuln := grypeDB.Vulnerability{
 		ProviderID: state.Provider,
@@ -36,14 +44,14 @@ func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) (
 		Withdrawn: "", // TODO: could get this from status?
 		//SummaryDigest: nil,                       // TODO: need access to digest store too
 		//DetailDigest:  strRef(descriptionDigest), // TODO: need access to digest store too
-		Detail:     vulnerability.Description(),
-		References: getReferences(vulnerability),
+		DetailDigest: descriptionDigest,
+		References:   getReferences(vulnerability),
 		//Related:       nil,
 		//Aliases:       nil,
 		Severities: getSeverities(vulnerability),
 		//DbSpecificNvd: getDBSpecific(vulnerability),
-		DbSpecific: getDBSpecific(vulnerability),
-		Affected:   getAffecteds(vulnerability),
+		//DbSpecific: getDBSpecific(vulnerability),
+		Affected: getAffecteds(vulnerability),
 	}
 
 	return transformers.NewEntries(vuln, blobs...), nil
@@ -55,25 +63,17 @@ func getAffecteds(vulnerability unmarshal.NVDVulnerability) *[]grypeDB.Affected 
 	var affs []grypeDB.Affected
 	for _, p := range uniquePkgs.All() {
 
-		matches := uniquePkgs.Matches(p)
-		cpes := internal.NewStringSet()
-		for _, m := range matches {
-			cpes.Add(strings.ToLower(m.Criteria)) // TODO: this was normalized by the namespace... now this is ad-hoc... this seems bad
-		}
+		appMatches := uniquePkgs.ApplicationMatches(p)
+		platMatches := uniquePkgs.PlatformMatches(p)
 
-		cpesList := cpes.ToSlice()
-		sort.Strings(cpesList)
-
-		for _, c := range cpesList {
-			affs = append(affs, grypeDB.Affected{
-				Package:           getPackage(p),
-				VersionConstraint: buildConstraints(uniquePkgs.Matches(p)),
-				VersionFormat:     "unknown",
-				Cpe:               getCPE(c),
-				//Digests:                         nil,
-				PlatformCpe: getCPE(p.PlatformCPE),
-			})
-		}
+		affs = append(affs, grypeDB.Affected{
+			Package:           getPackage(p),
+			VersionConstraint: buildConstraints(appMatches),
+			VersionFormat:     "unknown",
+			Cpes:              getCPEs(appMatches.CPEs()),
+			//Digests:                         nil,
+			PlatformCpes: getPlatformCPEs(platMatches.CPEs()),
+		})
 
 	}
 	return &affs
@@ -92,32 +92,76 @@ func getPackage(p pkgCandidate) *grypeDB.Package {
 	}
 }
 
-func getCPE(in string) *grypeDB.CpeWithoutVersion {
-	if in == "" {
+func getCPEs(ins []string) *[]grypeDB.Cpe {
+	if len(ins) == 0 {
 		return nil
 	}
 
-	atts, err := cpe.NewAttributes(in)
-	if err != nil {
-		log.WithFields("cpe", in).Warn("could not parse CPE, dropping...")
+	var cpes []grypeDB.Cpe
+
+	for _, in := range ins {
+
+		atts, err := cpe.NewAttributes(in)
+		if err != nil {
+			log.WithFields("cpe", in).Warn("could not parse CPE, dropping...")
+			return nil
+		}
+
+		c := grypeDB.Cpe{
+			ID: 0,
+			//Schema:         "", // CPE version I think... do we know this?
+			Type:            atts.Part,
+			Vendor:          atts.Vendor,
+			Product:         atts.Product,
+			Edition:         atts.Edition,
+			Language:        atts.Language,
+			SoftwareEdition: atts.SWEdition,
+			TargetHardware:  atts.TargetHW,
+			TargetSoftware:  atts.TargetSW,
+			Other:           atts.Other,
+		}
+
+		cpes = append(cpes, c)
+	}
+
+	return &cpes
+}
+
+func getPlatformCPEs(ins []string) *[]grypeDB.PlatformCpe {
+	if len(ins) == 0 {
 		return nil
 	}
 
-	c := grypeDB.CpeWithoutVersion{
-		ID: 0,
-		//Schema:         "", // CPE version I think... do we know this?
-		Type:            atts.Part,
-		Vendor:          atts.Vendor,
-		Product:         atts.Product,
-		Edition:         atts.Edition,
-		Language:        atts.Language,
-		SoftwareEdition: atts.SWEdition,
-		TargetHardware:  atts.TargetHW,
-		TargetSoftware:  atts.TargetSW,
-		Other:           atts.Other,
+	var cpes []grypeDB.PlatformCpe
+
+	for _, in := range ins {
+
+		atts, err := cpe.NewAttributes(in)
+		if err != nil {
+			log.WithFields("cpe", in).Warn("could not parse platform CPE, dropping...")
+			return nil
+		}
+
+		c := grypeDB.PlatformCpe{
+			ID: 0,
+			//Schema:         "", // CPE version I think... do we know this?
+			Type:            atts.Part,
+			Vendor:          atts.Vendor,
+			Product:         atts.Product,
+			Edition:         atts.Edition,
+			Language:        atts.Language,
+			Version:         atts.Version,
+			VersionUpdate:   atts.Update,
+			SoftwareEdition: atts.SWEdition,
+			TargetHardware:  atts.TargetHW,
+			TargetSoftware:  atts.TargetSW,
+			Other:           atts.Other,
+		}
+
+		cpes = append(cpes, c)
 	}
 
-	return &c
+	return &cpes
 }
 
 func getDBSpecific(vuln unmarshal.NVDVulnerability) *datatypes.JSON {
@@ -156,7 +200,7 @@ func getStr(s *string) string {
 	return *s
 }
 
-func getSeverities(vuln unmarshal.NVDVulnerability) *datatypes.JSONSlice[grypeDB.Severity] {
+func getSeverities(vuln unmarshal.NVDVulnerability) *[]grypeDB.Severity {
 	sevs := nvd.CvssSummaries(vuln.CVSS()).Sorted()
 	var results []grypeDB.Severity
 	for i, sev := range sevs {
@@ -172,9 +216,7 @@ func getSeverities(vuln unmarshal.NVDVulnerability) *datatypes.JSONSlice[grypeDB
 		})
 	}
 
-	ret := datatypes.JSONSlice[grypeDB.Severity](results)
-
-	return &ret
+	return &results
 }
 
 func getReferences(vuln unmarshal.NVDVulnerability) *[]grypeDB.Reference {

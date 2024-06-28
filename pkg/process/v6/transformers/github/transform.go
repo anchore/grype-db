@@ -7,12 +7,21 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
-	"gorm.io/datatypes"
 	"strings"
 )
 
 func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
+
+	cleanDescription := strings.TrimSpace(vulnerability.Advisory.Summary)
+	var descriptionDigest string
+	if cleanDescription != "" {
+		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
+		blobs = append(blobs, grypeDB.Blob{
+			Digest: descriptionDigest,
+			Value:  cleanDescription,
+		})
+	}
 
 	vuln := grypeDB.Vulnerability{
 		ProviderID: state.Provider,
@@ -30,8 +39,8 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		Detail:     vulnerability.Advisory.Summary, // TODO: need access to digest store too
-		References: getReferences(vulnerability),
+		DetailDigest: descriptionDigest, // TODO: need access to digest store too
+		References:   getReferences(vulnerability),
 		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:    getAliases(vulnerability),
 		Severities: getSeverities(vulnerability),
@@ -155,7 +164,7 @@ func getPackage(group groupIndex) *grypeDB.Package {
 	}
 }
 
-func getSeverities(vulnerability unmarshal.GitHubAdvisory) *datatypes.JSONSlice[grypeDB.Severity] {
+func getSeverities(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Severity {
 	var severities []grypeDB.Severity
 
 	cleanSeverity := strings.ToLower(strings.TrimSpace(vulnerability.Advisory.Severity))
@@ -177,9 +186,9 @@ func getSeverities(vulnerability unmarshal.GitHubAdvisory) *datatypes.JSONSlice[
 		})
 	}
 
-	ret := datatypes.JSONSlice[grypeDB.Severity](severities)
+	//ret := datatypes.JSONSlice[grypeDB.Severity](severities)
 
-	return &ret
+	return &severities
 }
 
 func getAliases(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Alias {

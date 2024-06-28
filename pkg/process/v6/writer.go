@@ -68,7 +68,9 @@ func (w writer) Write(entries ...data.Entry) error {
 				return fmt.Errorf("unable to write vulnerability to store: %w", err)
 			}
 		case grypeDB.Blob:
-			// TODO: toss for now...
+			if err := w.store.AddBlobs(&row); err != nil {
+				return fmt.Errorf("unable to write blob to store: %w", err)
+			}
 		default:
 			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
 		}
