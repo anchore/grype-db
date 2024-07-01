@@ -17,14 +17,18 @@ import (
 func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
 
-	cleanDescription := strings.TrimSpace(vulnerability.Description())
 	var descriptionDigest string
-	if cleanDescription != "" {
-		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
-		blobs = append(blobs, grypeDB.Blob{
-			Digest: descriptionDigest,
-			Value:  cleanDescription,
-		})
+	descBlob := getDescription(vulnerability)
+	if descBlob != nil {
+		descriptionDigest = descBlob.Digest
+		blobs = append(blobs, *descBlob)
+	}
+
+	var refsDigest string
+	refs := getReferences(vulnerability)
+	if refs != nil {
+		refsDigest = refs.Digest
+		blobs = append(blobs, *refs)
 	}
 
 	vuln := grypeDB.Vulnerability{
@@ -44,8 +48,8 @@ func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) (
 		Withdrawn: "", // TODO: could get this from status?
 		//SummaryDigest: nil,                       // TODO: need access to digest store too
 		//DetailDigest:  strRef(descriptionDigest), // TODO: need access to digest store too
-		DetailDigest: descriptionDigest,
-		References:   getReferences(vulnerability),
+		DetailDigest:     descriptionDigest,
+		ReferencesDigest: refsDigest,
 		//Related:       nil,
 		//Aliases:       nil,
 		Severities: getSeverities(vulnerability),
@@ -55,6 +59,18 @@ func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) (
 	}
 
 	return transformers.NewEntries(vuln, blobs...), nil
+}
+
+func getDescription(vuln unmarshal.NVDVulnerability) *grypeDB.Blob {
+	clean := strings.TrimSpace(vuln.Description())
+	if clean == "" {
+		return nil
+	}
+
+	return &grypeDB.Blob{
+		Digest: grypeDB.BlobDigest(clean),
+		Value:  clean,
+	}
 }
 
 func getAffecteds(vulnerability unmarshal.NVDVulnerability) *[]grypeDB.Affected {
@@ -219,7 +235,7 @@ func getSeverities(vuln unmarshal.NVDVulnerability) *[]grypeDB.Severity {
 	return &results
 }
 
-func getReferences(vuln unmarshal.NVDVulnerability) *[]grypeDB.Reference {
+func getReferences(vuln unmarshal.NVDVulnerability) *grypeDB.Blob {
 	references := []grypeDB.Reference{
 		{
 			URL: "https://nvd.nist.gov/vuln/detail/" + vuln.ID,
@@ -235,5 +251,14 @@ func getReferences(vuln unmarshal.NVDVulnerability) *[]grypeDB.Reference {
 			URL: reference.URL,
 		})
 	}
-	return &references
+
+	by, err := json.Marshal(references)
+	if err != nil {
+		panic(err) // TODO
+	}
+
+	return &grypeDB.Blob{
+		Digest: grypeDB.BlobDigest(string(by)),
+		Value:  string(by),
+	}
 }

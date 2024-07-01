@@ -1,6 +1,7 @@
 package os
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
@@ -15,14 +16,18 @@ import (
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
 
-	cleanDescription := strings.TrimSpace(vulnerability.Vulnerability.Description)
 	var descriptionDigest string
-	if cleanDescription != "" {
-		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
-		blobs = append(blobs, grypeDB.Blob{
-			Digest: descriptionDigest,
-			Value:  cleanDescription,
-		})
+	descBlob := getDescription(vulnerability)
+	if descBlob != nil {
+		descriptionDigest = descBlob.Digest
+		blobs = append(blobs, *descBlob)
+	}
+
+	var refsDigest string
+	refs := getReferences(vulnerability)
+	if refs != nil {
+		refsDigest = refs.Digest
+		blobs = append(blobs, *refs)
 	}
 
 	vuln := grypeDB.Vulnerability{
@@ -41,8 +46,8 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		DetailDigest: descriptionDigest, // TODO: need access to digest store too
-		References:   getReferences(vulnerability),
+		DetailDigest:     descriptionDigest, // TODO: need access to digest store too
+		ReferencesDigest: refsDigest,
 		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:    getAliases(vulnerability),
 		Severities: getSeverities(vulnerability),
@@ -51,6 +56,18 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 	}
 
 	return transformers.NewEntries(vuln, blobs...), nil
+}
+
+func getDescription(vuln unmarshal.OSVulnerability) *grypeDB.Blob {
+	clean := strings.TrimSpace(vuln.Vulnerability.Description)
+	if clean == "" {
+		return nil
+	}
+
+	return &grypeDB.Blob{
+		Digest: grypeDB.BlobDigest(clean),
+		Value:  clean,
+	}
 }
 
 func getAffecteds(vuln unmarshal.OSVulnerability) *[]grypeDB.Affected {
@@ -211,13 +228,35 @@ func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {
 	}
 }
 
-func getReferences(vuln unmarshal.OSVulnerability) *[]grypeDB.Reference {
+func getReferences(vuln unmarshal.OSVulnerability) *grypeDB.Blob {
 	// TODO: should we collect entries from the fixed ins? or should there be references for affected (an OSV difference)
-	return &[]grypeDB.Reference{
+	//return &[]grypeDB.Reference{
+	//	{
+	//		Type: "", // TODO: what's the right value here?
+	//		URL:  vuln.Vulnerability.Link,
+	//	},
+	//}
+
+	clean := strings.TrimSpace(vuln.Vulnerability.Link)
+	if clean == "" {
+		return nil
+	}
+
+	refs := []grypeDB.Reference{
 		{
 			Type: "", // TODO: what's the right value here?
 			URL:  vuln.Vulnerability.Link,
 		},
+	}
+
+	by, err := json.Marshal(refs)
+	if err != nil {
+		panic(err) // TODO
+	}
+
+	return &grypeDB.Blob{
+		Digest: grypeDB.BlobDigest(string(by)),
+		Value:  string(by),
 	}
 }
 

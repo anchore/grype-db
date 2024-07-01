@@ -1,6 +1,7 @@
 package github
 
 import (
+	"encoding/json"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -13,14 +14,18 @@ import (
 func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]data.Entry, error) {
 	var blobs []grypeDB.Blob
 
-	cleanDescription := strings.TrimSpace(vulnerability.Advisory.Summary)
 	var descriptionDigest string
-	if cleanDescription != "" {
-		descriptionDigest = grypeDB.BlobDigest(cleanDescription)
-		blobs = append(blobs, grypeDB.Blob{
-			Digest: descriptionDigest,
-			Value:  cleanDescription,
-		})
+	descBlob := getDescription(vulnerability)
+	if descBlob != nil {
+		descriptionDigest = descBlob.Digest
+		blobs = append(blobs, *descBlob)
+	}
+
+	var refsDigest string
+	refs := getReferences(vulnerability)
+	if refs != nil {
+		refsDigest = refs.Digest
+		blobs = append(blobs, *refs)
 	}
 
 	vuln := grypeDB.Vulnerability{
@@ -39,8 +44,8 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 		//Published:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//Withdrawn:     "",                // TODO: should be pointer? need to change unmarshallers to account for this
 		//SummaryDigest: "",                // TODO: need access to digest store too
-		DetailDigest: descriptionDigest, // TODO: need access to digest store too
-		References:   getReferences(vulnerability),
+		DetailDigest:     descriptionDigest, // TODO: need access to digest store too
+		ReferencesDigest: refsDigest,
 		//Related:      nil, // TODO: find examples for this... odds are aliases is what we want most of the time
 		Aliases:    getAliases(vulnerability),
 		Severities: getSeverities(vulnerability),
@@ -87,6 +92,18 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 	//}
 
 	return transformers.NewEntries(vuln, blobs...), nil
+}
+
+func getDescription(vuln unmarshal.GitHubAdvisory) *grypeDB.Blob {
+	clean := strings.TrimSpace(vuln.Advisory.Summary)
+	if clean == "" {
+		return nil
+	}
+
+	return &grypeDB.Blob{
+		Digest: grypeDB.BlobDigest(clean),
+		Value:  clean,
+	}
 }
 
 func getAffecteds(vuln unmarshal.GitHubAdvisory) *[]grypeDB.Affected {
@@ -201,15 +218,24 @@ func getAliases(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Alias {
 	return &aliases
 }
 
-func getReferences(vulnerability unmarshal.GitHubAdvisory) *[]grypeDB.Reference {
+func getReferences(vulnerability unmarshal.GitHubAdvisory) *grypeDB.Blob {
 	// TODO: are there no more links available upstream? this seems light...
-	return &[]grypeDB.Reference{
+	refs := []grypeDB.Reference{
 		{
 			Type: "ADVISORY", // TODO: enum
 			URL:  vulnerability.Advisory.URL,
 		},
 	}
 
+	by, err := json.Marshal(refs)
+	if err != nil {
+		panic(err) // TODO
+	}
+
+	return &grypeDB.Blob{
+		Digest: grypeDB.BlobDigest(string(by)),
+		Value:  string(by),
+	}
 }
 
 //func getFix(entry unmarshal.GitHubAdvisory, idx int) grypeDB.Fix {

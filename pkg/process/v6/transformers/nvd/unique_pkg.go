@@ -20,15 +20,10 @@ type pkgCandidate struct {
 	Product        string
 	Vendor         string
 	TargetSoftware string
-	PlatformCPE    string
 }
 
 func (p pkgCandidate) String() string {
-	if p.PlatformCPE == "" {
-		return fmt.Sprintf("%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware)
-	}
-
-	return fmt.Sprintf("%s|%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware, p.PlatformCPE)
+	return fmt.Sprintf("%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware)
 }
 
 func newPkgCandidate(match nvd.CpeMatch, platformCPE string) (*pkgCandidate, error) {
@@ -51,7 +46,7 @@ func newPkgCandidate(match nvd.CpeMatch, platformCPE string) (*pkgCandidate, err
 		Product:        c.Product().String(),
 		Vendor:         c.Vendor().String(),
 		TargetSoftware: c.TargetSw().String(),
-		PlatformCPE:    platformCPE,
+		//PlatformCPE:    platformCPE,
 	}, nil
 }
 
