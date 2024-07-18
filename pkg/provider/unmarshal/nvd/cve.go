@@ -50,11 +50,11 @@ type CveItem struct {
 	// EvaluatorComment      *string         `json:"evaluatorComment,omitempty"`
 	// EvaluatorImpact       *string         `json:"evaluatorImpact,omitempty"`
 	// EvaluatorSolution     *string         `json:"evaluatorSolution,omitempty"`
-	LastModified string      `json:"lastModified"`
-	Metrics      *Metrics    `json:"metrics,omitempty"`
-	Published    string      `json:"published"`
-	References   []Reference `json:"references"`
-	// SourceIdentifier      *string         `json:"sourceIdentifier,omitempty"`
+	LastModified     string      `json:"lastModified"`
+	Metrics          *Metrics    `json:"metrics,omitempty"`
+	Published        string      `json:"published"`
+	References       []Reference `json:"references"`
+	SourceIdentifier *string     `json:"sourceIdentifier,omitempty"`
 	// VendorComments        []VendorComment `json:"vendorComments,omitempty"`
 	VulnStatus *string `json:"vulnStatus,omitempty"`
 	// Weaknesses            []Weakness      `json:"weaknesses,omitempty"`
@@ -87,7 +87,7 @@ type LangString struct {
 	Value string `json:"value"`
 }
 
-// Metric scores for a vulnerability as found on NVD.
+// Metrics scores for a vulnerability as found on NVD.
 type Metrics struct {
 	CvssMetricV2  []CvssV2  `json:"cvssMetricV2,omitempty"`  // CVSS V2.0 score.
 	CvssMetricV30 []CvssV30 `json:"cvssMetricV30,omitempty"` // CVSS V3.0 score.
@@ -124,10 +124,10 @@ type CvssV31 struct {
 	Type                CvssType      `json:"type"`
 }
 
-// "type identifies whether the organization is a primary or secondary source. Primary sources
-// include the NVD and CNA who have reached the provider level in CVMAP. 10% of provider level
-// submissions are audited by the NVD. If a submission has been audited the NVD will appear as
-// the primary source and the provider level CNA will appear as the secondary source."
+// CvssType relative to the NVD docs: "type identifies whether the organization is a primary or secondary source.
+// Primary sources include the NVD and CNA who have reached the provider level in CVMAP. 10% of provider level
+// submissions are audited by the NVD. If a submission has been audited the NVD will appear as the primary source
+// and the provider level CNA will appear as the secondary source."
 type CvssType string
 
 const (

@@ -7,11 +7,12 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
 type githubProcessor struct {
-	transformer data.GitHubTransformer
+	transformer any
 }
 
 func NewGitHubProcessor(transformer data.GitHubTransformer) data.Processor {
@@ -20,12 +21,30 @@ func NewGitHubProcessor(transformer data.GitHubTransformer) data.Processor {
 	}
 }
 
-func (p githubProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func NewV2GitHubProcessor(transformer data.GitHubTransformerV2) data.Processor {
+	return &githubProcessor{
+		transformer: transformer,
+	}
+}
+
+func (p githubProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.GitHubAdvisoryEntries(reader)
 	if err != nil {
 		return nil, err
+	}
+
+	var handle func(entry unmarshal.GitHubAdvisory) ([]data.Entry, error)
+	switch t := p.transformer.(type) {
+	case data.GitHubTransformer:
+		handle = func(entry unmarshal.GitHubAdvisory) ([]data.Entry, error) {
+			return t(entry)
+		}
+	case data.GitHubTransformerV2:
+		handle = func(entry unmarshal.GitHubAdvisory) ([]data.Entry, error) {
+			return t(entry, state)
+		}
 	}
 
 	for _, entry := range entries {
@@ -34,7 +53,7 @@ func (p githubProcessor) Process(reader io.Reader) ([]data.Entry, error) {
 			continue
 		}
 
-		transformedEntries, err := p.transformer(entry)
+		transformedEntries, err := handle(entry)
 		if err != nil {
 			return nil, err
 		}

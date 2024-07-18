@@ -7,7 +7,7 @@ import (
 	"github.com/umisama/go-cpe"
 
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/process/common"
+	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
 

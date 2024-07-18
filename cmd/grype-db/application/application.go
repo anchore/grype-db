@@ -22,6 +22,7 @@ import (
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/ui"
 	"github.com/anchore/grype-db/internal/utils"
+	"github.com/anchore/grype/grype"
 )
 
 const Name = internal.ApplicationName
@@ -169,6 +170,7 @@ func setupLogger(app *Config) error {
 	}
 
 	log.Set(l)
+	grype.SetLogger(l)
 
 	return nil
 }

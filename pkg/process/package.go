@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/tarutil"
 	"github.com/anchore/grype/grype/db/legacy/distribution"
+	grypeDBLegacy "github.com/anchore/grype/grype/db/v5"
+	grypeDBLegacyStore "github.com/anchore/grype/grype/db/v5/store"
+	v6 "github.com/anchore/grype/grype/db/v6"
 )
 
 func secondsSinceEpoch() int64 {
@@ -20,6 +24,78 @@ func secondsSinceEpoch() int64 {
 }
 
 func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
+	// check if metadata file exists
+	if _, err := os.Stat(filepath.Join(dbDir, distribution.MetadataFileName)); os.IsNotExist(err) {
+		return v6Package(dbDir, overrideArchiveExtension)
+	}
+	return legacyPackage(dbDir, publishBaseURL, overrideArchiveExtension)
+}
+
+func v6Package(dbDir, overrideArchiveExtension string) error {
+	extension, err := resolveV6Extension(overrideArchiveExtension)
+	if err != nil {
+		return err
+	}
+	log.WithFields("from", dbDir, "extension", extension).Info("packaging database")
+
+	s, err := v6.NewReader(v6.Config{DBDirPath: dbDir})
+	if err != nil {
+		return fmt.Errorf("unable to open vulnerability store: %w", err)
+	}
+
+	metadata, err := s.GetDBMetadata()
+	if err != nil {
+		return fmt.Errorf("unable to get vulnerability store metadata: %w", err)
+	}
+
+	if metadata.Model != v6.ModelVersion {
+		return fmt.Errorf("metadata model %d does not match vulnerability store model %d", v6.ModelVersion, metadata.Model)
+	}
+
+	// TODO: add support for fetching all provider data
+
+	tarName := fmt.Sprintf(
+		"vulnerability-db_v%s_%s_%s.%s",
+		fmt.Sprintf("%d.%d.%d", metadata.Model, metadata.Revision, metadata.Addition),
+		"TODOPROVIDERTIME",
+		metadata.BuildTimestamp.UTC().Format(time.RFC3339),
+		extension,
+	)
+	tarPath := path.Join(dbDir, tarName)
+
+	if err := populate(tarName, dbDir); err != nil {
+		return err
+	}
+
+	log.WithFields("path", tarPath).Info("created database archive")
+
+	// TODO: write out latest.json file
+
+	return nil
+}
+
+func resolveV6Extension(overrideArchiveExtension string) (string, error) {
+	var extension = "tar.xz"
+
+	if overrideArchiveExtension != "" {
+		extension = strings.TrimLeft(overrideArchiveExtension, ".")
+	}
+
+	var found bool
+	for _, valid := range []string{"tar.xz", "tar.zst", "tar.gz"} {
+		if valid == extension {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return "", fmt.Errorf("unsupported archive extension %q", extension)
+	}
+	return extension, nil
+}
+
+func legacyPackage(dbDir, publishBaseURL, overrideArchiveExtension string) error { //nolint:funlen
 	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
 
 	fs := afero.NewOsFs()
@@ -30,6 +106,20 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 
 	if metadata == nil {
 		return fmt.Errorf("no metadata found in %q", dbDir)
+	}
+
+	s, err := grypeDBLegacyStore.New(filepath.Join(dbDir, grypeDBLegacy.VulnerabilityStoreFileName), false)
+	if err != nil {
+		return fmt.Errorf("unable to open vulnerability store: %w", err)
+	}
+
+	id, err := s.GetID()
+	if err != nil {
+		return fmt.Errorf("unable to get vulnerability store ID: %w", err)
+	}
+
+	if id.SchemaVersion != metadata.Version {
+		return fmt.Errorf("metadata version %d does not match vulnerability store version %d", metadata.Version, id.SchemaVersion)
 	}
 
 	u, err := url.Parse(publishBaseURL)

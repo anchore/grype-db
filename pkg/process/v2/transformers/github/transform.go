@@ -2,7 +2,7 @@ package github
 
 import (
 	"github.com/anchore/grype-db/pkg/data"
-	"github.com/anchore/grype-db/pkg/process/common"
+	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v2/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v2"
@@ -17,7 +17,7 @@ func Transform(vulnerability unmarshal.GitHubAdvisory) ([]data.Entry, error) {
 	var allVulns []grypeDB.Vulnerability
 
 	// Exclude entries marked as withdrawn
-	if vulnerability.Advisory.Withdrawn != nil {
+	if vulnerability.Advisory.Withdrawn != "" {
 		return nil, nil
 	}
 
