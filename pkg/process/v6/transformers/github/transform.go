@@ -43,14 +43,14 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 		},
 	}
 
-	for _, a := range getAffecteds(vulnerability) {
+	for _, a := range getAffected(vulnerability) {
 		ins = append(ins, a)
 	}
 
 	return transformers.NewEntries(ins...), nil
 }
 
-func getAffecteds(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackageHandle {
+func getAffected(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackageHandle {
 	var afs []grypeDB.AffectedPackageHandle
 	groups := groupFixedIns(vuln)
 	for group, fixedIns := range groups {

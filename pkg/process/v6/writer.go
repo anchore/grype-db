@@ -6,6 +6,7 @@ import (
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype/grype/db"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
@@ -63,15 +64,40 @@ func (w writer) Write(entries ...data.Entry) error {
 		}
 
 		switch row := entry.Data.(type) {
-		case grypeDB.VulnerabilityHandle:
-			if err := w.store.AddVulnerabilities(&row); err != nil {
-				return fmt.Errorf("unable to write vulnerability to store: %w", err)
+		case transformers.RelatedEntries:
+			if err := w.writeEntry(row); err != nil {
+				return fmt.Errorf("unable to write entry to store: %w", err)
 			}
+		default:
+			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
+
+		}
+	}
+
+	return nil
+}
+
+func (w writer) writeEntry(entry transformers.RelatedEntries) error {
+
+	if err := w.store.AddProvider(&entry.Provider); err != nil {
+		return fmt.Errorf("unable to write provider to store: %w", err)
+	}
+
+	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
+		return fmt.Errorf("unable to write vulnerability to store: %w", err)
+	}
+
+	for i := range entry.Related {
+		related := entry.Related[i]
+		switch row := related.(type) {
+
 		case grypeDB.AffectedPackageHandle:
+			row.VulnerabilityID = entry.VulnerabilityHandle.ID
 			if err := w.store.AddAffectedPackages(&row); err != nil {
 				return fmt.Errorf("unable to write affected-package to store: %w", err)
 			}
 		case grypeDB.NotAffectedPackageHandle:
+			row.VulnerabilityID = entry.VulnerabilityHandle.ID
 			panic("not implemented")
 			//if err := w.store.AddNotAffectedPackages(&row); err != nil {
 			//	return fmt.Errorf("unable to write affected-package to store: %w", err)
@@ -87,10 +113,12 @@ func (w writer) Write(entries ...data.Entry) error {
 			//	return fmt.Errorf("unable to write epss to store: %w", err)
 			//}
 		case grypeDB.AffectedCPEHandle:
+			row.VulnerabilityID = entry.VulnerabilityHandle.ID
 			if err := w.store.AddAffectedCPEs(&row); err != nil {
 				return fmt.Errorf("unable to write affected-cpe to store: %w", err)
 			}
 		case grypeDB.NotAffectedCPEHandle:
+			row.VulnerabilityID = entry.VulnerabilityHandle.ID
 			panic("not implemented")
 			//if err := w.store.AddNotAffectedCPEs(&row); err != nil {
 			//	return fmt.Errorf("unable to write not-affected-cpe to store: %w", err)
