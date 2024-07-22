@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/anchore/grype/grype"
 	"io"
 	"os"
 	"strings"
@@ -169,6 +170,7 @@ func setupLogger(app *Config) error {
 	}
 
 	log.Set(l)
+	grype.SetLogger(l)
 
 	return nil
 }
