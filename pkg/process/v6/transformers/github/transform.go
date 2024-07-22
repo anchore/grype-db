@@ -1,6 +1,8 @@
 package github
 
 import (
+	"strings"
+
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -8,7 +10,6 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
-	"strings"
 )
 
 func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]data.Entry, error) {
@@ -132,10 +133,37 @@ func groupFixedIns(vuln unmarshal.GitHubAdvisory) map[groupIndex][]unmarshal.Git
 
 }
 
+func getPackageType(ecosystem string) string {
+	switch ecosystem {
+	case "composer":
+		return "php-composer"
+	case "rust":
+		return "rust-crate"
+	case "dart":
+		return "dart-pub"
+	case "nuget":
+		return "dotnet"
+	case "go":
+		return "go-module"
+	case "java":
+		return "maven" // TODO: consider jankins-plugin as a separate type.  For now can determine based off of groupID
+	case "npm":
+		return "npm"
+	case "gem":
+		return "gem"
+	case "python":
+		return "python"
+	case "swift":
+		return "swift"
+	}
+
+	return ""
+}
+
 func getPackage(group groupIndex) *grypeDB.Package {
 	return &grypeDB.Package{
 		Name: group.name,
-		Type: group.ecosystem,
+		Type: getPackageType(group.ecosystem),
 	}
 }
 

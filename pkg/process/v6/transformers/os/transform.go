@@ -2,6 +2,8 @@ package os
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -9,7 +11,6 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/distro"
-	"strings"
 )
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
@@ -166,9 +167,24 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 
 }
 
+func getPackageType(osName string) string {
+	switch osName {
+	case "redhat", "amazon", "oracle", "sles", "mariner":
+		return "rpm"
+	case "ubuntu", "debian":
+		return "deb"
+	case "alpine", "chainguard", "wolfi":
+		return "apk"
+	case "windows":
+		return "msrc-kb"
+	}
+
+	return ""
+}
+
 func getPackage(group groupIndex) *grypeDB.Package {
 	return &grypeDB.Package{
-		Type: normalizeOsName(group.osName), // TODO: is this correct?
+		Type: getPackageType(group.osName), // TODO: is this correct?
 		Name: group.name,
 	}
 }
