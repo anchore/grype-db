@@ -154,7 +154,10 @@ func (w writer) writeMetadata() (*db.Metadata, error) {
 }
 
 func (w writer) Close() error {
-	w.store.Close()
+	if err := w.store.Close(); err != nil {
+		return fmt.Errorf("unable to close store: %w", err)
+	}
+
 	metadata, err := w.writeMetadata()
 	if err != nil {
 		return fmt.Errorf("unable to write DB metadata file: %w", err)

@@ -25,9 +25,7 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 			//SourceURL:        "",                                                   // TODO figure this
 		},
 		grypeDB.VulnerabilityHandle{
-			Name:   vulnerability.Advisory.GhsaID,
-			BlobID: 0,
-			Blob:   nil,
+			Name: vulnerability.Advisory.GhsaID,
 			BlobValue: &grypeDB.VulnerabilityBlob{
 				ID:            vulnerability.Advisory.GhsaID,
 				ProviderName:  state.Provider,
