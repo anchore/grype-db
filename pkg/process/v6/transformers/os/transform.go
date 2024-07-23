@@ -76,6 +76,7 @@ func getAffecteds(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPackageHandl
 				Fix: getFix(vuln, idx),
 			})
 		}
+		aph.BlobValue.Ranges = ranges
 		afs = append(afs, aph)
 	}
 	return afs
