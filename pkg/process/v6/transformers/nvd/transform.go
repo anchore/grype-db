@@ -1,6 +1,8 @@
 package nvd
 
 import (
+	"strings"
+
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -10,7 +12,6 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/syft/syft/cpe"
-	"strings"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability, state provider.State) ([]data.Entry, error) {
@@ -116,7 +117,7 @@ func getAffected(vulnerability unmarshal.NVDVulnerability) []grypeDB.AffectedCPE
 				//VulnerabilityID: 0, // TODO?
 				CPE: getCPEs(c),
 				BlobValue: &grypeDB.AffectedBlob{
-					//CVEs:          nil, // TODO?
+					CVEs:         []string{vulnerability.ID},
 					PlatformCPEs: platMatches.CPEs(),
 					Ranges:       getRanges(buildConstraints(appMatches)),
 				},
