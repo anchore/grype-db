@@ -59,7 +59,7 @@ func getAffecteds(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPackageHandl
 			Package:         getPackage(group),
 
 			BlobValue: &grypeDB.AffectedBlob{
-				CVEs:          []string{},
+				CVEs:          getAliases(vuln),
 				RpmModularity: group.module,
 
 				Ranges: nil,

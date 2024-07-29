@@ -58,7 +58,7 @@ func getAffected(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackageHandle 
 			afs = append(afs, grypeDB.AffectedPackageHandle{
 				Package: getPackage(group),
 				BlobValue: &grypeDB.AffectedBlob{
-					//CVEs:          nil, // TODO...
+					CVEs:   getAliases(vuln),
 					Ranges: getRanges(fixedInEntry, vuln, idx),
 				},
 			})
