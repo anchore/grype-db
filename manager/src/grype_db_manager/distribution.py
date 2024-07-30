@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
 DB_SUFFIXES = {".tar.gz", ".tar.zst"}
-MAX_DB_AGE = 120  # ~4 months in days
-MINIMUM_DB_COUNT = MAX_DB_AGE  # number of db entries per schema
+MAX_DB_AGE = 7  # old db listings are making the file large and slowing download times
+MINIMUM_DB_COUNT = 2  # always include at least 2 databases, no matter how old
 
 
 def listing_entries_dbs_in_s3(
