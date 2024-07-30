@@ -33,7 +33,8 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 				Description:   strings.TrimSpace(vulnerability.Advisory.Summary),
 				ModifiedDate:  internal.MustParseTime(vulnerability.Advisory.Updated),
 				PublishedDate: internal.MustParseTime(vulnerability.Advisory.Published),
-				Status:        grypeDB.VulnerabilityActive, // TODO
+				WithdrawnDate: internal.MustParseTime(vulnerability.Advisory.Withdrawn),
+				Status:        getVulnStatus(vulnerability),
 				References:    getReferences(vulnerability),
 				Aliases:       getAliases(vulnerability),
 				Severities:    getSeverities(vulnerability),
@@ -46,6 +47,14 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 	}
 
 	return transformers.NewEntries(ins...), nil
+}
+
+func getVulnStatus(vuln unmarshal.GitHubAdvisory) grypeDB.VulnerabilityStatus {
+	if vuln.Advisory.Withdrawn == "" {
+		return grypeDB.VulnerabilityActive
+	}
+
+	return grypeDB.VulnerabilityRejected
 }
 
 func getAffected(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackageHandle {
@@ -199,7 +208,8 @@ func getAliases(vulnerability unmarshal.GitHubAdvisory) []string {
 }
 
 func getReferences(vulnerability unmarshal.GitHubAdvisory) []grypeDB.Reference {
-	// TODO: are there no more links available upstream? this seems light...
+	// TODO: The additional reference links are not currently captured in the vunnel result, but should be enhanced to
+	// https://github.com/anchore/vunnel/issues/646 to capture this
 	refs := []grypeDB.Reference{
 		{
 			//Type: "ADVISORY", // TODO: enum
