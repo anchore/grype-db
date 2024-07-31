@@ -139,6 +139,7 @@ def validate_listing(cfg: config.Application, listing_file: str) -> None:
 
 @group.command(name="upload", help="upload a listing file to S3")
 @click.option("--ttl", "-t", "ttl_seconds", default=60 * 5, help="time to live in seconds for the listing file")
+@click.argument("listing-file")
 @click.pass_obj
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
 def upload_listing(cfg: config.Application, ttl_seconds: int) -> None:
@@ -196,14 +197,14 @@ def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bo
     click.echo(f"{Format.BOLD}Creating listing files from S3 state{Format.RESET}")
     ctx.invoke(create_listing)
 
-    click.echo(f"{Format.BOLD}Validating listing file {cfg.distribution.listing_file_name!r}{Format.RESET}")
-    ctx.invoke(validate_listing, listing_file=cfg.distribution.listing_file_name)
-
-    # TODO validate latest.json
-
     for listing_file_name in [cfg.distribution.listing_file_name, cfg.distribution.latest_file_name]:
+        click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")
+        ctx.invoke(validate_listing, listing_file=listing_file_name)
+
         if not dry_run:
             click.echo(f"{Format.BOLD}Uploading listing file {listing_file_name!r}{Format.RESET}")
             ctx.invoke(upload_listing, listing_file=listing_file_name)
         else:
-            click.echo(f"{Format.ITALIC}Dry run! Skipping the upload of the listing file {listing_file_name!r} to S3{Format.RESET}")
+            click.echo(
+                f"{Format.ITALIC}Dry run! Skipping the upload of the listing file {listing_file_name!r} to S3{Format.RESET}"
+            )

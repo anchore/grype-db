@@ -209,11 +209,12 @@ def _http_server(directory: str) -> Iterator[str]:
     url = f"http://{server_address[0]}:{server_address[1]}"
     listing_url = f"{url}/{LISTING_FILENAME}"
 
+    httpd = HTTPServer(
+        server_address,
+        functools.partial(SimpleHTTPRequestHandler, directory=directory),
+    )
+
     def serve() -> None:
-        httpd = HTTPServer(
-            server_address,
-            functools.partial(SimpleHTTPRequestHandler, directory=directory),
-        )
         logging.info(f"starting test server at {url}")
         httpd.serve_forever()
 
@@ -223,6 +224,7 @@ def _http_server(directory: str) -> Iterator[str]:
     try:
         yield listing_url
     finally:
+        httpd.server_close()
         pass
 
 
