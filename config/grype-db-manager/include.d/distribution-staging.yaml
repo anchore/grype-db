@@ -1,6 +1,7 @@
 # distribution:
 
 listing-file-name: listing.json
+latest-file-name: latest.json
 s3-path: grype/staging-databases
 s3-bucket: toolbox-data.anchore.io
 aws-region: us-west-2

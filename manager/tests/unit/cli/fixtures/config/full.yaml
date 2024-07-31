@@ -16,6 +16,7 @@ grype-db:
 
 distribution:
   listing-file-name: listing.json
+  latest-file-name: latest.json
   s3-path: grype/databases
   s3-bucket: testbucket
   aws-region: us-west-2
@@ -24,6 +25,7 @@ distribution:
   listing_replicas:
     - awsRegion: us-west-2
       listingFileName: listing.json
+      latestFileName: latest.json
       s3Bucket: testbucket
       s3Path: grype/databases
       

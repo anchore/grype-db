@@ -19,6 +19,7 @@
 /snapshot
 metadata.json
 listing.json
+latest.json
 .vscode/
 *.db
 *.db-journal

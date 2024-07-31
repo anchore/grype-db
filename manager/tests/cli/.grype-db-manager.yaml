@@ -16,6 +16,7 @@ grype-db:
 
 distribution:
   listing-file-name: listing.json
+  latest-file-name: latest.json
   s3-path: grype/databases
   # note: we are using localstack for testing, so the bucket name is arbitrary
   s3-bucket: testbucket

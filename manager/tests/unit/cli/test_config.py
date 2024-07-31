@@ -49,6 +49,7 @@ data:
 distribution:
   awsRegion: null
   downloadUrlPrefix: null
+  latestFileName: latest.json
   listingFileName: listing.json
   listingReplicas: []
   s3Bucket: null
@@ -97,9 +98,11 @@ data:
 distribution:
   awsRegion: us-west-2
   downloadUrlPrefix: http://localhost:4566/testbucket
+  latestFileName: latest.json
   listingFileName: listing.json
   listingReplicas:
     - awsRegion: us-west-2
+      latestFileName: latest.json
       listingFileName: listing.json
       s3Bucket: testbucket
       s3Path: grype/databases

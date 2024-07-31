@@ -29,24 +29,22 @@ from grype_db_manager.cli import config
 
 @pytest.fixture
 def listing_s3_mock(redact_aws_credentials):
-    def run(dir_with_config: str, skip_db_in_s3: list[str] = None, extra_dbs: list[str] = None):
+    def run(listing_file, dir_with_config: str, skip_db_in_s3: list[str] = None, extra_dbs: list[str] = None):
         if not skip_db_in_s3:
             skip_db_in_s3 = []
 
         if not extra_dbs:
             extra_dbs = []
 
-        listing_file_name = "listing.json"
-
         with utils.set_directory(dir_with_config):
             cfg = config.load()
-            if os.path.exists(listing_file_name):
-                os.remove(listing_file_name)
+            if os.path.exists(listing_file):
+                os.remove(listing_file)
 
         bucket = cfg.distribution.s3_bucket
         path = cfg.distribution.s3_path
 
-        listing_path = os.path.join(path, listing_file_name)
+        listing_path = os.path.join(path, listing_file)
 
         # add the input listing file to the bucket
         input_listing_path = os.path.join(dir_with_config, "input-listing.json")
@@ -97,9 +95,10 @@ def create_tar_gz(built: str, version: int):
 
 
 @pytest.mark.parametrize(
-    "case_dir, expected_exit_code, extra_dbs, contains",
+    "listing_file, case_dir, expected_exit_code, extra_dbs, contains",
     [
         pytest.param(
+            "listing.json",
             "create-all-exists",
             0,
             [],
@@ -107,6 +106,15 @@ def create_tar_gz(built: str, version: int):
             id="create-all-exists",
         ),
         pytest.param(
+            "latest.json",
+            "create-all-exists",
+            0,
+            [],
+            ["discovered 0 new database candidates to add to the listing", "wrote 5 total database entries to the listing"],
+            id="create-all-exists-latest",
+        ),
+        pytest.param(
+            "listing.json",
             "create-new-db",
             0,
             [
@@ -127,24 +135,45 @@ def create_tar_gz(built: str, version: int):
             ],
             id="create-new-db",
         ),
+        pytest.param(
+            "latest.json",
+            "create-new-db",
+            0,
+            [
+                "grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
+                "grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
+                "grype/databases/vulnerability-db_v2_2023-08-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
+                "grype/databases/vulnerability-db_v3_2023-08-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
+                "grype/databases/vulnerability-db_v4_2023-08-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
+                "grype/databases/vulnerability-db_v5_2023-08-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
+            ],
+            [
+                "discovered 6 new database candidates to add to the listing",
+                "new db: grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
+                "downloading file from s3 bucket=testbucket key=grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
+                "adding new listing entry: Entry(built='2023-08-11T02:13:23Z', version=5, url='http://localhost:4566/testbucket/grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz', checksum='sha256:1b66fce9af47877f18414cde4db8437e03bf2951f079916dc1882626b69976cf')",
+                "wrote 5 total database entries to the listing",
+            ],
+            id="create-new-db-latest",
+        ),
     ],
 )
 @mock_s3
 @patch("grype_db_manager.distribution.age_from_basename")
 def test_create_listing(
-    mock_file_age, test_dir_path, listing_s3_mock, case_dir, expected_exit_code, extra_dbs: list[str], contains
+    mock_file_age, test_dir_path, listing_s3_mock, listing_file, case_dir, expected_exit_code, extra_dbs: list[str], contains
 ):
     # contains an application config file
     config_dir_path = test_dir_path(f"fixtures/listing/{case_dir}")
-    listing_s3_mock(config_dir_path, extra_dbs=extra_dbs)
+    listing_s3_mock(listing_file, config_dir_path, extra_dbs=extra_dbs)
     mock_file_age.return_value = 42  # needs to be less than distribution.MAX_DB_AGE
 
     with utils.set_directory(config_dir_path):
-        with open("expected-listing.json") as f:
+        with open(f"expected-{listing_file}") as f:
             expected_object = db.Listing.from_json(f.read())
 
         runner = CliRunner()
-        result = runner.invoke(cli.cli, "listing create".split())
+        result = runner.invoke(cli.cli, ["listing", "create", listing_file])
 
         # for debugging
         print(result.output)
@@ -152,7 +181,7 @@ def test_create_listing(
         assert result.exit_code == expected_exit_code
 
         if expected_exit_code == 0:
-            with open("listing.json") as f:
+            with open(listing_file) as f:
                 actual_object = db.Listing.from_json(f.read())
 
     for item in contains:

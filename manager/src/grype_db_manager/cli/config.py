@@ -84,6 +84,7 @@ class Validate:
 @dataclass()
 class ListingReplica:
     listing_file_name: str = "listing.json"
+    latest_file_name: str = "latest.json"
     s3_path: str | None = None
     s3_bucket: str | None = None
     aws_region: str | None = None
@@ -92,6 +93,7 @@ class ListingReplica:
 @dataclass()
 class Distribution:
     listing_file_name: str = "listing.json"
+    latest_file_name: str = "latest.json"
     s3_path: str | None = None
     s3_bucket: str | None = None
     s3_endpoint_url: str | None = None
