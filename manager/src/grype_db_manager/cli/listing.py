@@ -142,45 +142,44 @@ def validate_listing(cfg: config.Application, listing_file: str) -> None:
 @click.argument("listing-file")
 @click.pass_obj
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
-def upload_listing(cfg: config.Application, ttl_seconds: int) -> None:
+def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int) -> None:
     if cfg.assert_aws_credentials:
         s3utils.check_credentials()
 
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
 
-    for listing_file in [cfg.distribution.listing_file_name, cfg.distribution.latest_file_name]:
-        with open(listing_file) as f:
-            the_listing = db.Listing.from_json(f.read())
+    with open(listing_file) as f:
+        the_listing = db.Listing.from_json(f.read())
 
-        # upload the listing file
+    # upload the listing file
+    s3utils.upload(
+        bucket=s3_bucket,
+        key=the_listing.url(s3_path, listing_file),
+        contents=the_listing.to_json(),
+        CacheControl=f"public,max-age={ttl_seconds}",
+    )
+
+    click.echo(f"{listing_file} uploaded to s3://{s3_bucket}/{s3_path}")
+
+    # upload to replicas
+    for replica in cfg.distribution.listing_replicas:
+        replica_s3_bucket = replica.s3_bucket or s3_bucket
+        replica_s3_path = replica.s3_path or s3_path
+        replica_filename = replica.listing_file_name or listing_file
+
+        if not replica_s3_bucket or not replica_s3_path:
+            logging.warning(f"skipping replica upload for {replica} because s3_bucket and s3_path are required")
+            continue
+
         s3utils.upload(
-            bucket=s3_bucket,
-            key=the_listing.url(s3_path, listing_file),
+            bucket=replica_s3_bucket,
+            key=the_listing.url(replica_s3_path, replica_filename),
             contents=the_listing.to_json(),
             CacheControl=f"public,max-age={ttl_seconds}",
         )
 
-        click.echo(f"{listing_file} uploaded to s3://{s3_bucket}/{s3_path}")
-
-        # upload to replicas
-        for replica in cfg.distribution.listing_replicas:
-            replica_s3_bucket = replica.s3_bucket or s3_bucket
-            replica_s3_path = replica.s3_path or s3_path
-            replica_filename = replica.listing_file_name or listing_file
-
-            if not replica_s3_bucket or not replica_s3_path:
-                logging.warning(f"skipping replica upload for {replica} because s3_bucket and s3_path are required")
-                continue
-
-            s3utils.upload(
-                bucket=replica_s3_bucket,
-                key=the_listing.url(replica_s3_path, replica_filename),
-                contents=the_listing.to_json(),
-                CacheControl=f"public,max-age={ttl_seconds}",
-            )
-
-            click.echo(f"{replica_filename} uploaded to s3://{replica_s3_bucket}/{replica_s3_path}")
+        click.echo(f"{replica_filename} uploaded to s3://{replica_s3_bucket}/{replica_s3_path}")
 
 
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
