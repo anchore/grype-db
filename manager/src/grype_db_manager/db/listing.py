@@ -224,7 +224,7 @@ def _http_server(directory: str) -> Iterator[str]:
     try:
         yield listing_url
     finally:
-        httpd.server_close()
+        httpd.shutdown()
         pass
 
 

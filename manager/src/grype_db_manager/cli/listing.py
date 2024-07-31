@@ -205,5 +205,5 @@ def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bo
             ctx.invoke(upload_listing, listing_file=listing_file_name)
         else:
             click.echo(
-                f"{Format.ITALIC}Dry run! Skipping the upload of the listing file {listing_file_name!r} to S3{Format.RESET}"
+                f"{Format.ITALIC}Dry run! Skipping the upload of the listing file {listing_file_name!r} to S3{Format.RESET}",
             )
