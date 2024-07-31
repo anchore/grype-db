@@ -34,9 +34,9 @@
     ],
     "5": [
       {
-        "built": "2023-08-11T02:13:23Z",
-        "checksum": "sha256:1b66fce9af47877f18414cde4db8437e03bf2951f079916dc1882626b69976cf",
-        "url": "http://localhost:4566/testbucket/grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
+        "built": "2023-08-10T01:32:21Z",
+        "checksum": "sha256:78045f3ed82435569a3681bc1da3c1e1a5cf80ac2536580dee35c8aa8e7f2cf6",
+        "url": "https://toolbox-data.anchore.io/grype/databases/vulnerability-db_v5_2023-08-10T01:32:21Z_7bf3acd8d0424bb6e3d9.tar.gz",
         "version": 5
       }
     ]

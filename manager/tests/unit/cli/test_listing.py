@@ -36,40 +36,39 @@ def listing_s3_mock(redact_aws_credentials):
         if not extra_dbs:
             extra_dbs = []
 
-        listing_file_name = "listing.json"
+        for listing_file_name in ["listing.json", "latest.json"]:
+            with utils.set_directory(dir_with_config):
+                cfg = config.load()
+                if os.path.exists(listing_file_name):
+                    os.remove(listing_file_name)
 
-        with utils.set_directory(dir_with_config):
-            cfg = config.load()
-            if os.path.exists(listing_file_name):
-                os.remove(listing_file_name)
+            bucket = cfg.distribution.s3_bucket
+            path = cfg.distribution.s3_path
 
-        bucket = cfg.distribution.s3_bucket
-        path = cfg.distribution.s3_path
+            listing_path = os.path.join(path, listing_file_name)
 
-        listing_path = os.path.join(path, listing_file_name)
+            # add the input listing file to the bucket
+            input_listing_path = os.path.join(dir_with_config, "input-listing.json")
 
-        # add the input listing file to the bucket
-        input_listing_path = os.path.join(dir_with_config, "input-listing.json")
+            with open(input_listing_path) as f:
+                contents = f.read()
 
-        with open(input_listing_path) as f:
-            contents = f.read()
+            s3 = boto3.client("s3", region_name="us-east-1")
 
-        s3 = boto3.client("s3", region_name="us-east-1")
+            s3.create_bucket(Bucket=bucket)
+            s3.put_object(Bucket=bucket, Key=listing_path, Body=contents)
 
-        s3.create_bucket(Bucket=bucket)
-        s3.put_object(Bucket=bucket, Key=listing_path, Body=contents)
+            # parse the listing file
+            lst = db.Listing.from_json(contents)
 
-        # parse the listing file
-        lst = db.Listing.from_json(contents)
-
-        # create a DB entry for each artifact
-        url_prefix = "https://toolbox-data.anchore.io/"
-        for entries in lst.available.values():
-            for entry in entries:
-                db_bucket_path = entry.url.removeprefix(url_prefix)
-                if db_bucket_path in skip_db_in_s3:
-                    continue
-                s3.put_object(Bucket=bucket, Key=db_bucket_path, Body="db-archive-contents...")
+            # create a DB entry for each artifact
+            url_prefix = "https://toolbox-data.anchore.io/"
+            for entries in lst.available.values():
+                for entry in entries:
+                    db_bucket_path = entry.url.removeprefix(url_prefix)
+                    if db_bucket_path in skip_db_in_s3:
+                        continue
+                    s3.put_object(Bucket=bucket, Key=db_bucket_path, Body="db-archive-contents...")
 
         # add any extra DBs
         for db_path in extra_dbs:
@@ -97,26 +96,20 @@ def create_tar_gz(built: str, version: int):
 
 
 @pytest.mark.parametrize(
-    "listing_file, case_dir, expected_exit_code, extra_dbs, contains",
+    "case_dir, expected_exit_code, extra_dbs, contains",
     [
         pytest.param(
-            "listing.json",
             "create-all-exists",
             0,
             [],
-            ["discovered 0 new database candidates to add to the listing", "wrote 15 total database entries to the listing"],
+            [
+                "discovered 0 new database candidates to add to the listing",
+                "wrote 15 total database entries to listing.json",
+                "wrote 5 total database entries to latest.json",
+            ],
             id="create-all-exists",
         ),
         pytest.param(
-            "latest.json",
-            "create-all-exists",
-            0,
-            [],
-            ["discovered 0 new database candidates to add to the listing", "wrote 5 total database entries to the listing"],
-            id="create-all-exists-latest",
-        ),
-        pytest.param(
-            "listing.json",
             "create-new-db",
             0,
             [
@@ -133,37 +126,17 @@ def create_tar_gz(built: str, version: int):
                 # note that the download URL isn't right relative to production values (where the existing listing was pulled from)
                 # but instead it's correct relative to the configuration, which specifies a localhost route.
                 "adding new listing entry: Entry(built='2023-08-08T01:33:25Z', version=1, url='http://localhost:4566/testbucket/grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz', checksum='sha256:9ece0b838be60974aee62087cf366b84e5b7cb74e7a665d86de7735aca927d36')",
-                "wrote 15 total database entries to the listing",
+                "wrote 15 total database entries to listing.json",
+                "wrote 5 total database entries to latest.json",
             ],
             id="create-new-db",
-        ),
-        pytest.param(
-            "latest.json",
-            "create-new-db",
-            0,
-            [
-                "grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
-                "grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
-                "grype/databases/vulnerability-db_v2_2023-08-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
-                "grype/databases/vulnerability-db_v3_2023-08-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
-                "grype/databases/vulnerability-db_v4_2023-08-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
-                "grype/databases/vulnerability-db_v5_2023-08-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
-            ],
-            [
-                "discovered 6 new database candidates to add to the listing",
-                "new db: grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
-                "downloading file from s3 bucket=testbucket key=grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz",
-                "adding new listing entry: Entry(built='2023-08-11T02:13:23Z', version=5, url='http://localhost:4566/testbucket/grype/databases/vulnerability-db_v5_2023-08-11T02:13:23Z_e95fbb61d7b141d7256b.tar.gz', checksum='sha256:1b66fce9af47877f18414cde4db8437e03bf2951f079916dc1882626b69976cf')",
-                "wrote 5 total database entries to the listing",
-            ],
-            id="create-new-db-latest",
         ),
     ],
 )
 @mock_s3
 @patch("grype_db_manager.distribution.age_from_basename")
 def test_create_listing(
-    mock_file_age, test_dir_path, listing_s3_mock, listing_file, case_dir, expected_exit_code, extra_dbs: list[str], contains
+    mock_file_age, test_dir_path, listing_s3_mock, case_dir, expected_exit_code, extra_dbs: list[str], contains
 ):
     # contains an application config file
     config_dir_path = test_dir_path(f"fixtures/listing/{case_dir}")
@@ -171,23 +144,22 @@ def test_create_listing(
     mock_file_age.return_value = 42  # needs to be less than distribution.MAX_DB_AGE
 
     with utils.set_directory(config_dir_path):
-        with open(f"expected-{listing_file}") as f:
-            expected_object = db.Listing.from_json(f.read())
-
         runner = CliRunner()
-        result = runner.invoke(cli.cli, ["listing", "create", listing_file])
+        result = runner.invoke(cli.cli, "listing create".split())
 
         # for debugging
         print(result.output)
 
         assert result.exit_code == expected_exit_code
 
-        if expected_exit_code == 0:
+        for item in contains:
+            assert item in result.output
+
+        for listing_file in ["listing.json", "latest.json"]:
+            with open(f"expected-{listing_file}") as f:
+                expected_object = db.Listing.from_json(f.read())
+
             with open(listing_file) as f:
                 actual_object = db.Listing.from_json(f.read())
 
-    for item in contains:
-        assert item in result.output
-
-    if expected_exit_code == 0:
-        assert actual_object == expected_object
+            assert actual_object == expected_object
