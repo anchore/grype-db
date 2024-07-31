@@ -29,7 +29,7 @@ def create_listing(cfg: config.Application, listing_file: str, ignore_missing_li
     the_listing = db.listing.fetch(
         bucket=s3_bucket,
         path=s3_path,
-        filename=listing_file,
+        filename=cfg.distribution.listing_file_name,
         create_if_missing=ignore_missing_listing,
     )
 
@@ -189,7 +189,7 @@ def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bo
 
     for listing_file_name in [cfg.distribution.listing_file_name, cfg.distribution.latest_file_name]:
         # create the historical listing file
-        click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")
+        click.echo(f"{Format.BOLD}Creating {listing_file_name!r} file from S3 state{Format.RESET}")
         ctx.invoke(create_listing, listing_file=listing_file_name)
 
         click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")

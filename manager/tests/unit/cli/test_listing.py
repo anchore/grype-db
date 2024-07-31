@@ -29,22 +29,24 @@ from grype_db_manager.cli import config
 
 @pytest.fixture
 def listing_s3_mock(redact_aws_credentials):
-    def run(listing_file, dir_with_config: str, skip_db_in_s3: list[str] = None, extra_dbs: list[str] = None):
+    def run(dir_with_config: str, skip_db_in_s3: list[str] = None, extra_dbs: list[str] = None):
         if not skip_db_in_s3:
             skip_db_in_s3 = []
 
         if not extra_dbs:
             extra_dbs = []
 
+        listing_file_name = "listing.json"
+
         with utils.set_directory(dir_with_config):
             cfg = config.load()
-            if os.path.exists(listing_file):
-                os.remove(listing_file)
+            if os.path.exists(listing_file_name):
+                os.remove(listing_file_name)
 
         bucket = cfg.distribution.s3_bucket
         path = cfg.distribution.s3_path
 
-        listing_path = os.path.join(path, listing_file)
+        listing_path = os.path.join(path, listing_file_name)
 
         # add the input listing file to the bucket
         input_listing_path = os.path.join(dir_with_config, "input-listing.json")
@@ -165,7 +167,7 @@ def test_create_listing(
 ):
     # contains an application config file
     config_dir_path = test_dir_path(f"fixtures/listing/{case_dir}")
-    listing_s3_mock(listing_file, config_dir_path, extra_dbs=extra_dbs)
+    listing_s3_mock(config_dir_path, extra_dbs=extra_dbs)
     mock_file_age.return_value = 42  # needs to be less than distribution.MAX_DB_AGE
 
     with utils.set_directory(config_dir_path):
