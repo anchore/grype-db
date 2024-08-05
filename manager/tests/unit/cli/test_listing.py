@@ -137,7 +137,7 @@ def test_create_listing(
     # contains an application config file
     config_dir_path = test_dir_path(f"fixtures/listing/{case_dir}")
     listing_s3_mock(config_dir_path, extra_dbs=extra_dbs)
-    mock_file_age.return_value = 42  # needs to be less than distribution.MAX_DB_AGE
+    mock_file_age.return_value = 2  # needs to be less than distribution.MAX_DB_AGE
 
     with utils.set_directory(config_dir_path):
         with open("expected-listing.json") as f:
