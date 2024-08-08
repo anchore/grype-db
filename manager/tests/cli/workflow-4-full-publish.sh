@@ -31,7 +31,7 @@ make clean-manager
 make cli-test-data/vunnel/oracle
 
 pushd s3-mock
-docker-compose up -d
+docker compose up -d
 python setup-workflow-4.py
 popd
 
@@ -78,7 +78,7 @@ assert_contains $(last_stdout_file) "ELSA-2021-9591"
 ### End of testing ########################
 
 pushd s3-mock
-docker-compose down -t 1 -v
+docker compose down -t 1 -v
 popd
 
 end_testing
