@@ -23,7 +23,7 @@ rm -rf $BIN_DIR
 curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $BIN_DIR $GRYPE_VERSION
 
 pushd s3-mock
-docker-compose up -d
+docker compose up -d
 python setup-workflow-3.py
 popd
 
@@ -58,7 +58,7 @@ assert_contains $(last_stdout_file) "CVE-2016-2148"
 ### End of testing ########################
 
 pushd s3-mock
-docker-compose down -t 1 -v
+docker compose down -t 1 -v
 popd
 
 end_testing
