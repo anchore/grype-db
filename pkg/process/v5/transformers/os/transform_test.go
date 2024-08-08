@@ -627,6 +627,84 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 			},
 		},
 		{
+			name:       "mariner linux 2.0",
+			numEntries: 1,
+			fixture:    "test-fixtures/mariner-20.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2021-37621",
+					PackageName: "exiv2",
+					Namespace:   "mariner:distro:mariner:2.0",
+					PackageQualifiers: []qualifier.Qualifier{
+						rpmmodularity.Qualifier{
+							Kind: "rpm-modularity",
+						},
+					},
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2021-37621",
+							Namespace: "nvd:cpe",
+						},
+					},
+					VersionConstraint: "< 0:0.27.5-1.cm2",
+					VersionFormat:     "rpm",
+					Fix: grypeDB.Fix{
+						Versions: []string{"0:0.27.5-1.cm2"},
+						State:    grypeDB.FixedState,
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2021-37621",
+				Namespace:    "mariner:distro:mariner:2.0",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2021-37621",
+				RecordSource: "vulnerabilities:mariner:2.0",
+				Severity:     "Medium",
+				URLs:         []string{"https://nvd.nist.gov/vuln/detail/CVE-2021-37621"},
+				Description:  "CVE-2021-37621 affecting package exiv2 for versions less than 0.27.5-1. An upgraded version of the package is available that resolves this issue.",
+				Cvss:         nil,
+			},
+		},
+		{
+			name:       "azure linux 3",
+			numEntries: 1,
+			fixture:    "test-fixtures/azure-linux-3.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-29403",
+					PackageName: "golang",
+					Namespace:   "mariner:distro:azurelinux:3.0",
+					PackageQualifiers: []qualifier.Qualifier{
+						rpmmodularity.Qualifier{
+							Kind: "rpm-modularity",
+						},
+					},
+					RelatedVulnerabilities: []grypeDB.VulnerabilityReference{
+						{
+							ID:        "CVE-2023-29403",
+							Namespace: "nvd:cpe",
+						},
+					},
+					VersionConstraint: "< 0:1.20.7-1.azl3",
+					VersionFormat:     "rpm",
+					Fix: grypeDB.Fix{
+						Versions: []string{"0:1.20.7-1.azl3"},
+						State:    grypeDB.FixedState,
+					},
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-29403",
+				Namespace:    "mariner:distro:azurelinux:3.0",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-29403",
+				RecordSource: "vulnerabilities:mariner:3.0",
+				Severity:     "High",
+				URLs:         []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-29403"},
+				Description:  "CVE-2023-29403 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
+			},
+		},
+		{
 			name:       "mariner entry with version range",
 			numEntries: 1,
 			fixture:    "test-fixtures/mariner-range.json",
