@@ -1,6 +1,10 @@
 # grype-db
-Application to create a grype vulnerability database from upstream vulnerability data sources.
 
+**Application to create a [Grype](https://github.com/anchore/grype) vulnerability database from upstream vulnerability data sources.**
+
+[![GitHub release](https://img.shields.io/github/release/anchore/grype-db.svg)](https://github.com/anchore/grype-db/releases/latest)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/anchore/grype-db/blob/main/LICENSE)
+[![Join our Discourse](https://img.shields.io/badge/Discourse-Join-blue?logo=discourse)](https://anchore.com/discourse)
 
 ## Installation
 
