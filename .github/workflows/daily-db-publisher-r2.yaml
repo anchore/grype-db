@@ -145,3 +145,10 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
         if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+
+  sync-listing-file-to-s3:
+    name: "Sync listing file to S3"
+    needs:
+      - publish-listing-file
+    uses: ./.github/workflows/copy-listing-from-r2.yaml
+    secrets: inherit
