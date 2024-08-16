@@ -2,19 +2,9 @@ name: 'Sync listing from R2 to S3'
 on:
   # allow for kicking off DB builds manually
   workflow_dispatch:
-    # TODO: delete me
-    inputs:
-      enabled:
-        description: "sync the Grype DB listing file from R2 to S3"
-        type: boolean
-        required: true
-        default: false
 
   # allow invoking from another workflow
   workflow_call:
-
-  # TODO: remove me
-  push:
 
 env:
   CGO_ENABLED: "0"
@@ -24,9 +14,6 @@ env:
 jobs:
   sync-listing-file:
     name: "Sync listing file"
-    
-    # TODO: delete me
-    if: ${{ github.event.inputs.enabled == 'true' }}
 
     runs-on: ubuntu-22.04
     steps:
