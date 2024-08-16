@@ -1,4 +1,4 @@
-name: 'Daily DB Publisher'
+name: 'Daily DB Publisher R2'
 on:
   # allow for kicking off DB builds manually
   workflow_dispatch:
