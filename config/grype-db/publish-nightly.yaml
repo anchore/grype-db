@@ -24,3 +24,4 @@ pull:
 
 package:
   publish-base-url: https://toolbox-data.anchore.io/grype/databases
+  override-archive-extension: tar.xz
