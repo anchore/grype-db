@@ -43,17 +43,13 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 	// not when the DB was created. The trailer represents the time the DB was packaged.
 	trailer := fmt.Sprintf("%d", secondsSinceEpoch())
 
-	// TODO (alex): supporting tar.zst
-	// var extension = "tar.zst"
-	var extension = "tar.gz"
+	var extension = "tar.zst"
 
 	if overrideArchiveExtension != "" {
 		extension = strings.TrimLeft(overrideArchiveExtension, ".")
+	} else if metadata.Version < 5 {
+		extension = "tar.gz"
 	}
-	// TODO (alex): supporting tar.zst
-	// else if metadata.Version < 5 {
-	// 	extension = "tar.gz"
-	// }
 
 	var found bool
 	for _, valid := range []string{"tar.zst", "tar.gz"} {
