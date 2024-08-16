@@ -7,3 +7,5 @@ grype-db: !include config/grype-db-manager/include.d/grype-db-local-build-r2.yam
 distribution: !include config/grype-db-manager/include.d/distribution-production-r2.yaml
 
 validate: !include config/grype-db-manager/include.d/validate.yaml
+
+assert-aws-credentials: false
