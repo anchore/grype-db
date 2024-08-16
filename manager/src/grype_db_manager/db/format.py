@@ -5,7 +5,6 @@ import re
 from typing import Any
 
 from colr import color as Color
-from supports_color import supportsColor
 from tabulate import tabulate
 from yardstick import artifact, comparison
 
@@ -26,7 +25,7 @@ class Format(enum.Enum):
     RESET = "\033[0m"
 
     def __init__(self, value: str):
-        if not supportsColor.stderr or os.environ.get("NO_COLOR", None):
+        if os.environ.get("NO_COLOR", None):
             self._value = ""
         else:
             self._value = value
