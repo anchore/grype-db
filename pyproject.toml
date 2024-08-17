@@ -36,7 +36,7 @@ zstandard = ">=0.21.0, <1"
 colorlog = "^6.7.0"
 mergedeep = "^1.3.4"
 pyyaml = ">=5.0.1, <7"
-yardstick = {git = "https://github.com/anchore/yardstick", rev = "8d86e14af1ecb6ffb72ced28a1f7cdea629319cc"}
+yardstick = {git = "https://github.com/anchore/yardstick", rev = "54fa85dc38e3446bc9c6660ca3117a8c87391915"}
 #yardstick = {path = "../yardstick", develop = true}
 colr = "^0.9.1"
 pyyaml-include = "^1.3.1"
