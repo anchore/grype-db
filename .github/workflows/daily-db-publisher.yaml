@@ -147,7 +147,6 @@ jobs:
 
 
   notify:
-    if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
     name: "Publish listing file"
     needs: generate-and-publish-dbs
     runs-on: ubuntu-22.04
@@ -155,6 +154,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
 
       - uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 #v3.16.2
+        if: failure() && env.SLACK_NOTIFICATIONS == 'true'
         with:
           status: ${{ job.status }}
           fields: workflow,eventName,job
