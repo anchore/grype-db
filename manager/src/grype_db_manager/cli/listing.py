@@ -173,10 +173,11 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
 @click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
+@click.option("--skip-validate", default=False, help="skip validation of the listing file", is_flag=True)
 @click.pass_obj
 @click.pass_context
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
-def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool) -> None:
+def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool, skip_validate: bool) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
     elif cfg.assert_aws_credentials:
@@ -185,8 +186,11 @@ def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bo
     click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")
     listing_file_name = ctx.invoke(create_listing)
 
-    click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")
-    ctx.invoke(validate_listing, listing_file=listing_file_name)
+    if not skip_validate:
+        click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")
+        ctx.invoke(validate_listing, listing_file=listing_file_name)
+    else:
+        click.echo(f"{Format.ITALIC}Skipping the validation of the listing file{Format.RESET}")
 
     if not dry_run:
         click.echo(f"{Format.BOLD}Uploading listing file {listing_file_name!r}{Format.RESET}")

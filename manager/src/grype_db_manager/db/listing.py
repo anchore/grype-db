@@ -273,7 +273,7 @@ def smoke_test(
         installation_path = os.path.join(tempdir, "grype-install")
 
         # way too verbose!
-        # logging.info(listing_contents)
+        logging.info(listing_contents)
         with open(os.path.join(tempdir, LISTING_FILENAME), "w") as f:
             f.write(listing_contents)
 
