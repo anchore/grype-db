@@ -129,11 +129,11 @@ func (w writer) ProviderMetadata() *ProviderMetadata {
 }
 
 func (w writer) Close() error {
-	w.store.Close()
 	metadata, err := w.metadata()
 	if err != nil {
 		return err
 	}
+	w.store.Close()
 
 	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
 	if err = metadata.Write(metadataPath); err != nil {
