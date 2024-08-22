@@ -65,6 +65,8 @@ class Listing:
         return asdict(self)
 
     def prune(self, max_age_days: int, minimum_elements: int, now: datetime.datetime | None = None) -> None:
+        self.sort()
+
         for schema_version, entries in self.available.items():
             kept = []
             pruned = []
@@ -81,19 +83,8 @@ class Listing:
                 else:
                     kept.append(entry)
 
-            # latest elements are in the back
-            pruned.sort(
-                key=lambda x: iso8601.parse_date(x.built),
-            )
-
             while len(kept) < minimum_elements and len(pruned) > 0:
-                kept.append(pruned.pop())
-
-            # latest elements are in the front
-            kept.sort(
-                key=lambda x: iso8601.parse_date(x.built),
-                reverse=True,
-            )
+                kept.append(pruned.pop(0))
 
             if not pruned:
                 logging.debug(f"no entries to prune from schema version {schema_version}")
@@ -159,6 +150,10 @@ class Listing:
 
     def latest(self, schema_version: int) -> Entry:
         return self.available[schema_version][0]
+
+    def sort(self) -> None:
+        for _, v in self.available.items():
+            v.sort(key=lambda x: x.url, reverse=True)
 
 
 def has_suffix(el: str, suffixes: set[str] | None) -> bool:
