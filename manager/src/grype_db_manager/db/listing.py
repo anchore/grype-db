@@ -104,7 +104,7 @@ class Listing:
 
         # keep listing entries sorted by date (rfc3339 formatted entries, which iso8601 is a superset of)
         self.available[entry.version].sort(
-            key=lambda x: iso8601.parse_date(x.built),
+            key=lambda x: x.url,
             reverse=True,
         )
 
