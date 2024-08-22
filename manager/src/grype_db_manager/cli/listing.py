@@ -55,13 +55,13 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
 
     # add DBs that were discovered in S3 but not already in the listing file
     logging.info(f"discovered {len(new_basenames)} new database candidates to add to the listing")
-    for entry in distribution.listing_entries_dbs_in_s3(
+    for entry in sorted(distribution.listing_entries_dbs_in_s3(
         basenames=new_basenames,
         paths_by_basename=existing_paths_by_basename,
         s3_bucket=s3_bucket,
         s3_path=s3_path,
         download_url_prefix=download_url_prefix,
-    ):
+    ), key=lambda item: item.url, reverse=True):
         the_listing.add(entry)
 
     # prune the listing to the top X many, by schema, sorted by build date
