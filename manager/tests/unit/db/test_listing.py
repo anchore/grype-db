@@ -592,3 +592,58 @@ def test_to_and_from_json():
     got_from = db.Listing.from_json(got_to)
 
     assert subject == got_from
+
+
+@pytest.fixture
+def listing():
+    # out-of-order entries, including entries with the same timestamp but different suffixes
+    entries = [
+        db.listing.Entry(
+            built="2024-08-22T01:31:37Z",
+            version=1,
+            url="https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-21T01:31:31Z_1724213864.tar.gz",
+            checksum="sha256:d0e8ca5357ebc152b767fe0a9caba8aba0dd106eacf936c653f02932a2c8e238",
+        ),
+        db.listing.Entry(
+            built="2024-08-22T01:31:37Z",
+            version=1,
+            url="https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724300289.tar.gz",
+            checksum="sha256:5ff9f2c047514ba4fbfc45e84df234ecbd2f09c11002c2f008be3a5c2c73b6f1",
+        ),
+        db.listing.Entry(
+            built="2024-08-22T01:31:37Z",
+            version=1,
+            url="https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz",
+            checksum="sha256:d3a298876eba3802bef8e3d9abb1941aa1f9ef2405333624951baeb85ea8f3da",
+        ),
+        db.listing.Entry(
+            built="2024-08-21T01:31:31Z",
+            version=1,
+            url="https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-21T01:31:31Z_1724213870.tar.gz",
+            checksum="sha256:e1a298876eba3802bef8e3d9abb1941aa1f9ef2405333624951baeb85ea8f3dc",
+        ),
+        db.listing.Entry(
+            built="2024-08-22T01:31:37Z",
+            version=1,
+            url="https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340382.tar.gz",
+            checksum="sha256:f3a298876eba3802bef8e3d9abb1941aa1f9ef2405333624951baeb85ea8f3fb",
+        ),
+    ]
+
+    available = {1: entries}
+    return db.listing.Listing(available=available)
+
+
+def test_listing_sort(listing):
+
+    listing.sort()
+
+    sorted_urls = [
+        "https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340382.tar.gz",
+        "https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz",
+        "https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724300289.tar.gz",
+        "https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-21T01:31:31Z_1724213870.tar.gz",
+        "https://grype.anchore.io/databases/vulnerability-db_v1_2024-08-21T01:31:31Z_1724213864.tar.gz",
+    ]
+
+    assert [entry.url for entry in listing.available[1]] == sorted_urls

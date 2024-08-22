@@ -71,6 +71,9 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
         minimum_elements=distribution.MINIMUM_DB_COUNT,
     )
 
+    # sort all listing elements by URL (which is by timestamp)
+    the_listing.sort()
+
     total_entries = sum([len(v) for k, v in the_listing.available.items()])
     logging.info(f"wrote {total_entries} total database entries to the listing")
 
