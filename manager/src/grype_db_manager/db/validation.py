@@ -204,7 +204,9 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
     )
 
     if is_stale or recapture:
-        capture.result_set(result_set=result_set, scan_requests=cfg.result_sets[result_set].scan_requests())
+        capture.result_set(
+            result_set=result_set, scan_requests=cfg.result_sets[result_set].scan_requests(), profiles=cfg.profiles.data,
+        )
     else:
         logging.info(f"skipping grype capture for result-set={result_set} (already exists)")
 
