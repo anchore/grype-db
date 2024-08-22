@@ -79,14 +79,13 @@ func (w writer) Write(entries ...data.Entry) error {
 // but the checksum must be computed after the database is compacted and closed.
 func (w writer) metadataAndClose() (*db.Metadata, error) {
 	storeID, err := w.store.GetID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
+	}
 	w.store.Close()
 	hashStr, err := file.ContentDigest(afero.NewOsFs(), w.dbPath, sha256.New())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash database file (%s): %w", w.dbPath, err)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
 	}
 
 	metadata := db.Metadata{
