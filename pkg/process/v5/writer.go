@@ -91,13 +91,18 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w writer) metadata() (*db.Metadata, error) {
+// metadataAndClose closes the database and returns its metadata.
+// The reason this is a compound action is that getting the built time and
+// schema version from the database is an operation on the open database,
+// but the checksum must be computed after the database is compacted and closed.
+func (w writer) metadataAndClose() (*db.Metadata, error) {
+	storeID, err := w.store.GetID()
+	w.store.Close()
 	hashStr, err := file.ContentDigest(afero.NewOsFs(), w.dbPath, sha256.New())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash database file (%s): %w", w.dbPath, err)
 	}
 
-	storeID, err := w.store.GetID()
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
 	}
@@ -129,11 +134,10 @@ func (w writer) ProviderMetadata() *ProviderMetadata {
 }
 
 func (w writer) Close() error {
-	metadata, err := w.metadata()
+	metadata, err := w.metadataAndClose()
 	if err != nil {
 		return err
 	}
-	w.store.Close()
 
 	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
 	if err = metadata.Write(metadataPath); err != nil {
