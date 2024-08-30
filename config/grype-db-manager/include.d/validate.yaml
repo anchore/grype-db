@@ -13,16 +13,17 @@ db:
   gate:
     # float between 0 and 1, the maximum allowable difference below the OSS F1 score before the gate fails (default 0,
     # meaning the test F1 score must be equal to or greater than the OSS F1 score to pass the gate)
-    f1-score-threshold: 0.15
+    max_f1_regression: 0.15
 
     # float between 0 and 100, the maximum % of unlabeled matches for a scan result before the gate fails (default 10%,
     # meaning the test scan must have less than 10% unlabeled matches to pass the gate)
-    # TODO: this should be at 25.0 after we sunset v1 and v2 schemas
-    unlabeled-matches-threshold: 50.0
+    # TODO: this should be at 25 after we sunset v1 and v2 schemas
+    max_unlabeled_percent: 50
 
     # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
     # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
-    introduced-fns-threshold: 10
+    max_new_false_negatives: 10
+    max_year: 2021
 
   # these are the set of images we will capture grype scans for using an existing published DB and a newly build DB.
   # The assumption is that they should perform similarly or the new DB should perform better. We do allow for the new

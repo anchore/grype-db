@@ -171,13 +171,20 @@ def validate_db(
         },
     )
 
-    gates = db.validate(
+    db.capture_results(
         cfg=yardstick_cfg,
-        result_set=result_set,
         db_uuid=db_uuid,
-        verbosity=verbosity,
+        result_set=result_set,
         recapture=recapture,
         root_dir=cfg.data.root,
+    )
+
+    gates = yardstick.validate.validate_result_set(
+        gate_config=cfg.validate.db.gate,
+        result_set=result_set,
+        images=[],
+        always_run_label_comparison=False,
+        verbosity=verbosity,
     )
 
     failure = not all(gate.passed() for gate in gates)

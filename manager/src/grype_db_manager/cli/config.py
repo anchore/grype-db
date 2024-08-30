@@ -10,6 +10,7 @@ import mergedeep
 import yaml
 from dataclass_wizard import asdict, fromdict
 from yamlinclude import YamlIncludeConstructor
+from yardstick.validate import GateConfig
 
 from grype_db_manager import db, s3utils
 
@@ -50,7 +51,7 @@ class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
     default_max_year: int = 2021
-    gate: db.validation.GateConfig = field(default_factory=db.validation.GateConfig)
+    gate: GateConfig = field(default_factory=GateConfig)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)

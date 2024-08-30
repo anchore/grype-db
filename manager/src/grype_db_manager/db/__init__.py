@@ -1,7 +1,7 @@
 from . import listing, metadata, schema
 from .listing import Listing
 from .metadata import Metadata
-from .validation import validate
+from .validation import capture_results, validate
 
 __all__ = [
     "Listing",
@@ -10,4 +10,5 @@ __all__ = [
     "metadata",
     "validate",
     "schema",
+    "capture_results",
 ]
