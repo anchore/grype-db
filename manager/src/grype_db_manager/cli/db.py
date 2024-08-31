@@ -1,9 +1,13 @@
 import logging
 import os
 import shutil
+import subprocess
 import sys
+import tempfile
+from dataclasses import asdict
 
 import click
+import yaml
 import yardstick
 from tabulate import tabulate
 from yardstick.cli import config as ycfg
@@ -151,6 +155,7 @@ def validate_db(
         result_sets={
             result_set: ycfg.ResultSet(
                 description="compare the latest published OSS DB with the latest (local) built DB",
+                validations=[cfg.validate.db.gate],
                 matrix=ycfg.ScanMatrix(
                     images=images,
                     tools=[
@@ -179,26 +184,14 @@ def validate_db(
         root_dir=cfg.data.root,
     )
 
-    gates = yardstick.validate.validate_result_set(
-        gate_config=cfg.validate.db.gate,
-        result_set=result_set,
-        images=[],
-        always_run_label_comparison=False,
-        verbosity=verbosity,
-    )
+    with tempfile.NamedTemporaryFile(mode="w+") as yardstick_config_file:
+        yaml.dump(asdict(yardstick_cfg), yardstick_config_file)
+        yardstick_config_file.flush()
 
-    failure = not all(gate.passed() for gate in gates)
-    if failure:
-        click.echo(f"{Format.BOLD}{Format.FAIL}Validation failed{Format.RESET}")
-        click.echo("Reasons for quality gate failure:")
-
-        for gate in gates:
-            for reason in gate.reasons:
-                click.echo(f"   - {reason}")
-
-        sys.exit(1)
-
-    click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
+        yardstick_config_file.seek(0)
+        subprocess.check_call(
+           ["yardstick", "-c", yardstick_config_file.name, "validate", "-r", result_set],
+        )
 
 
 @group.command(name="upload", help="upload a grype database")
