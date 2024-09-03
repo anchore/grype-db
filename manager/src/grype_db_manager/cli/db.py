@@ -7,6 +7,7 @@ import click
 import yardstick
 from tabulate import tabulate
 from yardstick.cli import config as ycfg
+from yardstick.cli.validate import validate as yardstick_validate
 
 from grype_db_manager import db, s3utils
 from grype_db_manager.cli import config, error
@@ -100,7 +101,9 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
 )
 @click.argument("db-uuid")
 @click.pass_obj
+@click.pass_context
 def validate_db(
+    ctx: click.Context,
     cfg: config.Application,
     db_uuid: str,
     images: list[str],
@@ -151,6 +154,7 @@ def validate_db(
         result_sets={
             result_set: ycfg.ResultSet(
                 description="compare the latest published OSS DB with the latest (local) built DB",
+                validations=[cfg.validate.db.gate],
                 matrix=ycfg.ScanMatrix(
                     images=images,
                     tools=[
@@ -179,26 +183,11 @@ def validate_db(
         root_dir=cfg.data.root,
     )
 
-    gates = yardstick.validate.validate_result_set(
-        gate_config=cfg.validate.db.gate,
-        result_set=result_set,
-        images=[],
-        always_run_label_comparison=False,
-        verbosity=verbosity,
-    )
+    ctx.obj = yardstick_cfg
+    ctx.invoke(yardstick_validate, always_run_label_comparison=False,
+               breakdown_by_ecosystem=False, verbosity=verbosity, result_sets=[], all_result_sets=True)
 
-    failure = not all(gate.passed() for gate in gates)
-    if failure:
-        click.echo(f"{Format.BOLD}{Format.FAIL}Validation failed{Format.RESET}")
-        click.echo("Reasons for quality gate failure:")
 
-        for gate in gates:
-            for reason in gate.reasons:
-                click.echo(f"   - {reason}")
-
-        sys.exit(1)
-
-    click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
 
 
 @group.command(name="upload", help="upload a grype database")
