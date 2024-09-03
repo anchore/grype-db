@@ -113,9 +113,6 @@ def validate_db(
 ) -> None:
     logging.info(f"validating DB {db_uuid}")
 
-    if not images:
-        images = cfg.validate.db.images
-
     db_manager = DBManager(root_dir=cfg.data.root)
     db_info = db_manager.get_db_info(db_uuid=db_uuid)
 
@@ -133,6 +130,36 @@ def validate_db(
     grype_version = db.schema.grype_version(db_info.schema_version)
 
     result_set = "db-validation"
+    result_sets = {}
+    for idx, rs in enumerate(cfg.validate.gates):
+        if images:
+            logging.info(f"filtering images for gate {idx}")
+            rs.images = [i for i in rs.images if i in images]
+
+        if not rs.images:
+            logging.info(f"no images found for gate {idx}")
+            continue
+
+        result_sets[f"result_set_{idx}"] = ycfg.ResultSet(
+            description=f"generated result set for gate {idx}",
+            validations=[rs.gate],
+            matrix=ycfg.ScanMatrix(
+                images=rs.images,
+                tools=[
+                    ycfg.Tool(
+                        label="custom-db",
+                        name="grype",
+                        version=grype_version + f"+import-db={db_info.archive_path}",
+                        profile="acceptance",
+                    ),
+                    ycfg.Tool(
+                        name="grype",
+                        version=grype_version,
+                        # profile="acceptance", # TODO: enable after current db is fixed
+                    ),
+                ],
+            ),
+        )
 
     yardstick_cfg = ycfg.Application(
         profiles=ycfg.Profiles(
@@ -150,38 +177,18 @@ def validate_db(
             },
         ),
         store_root=cfg.data.yardstick_root,
-        default_max_year=cfg.validate.db.default_max_year,
-        result_sets={
-            result_set: ycfg.ResultSet(
-                description="compare the latest published OSS DB with the latest (local) built DB",
-                validations=[cfg.validate.db.gate],
-                matrix=ycfg.ScanMatrix(
-                    images=images,
-                    tools=[
-                        ycfg.Tool(
-                            label="custom-db",
-                            name="grype",
-                            version=grype_version + f"+import-db={db_info.archive_path}",
-                            profile="acceptance",
-                        ),
-                        ycfg.Tool(
-                            name="grype",
-                            version=grype_version,
-                            # profile="acceptance", # TODO: enable after current db is fixed
-                        ),
-                    ],
-                ),
-            ),
-        },
+        default_max_year=cfg.validate.default_max_year,
+        result_sets=result_sets,
     )
 
-    db.capture_results(
-        cfg=yardstick_cfg,
-        db_uuid=db_uuid,
-        result_set=result_set,
-        recapture=recapture,
-        root_dir=cfg.data.root,
-    )
+    for r in result_sets.keys():
+        db.capture_results(
+            cfg=yardstick_cfg,
+            db_uuid=db_uuid,
+            result_set=r,
+            recapture=recapture,
+            root_dir=cfg.data.root,
+        )
 
     ctx.obj = yardstick_cfg
     ctx.invoke(yardstick_validate, always_run_label_comparison=False,

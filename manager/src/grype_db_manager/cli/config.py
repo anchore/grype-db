@@ -50,7 +50,6 @@ class Grype:
 class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
-    default_max_year: int = 2021
     gate: GateConfig = field(default_factory=GateConfig)
 
     def __post_init__(self):
@@ -78,7 +77,8 @@ class ValidateListing:
 
 @dataclass()
 class Validate:
-    db: ValidateDB = field(default_factory=ValidateDB)
+    default_max_year: int = 2021
+    gates: list[ValidateDB] = field(default_factory=list)
     listing: ValidateListing = field(default_factory=ValidateListing)
 
 
@@ -243,13 +243,6 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
     override_from_environment(cfg, prefix="GRYPE_DB_MANAGER", env=env)
 
     if wire_values:
-        # wire up the gate configuration so any gates created will use values from the application config
-        db.validation.set_default_gate_config(cfg.validate.db.gate)
-        gate_instance = db.validation.Gate(None, None)
-        if gate_instance.config != cfg.validate.db.gate:
-            msg = f"failed to set default gate config: {gate_instance.config} != {cfg.validate.db.gate}"
-            raise ValueError(msg)
-
         # setup the endpoint url and region for all s3 calls
         if cfg.distribution.s3_endpoint_url:
             sys.stderr.write(f"Overriding S3 endpoint URL: {cfg.distribution.s3_endpoint_url}\n")
