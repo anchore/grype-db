@@ -1,6 +1,8 @@
 module github.com/anchore/grype-db
 
-go 1.23.1
+go 1.23.0
+
+toolchain go1.23.1
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
@@ -8,8 +10,8 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.0
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.80.2
-	github.com/anchore/syft v1.13.0
+	github.com/anchore/grype v0.80.2-0.20240924142607-72aa7e4694b7
+	github.com/anchore/syft v1.12.3-0.20240923212138-01de99b25304
 	github.com/dustin/go-humanize v1.0.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-test/deep v1.1.1
@@ -22,7 +24,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jinzhu/copier v0.4.0
-	github.com/klauspost/compress v1.17.10
+	github.com/klauspost/compress v1.17.9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/profile v1.7.0
@@ -238,6 +240,3 @@ require (
 )
 
 replace github.com/mholt/archiver/v3 v3.5.1 => github.com/anchore/archiver/v3 v3.5.2
-
-// this is a breaking change, so we need to pin the version until glebarez/go-sqlite is updated to use internal/libc
-replace modernc.org/sqlite v1.33.0 => modernc.org/sqlite v1.32.0
