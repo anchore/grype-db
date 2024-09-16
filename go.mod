@@ -1,6 +1,6 @@
 module github.com/anchore/grype-db
 
-go 1.23.0
+go 1.23.1
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
@@ -8,8 +8,8 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.0
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.80.1
-	github.com/anchore/syft v1.12.2
+	github.com/anchore/grype v0.80.2-0.20240917150453-8a0e6d894eee
+	github.com/anchore/syft v1.12.3-0.20240916182519-7c617fd14e11
 	github.com/dustin/go-humanize v1.0.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-test/deep v1.1.1
