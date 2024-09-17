@@ -97,7 +97,7 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 			platformsNode = n
 		}
 	}
-	if platformsNode.Operator != nvd.Or || len(platformsNode.CpeMatch) < 2 {
+	if platformsNode.Operator != nvd.Or {
 		return false
 	}
 	if applicationNode.Operator != nvd.Or {
@@ -151,20 +151,6 @@ func noCPEsVulnerable(node nvd.Node) bool {
 	return true
 }
 
-func determinePlatformCPEAndNodes(c nvd.Configuration) (string, []nvd.Node) {
-	var platformCPE string
-	nodes := c.Nodes
-
-	if len(nodes) == 2 && c.Operator != nil && *c.Operator == nvd.And {
-		if len(nodes[1].CpeMatch) == 1 && !nodes[1].CpeMatch[0].Vulnerable {
-			platformCPE = nodes[1].CpeMatch[0].Criteria
-			nodes = []nvd.Node{nodes[0]}
-		}
-	}
-
-	return platformCPE, nodes
-}
-
 func _findUniquePkgs(set uniquePkgTracker, c nvd.Configuration) {
 	if len(c.Nodes) == 0 {
 		return
@@ -174,10 +160,9 @@ func _findUniquePkgs(set uniquePkgTracker, c nvd.Configuration) {
 		return
 	}
 
-	platformCPE, nodes := determinePlatformCPEAndNodes(c)
-	for _, node := range nodes {
+	for _, node := range c.Nodes {
 		for _, match := range node.CpeMatch {
-			candidate, err := newPkgCandidate(match, platformCPE)
+			candidate, err := newPkgCandidate(match, "")
 			if err != nil {
 				// Do not halt all execution because of being unable to create
 				// a PkgCandidate. This can happen when a CPE is invalid which

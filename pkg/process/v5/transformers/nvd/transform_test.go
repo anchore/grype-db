@@ -587,6 +587,112 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "Platform CPE first in CPE config list",
+			numEntries: 1,
+			fixture:    "test-fixtures/CVE-2023-45283-platform-cpe-first.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-45283",
+					PackageName: "go",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 1.20.11 || >= 1.21.0-0, < 1.21.4",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-45283",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"http://www.openwall.com/lists/oss-security/2023/12/05/2",
+					"https://go.dev/cl/540277",
+					"https://go.dev/cl/541175",
+					"https://go.dev/issue/63713",
+					"https://go.dev/issue/64028",
+					"https://groups.google.com/g/golang-announce/c/4tU8LZfBFkY",
+					"https://groups.google.com/g/golang-dev/c/6ypN5EjibjM/m/KmLVYH_uAgAJ",
+					"https://pkg.go.dev/vuln/GO-2023-2185",
+					"https://security.netapp.com/advisory/ntap-20231214-0008/",
+				},
+				Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(7.5, 3.9, 3.6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
+		{
+			name:       "Platform CPE last in CPE config list",
+			numEntries: 1,
+			fixture:    "test-fixtures/CVE-2023-45283-platform-cpe-last.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-45283",
+					PackageName: "go",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 1.20.11 || >= 1.21.0-0, < 1.21.4",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-45283",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"http://www.openwall.com/lists/oss-security/2023/12/05/2",
+					"https://go.dev/cl/540277",
+					"https://go.dev/cl/541175",
+					"https://go.dev/issue/63713",
+					"https://go.dev/issue/64028",
+					"https://groups.google.com/g/golang-announce/c/4tU8LZfBFkY",
+					"https://groups.google.com/g/golang-dev/c/6ypN5EjibjM/m/KmLVYH_uAgAJ",
+					"https://pkg.go.dev/vuln/GO-2023-2185",
+					"https://security.netapp.com/advisory/ntap-20231214-0008/",
+				},
+				Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(7.5, 3.9, 3.6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
