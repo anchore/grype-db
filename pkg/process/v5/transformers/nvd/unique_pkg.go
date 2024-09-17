@@ -97,7 +97,7 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 			platformsNode = n
 		}
 	}
-	if platformsNode.Operator != nvd.Or || len(platformsNode.CpeMatch) < 2 {
+	if platformsNode.Operator != nvd.Or {
 		return false
 	}
 	if applicationNode.Operator != nvd.Or {
