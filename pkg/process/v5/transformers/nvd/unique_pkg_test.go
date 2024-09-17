@@ -310,6 +310,94 @@ func TestFindUniquePkgs(t *testing.T) {
 				},
 			}),
 		},
+		{
+			name:     "single platform CPE as first element",
+			operator: opRef(nvd.And),
+			nodes: []nvd.Node{
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+							MatchCriteriaID: "902B8056-9E37-443B-8905-8AA93E2447FB",
+							Vulnerable:      false,
+						},
+					},
+				},
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:              "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding:   strRef("1.22.2"),
+							VersionStartIncluding: strRef("1.22"),
+							MatchCriteriaID:       "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:            true,
+						},
+						{
+							Criteria:            "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding: strRef("1.21.8"),
+							MatchCriteriaID:     "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:          true,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "go",
+					Vendor:         "golang",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+				},
+			}),
+		},
+		{
+			name:     "single platform CPE as last element",
+			operator: opRef(nvd.And),
+			nodes: []nvd.Node{
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:              "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding:   strRef("1.22.2"),
+							VersionStartIncluding: strRef("1.22"),
+							MatchCriteriaID:       "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:            true,
+						},
+						{
+							Criteria:            "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding: strRef("1.21.8"),
+							MatchCriteriaID:     "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:          true,
+						},
+					},
+				},
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+							MatchCriteriaID: "902B8056-9E37-443B-8905-8AA93E2447FB",
+							Vulnerable:      false,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "go",
+					Vendor:         "golang",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+				},
+			}),
+		},
 	}
 
 	for _, test := range tests {
