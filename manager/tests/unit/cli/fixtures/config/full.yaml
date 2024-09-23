@@ -35,13 +35,12 @@ validate:
     minimum-packages: 85
     minimum-vulnerabilities: 400
 
-  db:
-    default-max-year: 2021
-
-    gate:
-      f1-score-threshold: 0.0
-      unlabeled-matches-threshold: 10.0
-      introduced-fns-threshold: 0
-
-    images:
-      - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
+  default-max-year: 2021
+  gates:
+    - gate:
+        max_f1_regression: 0.15
+        max_unlabeled_percent: 50
+        max_new_false_negatives: 10
+        max_year: 2021
+      images:
+        - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
