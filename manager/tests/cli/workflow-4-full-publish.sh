@@ -57,7 +57,7 @@ header "Case 2: update the listing file based on the DB uploaded"
 # grype-db-manager listing validate <listing-file-path>
 
 run grype-db-manager listing update
-assert_contains $(last_stdout_file) "Quality gate passed!"
+assert_contains $(last_stdout_file) "Validation passed"
 assert_contains $(last_stdout_file) "listing.json uploaded to s3://testbucket/grype/databases"
 
 # check if grype works with this updated listing file
