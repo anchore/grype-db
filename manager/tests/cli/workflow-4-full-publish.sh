@@ -46,7 +46,7 @@ header "Case 1: create and publish a DB"
 # grype-db-manager db upload <uuid>
 
 run grype-db-manager db build-and-upload --schema-version $SCHEMA_VERSION --skip-namespace-check
-assert_contains $(last_stdout_file) "Validation passed"
+assert_contains $(last_stdout_file) "Quality gate passed!"
 assert_contains $(last_stdout_file) "' uploaded to s3://testbucket/grype/databases"
 
 
@@ -57,7 +57,7 @@ header "Case 2: update the listing file based on the DB uploaded"
 # grype-db-manager listing validate <listing-file-path>
 
 run grype-db-manager listing update
-assert_contains $(last_stdout_file) "Validation passed"
+assert_contains $(last_stdout_file) "Quality gate passed!"
 assert_contains $(last_stdout_file) "listing.json uploaded to s3://testbucket/grype/databases"
 
 # check if grype works with this updated listing file
