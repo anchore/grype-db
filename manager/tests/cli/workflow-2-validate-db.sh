@@ -20,9 +20,8 @@ header "Case 1: fail DB validation (too many unknowns)"
 
 make clean-yardstick-labels
 
-run_expect_fail grype-db-manager db validate $DB_ID -vvv --skip-namespace-check
-assert_contains $(last_stderr_file) "current indeterminate matches % is greater than 10.0%"
-
+run_expect_fail grype-db-manager db validate $DB_ID -vvv --skip-namespace-check --recapture
+assert_contains $(last_stdout_file) "current indeterminate matches % is greater than 10%"
 
 #############################################
 header "Case 2: fail DB validation (missing namespaces)"
@@ -47,7 +46,7 @@ cp -a ../../../data/vulnerability-match-labels/labels/docker.io+oraclelinux* ./c
 tree ./cli-test-data/yardstick/labels/
 
 run grype-db-manager db validate $DB_ID -vvv --skip-namespace-check
-assert_contains $(last_stdout_file) "Validation passed"
+assert_contains $(last_stdout_file) "Quality gate passed!"
 
 
 ### End of testing ########################
