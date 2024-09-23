@@ -1,7 +1,6 @@
 import logging
 import os
 import shutil
-import sys
 
 import click
 import yardstick
@@ -129,7 +128,6 @@ def validate_db(
 
     grype_version = db.schema.grype_version(db_info.schema_version)
 
-    result_set = "db-validation"
     result_sets = {}
     for idx, rs in enumerate(cfg.validate.gates):
         if images:
@@ -181,7 +179,7 @@ def validate_db(
         result_sets=result_sets,
     )
 
-    for r in result_sets.keys():
+    for r in result_sets:
         db.capture_results(
             cfg=yardstick_cfg,
             db_uuid=db_uuid,
@@ -191,10 +189,14 @@ def validate_db(
         )
 
     ctx.obj = yardstick_cfg
-    ctx.invoke(yardstick_validate, always_run_label_comparison=False,
-               breakdown_by_ecosystem=False, verbosity=verbosity, result_sets=[], all_result_sets=True)
-
-
+    ctx.invoke(
+        yardstick_validate,
+        always_run_label_comparison=False,
+        breakdown_by_ecosystem=False,
+        verbosity=verbosity,
+        result_sets=[],
+        all_result_sets=True,
+    )
 
 
 @group.command(name="upload", help="upload a grype database")

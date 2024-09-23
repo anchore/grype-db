@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import collections
 import logging
-from dataclasses import InitVar, dataclass, field
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import yardstick
-from yardstick import artifact, capture, comparison, store
+from yardstick import artifact, capture
 
 from grype_db_manager import grypedb
-from grype_db_manager.db import format
-from grype_db_manager.db.format import Format
 
 if TYPE_CHECKING:
     from yardstick.cli import config as ycfg
