@@ -14,6 +14,7 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
+	"github.com/anchore/grype/grype/version"
 )
 
 func TestUnmarshalNVDVulnerabilitiesEntries(t *testing.T) {
@@ -731,6 +732,65 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 			if diff := cmp.Diff(test.vulns, vulns); diff != "" {
 				t.Errorf("vulnerabilities do not match (-want +got):\n%s", diff)
 			}
+		})
+	}
+}
+
+func TestGetVersionFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		cpes     []string
+		expected version.Format
+	}{
+		{
+			name:     "detects JVM format from name",
+			input:    "java_se",
+			cpes:     []string{},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from CPEs",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:openjdk:11:update53:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (zulu)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:zula:zulu:15:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (jdk)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:jdk:11.0:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (jre)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:jre:11.0:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "returns unknown format for non-JVM product and non-JVM CPEs",
+			input:    "non_jvm_product",
+			cpes:     []string{"cpe:2.3:a:some_other_product:product_name:1.0:*:*:*:*:*:*"},
+			expected: version.UnknownFormat,
+		},
+		{
+			name:     "handles invalid CPE gracefully",
+			input:    "non_jvm_product",
+			cpes:     []string{"invalid_cpe_format"},
+			expected: version.UnknownFormat,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			format := getVersionFormat(tt.input, tt.cpes)
+			assert.Equal(t, tt.expected, format)
 		})
 	}
 }
