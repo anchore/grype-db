@@ -8,8 +8,8 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.0
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.80.2-0.20240923214501-2e206052bcd1
-	github.com/anchore/syft v1.12.3-0.20240923212138-01de99b25304
+	github.com/anchore/grype v0.80.2
+	github.com/anchore/syft v1.13.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-test/deep v1.1.1
