@@ -136,7 +136,8 @@ def validate_db(
     grype_version = db.schema.grype_version(db_info.schema_version)
     # TEMP
     # TODO: remove
-    grype_version = "feat-azure-linux-3-support"
+    if db_info.schema_version == 5:
+        grype_version = "feat-azure-linux-3-support"
     # end TEMP
 
     result_sets = {}
