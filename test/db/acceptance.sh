@@ -26,4 +26,9 @@ fi
 
 title "Validating DB"
 
-grype-db-manager db validate $DB_ID -vvv
+ALLOW_EMPTY=""
+if [[ "$SCHEMA_VERSION" == "1" || "$SCHEMA_VERSION" == "2" || "$SCHEMA_VERSION" == "3" ]]; then
+  ALLOW_EMPTY="--allow-empty-matches"
+fi
+
+grype-db-manager db validate $DB_ID -vvv $ALLOW_EMPTY

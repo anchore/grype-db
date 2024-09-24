@@ -1,12 +1,12 @@
 import logging
 import os
 import shutil
-import sys
 
 import click
 import yardstick
 from tabulate import tabulate
 from yardstick.cli import config as ycfg
+from yardstick.cli.validate import validate as yardstick_validate
 
 from grype_db_manager import db, s3utils
 from grype_db_manager.cli import config, error
@@ -98,20 +98,25 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
     is_flag=True,
     help="do not ensure the minimum expected namespaces are present",
 )
+@click.option("--allow-empty-matches",
+              "allow_empty_matches",
+              is_flag=True,
+    help="set 'fail_on_empty_matches' to false when invoking yardstick validate"
+)
 @click.argument("db-uuid")
 @click.pass_obj
+@click.pass_context
 def validate_db(
+    ctx: click.Context,
     cfg: config.Application,
     db_uuid: str,
     images: list[str],
     verbosity: int,
     recapture: bool,
     skip_namespace_check: bool,
+    allow_empty_matches: bool,
 ) -> None:
     logging.info(f"validating DB {db_uuid}")
-
-    if not images:
-        images = cfg.validate.db.images
 
     db_manager = DBManager(root_dir=cfg.data.root)
     db_info = db_manager.get_db_info(db_uuid=db_uuid)
@@ -129,7 +134,39 @@ def validate_db(
 
     grype_version = db.schema.grype_version(db_info.schema_version)
 
-    result_set = "db-validation"
+    result_sets = {}
+    for idx, rs in enumerate(cfg.validate.gates):
+        if images:
+            logging.info(f"filtering images for gate {idx}")
+            rs.images = [i for i in rs.images if i in images]
+
+        if not rs.images:
+            logging.info(f"no images found for gate {idx}")
+            continue
+
+        if allow_empty_matches:
+            rs.gate.fail_on_empty_match_set = False
+
+        result_sets[f"result_set_{idx}"] = ycfg.ResultSet(
+            description=f"generated result set for gate {idx}",
+            validations=[rs.gate],
+            matrix=ycfg.ScanMatrix(
+                images=rs.images,
+                tools=[
+                    ycfg.Tool(
+                        label="custom-db",
+                        name="grype",
+                        version=grype_version + f"+import-db={db_info.archive_path}",
+                        profile="acceptance",
+                    ),
+                    ycfg.Tool(
+                        name="grype",
+                        version=grype_version,
+                        # profile="acceptance", # TODO: enable after current db is fixed
+                    ),
+                ],
+            ),
+        )
 
     yardstick_cfg = ycfg.Application(
         profiles=ycfg.Profiles(
@@ -147,51 +184,28 @@ def validate_db(
             },
         ),
         store_root=cfg.data.yardstick_root,
-        default_max_year=cfg.validate.db.default_max_year,
-        result_sets={
-            result_set: ycfg.ResultSet(
-                description="compare the latest published OSS DB with the latest (local) built DB",
-                matrix=ycfg.ScanMatrix(
-                    images=images,
-                    tools=[
-                        ycfg.Tool(
-                            label="custom-db",
-                            name="grype",
-                            version=grype_version + f"+import-db={db_info.archive_path}",
-                            profile="acceptance",
-                        ),
-                        ycfg.Tool(
-                            name="grype",
-                            version=grype_version,
-                            # profile="acceptance", # TODO: enable after current db is fixed
-                        ),
-                    ],
-                ),
-            ),
-        },
+        default_max_year=cfg.validate.default_max_year,
+        result_sets=result_sets,
     )
 
-    gates = db.validate(
-        cfg=yardstick_cfg,
-        result_set=result_set,
-        db_uuid=db_uuid,
+    for r in result_sets:
+        db.capture_results(
+            cfg=yardstick_cfg,
+            db_uuid=db_uuid,
+            result_set=r,
+            recapture=recapture,
+            root_dir=cfg.data.root,
+        )
+
+    ctx.obj = yardstick_cfg
+    ctx.invoke(
+        yardstick_validate,
+        always_run_label_comparison=False,
+        breakdown_by_ecosystem=False,
         verbosity=verbosity,
-        recapture=recapture,
-        root_dir=cfg.data.root,
+        result_sets=[],
+        all_result_sets=True,
     )
-
-    failure = not all(gate.passed() for gate in gates)
-    if failure:
-        click.echo(f"{Format.BOLD}{Format.FAIL}Validation failed{Format.RESET}")
-        click.echo("Reasons for quality gate failure:")
-
-        for gate in gates:
-            for reason in gate.reasons:
-                click.echo(f"   - {reason}")
-
-        sys.exit(1)
-
-    click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
 
 
 @group.command(name="upload", help="upload a grype database")

@@ -1398,7 +1398,7 @@ Colr = "^0.9.1"
 dataclass-wizard = "^0.22.3"
 dataclasses-json = "^0.6.7"
 GitPython = "^3.1.43"
-importlib-metadata = ">=7.0.1,<8.0.0"
+importlib-metadata = ">=7.0.1,<9.0.0"
 mergedeep = "^1.3.4"
 omitempty = "^0.1.1"
 prompt-toolkit = "^3.0.47"
@@ -1411,8 +1411,8 @@ tabulate = "^0.9.0"
 [package.source]
 type = "git"
 url = "https://github.com/anchore/yardstick"
-reference = "8ef84656c6618292110c47fbb8805d78fc7b235d"
-resolved_reference = "8ef84656c6618292110c47fbb8805d78fc7b235d"
+reference = "v0.10.0"
+resolved_reference = "fe6ae0f3a4399aeae08abc60e98670f6764614c9"
 
 [[package]]
 name = "zipp"
@@ -1493,4 +1493,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<=3.13"
-content-hash = "943f0065c9a9329e092b695fd19a660059c1753f70790eb53fe0cf48e4dcab75"
+content-hash = "618b58c3adf4fe5edba3e40b5e77ca15a472d53e82f46d059bc6aa4b4c0d06f7"
