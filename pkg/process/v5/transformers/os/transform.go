@@ -39,13 +39,12 @@ func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 		providerName = "amazon"
 	case distro.Mariner, distro.Azure:
 		providerName = "mariner"
-		if feedGroupComponents[1] == "3.0" {
-			distroName = distro.Azure.String() // Mariner Linux 3.0 is known as "Azure Linux 3"
+		if strings.HasPrefix(feedGroupComponents[1], "3") {
+			distroName = distro.Azure.String() // Mariner Linux 3 is known as "Azure Linux 3"
 		}
 	}
 
 	ns, err := namespace.FromString(fmt.Sprintf("%s:distro:%s:%s", providerName, distroName, feedGroupComponents[1]))
-
 	if err != nil {
 		return nil, err
 	}
