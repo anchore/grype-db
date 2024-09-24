@@ -134,11 +134,6 @@ def validate_db(
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
     grype_version = db.schema.grype_version(db_info.schema_version)
-    # TEMP
-    # TODO: remove
-    if db_info.schema_version == 5:
-        grype_version = "feat-azure-linux-3-support"
-    # end TEMP
 
     result_sets = {}
     for idx, rs in enumerate(cfg.validate.gates):
