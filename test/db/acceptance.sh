@@ -27,7 +27,7 @@ fi
 title "Validating DB"
 
 ALLOW_EMPTY=""
-if [[ "$SCHEMA_VERSION" == "1" || "$SCHEMA_VERSION" == "2" || "$SCHEMA_VERSION" == "3" ]]; then
+if [[ "$SCHEMA_VERSION" == "1" || "$SCHEMA_VERSION" == "2" || "$SCHEMA_VERSION" == "3" || "$SCHEMA_VERSION" == "4" ]]; then
   ALLOW_EMPTY="--allow-empty-matches"
 fi
 

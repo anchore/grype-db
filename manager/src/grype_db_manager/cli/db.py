@@ -98,10 +98,11 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
     is_flag=True,
     help="do not ensure the minimum expected namespaces are present",
 )
-@click.option("--allow-empty-matches",
-              "allow_empty_matches",
-              is_flag=True,
-    help="set 'fail_on_empty_matches' to false when invoking yardstick validate"
+@click.option(
+    "--allow-empty-matches",
+    "allow_empty_matches",
+    is_flag=True,
+    help="set 'fail_on_empty_matches' to false when invoking yardstick validate",
 )
 @click.argument("db-uuid")
 @click.pass_obj
@@ -146,6 +147,8 @@ def validate_db(
 
         if allow_empty_matches:
             rs.gate.fail_on_empty_match_set = False
+
+        logging.info(f"writing config for result set result_set_{idx}")
 
         result_sets[f"result_set_{idx}"] = ycfg.ResultSet(
             description=f"generated result set for gate {idx}",

@@ -116,6 +116,7 @@ validate:
         maxNewFalseNegatives: 10
         maxUnlabeledPercent: 50
         maxYear: 2021
+        name: default
         referenceToolLabel: reference
         requiredNamespaces: []
       grype:
