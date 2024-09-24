@@ -40,12 +40,17 @@ gates:
       - docker.io/debian:7@sha256:81e88820a7759038ffa61cff59dfcc12d3772c3a2e75b7cfe963c952da2ad264
       - registry.access.redhat.com/ubi8@sha256:68fecea0d255ee253acbf0c860eaebb7017ef5ef007c25bee9eeffd29ce85b29
       - docker.io/ubuntu:20.04@sha256:9d42d0e3e57bc067d10a75ee33bdd1a5298e95e5fc3c5d1fce98b455cb879249
+
+
   - gate:
       max_f1_regression: 0.15
       max_unlabeled_percent: 25
       max_new_false_negatives: 10
       max_year: 2022 # important - Azure Linux 3 doesn't have enough CVEs going back to 2021
       candidate_tool_label: 'custom-db'
+      # TODO: remove once the latest db can be bumped to include
+      # Azure Linux 3 vulnerabilities.
+      fail_on_empty_match_set: false
 
     images:
       - docker.io/anchore/test_images:azurelinux3-63671fe@sha256:2d761ba36575ddd4e07d446f4f2a05448298c20e5bdcd3dedfbbc00f9865240d
