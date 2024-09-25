@@ -40,7 +40,9 @@ gates:
       - docker.io/debian:7@sha256:81e88820a7759038ffa61cff59dfcc12d3772c3a2e75b7cfe963c952da2ad264
       - registry.access.redhat.com/ubi8@sha256:68fecea0d255ee253acbf0c860eaebb7017ef5ef007c25bee9eeffd29ce85b29
       - docker.io/ubuntu:20.04@sha256:9d42d0e3e57bc067d10a75ee33bdd1a5298e95e5fc3c5d1fce98b455cb879249
-
+    # Old versions of grype may find no matches for some newer images
+    # Do not fail quality gate over this
+    allow_empty_results_for_schemas: [1,2]
 
   - gate:
       max_f1_regression: 0.15
