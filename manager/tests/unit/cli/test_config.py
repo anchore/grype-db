@@ -108,7 +108,11 @@ schemaMappingFile: mapping.json
 validate:
   defaultMaxYear: 2021
   gates:
-    - gate:
+    - allowEmptyResultsForSchemas:
+        - 1
+        - 2
+        - 3
+      gate:
         allowedNamespaces: []
         candidateToolLabel: candidate
         failOnEmptyMatchSet: true

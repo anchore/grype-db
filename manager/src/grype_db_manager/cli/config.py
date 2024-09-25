@@ -51,6 +51,7 @@ class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
     gate: Validation = field(default_factory=Validation)
+    allow_empty_results_for_schemas: list[int] = field(default_factory=list)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)
