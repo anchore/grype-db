@@ -11,6 +11,7 @@ import (
 
 	testUtils "github.com/anchore/grype-db/pkg/process/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
@@ -459,11 +460,11 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					VersionFormat:          "unknown",
 					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
-					Fix:                    grypeDB.Fix{
+					Fix: grypeDB.Fix{
 						Versions: []string{"2.9.6"},
-						State: "fixed",
+						State:    "fixed",
 					},
-					Advisories:             nil,
+					Advisories: nil,
 				},
 				{
 					ID:          "CVE-2020-10729",
@@ -477,11 +478,11 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					VersionFormat:          "unknown",
 					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
-					Fix:                    grypeDB.Fix{
+					Fix: grypeDB.Fix{
 						Versions: []string{"2.9.6"},
-						State: "fixed",
+						State:    "fixed",
 					},
-					Advisories:             nil,
+					Advisories: nil,
 				},
 			},
 			metadata: grypeDB.VulnerabilityMetadata{
@@ -800,6 +801,157 @@ func TestGetVersionFormat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			format := getVersionFormat(tt.input, tt.cpes)
 			assert.Equal(t, tt.expected, format)
+		})
+	}
+}
+
+func TestGetFix(t *testing.T) {
+	tests := []struct {
+		name     string
+		matches  []nvd.CpeMatch
+		expected grypeDB.Fix
+	}{
+		{
+			name: "Equals",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria: "cpe:2.3:a:vendor:product:2.2.0:*:*:*:*:target:*:*",
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "VersionEndExcluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:            "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionEndExcluding: strRef("2.3.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"2.3.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "VersionEndIncluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:            "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionEndIncluding: strRef("2.3.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "VersionStartExcluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartExcluding: strRef("2.3.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "VersionStartIncluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "Version Range",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndIncluding:   strRef("2.5.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "Multiple Version Ranges",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndIncluding:   strRef("2.5.0"),
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartExcluding: strRef("3.3.0"),
+					VersionEndExcluding:   strRef("3.5.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"3.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "Empty end exclude treated as unknown",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartExcluding: strRef("3.3.0"),
+					VersionEndExcluding:   strRef(""),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "Multiple fixes with deduplication",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("3.3.0"),
+					VersionEndExcluding:   strRef("3.5.0"),
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("0"),
+					VersionEndExcluding:   strRef("1.7.0"),
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target-2:*:*",
+					VersionStartIncluding: strRef("0"),
+					VersionEndExcluding:   strRef("1.7.0"),
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"1.7.0", "3.5.0"},
+				State:    "fixed",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fix := getFix(tt.matches)
+			assert.Equal(t, tt.expected, fix)
 		})
 	}
 }
