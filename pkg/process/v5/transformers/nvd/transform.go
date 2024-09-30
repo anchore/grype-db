@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/scylladb/go-set/strset"
+
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v5/transformers"
@@ -17,7 +19,6 @@ import (
 	"github.com/anchore/grype/grype/pkg"
 	"github.com/anchore/grype/grype/version"
 	"github.com/anchore/syft/syft/cpe"
-	"github.com/scylladb/go-set/strset"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
