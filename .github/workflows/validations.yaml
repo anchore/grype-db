@@ -19,40 +19,52 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+
+      - name: Run static analysis
+        run: make static-analysis
+
+  # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+  Unit-Test-Go:
+    name: "Unit tests (Go)"
+    runs-on: ubuntu-20.04
+    steps:
+
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
         with:
           python: false
 
-      - name: Run static analysis
-        run: make static-analysis
+      - name: Run go unit tests
+        run: make unit
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
-  Unit-Test:
-    name: "Unit tests"
+  Unit-Test-Python:
+    name: "Unit tests (Python)"
     runs-on: ubuntu-20.04
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
+        with:
+          go: false
 
-      - name: Install dependencies and package
-        run: |
-          cd publish && poetry install
-
-      - name: Run unit tests
-        run: make unit
+      - name: Run python unit tests
+        run: make unit-python
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Build-Snapshot-Artifacts:
     name: "Build snapshot artifacts"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -72,7 +84,7 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -84,19 +96,19 @@ jobs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
 
       - name: Read supported schema versions
         id: read-schema-versions
         run: |
-          content=`cat grype-schema-version-mapping.json | jq -c 'keys'`
+          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | .schema]'`
           echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04-4core-16gb
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
@@ -106,21 +118,12 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
         with:
-          # this downloads and initializes LFS, but does not pull the objects
-          lfs: true
-
-      - name: Checkout LFS objects
-        # lfs pull does a lfs fetch and lfs checkout, this is NOT the same as "git pull"
-        run: git lfs pull
+          submodules: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
-
-      - name: Install dependencies and package
-        run: |
-          cd test/acceptance && poetry install
 
       - name: Login to ghcr.io
         run: |
@@ -129,38 +132,51 @@ jobs:
       - name: Pull vulnerability data
         run: make download-all-provider-cache
 
-      - name: Build DB
-        run: |
-          cd test/acceptance && \
-          poetry run python grype-ingest.py generate --schema-version ${{ matrix.schema-version }}
+      - name: Build and validate the DB
+        run: make db-acceptance schema=${{ matrix.schema-version }}
+        env:
+          FORCE_COLOR: true
 
-      - name: Test DB
-        run: |
-          cd test/acceptance && \
-          poetry run python grype-ingest.py test --schema-version ${{ matrix.schema-version }}
 
-  Cli-Linux:
+  Cli-Go-Linux:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
-    name: "CLI tests (Linux)"
+    name: "CLI tests (Go-Linux)"
     needs: [Build-Snapshot-Artifacts]
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
+        with:
+          python: false
 
       - name: Restore CLI test-fixture cache
-        uses: actions/cache@v3
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
           path: ${{ github.workspace }}/test/cli/test-fixtures/cache
           key: ${{ runner.os }}-cli-test-cache-${{ hashFiles('test/cli/test-fixtures/cache.fingerprint') }}
 
       - name: Download snapshot build
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
 
-      - name: Run CLI Tests (Linux)
-        run: make cli
+      - name: Run Go CLI Tests (Linux)
+        run: make cli-go
+
+  Cli-Python:
+    # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+    name: "CLI tests (Python)"
+    runs-on: ubuntu-22.04-4core-16gb
+    steps:
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
+        with:
+          submodules: true
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+
+      - name: Run Python CLI Tests
+        run: make cli-python

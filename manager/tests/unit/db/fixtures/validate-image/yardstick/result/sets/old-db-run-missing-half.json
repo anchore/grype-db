@@ -1,0 +1,66 @@
+{
+  "name": "db-validation",
+  "state": [
+    {
+      "request": {
+        "image": "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+        "tool": "grype@v0.65.1+import-db=/Users/wagoodman/code/grype-db/manager/tests/cli/cli-test-data/manager/dbs/d3b718e0-6391-47a4-a078-74b8fa2eed31/stage/vulnerability-db_v5_2023-08-08T01:33:25Z_fe7c086fdcc7ba308ecb.tar.gz",
+        "label": "custom-db",
+        "profile": null,
+        "provides": null,
+        "takes": "SBOM",
+        "refresh": true
+      },
+      "config": {
+        "image_repo": "docker.io/oraclelinux",
+        "image_digest": "sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+        "tool_name": "grype[custom-db]",
+        "tool_version": "v0.65.1",
+        "image_tag": "6",
+        "tool_input": "cli-test-data/yardstick/result/store/docker.io+oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495/syft@v0.86.1/2023-08-04T19:53:38.406034+00:00/data.json",
+        "timestamp": "2023-02-02T03:03:03.000003+00:00",
+        "detail": {
+          "version_detail": "v0.65.1",
+          "db": {
+            "built": "2023-08-08T01:33:25Z",
+            "schemaVersion": 5,
+            "location": "cli-test-data/yardstick/tools/grype[custom-db]/v0.65.1/db/sha256:d83c6ded81ea3ff69aad9b367b9daee5424b74f813a6d49e9e8ba15d210cbfb6/5",
+            "checksum": "sha256:d83c6ded81ea3ff69aad9b367b9daee5424b74f813a6d49e9e8ba15d210cbfb6",
+            "error": null
+          }
+        },
+        "ID": "1b13a4e6-9f9f-04a9-391e-ebf8d3ef8730"
+      }
+    },
+    {
+      "request": {
+        "image": "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+        "tool": "grype@v0.65.1",
+        "label": null,
+        "profile": null,
+        "provides": null,
+        "takes": "SBOM",
+        "refresh": true
+      },
+      "config": {
+        "image_repo": "docker.io/oraclelinux",
+        "image_digest": "sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495",
+        "tool_name": "grype",
+        "tool_version": "v0.65.1",
+        "image_tag": "6",
+        "tool_input": "cli-test-data/yardstick/result/store/docker.io+oraclelinux@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495/syft@v0.86.1/2023-08-04T19:53:38.406034+00:00/data.json",
+        "timestamp": "2023-01-01T03:03:03.000003+00:00",
+        "detail": {
+          "db": {
+            "built": "2023-08-08T01:33:25Z",
+            "schemaVersion": 5,
+            "location": "cli-test-data/yardstick/tools/grype/v0.65.1/db/oss/5",
+            "checksum": "sha256:20b0a31d433279802531567a21986e1c9b7fb5efd6bcf8cdbd3abd04f71ae35c",
+            "error": null
+          }
+        },
+        "ID": "009408b2-917b-2497-c943-4bfab2bfb6b5"
+      }
+    }
+  ]
+}

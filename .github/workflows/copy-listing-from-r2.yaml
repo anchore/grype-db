@@ -1,0 +1,47 @@
+name: 'Sync listing from R2 to S3'
+on:
+  # allow for kicking off DB builds manually
+  workflow_dispatch:
+
+  # allow invoking from another workflow
+  workflow_call:
+
+env:
+  CGO_ENABLED: "0"
+  SLACK_NOTIFICATIONS: true
+  FORCE_COLOR: true
+
+jobs:
+  sync-listing-file:
+    name: "Sync listing file"
+
+    runs-on: ubuntu-22.04
+    steps:
+
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 #v4.2.0
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+
+      - name: Download the R2 listing file
+        run: curl --fail -O https://grype.anchore.io/databases/listing.json
+
+      - name: Upload listing file
+        run: |
+          poetry run \
+            grype-db-manager \
+              -c ./config/grype-db-manager/publish-production.yaml \
+                listing upload listing.json
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
+
+      - uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 #v3.16.2
+        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        with:
+          status: ${{ job.status }}
+          fields: workflow,eventName,job
+          text: Sync of the Grype DB listing file from R2 to S3 has failed
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+

@@ -1,12 +1,12 @@
 package commands
 
 import (
-	"archive/tar"
-	"compress/gzip"
+	"encoding/json"
 	"fmt"
-	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
@@ -16,6 +16,7 @@ import (
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/internal/tarutil"
 	"github.com/anchore/grype-db/pkg/provider"
 )
 
@@ -27,14 +28,18 @@ type cacheBackupConfig struct {
 		options.Store     `yaml:",inline" mapstructure:",squash"`
 		options.Selection `yaml:",inline" mapstructure:",squash"`
 	} `yaml:"provider" json:"provider" mapstructure:"provider"`
+	options.Results `yaml:"results" json:"results" mapstructure:"results"`
 }
 
 func (o *cacheBackupConfig) AddFlags(flags *pflag.FlagSet) {
-	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection)
+	options.AddAllFlags(flags, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection, &o.Results)
 }
 
 func (o *cacheBackupConfig) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
-	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection)
+	if err := options.Bind(v, "results.results-only", flags.Lookup("results-only")); err != nil {
+		return err
+	}
+	return options.BindAllFlags(flags, v, &o.CacheArchive, &o.Provider.Store, &o.Provider.Selection, &o.Results)
 }
 
 func CacheBackup(app *application.Application) *cobra.Command {
@@ -43,13 +48,14 @@ func CacheBackup(app *application.Application) *cobra.Command {
 	}
 	cfg.Provider.Store = options.DefaultStore()
 	cfg.Provider.Selection = options.DefaultSelection()
+	cfg.Results = options.DefaultResults()
 
 	cmd := &cobra.Command{
 		Use:     "backup",
 		Short:   "backup provider cache to an archive",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return cacheBackup(cfg)
 			}))
@@ -68,23 +74,11 @@ func cacheBackup(cfg cacheBackupConfig) error {
 	}
 	log.WithFields("providers", providers).Info("backing up provider state")
 
-	archive, err := os.Create(cfg.CacheArchive.Path)
+	writer, err := tarutil.NewWriter(cfg.CacheArchive.Path)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create archive writer: %w", err)
 	}
-
-	gw := gzip.NewWriter(archive)
-	defer func(gw *gzip.Writer) {
-		if err := gw.Close(); err != nil {
-			log.Errorf("unable to close gzip writer: %w", err)
-		}
-	}(gw)
-	tw := tar.NewWriter(gw)
-	defer func(tw *tar.Writer) {
-		if err := tw.Close(); err != nil {
-			log.Errorf("unable to close tar writer: %w", err)
-		}
-	}(tw)
+	defer writer.Close()
 
 	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
 
@@ -111,7 +105,7 @@ func cacheBackup(cfg cacheBackupConfig) error {
 		}
 
 		log.WithFields("provider", name).Debug("archiving data")
-		if err := archiveProvider(cfg.Provider.Root, name, tw); err != nil {
+		if err := archiveProvider(cfg, name, writer); err != nil {
 			return err
 		}
 	}
@@ -121,70 +115,119 @@ func cacheBackup(cfg cacheBackupConfig) error {
 	return nil
 }
 
-func archiveProvider(root string, name string, writer *tar.Writer) error {
+func archiveProvider(cfg cacheBackupConfig, name string, writer tarutil.Writer) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	err = os.Chdir(root)
+
+	err = os.Chdir(cfg.Provider.Root)
 	if err != nil {
 		return err
 	}
+
 	defer func(dir string) {
 		if err := os.Chdir(dir); err != nil {
 			log.Errorf("unable to restore directory: %w", err)
 		}
 	}(wd)
 
-	return filepath.Walk(name,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	var visitor pathVisitor
+	if cfg.Results.ResultsOnly {
+		log.WithFields("provider", name).Debug("archiving results only")
 
-			if info.IsDir() {
-				return nil
-			}
+		visitor = newCacheResultsOnlyWorkspaceVisitStrategy(writer, name)
+	} else {
+		log.WithFields("provider", name).Debug("archiving full workspace")
 
-			return addToArchive(writer, path)
-		},
-	)
+		visitor = cacheFullWorkspaceVisitStrategy{
+			writer: writer,
+		}
+	}
+
+	return filepath.Walk(name, visitor.visitPath)
 }
 
-func addToArchive(writer *tar.Writer, filename string) error {
-	log.WithFields("path", filename).Trace("adding to archive")
+type pathVisitor interface {
+	visitPath(path string, info fs.FileInfo, err error) error
+}
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+var (
+	_ pathVisitor = (*cacheFullWorkspaceVisitStrategy)(nil)
+	_ pathVisitor = (*cacheResultsOnlyWorkspaceVisitStrategy)(nil)
+)
 
-	info, err := file.Stat()
-	if err != nil {
-		return err
-	}
+type cacheFullWorkspaceVisitStrategy struct {
+	writer tarutil.Writer
+}
 
-	header, err := tar.FileInfoHeader(info, info.Name())
-	if err != nil {
-		return err
-	}
-
-	// use full path as name (FileInfoHeader only takes the basename)
-	// If we don't do this the directory structure would
-	// not be preserved
-	// https://golang.org/src/archive/tar/common.go?#L626
-	header.Name = filename
-
-	err = writer.WriteHeader(header)
+func (t cacheFullWorkspaceVisitStrategy) visitPath(p string, info fs.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
 
-	_, err = io.Copy(writer, file)
+	if info.IsDir() {
+		return nil
+	}
+
+	return t.writer.WriteEntry(tarutil.NewEntryFromFilePath(p))
+}
+
+type cacheResultsOnlyWorkspaceVisitStrategy struct {
+	writer       tarutil.Writer
+	providerName string
+	metadataPath string
+	inputPath    string
+}
+
+func newCacheResultsOnlyWorkspaceVisitStrategy(writer tarutil.Writer, providerName string) cacheResultsOnlyWorkspaceVisitStrategy {
+	return cacheResultsOnlyWorkspaceVisitStrategy{
+		writer:       writer,
+		providerName: providerName,
+		metadataPath: filepath.Join(providerName, "metadata.json"),
+		inputPath:    filepath.Join(providerName, "input"),
+	}
+}
+
+func (t cacheResultsOnlyWorkspaceVisitStrategy) visitPath(p string, info fs.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if info.IsDir() {
+		return nil
+	}
+
+	switch {
+	case strings.HasPrefix(p, t.inputPath):
+		// skip input data
+		return nil
+
+	case p == t.metadataPath:
+		// mark metadata stale
+
+		var state provider.State
+		f, err := os.Open(p)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		err = json.NewDecoder(f).Decode(&state)
+		if err != nil {
+			return err
+		}
+
+		state.Stale = true
+
+		// stream this to the archive
+		stateJSON, err := json.MarshalIndent(state, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		return t.writer.WriteEntry(tarutil.NewEntryFromBytes(stateJSON, p, info))
+	}
+
+	return t.writer.WriteEntry(tarutil.NewEntryFromFilePath(p))
 }

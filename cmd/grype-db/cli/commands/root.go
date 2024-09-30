@@ -45,7 +45,7 @@ func Root(app *application.Application) *cobra.Command {
 		Version: application.ReadBuildInfo().Version,
 		PreRunE: app.Setup(&cfg),
 		Example: formatRootExamples(),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				if err := runPull(pullConfig{
 					Pull:     cfg.Pull,

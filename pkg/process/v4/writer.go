@@ -13,7 +13,7 @@ import (
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
-	"github.com/anchore/grype/grype/db"
+	"github.com/anchore/grype/grype/db/legacy/distribution"
 	grypeDB "github.com/anchore/grype/grype/db/v4"
 	grypeDBStore "github.com/anchore/grype/grype/db/v4/store"
 )
@@ -73,18 +73,22 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w writer) metadata() (*db.Metadata, error) {
+// metadataAndClose closes the database and returns its metadata.
+// The reason this is a compound action is that getting the built time and
+// schema version from the database is an operation on the open database,
+// but the checksum must be computed after the database is compacted and closed.
+func (w writer) metadataAndClose() (*distribution.Metadata, error) {
+	storeID, err := w.store.GetID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
+	}
+	w.store.Close()
 	hashStr, err := file.ContentDigest(afero.NewOsFs(), w.dbPath, sha256.New())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash database file (%s): %w", w.dbPath, err)
 	}
 
-	storeID, err := w.store.GetID()
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
-	}
-
-	metadata := db.Metadata{
+	metadata := distribution.Metadata{
 		Built:    storeID.BuildTimestamp,
 		Version:  storeID.SchemaVersion,
 		Checksum: "sha256:" + hashStr,
@@ -93,13 +97,12 @@ func (w writer) metadata() (*db.Metadata, error) {
 }
 
 func (w writer) Close() error {
-	w.store.Close()
-	metadata, err := w.metadata()
+	metadata, err := w.metadataAndClose()
 	if err != nil {
 		return err
 	}
 
-	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
+	metadataPath := path.Join(filepath.Dir(w.dbPath), distribution.MetadataFileName)
 	if err = metadata.Write(metadataPath); err != nil {
 		return err
 	}
@@ -111,6 +114,7 @@ func (w writer) Close() error {
 }
 
 func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.VulnerabilityMetadataStoreReader) {
+	metadata.Severity = string(data.ParseSeverity(metadata.Severity))
 	if metadata.Severity != "" && strings.ToLower(metadata.Severity) != "unknown" {
 		return
 	}
@@ -126,13 +130,13 @@ func normalizeSeverity(metadata *grypeDB.VulnerabilityMetadata, reader grypeDB.V
 		return
 	}
 	if m == nil {
-		log.WithFields("id", metadata.ID).Debug("unable to find vulnerability metadata from NVD namespace")
+		log.WithFields("id", metadata.ID).Trace("unable to find vulnerability metadata from NVD namespace")
 		return
 	}
 
 	newSeverity := string(data.ParseSeverity(m.Severity))
-
-	log.WithFields("id", metadata.ID, "namespace", metadata.Namespace, "from", metadata.Severity, "to", newSeverity).Trace("overriding irrelevant severity with data from NVD record")
-
+	if newSeverity != metadata.Severity {
+		log.WithFields("id", metadata.ID, "namespace", metadata.Namespace, "sev-from", metadata.Severity, "sev-to", newSeverity).Trace("overriding irrelevant severity with data from NVD record")
+	}
 	metadata.Severity = newSeverity
 }

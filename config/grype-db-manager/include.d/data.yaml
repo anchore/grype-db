@@ -1,0 +1,5 @@
+# data:
+
+root: data/manager
+vunnel-root: data/vunnel
+yardstick-root: data/yardstick

@@ -51,28 +51,37 @@ func Test_normalizeSeverity(t *testing.T) {
 		expected        data.Severity
 	}{
 		{
-			name:            "skip missing metadata",
+			name:            "missing severity set to Unknown",
 			initialSeverity: "",
 			namespace:       "test",
 			reader:          &mockReader{},
-			expected:        "",
+			expected:        data.SeverityUnknown,
 		},
 		{
-			name:            "skip non-cve records metadata",
+			name:            "non-cve records metadata missing severity set to Unknown",
 			cveID:           "GHSA-1234-1234-1234",
 			initialSeverity: "",
 			namespace:       "test",
 			reader:          newDeadMockReader(), // should not be used
-			expected:        "",
-		}, {
-			name:            "override empty severity",
+			expected:        data.SeverityUnknown,
+		},
+		{
+			name:            "non-cve records metadata with severity set should not be overriden",
+			cveID:           "GHSA-1234-1234-1234",
+			initialSeverity: "high",
+			namespace:       "test",
+			reader:          newMockReader("critical"), // should not be used
+			expected:        data.SeverityHigh,
+		},
+		{
+			name:            "override empty severity from NVD",
 			initialSeverity: "",
 			namespace:       "test",
 			reader:          newMockReader("low"),
 			expected:        data.SeverityLow,
 		},
 		{
-			name:            "override unknown severity",
+			name:            "override unknown severity from NVD",
 			initialSeverity: "unknown",
 			namespace:       "test",
 			reader:          newMockReader("low"),
@@ -88,16 +97,16 @@ func Test_normalizeSeverity(t *testing.T) {
 		{
 			name:            "ignore nvd records",
 			initialSeverity: "Low",
-			namespace:       "nvd",
+			namespace:       "nvdv2:cves",
 			reader:          newDeadMockReader(), // should not be used
 			expected:        data.SeverityLow,
 		},
 		{
-			name:            "db errors should not fail or modify the record",
+			name:            "db errors should not fail or modify the record other than normalizing unset value",
 			initialSeverity: "",
 			namespace:       "test",
 			reader:          newDeadMockReader(),
-			expected:        "",
+			expected:        data.SeverityUnknown,
 		},
 	}
 	for _, tt := range tests {

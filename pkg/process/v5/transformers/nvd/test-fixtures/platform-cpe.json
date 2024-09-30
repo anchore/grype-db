@@ -129,6 +129,11 @@
                 {
                   "vulnerable": true,
                   "criteria": "cpe:2.3:a:python:python:3.11.0:alpha4:*:*:*:*:*:*",
+                  "matchCriteriaId": "09BBF4E9-EA54-41B5-948E-8E3D2660B7EF"
+                },
+                {
+                  "vulnerable": true,
+                  "criteria": "cpe:2.3:a:python:python:3.11.0:alpha4:*:*:*:*:*:*",
                   "matchCriteriaId": "D9BBF4E9-EA54-41B5-948E-8E3D2660B7EF"
                 },
                 {

@@ -14,6 +14,7 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
+	"github.com/anchore/grype/grype/version"
 )
 
 func TestUnmarshalNVDVulnerabilitiesEntries(t *testing.T) {
@@ -271,7 +272,7 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 						Kind: "platform-cpe",
 						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
 					}},
-					VersionConstraint: "<= 3.7.12 || >= 3.8.0, <= 3.8.12 || >= 3.9.0, <= 3.9.10 || >= 3.10.0, <= 3.10.2 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0 || = 3.11.0",
+					VersionConstraint: "<= 3.7.12 || >= 3.8.0, <= 3.8.12 || >= 3.9.0, <= 3.9.10 || >= 3.10.0, <= 3.10.2 || = 3.11.0-alpha1 || = 3.11.0-alpha2 || = 3.11.0-alpha3 || = 3.11.0-alpha4 || = 3.11.0-alpha5 || = 3.11.0-alpha6",
 					VersionFormat:     "unknown",
 					Namespace:         "nvd:cpe",
 					CPEs: []string{
@@ -325,6 +326,375 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "CVE-2022-0543 multiple platforms",
+			numEntries: 1,
+			fixture:    "test-fixtures/cve-2022-0543.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2022-0543",
+					PackageName: "redis",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
+					}},
+					VersionConstraint:      "",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+				{
+					ID:          "CVE-2022-0543",
+					PackageName: "redis",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
+					}},
+					VersionConstraint:      "",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+				{
+					ID:          "CVE-2022-0543",
+					PackageName: "redis",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+				{
+					ID:          "CVE-2022-0543",
+					PackageName: "redis",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+				{
+					ID:          "CVE-2022-0543",
+					PackageName: "redis",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redis:redis:-:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2022-0543",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2022-0543",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "Critical",
+				URLs: []string{
+					"http://packetstormsecurity.com/files/166885/Redis-Lua-Sandbox-Escape.html",
+					"https://bugs.debian.org/1005787",
+					"https://lists.debian.org/debian-security-announce/2022/msg00048.html",
+					"https://security.netapp.com/advisory/ntap-20220331-0004/",
+					"https://www.debian.org/security/2022/dsa-5081",
+					"https://www.ubercomp.com/posts/2022-01-20_redis_on_debian_rce",
+				},
+				Description: "It was discovered, that redis, a persistent key-value database, due to a packaging issue, is prone to a (Debian-specific) Lua sandbox escape, which could result in remote code execution.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(10, 10, 10),
+						Vector:         "AV:N/AC:L/Au:N/C:C/I:C/A:C",
+						Version:        "2.0",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(10, 3.9, 6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
+		{
+			name:       "CVE-2020-10729 multiple platforms omitted top level config",
+			numEntries: 1,
+			fixture:    "test-fixtures/cve-2020-10729.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2020-10729",
+					PackageName: "ansible_engine",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:redhat:enterprise_linux:7.0:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 2.9.6",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+				{
+					ID:          "CVE-2020-10729",
+					PackageName: "ansible_engine",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:redhat:enterprise_linux:8.0:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 2.9.6",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix:                    grypeDB.Fix{State: "unknown"},
+					Advisories:             nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2020-10729",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2020-10729",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "Medium",
+				URLs: []string{
+					"https://bugzilla.redhat.com/show_bug.cgi?id=1831089",
+					"https://github.com/ansible/ansible/issues/34144",
+					"https://www.debian.org/security/2021/dsa-4950",
+				},
+				Description: "A flaw was found in the use of insufficiently random values in Ansible. Two random password lookups of the same length generate the equal value as the template caching action for the same file since no re-evaluation happens. The highest threat from this vulnerability would be that all passwords are exposed at once for the file. This flaw affects Ansible Engine versions before 2.9.6.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics: grypeDB.NewCvssMetrics(
+							2.1,
+							3.9,
+							2.9,
+						),
+						Vector:  "AV:L/AC:L/Au:N/C:P/I:N/A:N",
+						Version: "2.0",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
+					},
+					{
+						VendorMetadata: nil,
+						Metrics: grypeDB.NewCvssMetrics(
+							5.5,
+							1.8,
+							3.6,
+						),
+						Vector:  "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+						Version: "3.1",
+						Source:  "nvd@nist.gov",
+						Type:    "Primary",
+					},
+				},
+			},
+		},
+		{
+			name:       "multiple platforms some are application",
+			numEntries: 2,
+			fixture:    "test-fixtures/multiple-platforms-with-application-cpe.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-38733",
+					PackageName: "robotic_process_automation",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:a:redhat:openshift:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      ">= 21.0.0, <= 21.0.7.3 || >= 23.0.0, <= 23.0.3",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:ibm:robotic_process_automation:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+				{
+					ID:          "CVE-2023-38733",
+					PackageName: "robotic_process_automation",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      ">= 21.0.0, <= 21.0.7.3 || >= 23.0.0, <= 23.0.3",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:ibm:robotic_process_automation:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-38733",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-38733",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "Medium",
+				URLs: []string{
+					"https://exchange.xforce.ibmcloud.com/vulnerabilities/262293",
+					"https://www.ibm.com/support/pages/node/7028223",
+				},
+				Description: "\nIBM Robotic Process Automation 21.0.0 through 21.0.7.1 and 23.0.0 through 23.0.1 server could allow an authenticated user to view sensitive information from installation logs.  IBM X-Force Id:  262293.\n\n",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(4.3, 2.8, 1.4),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(4.3, 2.8, 1.4),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+						Version:        "3.1",
+						Source:         "psirt@us.ibm.com",
+						Type:           "Secondary",
+					},
+				},
+			},
+		},
+		{
+			name:       "Platform CPE first in CPE config list",
+			numEntries: 1,
+			fixture:    "test-fixtures/CVE-2023-45283-platform-cpe-first.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-45283",
+					PackageName: "go",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 1.20.11 || >= 1.21.0-0, < 1.21.4",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-45283",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"http://www.openwall.com/lists/oss-security/2023/12/05/2",
+					"https://go.dev/cl/540277",
+					"https://go.dev/cl/541175",
+					"https://go.dev/issue/63713",
+					"https://go.dev/issue/64028",
+					"https://groups.google.com/g/golang-announce/c/4tU8LZfBFkY",
+					"https://groups.google.com/g/golang-dev/c/6ypN5EjibjM/m/KmLVYH_uAgAJ",
+					"https://pkg.go.dev/vuln/GO-2023-2185",
+					"https://security.netapp.com/advisory/ntap-20231214-0008/",
+				},
+				Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(7.5, 3.9, 3.6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
+		{
+			name:       "Platform CPE last in CPE config list",
+			numEntries: 1,
+			fixture:    "test-fixtures/CVE-2023-45283-platform-cpe-last.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-45283",
+					PackageName: "go",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 1.20.11 || >= 1.21.0-0, < 1.21.4",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						State: "unknown",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-45283",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"http://www.openwall.com/lists/oss-security/2023/12/05/2",
+					"https://go.dev/cl/540277",
+					"https://go.dev/cl/541175",
+					"https://go.dev/issue/63713",
+					"https://go.dev/issue/64028",
+					"https://groups.google.com/g/golang-announce/c/4tU8LZfBFkY",
+					"https://groups.google.com/g/golang-dev/c/6ypN5EjibjM/m/KmLVYH_uAgAJ",
+					"https://pkg.go.dev/vuln/GO-2023-2185",
+					"https://security.netapp.com/advisory/ntap-20231214-0008/",
+				},
+				Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(7.5, 3.9, 3.6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -363,6 +733,65 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 			if diff := cmp.Diff(test.vulns, vulns); diff != "" {
 				t.Errorf("vulnerabilities do not match (-want +got):\n%s", diff)
 			}
+		})
+	}
+}
+
+func TestGetVersionFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		cpes     []string
+		expected version.Format
+	}{
+		{
+			name:     "detects JVM format from name",
+			input:    "java_se",
+			cpes:     []string{},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from CPEs",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:openjdk:11:update53:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (zulu)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:zula:zulu:15:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (jdk)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:jdk:11.0:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (jre)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:jre:11.0:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "returns unknown format for non-JVM product and non-JVM CPEs",
+			input:    "non_jvm_product",
+			cpes:     []string{"cpe:2.3:a:some_other_product:product_name:1.0:*:*:*:*:*:*"},
+			expected: version.UnknownFormat,
+		},
+		{
+			name:     "handles invalid CPE gracefully",
+			input:    "non_jvm_product",
+			cpes:     []string{"invalid_cpe_format"},
+			expected: version.UnknownFormat,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			format := getVersionFormat(tt.input, tt.cpes)
+			assert.Equal(t, tt.expected, format)
 		})
 	}
 }

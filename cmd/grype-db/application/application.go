@@ -39,7 +39,7 @@ func New() *Application {
 
 func (a *Application) Setup(opts options.Interface) func(cmd *cobra.Command, args []string) error {
 	v := newViper()
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
 		// bind options to viper
 		if opts != nil {
 			if err := opts.BindFlags(cmd.Flags(), v); err != nil {

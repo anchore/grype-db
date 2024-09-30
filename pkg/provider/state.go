@@ -26,6 +26,7 @@ type State struct {
 	Timestamp        time.Time `json:"timestamp"`
 	Listing          *File     `json:"listing"`
 	Store            string    `json:"store"`
+	Stale            bool      `json:"stale"`
 	resultFileStates []File
 }
 

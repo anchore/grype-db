@@ -24,7 +24,7 @@ func Version(_ *application.Application) *cobra.Command {
 
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			// note: we intentionally do not execute through the application infrastructure (no app config is required for this command)
 
 			buildInfo := application.ReadBuildInfo()

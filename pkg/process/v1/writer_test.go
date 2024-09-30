@@ -51,29 +51,37 @@ func Test_normalizeSeverity(t *testing.T) {
 		expected        data.Severity
 	}{
 		{
-			name:            "skip missing metadata",
+			name:            "missing severity set to Unknown",
 			initialSeverity: "",
 			recordSource:    "test",
 			reader:          &mockReader{},
-			expected:        "",
+			expected:        data.SeverityUnknown,
 		},
 		{
-			name:            "skip non-cve records metadata",
+			name:            "non-cve records metadata missing severity set to Unknown",
 			cveID:           "GHSA-1234-1234-1234",
 			initialSeverity: "",
 			recordSource:    "test",
 			reader:          newDeadMockReader(), // should not be used
-			expected:        "",
+			expected:        data.SeverityUnknown,
 		},
 		{
-			name:            "override empty severity",
+			name:            "non-cve records metadata with severity set should not be overriden",
+			cveID:           "GHSA-1234-1234-1234",
+			initialSeverity: "high",
+			recordSource:    "test",
+			reader:          newMockReader("critical"), // should not be used
+			expected:        data.SeverityHigh,
+		},
+		{
+			name:            "override empty severity from NVD",
 			initialSeverity: "",
 			recordSource:    "test",
 			reader:          newMockReader("low"),
 			expected:        data.SeverityLow,
 		},
 		{
-			name:            "override unknown severity",
+			name:            "override unknown severity from NVD",
 			initialSeverity: "unknown",
 			recordSource:    "test",
 			reader:          newMockReader("low"),
@@ -94,11 +102,11 @@ func Test_normalizeSeverity(t *testing.T) {
 			expected:        data.SeverityLow,
 		},
 		{
-			name:            "db errors should not fail or modify the record",
+			name:            "db errors should not fail or modify the record other than normalizing unset value",
 			initialSeverity: "",
 			recordSource:    "test",
 			reader:          newDeadMockReader(),
-			expected:        "",
+			expected:        data.SeverityUnknown,
 		},
 	}
 	for _, tt := range tests {

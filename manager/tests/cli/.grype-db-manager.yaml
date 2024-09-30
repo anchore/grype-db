@@ -1,0 +1,64 @@
+# calling sts:GetCallerIdentity is a cheap way to assert that the credentials are valid
+# however, with localstack we need to disable this check since we don't have a valid token to begin with
+assert_aws_credentials: false
+
+data:
+  root: cli-test-data/manager
+  vunnel-root: cli-test-data/vunnel
+  yardstick-root: cli-test-data/yardstick
+
+grype-db:
+  # use the current repo at the current commit as the source of truth for the
+  # for the grype-db build source
+  version: file://../../../
+
+  config: .grype-db.yaml
+
+distribution:
+  listing-file-name: listing.json
+  s3-path: grype/databases
+  # note: we are using localstack for testing, so the bucket name is arbitrary
+  s3-bucket: testbucket
+  aws-region: us-west-2
+  s3-endpoint-url: http://localhost:4566
+  download-url-prefix: http://localhost:4566/testbucket
+
+validate:
+  listing:
+    image: "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
+    minimum-packages: 10          # 14 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
+    minimum-vulnerabilities: 10   # 15 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
+  default-max-year: 2021
+  gates:
+    # new vulnerabilities are added all of the time, instead of keeping up it's easier to ignore newer entries.
+    # This approach helps tremendously with keeping the analysis relatively stable.
+
+    - gate:
+        # float between 0 and 1, the maximum allowable difference below the OSS F1 score before the gate fails (default 0,
+        # meaning the test F1 score must be equal to or greater than the OSS F1 score to pass the gate)
+        max_f1_regression: 0.5
+
+        # float between 0 and 100, the maximum % of unlabeled matches for a scan result before the gate fails (default 10%,
+        # meaning the test scan must have less than 10% unlabeled matches to pass the gate)
+        max_unlabeled_percent: 10
+
+        # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
+        # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
+        max_new_false_negatives: 10
+        # determines which tool is being validated against which
+        # in other words, this gate asserts that the tool labeled 'custom-db'
+        # performs as well as or better than the tool not thus labeled.
+        candidate_tool_label: 'custom-db'
+
+      grype:
+        version: latest
+
+      syft:
+        # this should USUALLY match the version of syft that is referenced in vulnerability-match-labels on the main branch.
+        # However, in this case we are going to allow for this version to drift in testing. It's ok if we download
+        # the SBOM and NOT use it, since we are testing the workflow generally works.
+        version: v0.86.1
+
+      # note: always reference images with BOTH a tag and a digest
+      images:
+        - docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495

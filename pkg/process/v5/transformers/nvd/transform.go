@@ -2,6 +2,7 @@ package nvd
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/pkg/data"
@@ -12,6 +13,9 @@ import (
 	"github.com/anchore/grype/grype/db/v5/namespace"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
+	"github.com/anchore/grype/grype/pkg"
+	"github.com/anchore/grype/grype/version"
+	"github.com/anchore/syft/syft/cpe"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
@@ -46,10 +50,10 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			cpes.Add(grypeNamespace.Resolver().Normalize(m.Criteria))
 		}
 
-		if p.PlatformCPE != nil {
+		if p.PlatformCPE != "" {
 			qualifiers = []qualifier.Qualifier{platformcpe.Qualifier{
 				Kind: "platform-cpe",
-				CPE:  *p.PlatformCPE,
+				CPE:  p.PlatformCPE,
 			}}
 		}
 
@@ -61,7 +65,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 			ID:                vulnerability.ID,
 			PackageQualifiers: qualifiers,
 			VersionConstraint: buildConstraints(uniquePkgs.Matches(p)),
-			VersionFormat:     "unknown",
+			VersionFormat:     strings.ToLower(getVersionFormat(p.Product, orderedCPEs).String()),
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
 			CPEs:              orderedCPEs,
@@ -83,6 +87,22 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	}
 
 	return transformers.NewEntries(allVulns, metadata), nil
+}
+
+func getVersionFormat(name string, cpes []string) version.Format {
+	if pkg.HasJvmPackageName(name) {
+		return version.JVMFormat
+	}
+	for _, c := range cpes {
+		att, err := cpe.NewAttributes(c)
+		if err != nil {
+			continue
+		}
+		if pkg.HasJvmPackageName(att.Product) {
+			return version.JVMFormat
+		}
+	}
+	return version.UnknownFormat
 }
 
 func getFix(matches []nvd.CpeMatch) grypeDB.Fix {

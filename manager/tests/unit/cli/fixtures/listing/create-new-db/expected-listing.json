@@ -1,0 +1,104 @@
+{
+  "available": {
+    "1": [
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:7a62753ddb1f12994fdcd41244106cc459406620c522cb32c54da46b12b86634",
+        "url": "http://localhost:4566/testbucket/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz",
+        "version": 1
+      },
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:5ff9f2c047514ba4fbfc45e84df234ecbd2f09c11002c2f008be3a5c2c73b6f1",
+        "url": "http://localhost:4566/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724300289.tar.gz",
+        "version": 1
+      },
+      {
+        "built": "2024-08-21T01:31:31Z",
+        "checksum": "sha256:d0e8ca5357ebc152b767fe0a9caba8aba0dd106eacf936c653f02932a2c8e238",
+        "url": "http://localhost:4566/databases/vulnerability-db_v1_2024-08-21T01:31:31Z_1724213864.tar.gz",
+        "version": 1
+      }
+    ],
+    "2": [
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:330c91514fbc2f810f834ebcada5d87d3295cabee0878ae94ed044480e9a395e",
+        "url": "http://localhost:4566/testbucket/databases/vulnerability-db_v2_2024-08-22T01:31:37Z_1724340410.tar.gz",
+        "version": 2
+      },
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:18c0f3314a1b3f350d3c2cc20bc750411dfe7985ef3db3bdb134ef423fc7b43c",
+        "url": "http://localhost:4566/databases/vulnerability-db_v2_2024-08-22T01:31:37Z_1724300266.tar.gz",
+        "version": 2
+      },
+      {
+        "built": "2024-08-21T01:31:31Z",
+        "checksum": "sha256:d69d765bf1ee648cb5a50e3c2443e454c8b8b4820d007823528fd784620f9eaa",
+        "url": "http://localhost:4566/databases/vulnerability-db_v2_2024-08-21T01:31:31Z_1724213871.tar.gz",
+        "version": 2
+      }
+    ],
+    "3": [
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:1f260352be56b1f5fbcc9f904e5597656b865b8d67ae6c7f21837c761588ad7b",
+        "url": "http://localhost:4566/testbucket/databases/vulnerability-db_v3_2024-08-22T01:31:37Z_1724340460.tar.gz",
+        "version": 3
+      },
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:7f34f48fc8776dc7d297d655d38b224390301d048374e4a51c59df58af57e109",
+        "url": "http://localhost:4566/databases/vulnerability-db_v3_2024-08-22T01:31:37Z_1724300325.tar.gz",
+        "version": 3
+      },
+      {
+        "built": "2024-08-21T01:31:31Z",
+        "checksum": "sha256:4f66681b5be7c4eb192107bac6cf59b5e6ccf9a6f10ea9b23110af402f22507a",
+        "url": "http://localhost:4566/databases/vulnerability-db_v3_2024-08-21T01:31:31Z_1724213901.tar.gz",
+        "version": 3
+      }
+    ],
+    "4": [
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:4b224aef183a59d3dae1c18468591d3616c0be01dd47dc07f65fb77ee68f8000",
+        "url": "http://localhost:4566/testbucket/databases/vulnerability-db_v4_2024-08-22T01:31:37Z_1724340541.tar.gz",
+        "version": 4
+      },
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:497c8109d4c717ef1214b8cbd1954fccab7e89a77cd03469f01512ba566b7c14",
+        "url": "http://localhost:4566/databases/vulnerability-db_v4_2024-08-22T01:31:37Z_1724300355.tar.gz",
+        "version": 4
+      },
+      {
+        "built": "2024-08-21T01:31:31Z",
+        "checksum": "sha256:826fbbefbe631e2dd48e039e761b3ddba2d9ded0f2944c2d0c9db21b821695e2",
+        "url": "http://localhost:4566/databases/vulnerability-db_v4_2024-08-21T01:31:31Z_1724213974.tar.gz",
+        "version": 4
+      }
+    ],
+    "5": [
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:d7acab56538166c3543eaf11ec4622ef657f196323fa8d06670f46ad21bd2851",
+        "url": "http://localhost:4566/testbucket/databases/vulnerability-db_v5_2024-08-22T01:31:37Z_1724340606.tar.gz",
+        "version": 5
+      },
+      {
+        "built": "2024-08-22T01:31:37Z",
+        "checksum": "sha256:1c0d7e9c027c31e476352157e83575181e9420f2788ff23b01e0b4b096971541",
+        "url": "http://localhost:4566/databases/vulnerability-db_v5_2024-08-22T01:31:37Z_1724300383.tar.gz",
+        "version": 5
+      },
+      {
+        "built": "2024-08-21T01:31:31Z",
+        "checksum": "sha256:2aff16956eb083b6f3444b1b7c80ac64929dad293474dfc75ea20138aedb3bb1",
+        "url": "http://localhost:4566/databases/vulnerability-db_v5_2024-08-21T01:31:31Z_1724213998.tar.gz",
+        "version": 5
+      }
+    ]
+  }
+}

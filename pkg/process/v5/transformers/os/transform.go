@@ -30,21 +30,42 @@ func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 	}
 
 	providerName := d.String()
+	distroName := d.String()
 
 	switch d {
 	case distro.OracleLinux:
 		providerName = "oracle"
 	case distro.AmazonLinux:
 		providerName = "amazon"
+	case distro.Mariner, distro.Azure:
+		providerName = "mariner"
+		if strings.HasPrefix(feedGroupComponents[1], "3") {
+			distroName = distro.Azure.String() // Mariner Linux 3 is known as "Azure Linux 3"
+		}
 	}
 
-	ns, err := namespace.FromString(fmt.Sprintf("%s:distro:%s:%s", providerName, d.String(), feedGroupComponents[1]))
-
+	ns, err := namespace.FromString(fmt.Sprintf("%s:distro:%s:%s", providerName, distroName, feedGroupComponents[1]))
 	if err != nil {
 		return nil, err
 	}
 
 	return ns, nil
+}
+
+func buildPackageQualifiers(fixedInEntry unmarshal.OSFixedIn) (qualifiers []qualifier.Qualifier) {
+	if fixedInEntry.VersionFormat == "rpm" {
+		module := ""
+		if fixedInEntry.Module != nil {
+			module = *fixedInEntry.Module
+		}
+
+		qualifiers = []qualifier.Qualifier{rpmmodularity.Qualifier{
+			Kind:   "rpm-modularity",
+			Module: module,
+		}}
+	}
+
+	return qualifiers
 }
 
 func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
@@ -64,20 +85,11 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	// separate vulnerability entries (one for each name|namespace combo) while merging
 	// constraint ranges as they are found.
 	for idx, fixedInEntry := range vulnerability.Vulnerability.FixedIn {
-		var qualifiers []qualifier.Qualifier
-
-		if fixedInEntry.Module != nil {
-			qualifiers = []qualifier.Qualifier{rpmmodularity.Qualifier{
-				Kind:   "rpm-modularity",
-				Module: *fixedInEntry.Module,
-			}}
-		}
-
 		// create vulnerability entry
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                     vulnerability.Vulnerability.Name,
-			PackageQualifiers:      qualifiers,
-			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VersionFormat),
+			PackageQualifiers:      buildPackageQualifiers(fixedInEntry),
+			VersionConstraint:      enforceConstraint(fixedInEntry.Version, fixedInEntry.VulnerableRange, fixedInEntry.VersionFormat, vulnerability.Vulnerability.Name),
 			VersionFormat:          fixedInEntry.VersionFormat,
 			PackageName:            grypeNamespace.Resolver().Normalize(fixedInEntry.Name),
 			Namespace:              entryNamespace,
@@ -187,16 +199,40 @@ func getRelatedVulnerabilities(entry unmarshal.OSVulnerability) (vulns []grypeDB
 	return vulns
 }
 
-func enforceConstraint(constraint, format string) string {
-	constraint = common.CleanConstraint(constraint)
-	if len(constraint) == 0 {
+func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
+	constraint := fmt.Sprintf("< %s", fixVersion)
+
+	if strings.HasPrefix(vulnerabilityID, "ALASKERNEL-") {
+		// Amazon advisories of the form ALASKERNEL-5.4-2023-048 should be interpreted as only applying to
+		// the 5.4.x kernel line since Amazon issue a separate advisory per affected line, thus the constraint
+		// should be >= 5.4, < {fix version}.  In the future the vunnel schema for OS vulns should be enhanced
+		// to emit actual constraints rather than fixed-in entries (tracked in https://github.com/anchore/vunnel/issues/266)
+		// at which point this workaround in grype-db can be removed.
+
+		components := strings.Split(vulnerabilityID, "-")
+
+		if len(components) == 4 {
+			base := components[1]
+			constraint = fmt.Sprintf(">= %s, < %s", base, fixVersion)
+		}
+	}
+
+	return constraint
+}
+
+func enforceConstraint(fixedVersion, vulnerableRange, format, vulnerabilityID string) string {
+	if len(vulnerableRange) > 0 {
+		return vulnerableRange
+	}
+	fixedVersion = common.CleanConstraint(fixedVersion)
+	if len(fixedVersion) == 0 {
 		return ""
 	}
 	switch strings.ToLower(format) {
 	case "semver":
-		return common.EnforceSemVerConstraint(constraint)
+		return common.EnforceSemVerConstraint(fixedVersion)
 	default:
 		// the passed constraint is a fixed version
-		return fmt.Sprintf("< %s", constraint)
+		return deriveConstraintFromFix(fixedVersion, vulnerabilityID)
 	}
 }

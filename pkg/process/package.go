@@ -1,8 +1,6 @@
 package process
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"net/url"
 	"os"
@@ -13,21 +11,19 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/internal/tar"
-	"github.com/anchore/grype/grype/db"
+	"github.com/anchore/grype-db/internal/tarutil"
+	"github.com/anchore/grype/grype/db/legacy/distribution"
 )
 
-func randomString() (string, error) {
-	b := make([]byte, 10)
-	_, err := rand.Read(b)
-	return hex.EncodeToString(b), err
+func secondsSinceEpoch() int64 {
+	return time.Now().UTC().Unix()
 }
 
 func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
 
 	fs := afero.NewOsFs()
-	metadata, err := db.NewMetadataFromDir(fs, dbDir)
+	metadata, err := distribution.NewMetadataFromDir(fs, dbDir)
 	if err != nil {
 		return err
 	}
@@ -41,10 +37,11 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 		return err
 	}
 
-	trailer, err := randomString()
-	if err != nil {
-		return fmt.Errorf("unable to create random archive trailer: %w", err)
-	}
+	// we need a well-ordered string to append to the archive name to ensure uniqueness (to avoid overwriting
+	// existing archives in the CDN) as well as to ensure that multiple archives created in the same day are
+	// put in the correct order in the listing file. The DB timestamp represents the age of the data in the DB
+	// not when the DB was created. The trailer represents the time the DB was packaged.
+	trailer := fmt.Sprintf("%d", secondsSinceEpoch())
 
 	// TODO (alex): supporting tar.zst
 	// var extension = "tar.zst"
@@ -87,13 +84,13 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 
 	log.WithFields("path", tarPath).Info("created database archive")
 
-	entry, err := db.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
+	entry, err := distribution.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
 	if err != nil {
 		return fmt.Errorf("unable to create listing entry from archive: %w", err)
 	}
 
-	listing := db.NewListing(entry)
-	listingPath := path.Join(dbDir, db.ListingFileName)
+	listing := distribution.NewListing(entry)
+	listingPath := path.Join(dbDir, distribution.ListingFileName)
 	if err = listing.Write(listingPath); err != nil {
 		return err
 	}
@@ -115,7 +112,7 @@ func populate(tarName, dbDir string) error {
 
 	defer func() {
 		if err = os.Chdir(originalDir); err != nil {
-			log.Errorf("unable to cd to original dir: %w", err)
+			log.Errorf("unable to cd to original dir: %v", err)
 		}
 	}()
 
@@ -131,7 +128,7 @@ func populate(tarName, dbDir string) error {
 		}
 	}
 
-	if err = tar.Populate(tarName, files...); err != nil {
+	if err = tarutil.PopulateWithPaths(tarName, files...); err != nil {
 		return fmt.Errorf("unable to create db archive: %w", err)
 	}
 

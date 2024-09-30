@@ -1,0 +1,10 @@
+# this configuration is intended to be used for running acceptance tests on PRs
+
+data: !include config/grype-db-manager/include.d/data.yaml
+
+grype-db: !include config/grype-db-manager/include.d/grype-db-local-build.yaml
+
+# note: do not include the distribution config here. It is only used for the production/staging pipelines.
+# distribution: ...
+
+validate: !include config/grype-db-manager/include.d/validate.yaml

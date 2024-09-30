@@ -1,0 +1,7 @@
+# distribution:
+
+listing-file-name: listing.json
+s3-path: databases
+s3-bucket: oss-prod-anchore
+aws-region: auto
+download-url-prefix: https://grype.anchore.io

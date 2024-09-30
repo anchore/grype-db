@@ -1,4 +1,4 @@
-# note: this file is not intended to be used for the daily-db-sync workflow to populate a vulnerability data cache
+root: ./data/vunnel
 
 log:
   slim: true
@@ -8,3 +8,8 @@ providers:
   ubuntu:
     # there is a lot of IO when running git log commands in this provider, so some concurrency helps here
     max_workers: 10
+
+  nvd:
+    # apply community-provided overrides to the NVD data
+    # sourced from the https://github.com/anchore/nvd-data-overrides repo
+    overrides_enabled: true

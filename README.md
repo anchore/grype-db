@@ -1,6 +1,10 @@
 # grype-db
-Application to create a grype vulnerability database from upstream vulnerability data sources.
 
+**Application to create a [Grype](https://github.com/anchore/grype) vulnerability database from upstream vulnerability data sources.**
+
+[![GitHub release](https://img.shields.io/github/release/anchore/grype-db.svg)](https://github.com/anchore/grype-db/releases/latest)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/anchore/grype-db/blob/main/LICENSE)
+[![Join our Discourse](https://img.shields.io/badge/Discourse-Join-blue?logo=discourse)](https://anchore.com/discourse)
 
 ## Installation
 
@@ -46,10 +50,11 @@ process the vulnerability data. Use `-g` to generate the list of providers to pu
 **note: you can skip the `pull` step if you already have a local cache of vulnerability data (with `make download-all-provider-cache`).**
 
 The `build` command processes the cached vuln data generate a `vulnerability.db` sqlite3 file. Additionally, a `metadata.json`
-is created that is used in packaging and curation of the database file by this application and downstream consuming applications.
+is created that is used in packaging and curation of the database file by this application and downstream consuming applications
+and a `provider-metadata.json` file is created that includes the last successful run date for each provider.
 Use `-g` to generate the list of providers to pull based on the output of "vunnel list".
 
-The `package` command archives the `vulnerability.db` and `metadata.json` files into a `tar.gz` file. Additionally, a `listing.json`
+The `package` command archives the `vulnerability.db`, `metadata.json` and `provider-metadata.json` files into a `tar.gz` file. Additionally, a `listing.json`
 is generated to aid in serving one or more database archives for downstream consumption, where the consuming application should
 use the listing file to discover available archives available for download. The base URL used to create the download URL for each
 database archive is controlled by the `package.base-url` configuration option.
