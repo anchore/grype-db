@@ -13,7 +13,7 @@ import (
 	"github.com/anchore/grype-db/internal/file"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
-	"github.com/anchore/grype/grype/db"
+	"github.com/anchore/grype/grype/db/legacy/distribution"
 	grypeDB "github.com/anchore/grype/grype/db/v2"
 	grypeDBStore "github.com/anchore/grype/grype/db/v2/store"
 )
@@ -65,7 +65,7 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w writer) metadata() (*db.Metadata, error) {
+func (w writer) metadata() (*distribution.Metadata, error) {
 	hashStr, err := file.ContentDigest(afero.NewOsFs(), w.dbPath, sha256.New())
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash database file (%s): %w", w.dbPath, err)
@@ -76,7 +76,7 @@ func (w writer) metadata() (*db.Metadata, error) {
 		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
 	}
 
-	metadata := db.Metadata{
+	metadata := distribution.Metadata{
 		Built:    storeID.BuildTimestamp,
 		Version:  storeID.SchemaVersion,
 		Checksum: "sha256:" + hashStr,
@@ -91,7 +91,7 @@ func (w writer) Close() error {
 		return err
 	}
 
-	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
+	metadataPath := path.Join(filepath.Dir(w.dbPath), distribution.MetadataFileName)
 	if err = metadata.Write(metadataPath); err != nil {
 		return err
 	}

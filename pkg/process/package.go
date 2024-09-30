@@ -12,7 +12,7 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/tarutil"
-	"github.com/anchore/grype/grype/db"
+	"github.com/anchore/grype/grype/db/legacy/distribution"
 )
 
 func secondsSinceEpoch() int64 {
@@ -23,7 +23,7 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
 
 	fs := afero.NewOsFs()
-	metadata, err := db.NewMetadataFromDir(fs, dbDir)
+	metadata, err := distribution.NewMetadataFromDir(fs, dbDir)
 	if err != nil {
 		return err
 	}
@@ -84,13 +84,13 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 
 	log.WithFields("path", tarPath).Info("created database archive")
 
-	entry, err := db.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
+	entry, err := distribution.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
 	if err != nil {
 		return fmt.Errorf("unable to create listing entry from archive: %w", err)
 	}
 
-	listing := db.NewListing(entry)
-	listingPath := path.Join(dbDir, db.ListingFileName)
+	listing := distribution.NewListing(entry)
+	listingPath := path.Join(dbDir, distribution.ListingFileName)
 	if err = listing.Write(listingPath); err != nil {
 		return err
 	}

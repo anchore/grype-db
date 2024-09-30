@@ -16,7 +16,7 @@ import (
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype/grype/db"
+	"github.com/anchore/grype/grype/db/legacy/distribution"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	grypeDBStore "github.com/anchore/grype/grype/db/v5/store"
 )
@@ -95,7 +95,7 @@ func (w writer) Write(entries ...data.Entry) error {
 // The reason this is a compound action is that getting the built time and
 // schema version from the database is an operation on the open database,
 // but the checksum must be computed after the database is compacted and closed.
-func (w writer) metadataAndClose() (*db.Metadata, error) {
+func (w writer) metadataAndClose() (*distribution.Metadata, error) {
 	storeID, err := w.store.GetID()
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch store ID: %w", err)
@@ -106,7 +106,7 @@ func (w writer) metadataAndClose() (*db.Metadata, error) {
 		return nil, fmt.Errorf("failed to hash database file (%s): %w", w.dbPath, err)
 	}
 
-	metadata := db.Metadata{
+	metadata := distribution.Metadata{
 		Built:    storeID.BuildTimestamp,
 		Version:  storeID.SchemaVersion,
 		Checksum: "sha256:" + hashStr,
@@ -138,7 +138,7 @@ func (w writer) Close() error {
 		return err
 	}
 
-	metadataPath := path.Join(filepath.Dir(w.dbPath), db.MetadataFileName)
+	metadataPath := path.Join(filepath.Dir(w.dbPath), distribution.MetadataFileName)
 	if err = metadata.Write(metadataPath); err != nil {
 		return err
 	}
