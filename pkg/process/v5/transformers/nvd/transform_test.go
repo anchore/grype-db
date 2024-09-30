@@ -459,7 +459,10 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					VersionFormat:          "unknown",
 					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
-					Fix:                    grypeDB.Fix{State: "unknown"},
+					Fix:                    grypeDB.Fix{
+						Versions: []string{"2.9.6"},
+						State: "fixed",
+					},
 					Advisories:             nil,
 				},
 				{
@@ -474,7 +477,10 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					VersionFormat:          "unknown",
 					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
-					Fix:                    grypeDB.Fix{State: "unknown"},
+					Fix:                    grypeDB.Fix{
+						Versions: []string{"2.9.6"},
+						State: "fixed",
+					},
 					Advisories:             nil,
 				},
 			},
@@ -607,7 +613,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
 					Fix: grypeDB.Fix{
-						State: "unknown",
+						Versions: []string{"1.20.11", "1.21.4"},
+						State:    "fixed",
 					},
 					Advisories: nil,
 				},
@@ -660,7 +667,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
 					Fix: grypeDB.Fix{
-						State: "unknown",
+						Versions: []string{"1.20.11", "1.21.4"},
+						State:    "fixed",
 					},
 					Advisories: nil,
 				},

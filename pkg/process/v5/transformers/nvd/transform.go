@@ -1,6 +1,7 @@
 package nvd
 
 import (
+	"slices"
 	"sort"
 	"strings"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/anchore/grype/grype/pkg"
 	"github.com/anchore/grype/grype/version"
 	"github.com/anchore/syft/syft/cpe"
+	"github.com/scylladb/go-set/strset"
 )
 
 func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
@@ -64,12 +66,12 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                vulnerability.ID,
 			PackageQualifiers: qualifiers,
-			VersionConstraint: buildConstraints(uniquePkgs.Matches(p)),
+			VersionConstraint: buildConstraints(matches),
 			VersionFormat:     strings.ToLower(getVersionFormat(p.Product, orderedCPEs).String()),
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
 			CPEs:              orderedCPEs,
-			Fix:               getFix(uniquePkgs.Matches((p))),
+			Fix:               getFix(matches),
 		})
 	}
 
@@ -106,21 +108,24 @@ func getVersionFormat(name string, cpes []string) version.Format {
 }
 
 func getFix(matches []nvd.CpeMatch) grypeDB.Fix {
-	var fixedInVersions []string
+	fixedInVersions := strset.New()
 
 	for _, match := range matches {
-		if match.VersionEndExcluding != nil {
-			fixedInVersions = append(fixedInVersions, *match.VersionEndExcluding)
+		if match.VersionEndExcluding != nil && *match.VersionEndExcluding != "" {
+			fixedInVersions.Add(*match.VersionEndExcluding)
 		}
 	}
 
+	var fixes []string
 	fixState := grypeDB.UnknownFixState
-	if len(fixedInVersions) > 0 {
+	if fixedInVersions.Size() > 0 {
 		fixState = grypeDB.FixedState
+		fixes = fixedInVersions.List()
+		slices.Sort(fixes)
 	}
 
 	return grypeDB.Fix{
-		Versions: fixedInVersions,
+		Versions: fixes,
 		State:    fixState,
 	}
 }
