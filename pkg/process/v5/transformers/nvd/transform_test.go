@@ -815,7 +815,8 @@ func TestGetFix(t *testing.T) {
 			name: "Equals",
 			matches: []nvd.CpeMatch{
 				{
-					Criteria: "cpe:2.3:a:vendor:product:2.2.0:*:*:*:*:target:*:*",
+					Criteria:   "cpe:2.3:a:vendor:product:2.2.0:*:*:*:*:target:*:*",
+					Vulnerable: true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -829,6 +830,7 @@ func TestGetFix(t *testing.T) {
 				{
 					Criteria:            "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionEndExcluding: strRef("2.3.0"),
+					Vulnerable:          true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -842,6 +844,7 @@ func TestGetFix(t *testing.T) {
 				{
 					Criteria:            "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionEndIncluding: strRef("2.3.0"),
+					Vulnerable:          true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -855,6 +858,7 @@ func TestGetFix(t *testing.T) {
 				{
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartExcluding: strRef("2.3.0"),
+					Vulnerable:            true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -868,6 +872,7 @@ func TestGetFix(t *testing.T) {
 				{
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartIncluding: strRef("2.3.0"),
+					Vulnerable:            true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -882,6 +887,7 @@ func TestGetFix(t *testing.T) {
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartIncluding: strRef("2.3.0"),
 					VersionEndIncluding:   strRef("2.5.0"),
+					Vulnerable:            true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -896,11 +902,13 @@ func TestGetFix(t *testing.T) {
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartIncluding: strRef("2.3.0"),
 					VersionEndIncluding:   strRef("2.5.0"),
+					Vulnerable:            true,
 				},
 				{
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartExcluding: strRef("3.3.0"),
 					VersionEndExcluding:   strRef("3.5.0"),
+					Vulnerable:            true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -915,6 +923,7 @@ func TestGetFix(t *testing.T) {
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartExcluding: strRef("3.3.0"),
 					VersionEndExcluding:   strRef(""),
+					Vulnerable:            true,
 				},
 			},
 			expected: grypeDB.Fix{
@@ -929,21 +938,119 @@ func TestGetFix(t *testing.T) {
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartIncluding: strRef("3.3.0"),
 					VersionEndExcluding:   strRef("3.5.0"),
+					Vulnerable:            true,
 				},
 				{
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
 					VersionStartIncluding: strRef("0"),
 					VersionEndExcluding:   strRef("1.7.0"),
+					Vulnerable:            true,
 				},
 				{
 					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target-2:*:*",
 					VersionStartIncluding: strRef("0"),
 					VersionEndExcluding:   strRef("1.7.0"),
+					Vulnerable:            true,
 				},
 			},
 			expected: grypeDB.Fix{
 				Versions: []string{"1.7.0", "3.5.0"},
 				State:    "fixed",
+			},
+		},
+		{
+			name: "< version as end in a separate affected >= range",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.5.0"),
+					VersionEndExcluding:   strRef("3.5.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"3.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "< version as start in a separate affected <= range",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.1.0"),
+					VersionEndIncluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "< range with same version affected == critera",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:   "cpe:2.3:a:vendor:product:2.5.0:*:*:*:*:target:*:*",
+					Vulnerable: true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "< range with another unaffected entry",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:   "cpe:2.3:a:vendor:product:2.5.0:*:*:*:*:target:*:*",
+					Vulnerable: false,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"2.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "treat * in < as unknown fix state",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("*"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
 			},
 		},
 	}
