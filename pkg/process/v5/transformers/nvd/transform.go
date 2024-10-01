@@ -109,19 +109,44 @@ func getVersionFormat(name string, cpes []string) version.Format {
 }
 
 func getFix(matches []nvd.CpeMatch) grypeDB.Fix {
-	fixedInVersions := strset.New()
+	possiblyFixed := strset.New()
+	knownAffected := strset.New()
+	unspecifiedSet := strset.New("*", "-", "*")
 
 	for _, match := range matches {
-		if match.VersionEndExcluding != nil && *match.VersionEndExcluding != "" {
-			fixedInVersions.Add(*match.VersionEndExcluding)
+		if !match.Vulnerable {
+			continue
+		}
+
+		if match.VersionEndExcluding != nil && !unspecifiedSet.Has(*match.VersionEndExcluding) {
+			possiblyFixed.Add(*match.VersionEndExcluding)
+		}
+
+		if match.VersionStartIncluding != nil && !unspecifiedSet.Has(*match.VersionStartIncluding) {
+			knownAffected.Add(*match.VersionStartIncluding)
+		}
+
+		if match.VersionEndIncluding != nil && !unspecifiedSet.Has(*match.VersionEndIncluding) {
+			knownAffected.Add(*match.VersionEndIncluding)
+		}
+
+		matchCPE, err := cpe.New(match.Criteria, cpe.DeclaredSource)
+		if err != nil {
+			continue
+		}
+
+		if !unspecifiedSet.Has(matchCPE.Attributes.Version) {
+			knownAffected.Add(matchCPE.Attributes.Version)
 		}
 	}
 
+	possiblyFixed.Remove(knownAffected.List()...)
+
 	var fixes []string
 	fixState := grypeDB.UnknownFixState
-	if fixedInVersions.Size() > 0 {
+	if possiblyFixed.Size() > 0 {
 		fixState = grypeDB.FixedState
-		fixes = fixedInVersions.List()
+		fixes = possiblyFixed.List()
 		slices.Sort(fixes)
 	}
 
