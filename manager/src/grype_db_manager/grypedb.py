@@ -32,7 +32,11 @@ DB_DIR = "dbs"
 # however, its important to use the file for the same version of vunnel used by grype-db to build the DB, which
 # isn't always possible to know. Ideally this version info would be captured in the vunnel data directory directly.
 # For the meantime this is a snapshot of the expected namespaces for vunnel 0.17.2 in Oct 2023 (boo! 👻).
-expected_namespaces = [
+v5_additional_namespaces = [
+    "mariner:distro:azurelinux:3.0",
+]
+
+v4_expected_namespaces = [
     "alpine:distro:alpine:3.10",
     "alpine:distro:alpine:3.11",
     "alpine:distro:alpine:3.12",
@@ -228,6 +232,12 @@ v3_expected_namespaces = [
     "wolfi:rolling",
 ]
 
+def expected_namespaces(schema_version: int) -> list[str]:
+    if schema_version <= 3:
+        return v3_expected_namespaces
+    if schema_version == 4:
+        return v4_expected_namespaces
+    return v4_expected_namespaces + v5_additional_namespaces
 
 @dataclasses.dataclass
 class DBInfo:
@@ -288,9 +298,7 @@ class DBManager:
 
     def validate_namespaces(self, db_uuid: str) -> None:
         db_info = self.get_db_info(db_uuid)
-
-        expected = v3_expected_namespaces if db_info.schema_version <= 3 else expected_namespaces
-
+        expected = expected_namespaces(db_info.schema_version)
         missing_namespaces = set(expected) - set(self.list_namespaces(db_uuid=db_uuid))
 
         if missing_namespaces:

@@ -70,16 +70,16 @@ class TestDBManager:
         [
             pytest.param([], 5, True, id="empty"),
             pytest.param(["namespace1"], 5, True, id="too few namespaces"),
-            pytest.param(grypedb.expected_namespaces, 5, False, id="v5 matches"),
-            pytest.param(grypedb.expected_namespaces + ["extra_items"], 5, False, id="v5 with extra items"),
-            pytest.param(list(grypedb.expected_namespaces)[:-5], 5, True, id="v5 missing items"),
-            pytest.param(grypedb.v3_expected_namespaces, 3, False, id="v3 matches"),
-            pytest.param(grypedb.v3_expected_namespaces + ["extra_items"], 3, False, id="v3 with extra items"),
-            pytest.param(list(grypedb.v3_expected_namespaces)[:-5], 3, True, id="v3 missing items"),
+            pytest.param(grypedb.expected_namespaces(5), 5, False, id="v5 matches"),
+            pytest.param(grypedb.expected_namespaces(5) + ["extra_items"], 5, False, id="v5 with extra items"),
+            pytest.param(list(grypedb.expected_namespaces(5))[:-5], 5, True, id="v5 missing items"),
+            pytest.param(grypedb.expected_namespaces(3), 3, False, id="v3 matches"),
+            pytest.param(grypedb.expected_namespaces(3) + ["extra_items"], 3, False, id="v3 with extra items"),
+            pytest.param(list(grypedb.expected_namespaces(3))[:-5], 3, True, id="v3 missing items"),
         ],
     )
     def test_validate_namespaces(self, tmp_path: pathlib.Path, mocker, schema_version, listed_namespaces, expect_error):
-        assert len(grypedb.expected_namespaces) > 0
+        assert len(grypedb.expected_namespaces(schema_version)) > 0
 
         dbm = grypedb.DBManager(root_dir=tmp_path.as_posix())
         session_id = dbm.new_session()
