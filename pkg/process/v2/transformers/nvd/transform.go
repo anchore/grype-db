@@ -45,7 +45,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 		vuln := grypeDB.Vulnerability{
 			ID:                   vulnerability.ID,
 			RecordSource:         recordSource,
-			VersionConstraint:    buildConstraints(uniquePkgs.Matches(p)),
+			VersionConstraint:    buildConstraints(matches),
 			VersionFormat:        "unknown", // TODO: derive this from the target software
 			PackageName:          p.Product,
 			Namespace:            "nvd", // should the vendor be here? or in other metadata?
