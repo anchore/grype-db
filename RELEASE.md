@@ -1,6 +1,6 @@
 # Release
 
-A release of grype comprises:
+A release of grype-db comprises:
 - a new semver git tag from the current tip of the main branch
 - a new [github release](https://github.com/anchore/grype-db/releases) with a changelog and archived binary assets
 
