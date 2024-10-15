@@ -32,6 +32,7 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 
 	tests := []struct {
 		name       string
+		config     Config
 		numEntries int
 		fixture    string
 		vulns      []grypeDB.Vulnerability
@@ -708,6 +709,9 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.config == (Config{}) {
+				test.config = defaultConfig()
+			}
 			f, err := os.Open(test.fixture)
 			require.NoError(t, err)
 			t.Cleanup(func() {
@@ -719,7 +723,7 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 
 			var vulns []grypeDB.Vulnerability
 			for _, entry := range entries {
-				dataEntries, err := Transform(entry.Cve)
+				dataEntries, err := transform(test.config, entry.Cve)
 				require.NoError(t, err)
 
 				for _, entry := range dataEntries {

@@ -31,7 +31,7 @@ func (p pkgCandidate) String() string {
 	return fmt.Sprintf("%s|%s|%s|%s", p.Vendor, p.Product, p.TargetSoftware, p.PlatformCPE)
 }
 
-func newPkgCandidate(match nvd.CpeMatch, platformCPE string) (*pkgCandidate, error) {
+func newPkgCandidate(tCfg Config, match nvd.CpeMatch, platformCPE string) (*pkgCandidate, error) {
 	// we are only interested in packages that are vulnerable (not related to secondary match conditioning)
 	if !match.Vulnerable {
 		return nil, nil
@@ -42,8 +42,9 @@ func newPkgCandidate(match nvd.CpeMatch, platformCPE string) (*pkgCandidate, err
 		return nil, fmt.Errorf("unable to create uniquePkgEntry from '%s': %w", match.Criteria, err)
 	}
 
-	// we are only interested in applications, not hardware or operating systems
-	if c.Part() != cpe.Application {
+	// we are interested in applications, conditionally operating systems, but never hardware
+	part := c.Part()
+	if !tCfg.CPEParts.Has(string(part)) {
 		return nil, nil
 	}
 
@@ -55,15 +56,15 @@ func newPkgCandidate(match nvd.CpeMatch, platformCPE string) (*pkgCandidate, err
 	}, nil
 }
 
-func findUniquePkgs(cfgs ...nvd.Configuration) uniquePkgTracker {
+func findUniquePkgs(tCfg Config, cfgs ...nvd.Configuration) uniquePkgTracker {
 	set := newUniquePkgTracker()
 	for _, c := range cfgs {
-		_findUniquePkgs(set, c)
+		_findUniquePkgs(tCfg, set, c)
 	}
 	return set
 }
 
-func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
+func platformPackageCandidates(tCfg Config, set uniquePkgTracker, c nvd.Configuration) bool {
 	nodes := c.Nodes
 	/*
 		Turn a configuration like this:
@@ -108,7 +109,7 @@ func platformPackageCandidates(set uniquePkgTracker, c nvd.Configuration) bool {
 	for _, application := range applicationNode.CpeMatch {
 		for _, maybePlatform := range matches {
 			platform := maybePlatform.Criteria
-			candidate, err := newPkgCandidate(application, platform)
+			candidate, err := newPkgCandidate(tCfg, application, platform)
 			if err != nil {
 				log.Debugf("unable processing uniquePkg with multiple platforms: %v", err)
 				continue
@@ -151,18 +152,18 @@ func noCPEsVulnerable(node nvd.Node) bool {
 	return true
 }
 
-func _findUniquePkgs(set uniquePkgTracker, c nvd.Configuration) {
+func _findUniquePkgs(tCfg Config, set uniquePkgTracker, c nvd.Configuration) {
 	if len(c.Nodes) == 0 {
 		return
 	}
 
-	if platformPackageCandidates(set, c) {
+	if platformPackageCandidates(tCfg, set, c) {
 		return
 	}
 
 	for _, node := range c.Nodes {
 		for _, match := range node.CpeMatch {
-			candidate, err := newPkgCandidate(match, "")
+			candidate, err := newPkgCandidate(tCfg, match, "")
 			if err != nil {
 				// Do not halt all execution because of being unable to create
 				// a PkgCandidate. This can happen when a CPE is invalid which

@@ -21,7 +21,26 @@ import (
 	"github.com/anchore/syft/syft/cpe"
 )
 
-func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
+type Config struct {
+	CPEParts *strset.Set
+}
+
+func defaultConfig() Config {
+	return Config{
+		CPEParts: strset.New("a"),
+	}
+}
+
+func Transformer(cfg Config) data.NVDTransformer {
+	if cfg == (Config{}) {
+		cfg = defaultConfig()
+	}
+	return func(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
+		return transform(cfg, vulnerability)
+	}
+}
+
+func transform(cfg Config, vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	// TODO: stop capturing record source in the vulnerability metadata record (now that feed groups are not real)
 	recordSource := "nvdv2:nvdv2:cves"
 
@@ -32,7 +51,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 
 	entryNamespace := grypeNamespace.String()
 
-	uniquePkgs := findUniquePkgs(vulnerability.Configurations...)
+	uniquePkgs := findUniquePkgs(cfg, vulnerability.Configurations...)
 
 	// extract all links
 	var links []string

@@ -17,14 +17,15 @@ type Build struct {
 	SchemaVersion  int  `yaml:"schema-version" json:"schema-version" mapstructure:"schema-version"`
 
 	// unbound options
-	// (none)
+	IncludeCPEParts []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
 }
 
 func DefaultBuild() Build {
 	return Build{
-		DBLocation:     DefaultDBLocation(),
-		SkipValidation: false,
-		SchemaVersion:  process.DefaultSchemaVersion,
+		DBLocation:      DefaultDBLocation(),
+		SkipValidation:  false,
+		SchemaVersion:   process.DefaultSchemaVersion,
+		IncludeCPEParts: []string{"a"},
 	}
 }
 
@@ -54,7 +55,7 @@ func (o *Build) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	}
 
 	// set default values for non-bound struct items
-	// (none)
+	v.SetDefault("build.include-cpe-parts", o.IncludeCPEParts)
 
 	return o.DBLocation.BindFlags(flags, v)
 }
