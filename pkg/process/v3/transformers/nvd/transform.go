@@ -51,7 +51,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 		// create vulnerability entry
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                vulnerability.ID,
-			VersionConstraint: buildConstraints(uniquePkgs.Matches(p)),
+			VersionConstraint: buildConstraints(matches),
 			VersionFormat:     "unknown",
 			PackageName:       p.Product,
 			Namespace:         entryNamespace,
