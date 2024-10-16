@@ -25,10 +25,11 @@ import (
 )
 
 type BuildConfig struct {
-	SchemaVersion int
-	Directory     string
-	States        provider.States
-	Timestamp     time.Time
+	SchemaVersion   int
+	Directory       string
+	States          provider.States
+	Timestamp       time.Time
+	IncludeCPEParts []string
 }
 
 func Build(cfg BuildConfig) error {
@@ -38,7 +39,7 @@ func Build(cfg BuildConfig) error {
 		"providers", cfg.States.Names()).
 		Info("building database")
 
-	processors, err := getProcessors(cfg.SchemaVersion)
+	processors, err := getProcessors(cfg)
 	if err != nil {
 		return err
 	}
@@ -89,8 +90,8 @@ func mergeOpeners(entries []openerEntry) <-chan entry.Opener {
 	return out
 }
 
-func getProcessors(schemaVersion int) ([]data.Processor, error) {
-	switch schemaVersion {
+func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
+	switch cfg.SchemaVersion {
 	case grypeDBv1.SchemaVersion:
 		return v1.Processors(), nil
 	case grypeDBv2.SchemaVersion:
@@ -100,9 +101,9 @@ func getProcessors(schemaVersion int) ([]data.Processor, error) {
 	case grypeDBv4.SchemaVersion:
 		return v4.Processors(), nil
 	case grypeDBv5.SchemaVersion:
-		return v5.Processors(), nil
+		return v5.Processors(v5.NewConfig(v5.WithCPEParts(cfg.IncludeCPEParts))), nil
 	default:
-		return nil, fmt.Errorf("unable to create processor: unsupported schema version: %+v", schemaVersion)
+		return nil, fmt.Errorf("unable to create processor: unsupported schema version: %+v", cfg.SchemaVersion)
 	}
 }
 
