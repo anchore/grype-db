@@ -109,11 +109,12 @@ func runBuild(cfg buildConfig) error {
 	}
 
 	return process.Build(process.BuildConfig{
-		SchemaVersion:   cfg.SchemaVersion,
-		Directory:       cfg.Directory,
-		States:          states,
-		Timestamp:       earliestTimestamp(states),
-		IncludeCPEParts: cfg.IncludeCPEParts,
+		SchemaVersion:       cfg.SchemaVersion,
+		Directory:           cfg.Directory,
+		States:              states,
+		Timestamp:           earliestTimestamp(states),
+		IncludeCPEParts:     cfg.IncludeCPEParts,
+		InferNVDFixVersions: cfg.InferNVDFixVersions,
 	})
 }
 

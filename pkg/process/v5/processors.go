@@ -24,6 +24,12 @@ func WithCPEParts(included []string) Option {
 	}
 }
 
+func WithInferNVDFixVersions(infer bool) Option {
+	return func(cfg *Config) {
+		cfg.NVD.InferNVDFixVersions = infer
+	}
+}
+
 func NewConfig(options ...Option) Config {
 	var cfg Config
 	for _, option := range options {

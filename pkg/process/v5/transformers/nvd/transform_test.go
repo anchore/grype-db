@@ -1061,8 +1061,16 @@ func TestGetFix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fix := getFix(tt.matches)
+			fix := getFix(tt.matches, true)
 			assert.Equal(t, tt.expected, fix)
+		})
+
+		t.Run(tt.name+" don't infer NVD fixes", func(t *testing.T) {
+			fix := getFix(tt.matches, false)
+			assert.Equal(t, grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			}, fix)
 		})
 	}
 }
