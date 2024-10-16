@@ -22,12 +22,14 @@ import (
 )
 
 type Config struct {
-	CPEParts *strset.Set
+	CPEParts            *strset.Set
+	InferNVDFixVersions bool
 }
 
 func defaultConfig() Config {
 	return Config{
-		CPEParts: strset.New("a"),
+		CPEParts:            strset.New("a"),
+		InferNVDFixVersions: true,
 	}
 }
 
@@ -91,7 +93,7 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability) ([]data.Ent
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
 			CPEs:              orderedCPEs,
-			Fix:               getFix(matches),
+			Fix:               getFix(matches, cfg.InferNVDFixVersions),
 		})
 	}
 
@@ -127,7 +129,13 @@ func getVersionFormat(name string, cpes []string) version.Format {
 	return version.UnknownFormat
 }
 
-func getFix(matches []nvd.CpeMatch) grypeDB.Fix {
+func getFix(matches []nvd.CpeMatch, inferNVDFixVersions bool) grypeDB.Fix {
+	if !inferNVDFixVersions {
+		return grypeDB.Fix{
+			State: grypeDB.UnknownFixState,
+		}
+	}
+
 	possiblyFixed := strset.New()
 	knownAffected := strset.New()
 	unspecifiedSet := strset.New("*", "-", "*")

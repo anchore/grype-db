@@ -25,11 +25,12 @@ import (
 )
 
 type BuildConfig struct {
-	SchemaVersion   int
-	Directory       string
-	States          provider.States
-	Timestamp       time.Time
-	IncludeCPEParts []string
+	SchemaVersion       int
+	Directory           string
+	States              provider.States
+	Timestamp           time.Time
+	IncludeCPEParts     []string
+	InferNVDFixVersions bool
 }
 
 func Build(cfg BuildConfig) error {
@@ -101,7 +102,7 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 	case grypeDBv4.SchemaVersion:
 		return v4.Processors(), nil
 	case grypeDBv5.SchemaVersion:
-		return v5.Processors(v5.NewConfig(v5.WithCPEParts(cfg.IncludeCPEParts))), nil
+		return v5.Processors(v5.NewConfig(v5.WithCPEParts(cfg.IncludeCPEParts), v5.WithInferNVDFixVersions(cfg.InferNVDFixVersions))), nil
 	default:
 		return nil, fmt.Errorf("unable to create processor: unsupported schema version: %+v", cfg.SchemaVersion)
 	}
