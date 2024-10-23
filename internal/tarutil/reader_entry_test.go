@@ -1,11 +1,14 @@
 package tarutil
 
 import (
+	"archive/tar"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,25 +51,67 @@ func (m mockFileInfo) Sys() any {
 }
 
 func TestReaderEntry_writeEntry(t *testing.T) {
+	d := t.TempDir()
+	file := filepath.Join(d, "file.txt")
+	require.NoError(t, os.WriteFile(file, []byte("hello world"), 0644))
+
+	link := filepath.Join(d, "link")
+	require.NoError(t, os.Symlink(file, link))
+
+	dir := filepath.Join(d, "dir")
+	require.NoError(t, os.Mkdir(dir, 0755))
 
 	tests := []struct {
-		name     string
-		bytes    []byte
-		filename string
-		fileinfo os.FileInfo
-		wantErr  require.ErrorAssertionFunc
+		name        string
+		typeFlag    byte
+		bytes       []byte
+		filename    string
+		fileinfo    os.FileInfo
+		wantErr     require.ErrorAssertionFunc
+		expectFlush bool
+		fs          afero.Fs
 	}{
 		{
-			name:     "valid file",
-			bytes:    []byte("hello world"),
-			filename: "file.txt",
+			name:        "valid file",
+			typeFlag:    tar.TypeReg,
+			bytes:       []byte("hello world"),
+			filename:    file,
+			expectFlush: true,
 			fileinfo: &mockFileInfo{
-				name:    "SOMEWHEREELSE/PLACES.txt",
+				name:    file,
 				size:    11,
 				mode:    0644,
 				modTime: time.Now(),
 				isDir:   false,
 				sys:     nil,
+			},
+		},
+		{
+			name:        "symlink",
+			typeFlag:    tar.TypeSymlink,
+			bytes:       nil,
+			filename:    link,
+			expectFlush: false,
+			fileinfo: &mockFileInfo{
+				name:    link,
+				size:    0,
+				mode:    os.ModeSymlink,
+				modTime: time.Now(),
+				isDir:   false,
+			},
+		},
+		{
+			name:        "directory",
+			typeFlag:    tar.TypeDir,
+			bytes:       nil,
+			filename:    dir,
+			expectFlush: false,
+			fileinfo: &mockFileInfo{
+				name:    dir,
+				size:    0,
+				mode:    os.ModeDir,
+				modTime: time.Now(),
+				isDir:   true,
 			},
 		},
 	}
@@ -88,10 +133,11 @@ func TestReaderEntry_writeEntry(t *testing.T) {
 
 			assert.NoError(t, err)
 			require.Len(t, tw.headers, 1)
+			assert.Equal(t, tt.typeFlag, tw.headers[0].Typeflag)
 			assert.Equal(t, tt.filename, tw.headers[0].Name)
 			assert.Equal(t, int64(len(tt.bytes)), tw.headers[0].Size)
 			assert.Equal(t, string(tt.bytes), tw.buffers[0].String())
-			assert.True(t, tw.flushCalled)
+			assert.Equal(t, tt.expectFlush, tw.flushCalled)
 		})
 	}
 }

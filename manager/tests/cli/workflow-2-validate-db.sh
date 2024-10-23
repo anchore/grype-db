@@ -20,6 +20,9 @@ header "Case 1: fail DB validation (too many unknowns)"
 
 make clean-yardstick-labels
 
+# workaround for go1.23+ looking into parent dirs when building go modules in subdirs
+export GOWORK=off
+
 run_expect_fail grype-db-manager db validate $DB_ID -vvv --skip-namespace-check --recapture
 assert_contains $(last_stdout_file) "current indeterminate matches % is greater than 10%"
 

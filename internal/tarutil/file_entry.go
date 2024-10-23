@@ -1,7 +1,6 @@
 package tarutil
 
 import (
-	"archive/tar"
 	"fmt"
 	"io"
 	"os"
@@ -28,34 +27,11 @@ func NewEntryFromFilePaths(paths ...string) []Entry {
 }
 
 func (t FileEntry) writeEntry(tw lowLevelWriter) error {
-	filePath := t.Path
-	f, err := os.Open(filePath)
+	fi, err := os.Lstat(t.Path)
 	if err != nil {
-		return fmt.Errorf("unable to open file (%s): %w", filePath, err)
+		return fmt.Errorf("unable to stat file %q: %w", t.Path, err)
 	}
-	defer f.Close()
-
-	stat, err := f.Stat()
-	if err != nil {
-		return fmt.Errorf("unable to get stat for file (%s): %w", filePath, err)
-	}
-
-	header := &tar.Header{
-		Name:    filePath,
-		Size:    stat.Size(),
-		Mode:    int64(stat.Mode()),
-		ModTime: stat.ModTime(),
-	}
-
-	err = tw.WriteHeader(header)
-	if err != nil {
-		return fmt.Errorf("unable to write header for file (%s): %w", filePath, err)
-	}
-
-	_, err = io.Copy(tw, f)
-	if err != nil {
-		return fmt.Errorf("unable to copy data to the tar (file='%s'): %w", filePath, err)
-	}
-
-	return nil
+	return writeEntry(tw, t.Path, fi, func() (io.Reader, error) {
+		return os.Open(t.Path)
+	})
 }

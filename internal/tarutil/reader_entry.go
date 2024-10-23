@@ -27,33 +27,64 @@ func NewEntryFromBytes(by []byte, filename string, fileInfo os.FileInfo) Entry {
 
 func (t ReaderEntry) writeEntry(tw lowLevelWriter) error {
 	log.WithFields("path", t.Filename).Trace("adding stream to archive")
+	return writeEntry(tw, t.Filename, t.FileInfo, func() (io.Reader, error) {
+		return t.Reader, nil
+	})
+}
 
-	header, err := tar.FileInfoHeader(t.FileInfo, t.FileInfo.Name())
+func writeEntry(tw lowLevelWriter, filename string, fileInfo os.FileInfo, opener func() (io.Reader, error)) error {
+	header, err := tar.FileInfoHeader(fileInfo, "")
 	if err != nil {
 		return err
 	}
 
-	contents, err := io.ReadAll(t.Reader)
-	if err != nil {
-		return err
-	}
+	header.Name = filename
+	switch fileInfo.Mode() & os.ModeType {
+	case os.ModeDir:
+		header.Size = 0
+		err = tw.WriteHeader(header)
+		if err != nil {
+			return err
+		}
+		return nil
 
-	header.Name = t.Filename
-	header.Size = int64(len(contents))
-	err = tw.WriteHeader(header)
-	if err != nil {
-		return err
-	}
+	case os.ModeSymlink:
+		linkTarget, err := os.Readlink(filename)
+		if err != nil {
+			return err
+		}
+		header.Linkname = linkTarget
+		header.Size = 0
+		err = tw.WriteHeader(header)
+		if err != nil {
+			return err
+		}
+		return nil
 
-	_, err = tw.Write(contents)
-	if err != nil {
-		return err
-	}
+	default:
+		reader, err := opener()
+		if err != nil {
+			return err
+		}
 
-	// note: this will ensure that the tar entry is properly aligned in the tar archive (padding with zeros)
-	err = tw.Flush()
-	if err != nil {
-		return err
+		contents, err := io.ReadAll(reader)
+		if err != nil {
+			return err
+		}
+		header.Size = int64(len(contents))
+
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if _, err := tw.Write(contents); err != nil {
+			return err
+		}
+
+		// ensure proper alignment in the tar archive (padding with zeros)
+		if err := tw.Flush(); err != nil {
+			return err
+		}
 	}
 
 	return nil

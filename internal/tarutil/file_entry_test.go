@@ -45,7 +45,6 @@ func (m *mockTarWriter) Write(b []byte) (int, error) {
 
 func TestFileEntry_writeEntry(t *testing.T) {
 	testStr := "hello world"
-
 	tests := []struct {
 		name    string
 		file    func(t *testing.T) string

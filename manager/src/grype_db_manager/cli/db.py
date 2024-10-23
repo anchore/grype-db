@@ -153,12 +153,10 @@ def validate_db(
                         label="custom-db",
                         name="grype",
                         version=grype_version + f"+import-db={db_info.archive_path}",
-                        profile="acceptance",
                     ),
                     ycfg.Tool(
                         name="grype",
                         version=grype_version,
-                        # profile="acceptance", # TODO: enable after current db is fixed
                     ),
                 ],
             ),
@@ -166,18 +164,7 @@ def validate_db(
 
     yardstick_cfg = ycfg.Application(
         profiles=ycfg.Profiles(
-            data={
-                "grype": {
-                    "acceptance": {
-                        "config_path": "config/grype/acceptance.yaml",
-                    },
-                },
-                "grype[custom-db]": {
-                    "acceptance": {
-                        "config_path": "config/grype/acceptance.yaml",
-                    },
-                },
-            },
+            data={},
         ),
         store_root=cfg.data.yardstick_root,
         default_max_year=cfg.validate.default_max_year,
@@ -185,6 +172,8 @@ def validate_db(
     )
 
     for r in result_sets:
+        # workaround for test setup issues
+        os.environ["GRYPE_DB_VALIDATE_BY_HASH_ON_START"] = "true"
         db.capture_results(
             cfg=yardstick_cfg,
             db_uuid=db_uuid,
