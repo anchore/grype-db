@@ -1,4 +1,4 @@
-cli-test-data
+cli-test-data*
 .yardstick
 .grype-db-manager
 grype-db-cache.tar.gz

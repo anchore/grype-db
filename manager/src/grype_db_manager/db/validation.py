@@ -48,12 +48,15 @@ def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_d
     db_info = dbm.get_db_info(db_uuid)
 
     request_images = cfg.result_sets[result_set].images()
-    is_stale = _is_result_set_stale(
-        request_images=request_images,
-        result_set=result_set,
-        db_info=db_info,
-        yardstick_root_dir=cfg.store_root,
-    )
+
+    is_stale = True
+    if not recapture:
+        is_stale = _is_result_set_stale(
+            request_images=request_images,
+            result_set=result_set,
+            db_info=db_info,
+            yardstick_root_dir=cfg.store_root,
+        )
 
     if is_stale or recapture:
         capture.result_set(

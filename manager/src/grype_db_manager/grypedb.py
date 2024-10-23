@@ -232,12 +232,14 @@ v3_expected_namespaces = [
     "wolfi:rolling",
 ]
 
+
 def expected_namespaces(schema_version: int) -> list[str]:
     if schema_version <= 3:
         return v3_expected_namespaces
     if schema_version == 4:
         return v4_expected_namespaces
     return v4_expected_namespaces + v5_additional_namespaces
+
 
 @dataclasses.dataclass
 class DBInfo:
