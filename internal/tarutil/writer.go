@@ -192,7 +192,7 @@ func (w *writer) Close() error {
 //	return spy, spy, nil
 //}
 //
-//func sizer(path string) func() int64 {
+// func sizer(path string) func() int64 {
 //	return func() int64 {
 //		stat, err := os.Stat(path)
 //		if err != nil {
