@@ -25,7 +25,7 @@ func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 }
 
 func packageDB(dbDir, overrideArchiveExtension string) error {
-	extension, err := resolveV6Extension(overrideArchiveExtension)
+	extension, err := resolveExtension(overrideArchiveExtension)
 	if err != nil {
 		return err
 	}
@@ -45,30 +45,25 @@ func packageDB(dbDir, overrideArchiveExtension string) error {
 	return writeLatestDocument(tarPath)
 }
 
-func writeLatestDocument(tarPath string) error {
-	archive, err := v6Distribution.NewArchive(tarPath)
-	if err != nil || archive == nil {
-		return fmt.Errorf("unable to create archive: %w", err)
+func resolveExtension(overrideArchiveExtension string) (string, error) {
+	var extension = "tar.zst"
+
+	if overrideArchiveExtension != "" {
+		extension = strings.TrimLeft(overrideArchiveExtension, ".")
 	}
 
-	doc := v6Distribution.NewLatestDocument(*archive)
-	if doc == nil {
-		return errors.New("unable to create latest document")
+	var found bool
+	for _, valid := range []string{"tar.zst", "tar.xz", "tar.gz"} {
+		if valid == extension {
+			found = true
+			break
+		}
 	}
 
-	dbDir := filepath.Dir(tarPath)
-
-	latestPath := path.Join(dbDir, v6Distribution.LatestFileName)
-
-	fh, err := os.OpenFile(latestPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to create latest file: %w", err)
+	if !found {
+		return "", fmt.Errorf("unsupported archive extension %q", extension)
 	}
-
-	if err = doc.Write(fh); err != nil {
-		return fmt.Errorf("unable to write latest document: %w", err)
-	}
-	return nil
+	return extension, nil
 }
 
 func calculateTarPath(dbDir string, extension string) (string, error) {
@@ -124,27 +119,6 @@ func eldestProviderTimestamp(providers []v6.Provider) *time.Time {
 	return eldest
 }
 
-func resolveV6Extension(overrideArchiveExtension string) (string, error) {
-	var extension = "tar.xz"
-
-	if overrideArchiveExtension != "" {
-		extension = strings.TrimLeft(overrideArchiveExtension, ".")
-	}
-
-	var found bool
-	for _, valid := range []string{"tar.xz", "tar.zst", "tar.gz"} {
-		if valid == extension {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return "", fmt.Errorf("unsupported archive extension %q", extension)
-	}
-	return extension, nil
-}
-
 func populateTar(tarPath string) error {
 	originalDir, err := os.Getwd()
 	if err != nil {
@@ -181,5 +155,31 @@ func populateTar(tarPath string) error {
 		return fmt.Errorf("unable to create db archive: %w", err)
 	}
 
+	return nil
+}
+
+func writeLatestDocument(tarPath string) error {
+	archive, err := v6Distribution.NewArchive(tarPath)
+	if err != nil || archive == nil {
+		return fmt.Errorf("unable to create archive: %w", err)
+	}
+
+	doc := v6Distribution.NewLatestDocument(*archive)
+	if doc == nil {
+		return errors.New("unable to create latest document")
+	}
+
+	dbDir := filepath.Dir(tarPath)
+
+	latestPath := path.Join(dbDir, v6Distribution.LatestFileName)
+
+	fh, err := os.OpenFile(latestPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("unable to create latest file: %w", err)
+	}
+
+	if err = doc.Write(fh); err != nil {
+		return fmt.Errorf("unable to write latest document: %w", err)
+	}
 	return nil
 }
