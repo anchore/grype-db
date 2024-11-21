@@ -18,16 +18,19 @@ import (
 // data shape dictated by vunnel "provider workspace state" schema definition
 
 type State struct {
-	location         string
-	root             string
-	Provider         string    `json:"provider"`
-	Schema           Schema    `json:"schema"`
-	URLs             []string  `json:"urls"`
-	Timestamp        time.Time `json:"timestamp"`
-	Listing          *File     `json:"listing"`
-	Store            string    `json:"store"`
-	Stale            bool      `json:"stale"`
-	resultFileStates []File
+	location            string
+	root                string
+	Provider            string    `json:"provider"`
+	Version             int       `json:"version"`
+	DistributionVersion int       `json:"distribution_version"`
+	Processor           string    `json:"processor"`
+	Schema              Schema    `json:"schema"`
+	URLs                []string  `json:"urls"`
+	Timestamp           time.Time `json:"timestamp"`
+	Listing             *File     `json:"listing"`
+	Store               string    `json:"store"`
+	Stale               bool      `json:"stale"`
+	resultFileStates    []File
 }
 
 type Schema struct {
