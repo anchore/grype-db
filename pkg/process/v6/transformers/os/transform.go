@@ -29,7 +29,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 			BlobValue: &grypeDB.VulnerabilityBlob{
 				ID:            vulnerability.Vulnerability.Name,
 				ProviderName:  state.Provider,
-				Assigner:      nil,
+				Assigners:     nil,
 				Description:   strings.TrimSpace(vulnerability.Vulnerability.Description),
 				Status:        grypeDB.VulnerabilityActive,
 				References:    getReferences(vulnerability),

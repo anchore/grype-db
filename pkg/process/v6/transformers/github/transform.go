@@ -35,7 +35,7 @@ func getVulnerability(vuln unmarshal.GitHubAdvisory, provider string) grypeDB.Vu
 			// it does not appear to be possible to get "credits" or any user information from the graphql API
 			// for security advisories (see https://docs.github.com/en/graphql/reference/queries#securityadvisories),
 			// thus assigner is left empty.
-			Assigner:      nil,
+			Assigners:     nil,
 			Description:   strings.TrimSpace(vuln.Advisory.Summary),
 			ModifiedDate:  internal.ParseTime(vuln.Advisory.Updated),
 			PublishedDate: internal.ParseTime(vuln.Advisory.Published),

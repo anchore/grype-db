@@ -61,7 +61,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2018-5487",
 							ProviderName:  "nvd",
-							Assigner:      []string{"security-alert@netapp.com"},
+							Assigners:     []string{"security-alert@netapp.com"},
 							Description:   "NetApp OnCommand Unified Manager for Linux versions 7.2 through 7.3 ship with the Java Management Extension Remote Method Invocation (JMX RMI) service bound to the network, and are susceptible to unauthenticated remote code execution.",
 							ModifiedDate:  timeRef(time.Date(2018, 7, 5, 13, 52, 30, 627000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2018, 5, 24, 14, 29, 0, 390000000, time.UTC)),
@@ -137,7 +137,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2018-1000222",
 							ProviderName:  "nvd",
-							Assigner:      []string{"cve@mitre.org"},
+							Assigners:     []string{"cve@mitre.org"},
 							Description:   "Libgd version 2.2.5 contains a Double Free Vulnerability vulnerability in gdImageBmpPtr Function that can result in Remote Code Execution . This attack appear to be exploitable via Specially Crafted Jpeg Image can trigger double free. This vulnerability appears to have been fixed in after commit ac16bdf2d41724b5a65255d4c28fb0ec46bc42f5.",
 							ModifiedDate:  timeRef(time.Date(2020, 3, 31, 2, 15, 12, 667000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2018, 8, 20, 20, 29, 1, 347000000, time.UTC)),
@@ -225,7 +225,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2018-10189",
 							ProviderName:  "nvd",
-							Assigner:      []string{"cve@mitre.org"},
+							Assigners:     []string{"cve@mitre.org"},
 							Description:   "An issue was discovered in Mautic 1.x and 2.x before 2.13.0. It is possible to systematically emulate tracking cookies per contact due to tracking the contact by their auto-incremented ID. Thus, a third party can manipulate the cookie value with +1 to systematically assume being tracked as each contact in Mautic. It is then possible to retrieve information about the contact through forms that have progressive profiling enabled.",
 							ModifiedDate:  timeRef(time.Date(2018, 5, 23, 14, 41, 49, 73000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2018, 4, 17, 20, 29, 0, 410000000, time.UTC)),
@@ -308,7 +308,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2015-8978",
 							ProviderName:  "nvd",
-							Assigner:      []string{"cve@mitre.org"},
+							Assigners:     []string{"cve@mitre.org"},
 							Description:   "In Soap Lite (aka the SOAP::Lite extension for Perl) 1.14 and earlier, an example attack consists of defining 10 or more XML entities, each defined as consisting of 10 of the previous entity, with the document consisting of a single instance of the largest entity, which expands to one billion copies of the first entity. The amount of computer memory used for handling an external SOAP call would likely exceed that available to the process parsing the XML.",
 							ModifiedDate:  timeRef(time.Date(2016, 11, 28, 19, 50, 59, 600000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2016, 11, 22, 17, 59, 0, 180000000, time.UTC)),
@@ -367,7 +367,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2022-26488",
 							ProviderName:  "nvd",
-							Assigner:      []string{"cve@mitre.org"},
+							Assigners:     []string{"cve@mitre.org"},
 							Description:   "In Python before 3.10.3 on Windows, local users can gain privileges because the search path is inadequately secured. The installer may allow a local attacker to add user-writable directories to the system search path. To exploit, an administrator must have installed Python for all users and enabled PATH entries. A non-administrative user can trigger a repair that incorrectly adds user-writable paths into PATH, enabling search-path hijacking of other users and system services. This affects Python (CPython) through 3.7.12, 3.8.x through 3.8.12, 3.9.x through 3.9.10, and 3.10.x through 3.10.2.",
 							ModifiedDate:  timeRef(time.Date(2022, 9, 3, 3, 34, 19, 933000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2022, 3, 10, 17, 47, 45, 383000000, time.UTC)),
@@ -474,7 +474,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2022-0543",
 							ProviderName:  "nvd",
-							Assigner:      []string{"security@debian.org"},
+							Assigners:     []string{"security@debian.org"},
 							Description:   "It was discovered, that redis, a persistent key-value database, due to a packaging issue, is prone to a (Debian-specific) Lua sandbox escape, which could result in remote code execution.",
 							ModifiedDate:  timeRef(time.Date(2023, 9, 29, 15, 55, 24, 533000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2022, 2, 18, 20, 15, 17, 583000000, time.UTC)),
@@ -569,7 +569,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2020-10729",
 							ProviderName:  "nvd",
-							Assigner:      []string{"secalert@redhat.com"},
+							Assigners:     []string{"secalert@redhat.com"},
 							Description:   "A flaw was found in the use of insufficiently random values in Ansible. Two random password lookups of the same length generate the equal value as the template caching action for the same file since no re-evaluation happens. The highest threat from this vulnerability would be that all passwords are exposed at once for the file. This flaw affects Ansible Engine versions before 2.9.6.",
 							ModifiedDate:  timeRef(time.Date(2021, 12, 10, 19, 57, 6, 357000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2021, 5, 27, 19, 15, 7, 880000000, time.UTC)),
@@ -660,7 +660,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2023-38733",
 							ProviderName:  "nvd",
-							Assigner:      []string{"psirt@us.ibm.com"},
+							Assigners:     []string{"psirt@us.ibm.com"},
 							Description:   "IBM Robotic Process Automation 21.0.0 through 21.0.7.1 and 23.0.0 through 23.0.1 server could allow an authenticated user to view sensitive information from installation logs.  IBM X-Force Id:  262293.",
 							ModifiedDate:  timeRef(time.Date(2023, 8, 26, 2, 25, 42, 957000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2023, 8, 22, 22, 15, 8, 460000000, time.UTC)),
@@ -748,7 +748,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2023-45283",
 							ProviderName:  "nvd",
-							Assigner:      []string{"security@golang.org"},
+							Assigners:     []string{"security@golang.org"},
 							Description:   "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
 							ModifiedDate:  timeRef(time.Date(2023, 12, 14, 10, 15, 7, 947000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2023, 11, 9, 17, 15, 8, 757000000, time.UTC)),
@@ -859,7 +859,7 @@ func TestTransform(t *testing.T) {
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:            "CVE-2023-45283",
 							ProviderName:  "nvd",
-							Assigner:      []string{"security@golang.org"},
+							Assigners:     []string{"security@golang.org"},
 							Description:   "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
 							ModifiedDate:  timeRef(time.Date(2023, 12, 14, 10, 15, 7, 947000000, time.UTC)),
 							PublishedDate: timeRef(time.Date(2023, 11, 9, 17, 15, 8, 757000000, time.UTC)),
