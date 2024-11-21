@@ -532,10 +532,9 @@ func TestTransform(t *testing.T) {
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
 						Name: "CVE-2011-4623",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:            "CVE-2011-4623",
-							ProviderName:  "debian",
-							Status:        "active",
-							PublishedDate: &timeVal,
+							ID:           "CVE-2011-4623",
+							ProviderName: "debian",
+							Status:       "active",
 							References: []grypeDB.Reference{
 								{
 									URL:  "https://security-tracker.debian.org/tracker/CVE-2011-4623",

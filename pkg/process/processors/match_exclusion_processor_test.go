@@ -9,6 +9,7 @@ import (
 
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/internal/tests"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
@@ -27,7 +28,9 @@ func TestMatchExclusionProcessor_Process(t *testing.T) {
 	defer tests.CloseFile(f)
 
 	processor := NewMatchExclusionProcessor(mockMatchExclusionProcessorTransform)
-	entries, err := processor.Process(f)
+	entries, err := processor.Process(f, provider.State{
+		Provider: "match-exclusions",
+	})
 
 	require.NoError(t, err)
 	assert.Len(t, entries, 3)
