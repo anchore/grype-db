@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/anchore/grype-db/pkg/process/internal/tests"
+	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/process/v5/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
@@ -19,7 +19,7 @@ import (
 func TestUnmarshalOSVulnerabilitiesEntries(t *testing.T) {
 	f, err := os.Open("test-fixtures/unmarshal-test.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.OSVulnerabilityEntries(f)
 	require.NoError(t, err)

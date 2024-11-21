@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/anchore/grype-db/pkg/process/internal/tests"
+	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v3"
 )
@@ -15,7 +15,7 @@ import (
 func TestUnmarshalMsrcVulnerabilities(t *testing.T) {
 	f, err := os.Open("test-fixtures/microsoft-msrc-0.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.MSRCVulnerabilityEntries(f)
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestParseMSRCEntry(t *testing.T) {
 
 	f, err := os.Open("test-fixtures/microsoft-msrc-0.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.MSRCVulnerabilityEntries(f)
 	require.NoError(t, err)

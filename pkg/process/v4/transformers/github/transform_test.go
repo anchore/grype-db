@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/anchore/grype-db/pkg/process/internal/tests"
+	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v4"
 	"github.com/anchore/grype/grype/db/v4/namespace"
@@ -70,7 +70,7 @@ func TestBuildGrypeNamespace(t *testing.T) {
 func TestUnmarshalGitHubEntries(t *testing.T) {
 	f, err := os.Open("test-fixtures/github-github-python-0.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.GitHubAdvisoryEntries(f)
 	require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestParseGitHubEntry(t *testing.T) {
 
 	f, err := os.Open("test-fixtures/github-github-python-1.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.GitHubAdvisoryEntries(f)
 	require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestDefaultVersionFormatNpmGitHubEntry(t *testing.T) {
 
 	f, err := os.Open("test-fixtures/github-github-npm-0.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.GitHubAdvisoryEntries(f)
 	require.NoError(t, err)
@@ -240,7 +240,7 @@ func TestDefaultVersionFormatNpmGitHubEntry(t *testing.T) {
 func TestFilterWithdrawnEntries(t *testing.T) {
 	f, err := os.Open("test-fixtures/github-withdrawn.json")
 	require.NoError(t, err)
-	defer tests.CloseFile(f)
+	defer testUtils.CloseFile(f)
 
 	entries, err := unmarshal.GitHubAdvisoryEntries(f)
 	require.NoError(t, err)
