@@ -9,16 +9,12 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
-	v1 "github.com/anchore/grype-db/pkg/process/v1"
-	v2 "github.com/anchore/grype-db/pkg/process/v2"
 	v3 "github.com/anchore/grype-db/pkg/process/v3"
 	v4 "github.com/anchore/grype-db/pkg/process/v4"
 	v5 "github.com/anchore/grype-db/pkg/process/v5"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDBv1 "github.com/anchore/grype/grype/db/v1"
-	grypeDBv2 "github.com/anchore/grype/grype/db/v2"
 	grypeDBv3 "github.com/anchore/grype/grype/db/v3"
 	grypeDBv4 "github.com/anchore/grype/grype/db/v4"
 	grypeDBv5 "github.com/anchore/grype/grype/db/v5"
@@ -93,10 +89,6 @@ func mergeOpeners(entries []openerEntry) <-chan entry.Opener {
 
 func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 	switch cfg.SchemaVersion {
-	case grypeDBv1.SchemaVersion:
-		return v1.Processors(), nil
-	case grypeDBv2.SchemaVersion:
-		return v2.Processors(), nil
 	case grypeDBv3.SchemaVersion:
 		return v3.Processors(), nil
 	case grypeDBv4.SchemaVersion:
@@ -110,10 +102,6 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 
 func getWriter(schemaVersion int, dataAge time.Time, directory string, states provider.States) (data.Writer, error) {
 	switch schemaVersion {
-	case grypeDBv1.SchemaVersion:
-		return v1.NewWriter(directory, dataAge)
-	case grypeDBv2.SchemaVersion:
-		return v2.NewWriter(directory, dataAge)
 	case grypeDBv3.SchemaVersion:
 		return v3.NewWriter(directory, dataAge)
 	case grypeDBv4.SchemaVersion:
