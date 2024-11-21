@@ -256,6 +256,13 @@ download-all-provider-cache:
 	@bash -c "oras pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
 
 
+## Code and data generation targets #################################
+
+.PHONY: generate-processor-code
+generate-processor-code:
+	go generate ./pkg/process
+	make format
+
 ## Build-related targets #################################
 
 .PHONY: build
