@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	testUtils "github.com/anchore/grype-db/pkg/process/tests"
+	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v4"
 	"github.com/anchore/grype/grype/db/v4/namespace"
