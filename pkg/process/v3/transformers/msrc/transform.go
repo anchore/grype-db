@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/anchore/grype-db/pkg/data"
-	"github.com/anchore/grype-db/pkg/process/common"
+	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v3/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v3"

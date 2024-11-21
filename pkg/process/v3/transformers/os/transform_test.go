@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	testUtils "github.com/anchore/grype-db/pkg/process/tests"
+	"github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/process/v3/transformers"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v3"
@@ -17,7 +17,7 @@ import (
 func TestUnmarshalOSVulnerabilitiesEntries(t *testing.T) {
 	f, err := os.Open("test-fixtures/unmarshal-test.json")
 	require.NoError(t, err)
-	defer testUtils.CloseFile(f)
+	defer tests.CloseFile(f)
 
 	entries, err := unmarshal.OSVulnerabilityEntries(f)
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestUnmarshalOSVulnerabilitiesEntries(t *testing.T) {
 }
 
 func TestParseVulnerabilitiesEntry(t *testing.T) {
-	tests := []struct {
+	tc := []struct {
 		name        string
 		numEntries  int
 		fixture     string
@@ -493,7 +493,7 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
+	for _, test := range tc {
 		t.Run(test.name, func(t *testing.T) {
 			f, err := os.Open(test.fixture)
 			require.NoError(t, err)
