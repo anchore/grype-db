@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/data"
-	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
+	"github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
@@ -24,7 +24,7 @@ func mockMatchExclusionProcessorTransform(vulnerability unmarshal.MatchExclusion
 func TestMatchExclusionProcessor_Process(t *testing.T) {
 	f, err := os.Open("test-fixtures/exclusions.json")
 	require.NoError(t, err)
-	defer testUtils.CloseFile(f)
+	defer tests.CloseFile(f)
 
 	processor := NewMatchExclusionProcessor(mockMatchExclusionProcessorTransform)
 	entries, err := processor.Process(f)

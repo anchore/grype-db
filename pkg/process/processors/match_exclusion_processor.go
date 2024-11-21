@@ -7,6 +7,7 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
@@ -20,7 +21,7 @@ func NewMatchExclusionProcessor(transformer data.MatchExclusionTransformer) data
 	}
 }
 
-func (p matchExclusionProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func (p matchExclusionProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.MatchExclusions(reader)

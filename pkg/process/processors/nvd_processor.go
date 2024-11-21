@@ -6,11 +6,12 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
 type nvdProcessor struct {
-	transformer data.NVDTransformer
+	transformer any
 }
 
 func NewNVDProcessor(transformer data.NVDTransformer) data.Processor {
@@ -19,12 +20,30 @@ func NewNVDProcessor(transformer data.NVDTransformer) data.Processor {
 	}
 }
 
-func (p nvdProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func NewV2NVDProcessor(transformer data.NVDTransformerV2) data.Processor {
+	return &nvdProcessor{
+		transformer: transformer,
+	}
+}
+
+func (p nvdProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.NvdVulnerabilityEntries(reader)
 	if err != nil {
 		return nil, err
+	}
+
+	var handle func(entry unmarshal.NVDVulnerability) ([]data.Entry, error)
+	switch t := p.transformer.(type) {
+	case data.NVDTransformer:
+		handle = func(entry unmarshal.NVDVulnerability) ([]data.Entry, error) {
+			return t(entry)
+		}
+	case data.NVDTransformerV2:
+		handle = func(entry unmarshal.NVDVulnerability) ([]data.Entry, error) {
+			return t(entry, state)
+		}
 	}
 
 	for _, entry := range entries {
@@ -33,7 +52,7 @@ func (p nvdProcessor) Process(reader io.Reader) ([]data.Entry, error) {
 			continue
 		}
 
-		transformedEntries, err := p.transformer(entry.Cve)
+		transformedEntries, err := handle(entry.Cve)
 		if err != nil {
 			return nil, err
 		}
