@@ -2,13 +2,17 @@ package tarutil
 
 import (
 	"archive/tar"
+	"bufio"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 
-	"github.com/klauspost/compress/zstd"
+	"github.com/google/shlex"
+
+	"github.com/anchore/grype-db/internal/log"
 )
 
 var ErrUnsupportedArchiveSuffix = fmt.Errorf("archive name has an unsupported suffix")
@@ -20,7 +24,7 @@ type writer struct {
 	writer     *tar.Writer
 }
 
-// NewWriter creates a new tar writer that writes to the specified archive path. Supports .tar.gz and .tar.zst file extensions.
+// NewWriter creates a new tar writer that writes to the specified archive path. Supports .tar.gz, .tar.zst, .tar.xz, and .tar file extensions.
 func NewWriter(archivePath string) (Writer, error) {
 	w, err := newCompressor(archivePath)
 	if err != nil {
@@ -45,17 +49,77 @@ func newCompressor(archivePath string) (io.WriteCloser, error) {
 	case strings.HasSuffix(archivePath, ".tar.gz"):
 		return gzip.NewWriter(archive), nil
 	case strings.HasSuffix(archivePath, ".tar.zst"):
-		// adding zstd.WithWindowSize(zstd.MaxWindowSize), zstd.WithAllLitEntropyCompression(true)
-		// will have slightly better results, but use a lot more memory
-		w, err := zstd.NewWriter(archive, zstd.WithEncoderLevel(zstd.SpeedBestCompression))
-		if err != nil {
-			return nil, fmt.Errorf("unable to get zst compression stream: %w", err)
-		}
-		return w, nil
+		// note: since we're using --ultra this tends to have a high memory usage at decompression time
+		// For ~700 MB payload that is compressing down to ~60 MB, that would need ~130 MB of memory (--ultra -22)
+		// for the same payload compressing down to ~65MB, that would need ~70MB of memory (--ultra -21)
+		return newShellCompressor("zstd -T0 -22 --ultra -c -vv", archive)
+	case strings.HasSuffix(archivePath, ".tar.xz"):
+		return newShellCompressor("xz -9 --threads=0 -c -vv", archive)
 	case strings.HasSuffix(archivePath, ".tar"):
 		return archive, nil
 	}
 	return nil, ErrUnsupportedArchiveSuffix
+}
+
+// shellCompressor wraps the stdin pipe of an external compression process and ensures proper cleanup.
+type shellCompressor struct {
+	cmd  *exec.Cmd
+	pipe io.WriteCloser
+}
+
+func newShellCompressor(c string, archive io.Writer) (*shellCompressor, error) {
+	args, err := shlex.Split(c)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse command: %w", err)
+	}
+	binary := args[0]
+	args = args[1:]
+	cmd := exec.Command(binary, args...)
+	log.Debug(strings.Join(cmd.Args, " "))
+	cmd.Stdout = archive
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create stderr pipe: %w", err)
+	}
+
+	pipe, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create stdin pipe: %w", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, fmt.Errorf("unable to start process: %w", err)
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(stderrPipe)
+		for scanner.Scan() {
+			log.Debugf("[%s] %s", binary, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			log.Errorf("[%s] error reading stderr: %v", binary, err)
+		}
+	}()
+
+	return &shellCompressor{
+		cmd:  cmd,
+		pipe: pipe,
+	}, nil
+}
+
+func (sc *shellCompressor) Write(p []byte) (int, error) {
+	return sc.pipe.Write(p)
+}
+
+func (sc *shellCompressor) Close() error {
+	if err := sc.pipe.Close(); err != nil {
+		return fmt.Errorf("unable to close compression stdin pipe: %w", err)
+	}
+	if err := sc.cmd.Wait(); err != nil {
+		return fmt.Errorf("compression process error: %w", err)
+	}
+	return nil
 }
 
 func (w *writer) WriteEntry(entry Entry) error {
