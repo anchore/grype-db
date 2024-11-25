@@ -151,9 +151,15 @@ func providerStates(skipValidation bool, providers []provider.Provider) ([]provi
 func earliestTimestamp(states []provider.State) time.Time {
 	earliest := states[0].Timestamp
 	for _, s := range states {
+		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
+		if s.Provider == "nvd" {
+			log.WithFields("provider", s.Provider).Trace("not considering data age for provider")
+			continue
+		}
 		if s.Timestamp.Before(earliest) {
 			earliest = s.Timestamp
 		}
 	}
+	log.WithFields("timestamp", earliest).Debug("earliest data timestamp")
 	return earliest
 }
