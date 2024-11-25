@@ -108,11 +108,16 @@ func runBuild(cfg buildConfig) error {
 		return fmt.Errorf("unable to get provider states: %w", err)
 	}
 
+	earliest, err := earliestTimestamp(states)
+	if err != nil {
+		return fmt.Errorf("unable to get earliest timestamp: %w", err)
+	}
+
 	return process.Build(process.BuildConfig{
 		SchemaVersion:       cfg.SchemaVersion,
 		Directory:           cfg.Directory,
 		States:              states,
-		Timestamp:           earliestTimestamp(states),
+		Timestamp:           earliest,
 		IncludeCPEParts:     cfg.IncludeCPEParts,
 		InferNVDFixVersions: cfg.InferNVDFixVersions,
 	})
@@ -148,18 +153,30 @@ func providerStates(skipValidation bool, providers []provider.Provider) ([]provi
 	return states, nil
 }
 
-func earliestTimestamp(states []provider.State) time.Time {
-	earliest := states[0].Timestamp
+func earliestTimestamp(states []provider.State) (time.Time, error) {
+	if len(states) == 0 {
+		return time.Time{}, fmt.Errorf("cannot find earliest timestamp: no states provided")
+	}
+	var earliest time.Time
 	for _, s := range states {
 		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
 		if s.Provider == "nvd" {
-			log.WithFields("provider", s.Provider).Trace("not considering data age for provider")
+			log.WithFields("provider", s.Provider).Debug("not considering data age for provider")
+			continue
+		}
+		if earliest.IsZero() {
+			earliest = s.Timestamp
 			continue
 		}
 		if s.Timestamp.Before(earliest) {
 			earliest = s.Timestamp
 		}
 	}
+
+	if earliest.IsZero() {
+		return time.Time{}, fmt.Errorf("unable to determine earliest timestamp")
+	}
+
 	log.WithFields("timestamp", earliest).Debug("earliest data timestamp")
-	return earliest
+	return earliest, nil
 }
