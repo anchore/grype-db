@@ -112,8 +112,7 @@ func getFix(fixedInEntry unmarshal.OSFixedIn) *grypeDB.Fix {
 	var refs []grypeDB.Reference
 	for _, l := range linkOrder {
 		refs = append(refs, grypeDB.Reference{
-			Tags: []string{grypeDB.AdvisoryReferenceTag},
-			URL:  l,
+			URL: l,
 		})
 	}
 
@@ -306,8 +305,7 @@ func getReferences(vuln unmarshal.OSVulnerability) []grypeDB.Reference {
 	for _, l := range linkOrder {
 		refs = append(refs,
 			grypeDB.Reference{
-				Tags: []string{grypeDB.AdvisoryReferenceTag},
-				URL:  l,
+				URL: l,
 			},
 		)
 	}

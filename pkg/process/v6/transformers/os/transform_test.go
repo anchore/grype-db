@@ -90,8 +90,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-19967",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-19967",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -134,8 +133,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://alas.aws.amazon.com/AL2/ALAS-2018-1106.html",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://alas.aws.amazon.com/AL2/ALAS-2018-1106.html",
 								},
 							},
 							Aliases: []string{"CVE-2018-14648"},
@@ -247,8 +245,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://alas.aws.amazon.com/AL2/ALAS-2021-1704.html",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://alas.aws.amazon.com/AL2/ALAS-2021-1704.html",
 								},
 							},
 							Aliases: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
@@ -300,8 +297,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://alas.aws.amazon.com/AL2/ALASKERNEL-5.4-2022-007.html",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://alas.aws.amazon.com/AL2/ALASKERNEL-5.4-2022-007.html",
 								},
 							},
 							Aliases: []string{"CVE-2021-3753", "CVE-2021-40490"},
@@ -353,8 +349,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://alas.aws.amazon.com/AL2/ALASKERNEL-5.10-2022-005.html",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://alas.aws.amazon.com/AL2/ALASKERNEL-5.10-2022-005.html",
 								},
 							},
 							Aliases: []string{"CVE-2021-3753", "CVE-2021-40490"},
@@ -413,8 +408,7 @@ func TestTransform(t *testing.T) {
 							Description:  "CVE-2023-29403 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2023-29403",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-29403",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -457,8 +451,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://security-tracker.debian.org/tracker/CVE-2008-7220",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://security-tracker.debian.org/tracker/CVE-2008-7220",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -537,8 +530,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://security-tracker.debian.org/tracker/CVE-2011-4623",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://security-tracker.debian.org/tracker/CVE-2011-4623",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -575,8 +567,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://security-tracker.debian.org/tracker/CVE-2008-5618",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://security-tracker.debian.org/tracker/CVE-2008-5618",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -620,8 +611,7 @@ func TestTransform(t *testing.T) {
 							Description:  "CVE-2021-37621 affecting package exiv2 for versions less than 0.27.5-1. An upgraded version of the package is available that resolves this issue.",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2021-37621",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2021-37621",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -666,8 +656,7 @@ func TestTransform(t *testing.T) {
 							Description:  "CVE-2023-29404 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2023-29404",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-29404",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -712,12 +701,10 @@ func TestTransform(t *testing.T) {
 							Aliases:       []string{"CVE-2020-13112"},
 							References: []grypeDB.Reference{
 								{
-									URL:  "http://linux.oracle.com/errata/ELSA-2020-2550.html",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "http://linux.oracle.com/errata/ELSA-2020-2550.html",
 								},
 								{
-									URL:  "http://linux.oracle.com/cve/CVE-2020-13112.html",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "http://linux.oracle.com/cve/CVE-2020-13112.html",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -788,8 +775,7 @@ func TestTransform(t *testing.T) {
 							Status:       "active",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://access.redhat.com/security/cve/CVE-2020-14350",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://access.redhat.com/security/cve/CVE-2020-14350",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -884,8 +870,7 @@ func TestTransform(t *testing.T) {
 							Description:  "A flaw was found in Mozilla Firefox. A race condition can occur while running the nsDocShell destructor causing a use-after-free memory issue. The highest threat from this vulnerability is to data confidentiality and integrity as well as system availability.",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://access.redhat.com/security/cve/CVE-2020-6819",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://access.redhat.com/security/cve/CVE-2020-6819",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -924,8 +909,7 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
-														URL:  "https://access.redhat.com/errata/RHSA-2020:1341",
-														Tags: []string{grypeDB.AdvisoryReferenceTag},
+														URL: "https://access.redhat.com/errata/RHSA-2020:1341",
 													},
 												},
 											},
@@ -950,8 +934,7 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
-														URL:  "https://access.redhat.com/errata/RHSA-2020:1495",
-														Tags: []string{grypeDB.AdvisoryReferenceTag},
+														URL: "https://access.redhat.com/errata/RHSA-2020:1495",
 													},
 												},
 											},
@@ -978,8 +961,7 @@ func TestTransform(t *testing.T) {
 							Description:  "A flaw was found in PostgreSQL, where some PostgreSQL extensions did not use the search_path safely in their installation script. This flaw allows an attacker with sufficient privileges to trick an administrator into executing a specially crafted script during the extension's installation or update. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.",
 							References: []grypeDB.Reference{
 								{
-									URL:  "https://access.redhat.com/security/cve/CVE-2020-14350",
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
+									URL: "https://access.redhat.com/security/cve/CVE-2020-14350",
 								},
 							},
 							Severities: []grypeDB.Severity{
@@ -1021,8 +1003,8 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
-														Tags: []string{grypeDB.AdvisoryReferenceTag},
-														URL:  "https://access.redhat.com/errata/RHSA-2020:3669",
+
+														URL: "https://access.redhat.com/errata/RHSA-2020:3669",
 													},
 												},
 											},
@@ -1050,8 +1032,8 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
-														Tags: []string{grypeDB.AdvisoryReferenceTag},
-														URL:  "https://access.redhat.com/errata/RHSA-2020:5620",
+
+														URL: "https://access.redhat.com/errata/RHSA-2020:5620",
 													},
 												},
 											},
@@ -1079,8 +1061,8 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
-														Tags: []string{grypeDB.AdvisoryReferenceTag},
-														URL:  "https://access.redhat.com/errata/RHSA-2020:5619",
+
+														URL: "https://access.redhat.com/errata/RHSA-2020:5619",
 													},
 												},
 											},

@@ -205,8 +205,7 @@ func getReferences(vulnerability unmarshal.GitHubAdvisory) []grypeDB.Reference {
 	// https://github.com/anchore/vunnel/issues/646 to capture this
 	refs := []grypeDB.Reference{
 		{
-			Tags: []string{grypeDB.AdvisoryReferenceTag},
-			URL:  vulnerability.Advisory.URL,
+			URL: vulnerability.Advisory.URL,
 		},
 	}
 

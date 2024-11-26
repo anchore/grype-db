@@ -284,8 +284,7 @@ func getSeverities(vuln unmarshal.NVDVulnerability) []grypeDB.Severity {
 func getReferences(vuln unmarshal.NVDVulnerability) []grypeDB.Reference {
 	references := []grypeDB.Reference{
 		{
-			Tags: []string{grypeDB.AdvisoryReferenceTag},
-			URL:  "https://nvd.nist.gov/vuln/detail/" + vuln.ID,
+			URL: "https://nvd.nist.gov/vuln/detail/" + vuln.ID,
 		},
 	}
 	for _, reference := range vuln.References {

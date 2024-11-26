@@ -91,8 +91,7 @@ func TestGetVulnerability(t *testing.T) {
 						Status:        grypeDB.VulnerabilityActive,
 						References: []grypeDB.Reference{
 							{
-								Tags: []string{grypeDB.AdvisoryReferenceTag},
-								URL:  "https://github.com/advisories/GHSA-2wgc-48g2-cj5w",
+								URL: "https://github.com/advisories/GHSA-2wgc-48g2-cj5w",
 							},
 						},
 						Aliases: []string{"CVE-2024-21653"},
@@ -129,8 +128,7 @@ func TestGetVulnerability(t *testing.T) {
 						Status:        grypeDB.VulnerabilityRejected,
 						References: []grypeDB.Reference{
 							{
-								Tags: []string{grypeDB.AdvisoryReferenceTag},
-								URL:  "https://github.com/advisories/GHSA-3x74-v64j-qc3f",
+								URL: "https://github.com/advisories/GHSA-3x74-v64j-qc3f",
 							},
 						},
 						Aliases: []string{"CVE-2023-30179"},
@@ -167,8 +165,7 @@ func TestGetVulnerability(t *testing.T) {
 						Status:        grypeDB.VulnerabilityActive,
 						References: []grypeDB.Reference{
 							{
-								Tags: []string{grypeDB.AdvisoryReferenceTag},
-								URL:  "https://github.com/advisories/GHSA-vc9j-fhvv-8vrf",
+								URL: "https://github.com/advisories/GHSA-vc9j-fhvv-8vrf",
 							},
 						},
 						Aliases: []string{"CVE-2020-14000"},
@@ -202,8 +199,7 @@ func TestGetVulnerability(t *testing.T) {
 						Description:  "Low severity vulnerability that affects notebook",
 						References: []grypeDB.Reference{
 							{
-								URL:  "https://github.com/advisories/GHSA-6cwv-x26c-w2q4",
-								Tags: []string{"advisory"},
+								URL: "https://github.com/advisories/GHSA-6cwv-x26c-w2q4",
 							},
 						},
 
@@ -226,8 +222,7 @@ func TestGetVulnerability(t *testing.T) {
 						Description:  "Moderate severity vulnerability that affects Plone",
 						References: []grypeDB.Reference{
 							{
-								URL:  "https://github.com/advisories/GHSA-p5wr-vp8g-q5p4",
-								Tags: []string{"advisory"},
+								URL: "https://github.com/advisories/GHSA-p5wr-vp8g-q5p4",
 							},
 						},
 						Aliases: []string{"CVE-2017-5524"},
@@ -256,8 +251,7 @@ func TestGetVulnerability(t *testing.T) {
 						Status:        grypeDB.VulnerabilityRejected,
 						References: []grypeDB.Reference{
 							{
-								Tags: []string{grypeDB.AdvisoryReferenceTag},
-								URL:  "https://github.com/advisories/GHSA-6cwv-x26c-w2q4",
+								URL: "https://github.com/advisories/GHSA-6cwv-x26c-w2q4",
 							},
 						},
 						Aliases: []string{"CVE-2018-8768"},
@@ -283,8 +277,7 @@ func TestGetVulnerability(t *testing.T) {
 						Status:       grypeDB.VulnerabilityActive,
 						References: []grypeDB.Reference{
 							{
-								Tags: []string{grypeDB.AdvisoryReferenceTag},
-								URL:  "https://github.com/advisories/GHSA-p5wr-vp8g-q5p4",
+								URL: "https://github.com/advisories/GHSA-p5wr-vp8g-q5p4",
 							},
 						},
 						Aliases: []string{"CVE-2017-5524"},

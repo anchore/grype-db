@@ -68,8 +68,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
 								},
 								{
 									URL:  "https://security.netapp.com/advisory/ntap-20180523-0001/",
@@ -144,8 +144,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2018-1000222",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-1000222",
 								},
 								{
 									URL:  "https://github.com/libgd/libgd/issues/447",
@@ -232,8 +232,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2018-10189",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-10189",
 								},
 								{
 									URL:  "https://github.com/mautic/mautic/releases/tag/2.13.0",
@@ -315,8 +315,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2015-8978",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2015-8978",
 								},
 								{
 									URL:  "http://cpansearch.perl.org/src/PHRED/SOAP-Lite-1.20/Changes",
@@ -374,8 +374,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2022-26488",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2022-26488",
 								},
 								{
 									URL:  "https://mail.python.org/archives/list/security-announce@python.org/thread/657Z4XULWZNIY5FRP3OWXHYKUSIH6DMN/",
@@ -481,8 +481,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2022-0543",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2022-0543",
 								},
 								{
 									URL:  "http://packetstormsecurity.com/files/166885/Redis-Lua-Sandbox-Escape.html",
@@ -576,8 +576,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2020-10729",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2020-10729",
 								},
 								{
 									URL:  "https://bugzilla.redhat.com/show_bug.cgi?id=1831089",
@@ -667,8 +667,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2023-38733",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-38733",
 								},
 								{
 									URL:  "https://exchange.xforce.ibmcloud.com/vulnerabilities/262293",
@@ -755,8 +755,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
 								},
 								{
 									URL:  "http://www.openwall.com/lists/oss-security/2023/12/05/2",
@@ -866,8 +866,8 @@ func TestTransform(t *testing.T) {
 							Status:        grypeDB.VulnerabilityActive,
 							References: []grypeDB.Reference{
 								{
-									Tags: []string{grypeDB.AdvisoryReferenceTag},
-									URL:  "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
 								},
 								{
 									URL:  "http://www.openwall.com/lists/oss-security/2023/12/05/2",
