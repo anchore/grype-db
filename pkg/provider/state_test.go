@@ -1,4 +1,4 @@
-package commands
+package provider
 
 import (
 	"reflect"
@@ -6,20 +6,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/anchore/grype-db/pkg/provider"
 )
 
 func Test_earliestTimestamp(t *testing.T) {
 	tests := []struct {
 		name    string
-		states  []provider.State
+		states  []State
 		want    time.Time
 		wantErr require.ErrorAssertionFunc
 	}{
 		{
 			name: "happy path",
-			states: []provider.State{
+			states: []State{
 				{
 					Timestamp: time.Date(2021, 1, 2, 0, 0, 0, 0, time.UTC),
 				},
@@ -34,13 +32,13 @@ func Test_earliestTimestamp(t *testing.T) {
 		},
 		{
 			name:    "empty states",
-			states:  []provider.State{},
+			states:  []State{},
 			want:    time.Time{},
 			wantErr: requireErrorContains("cannot find earliest timestamp: no states provided"),
 		},
 		{
 			name: "single state",
-			states: []provider.State{
+			states: []State{
 				{
 					Timestamp: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
@@ -59,7 +57,7 @@ func Test_earliestTimestamp(t *testing.T) {
 		},
 		{
 			name: "all states have provider nvd",
-			states: []provider.State{
+			states: []State{
 				{
 					Provider:  "nvd",
 					Timestamp: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -74,7 +72,7 @@ func Test_earliestTimestamp(t *testing.T) {
 		},
 		{
 			name: "mix of nvd and non-nvd providers",
-			states: []provider.State{
+			states: []State{
 				{
 					Provider:  "nvd",
 					Timestamp: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -92,7 +90,7 @@ func Test_earliestTimestamp(t *testing.T) {
 		},
 		{
 			name: "timestamps are the same",
-			states: []provider.State{
+			states: []State{
 				{
 					Timestamp: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
@@ -112,7 +110,7 @@ func Test_earliestTimestamp(t *testing.T) {
 			if tt.wantErr == nil {
 				tt.wantErr = require.NoError
 			}
-			got, err := earliestTimestamp(tt.states)
+			got, err := States(tt.states).EarliestTimestamp()
 			tt.wantErr(t, err)
 			if err != nil {
 				return

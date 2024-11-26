@@ -134,3 +134,31 @@ func (s States) Names() []string {
 	}
 	return names
 }
+
+func (s States) EarliestTimestamp() (time.Time, error) {
+	if len(s) == 0 {
+		return time.Time{}, fmt.Errorf("cannot find earliest timestamp: no states provided")
+	}
+	var earliest time.Time
+	for _, curState := range s {
+		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
+		if curState.Provider == "nvd" {
+			log.WithFields("provider", curState.Provider).Debug("not considering data age for provider")
+			continue
+		}
+		if earliest.IsZero() {
+			earliest = curState.Timestamp
+			continue
+		}
+		if curState.Timestamp.Before(earliest) {
+			earliest = curState.Timestamp
+		}
+	}
+
+	if earliest.IsZero() {
+		return time.Time{}, fmt.Errorf("unable to determine earliest timestamp")
+	}
+
+	log.WithFields("timestamp", earliest).Debug("earliest data timestamp")
+	return earliest, nil
+}

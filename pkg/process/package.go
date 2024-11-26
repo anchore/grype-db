@@ -9,8 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/scylladb/go-set/strset"
+
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/tarutil"
+	"github.com/anchore/grype-db/pkg/provider"
 	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/legacy/distribution"
 	v6 "github.com/anchore/grype/grype/db/v6"
 	v6Distribution "github.com/anchore/grype/grype/db/v6/distribution"
@@ -31,10 +34,47 @@ func packageDB(dbDir, overrideArchiveExtension string) error {
 	}
 	log.WithFields("from", dbDir, "extension", extension).Info("packaging database")
 
-	tarPath, err := calculateTarPath(dbDir, extension)
+	s, err := v6.NewReader(v6.Config{DBDirPath: dbDir})
+	if err != nil {
+		return fmt.Errorf("unable to open vulnerability store: %w", err)
+	}
+
+	metadata, err := s.GetDBMetadata()
+	if err != nil || metadata == nil {
+		return fmt.Errorf("unable to get vulnerability store metadata: %w", err)
+	}
+
+	if metadata.Model != v6.ModelVersion {
+		return fmt.Errorf("metadata model %d does not match vulnerability store model %d", v6.ModelVersion, metadata.Model)
+	}
+
+	providerModels, err := s.AllProviders()
+	if err != nil {
+		return fmt.Errorf("unable to get all providers: %w", err)
+	}
+
+	if len(providerModels) == 0 {
+		return fmt.Errorf("no providers found in the vulnerability store")
+	}
+
+	eldest, err := toProviders(providerModels).EarliestTimestamp()
 	if err != nil {
 		return err
 	}
+
+	// output archive vulnerability-db_VERSION_OLDESTDATADATE_BUILTEPOCH.tar.gz, where:
+	// - VERSION: schema version in the form of v#.#.#
+	// - OLDESTDATADATE: RFC3338 formatted value of the oldest date capture date found for all contained providers
+	// - BUILTEPOCH: linux epoch formatted value of the database metadata built field
+	tarName := fmt.Sprintf(
+		"vulnerability-db_v%s_%s_%d.%s",
+		fmt.Sprintf("%d.%d.%d", metadata.Model, metadata.Revision, metadata.Addition),
+		eldest.UTC().Format(time.RFC3339),
+		metadata.BuildTimestamp.Unix(),
+		extension,
+	)
+
+	tarPath := filepath.Join(dbDir, tarName)
 
 	if err := populateTar(tarPath); err != nil {
 		return err
@@ -42,7 +82,18 @@ func packageDB(dbDir, overrideArchiveExtension string) error {
 
 	log.WithFields("path", tarPath).Info("created database archive")
 
-	return writeLatestDocument(tarPath)
+	return writeLatestDocument(tarPath, *metadata)
+}
+
+func toProviders(states []v6.Provider) provider.States {
+	var result provider.States
+	for _, state := range states {
+		result = append(result, provider.State{
+			Provider:  state.ID,
+			Timestamp: *state.DateCaptured,
+		})
+	}
+	return result
 }
 
 func resolveExtension(overrideArchiveExtension string) (string, error) {
@@ -66,58 +117,7 @@ func resolveExtension(overrideArchiveExtension string) (string, error) {
 	return extension, nil
 }
 
-func calculateTarPath(dbDir string, extension string) (string, error) {
-	s, err := v6.NewReader(v6.Config{DBDirPath: dbDir})
-	if err != nil {
-		return "", fmt.Errorf("unable to open vulnerability store: %w", err)
-	}
-
-	metadata, err := s.GetDBMetadata()
-	if err != nil {
-		return "", fmt.Errorf("unable to get vulnerability store metadata: %w", err)
-	}
-
-	if metadata.Model != v6.ModelVersion {
-		return "", fmt.Errorf("metadata model %d does not match vulnerability store model %d", v6.ModelVersion, metadata.Model)
-	}
-
-	providers, err := s.AllProviders()
-	if err != nil {
-		return "", fmt.Errorf("unable to get all providers: %w", err)
-	}
-
-	if len(providers) == 0 {
-		return "", fmt.Errorf("no providers found in the vulnerability store")
-	}
-
-	eldest := eldestProviderTimestamp(providers)
-	if eldest == nil {
-		return "", errors.New("could not resolve eldest provider timestamp")
-	}
-	// output archive vulnerability-db_VERSION_OLDESTDATADATE_BUILTEPOCH.tar.gz, where:
-	// - VERSION: schema version in the form of v#.#.#
-	// - OLDESTDATADATE: RFC3338 formatted value of the oldest date capture date found for all contained providers
-	// - BUILTEPOCH: linux epoch formatted value of the database metadata built field
-	tarName := fmt.Sprintf(
-		"vulnerability-db_v%s_%s_%d.%s",
-		fmt.Sprintf("%d.%d.%d", metadata.Model, metadata.Revision, metadata.Addition),
-		eldest.UTC().Format(time.RFC3339),
-		metadata.BuildTimestamp.Unix(),
-		extension,
-	)
-
-	return filepath.Join(dbDir, tarName), err
-}
-
-func eldestProviderTimestamp(providers []v6.Provider) *time.Time {
-	var eldest *time.Time
-	for _, p := range providers {
-		if eldest == nil || p.DateCaptured.Before(*eldest) {
-			eldest = p.DateCaptured
-		}
-	}
-	return eldest
-}
+var listingFiles = strset.New("listing.json", "latest.json", "history.json")
 
 func populateTar(tarPath string) error {
 	originalDir, err := os.Getwd()
@@ -146,7 +146,7 @@ func populateTar(tarPath string) error {
 
 	var files []string
 	for _, fi := range fileInfos {
-		if fi.Name() != "listing.json" && !strings.Contains(fi.Name(), ".tar.") {
+		if !listingFiles.Has(fi.Name()) && !strings.Contains(fi.Name(), ".tar.") {
 			files = append(files, fi.Name())
 		}
 	}
@@ -158,8 +158,8 @@ func populateTar(tarPath string) error {
 	return nil
 }
 
-func writeLatestDocument(tarPath string) error {
-	archive, err := v6Distribution.NewArchive(tarPath)
+func writeLatestDocument(tarPath string, metadata v6.DBMetadata) error {
+	archive, err := v6Distribution.NewArchive(tarPath, *metadata.BuildTimestamp, metadata.Model, metadata.Revision, metadata.Addition)
 	if err != nil || archive == nil {
 		return fmt.Errorf("unable to create archive: %w", err)
 	}

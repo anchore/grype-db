@@ -73,6 +73,15 @@ func newShellCompressor(c string, archive io.Writer) (*shellCompressor, error) {
 		return nil, fmt.Errorf("unable to parse command: %w", err)
 	}
 	binary := args[0]
+
+	binPath, err := exec.LookPath(binary)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find binary %q: %w", binary, err)
+	}
+	if binPath == "" {
+		return nil, fmt.Errorf("unable to find binary %q in PATH", binary)
+	}
+
 	args = args[1:]
 	cmd := exec.Command(binary, args...)
 	log.Debug(strings.Join(cmd.Args, " "))

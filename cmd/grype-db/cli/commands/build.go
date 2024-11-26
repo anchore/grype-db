@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
@@ -108,7 +107,7 @@ func runBuild(cfg buildConfig) error {
 		return fmt.Errorf("unable to get provider states: %w", err)
 	}
 
-	earliest, err := earliestTimestamp(states)
+	earliest, err := provider.States(states).EarliestTimestamp()
 	if err != nil {
 		return fmt.Errorf("unable to get earliest timestamp: %w", err)
 	}
@@ -151,39 +150,4 @@ func providerStates(skipValidation bool, providers []provider.Provider) ([]provi
 		log.Debugf("state validated for all providers")
 	}
 	return states, nil
-}
-
-func earliestTimestamp(states []provider.State) (time.Time, error) {
-	if len(states) == 0 {
-		return time.Time{}, fmt.Errorf("cannot find earliest timestamp: no states provided")
-	}
-
-	// special case when there is exactly 1 state, return its timestamp even
-	// if it is nvd, because otherwise quality gates that pull only nvd deterministically fail.
-	if len(states) == 1 {
-		return states[0].Timestamp, nil
-	}
-
-	var earliest time.Time
-	for _, s := range states {
-		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
-		if s.Provider == "nvd" {
-			log.WithFields("provider", s.Provider).Debug("not considering data age for provider")
-			continue
-		}
-		if earliest.IsZero() {
-			earliest = s.Timestamp
-			continue
-		}
-		if s.Timestamp.Before(earliest) {
-			earliest = s.Timestamp
-		}
-	}
-
-	if earliest.IsZero() {
-		return time.Time{}, fmt.Errorf("unable to determine earliest timestamp")
-	}
-
-	log.WithFields("timestamp", earliest).Debug("earliest data timestamp")
-	return earliest, nil
 }
