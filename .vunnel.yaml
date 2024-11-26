@@ -15,7 +15,8 @@ providers:
     overrides_enabled: true
 
     # we're getting a lot of 503s and intermittent failures from the NVD API, so we're going to retry a few times
-    request_timeout: 250
+    request_timeout: 125
+    request_retry_count: 15
     runtime:
       on_error:
         retry_count: 10
