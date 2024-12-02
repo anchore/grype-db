@@ -249,6 +249,7 @@ class DBInfo:
     db_created: datetime.datetime
     data_created: datetime.datetime
     archive_path: str
+    latest_path: str | None = None
 
 
 class DBInvalidException(Exception):
@@ -289,6 +290,12 @@ class DBManager:
         # a sqlite3 db
         db_path = os.path.join(build_dir, "vulnerability.db")
 
+        # check if there is a metadata.json file in the build directory
+        metadata_path = os.path.join(build_dir, "metadata.json")
+        if not os.path.exists(metadata_path):
+            msg = f"missing metadata.json for DB {db_uuid!r}"
+            raise DBInvalidException(msg)
+
         # select distinct values in the "namespace" column of the "vulnerability" table
         con = sqlite3.connect(db_path)
         crsr = con.cursor()
@@ -322,14 +329,8 @@ class DBManager:
             with open(timestamp_path) as f:
                 db_created_timestamp = datetime.datetime.fromisoformat(f.read())
 
-        # read info from the metadata file in build/metadata.json
-        metadata_path = os.path.join(session_dir, "build", "metadata.json")
-        if not os.path.exists(metadata_path):
-            msg = f"missing metadata.json for DB {db_uuid!r}"
-            raise DBInvalidException(msg)
-
-        with open(metadata_path) as f:
-            metadata = json.load(f)
+        # read info from the metadata file in build/metadata.json (v1 - v5) or build/latest.json (v6+)
+        metadata = db_metadata(build_dir=os.path.join(session_dir, "build"))
 
         stage_dir, _ = self.db_paths(db_uuid=db_uuid)
         db_pattern = os.path.join(
@@ -347,13 +348,18 @@ class DBManager:
 
         abs_archive_path = os.path.abspath(matches[0])
 
+        db_created = db_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if "db_created" in metadata:
+            db_created = metadata["db_created"]
+
         return DBInfo(
             uuid=db_uuid,
             schema_version=metadata["version"],
-            db_checksum=metadata["checksum"],
-            db_created=db_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            data_created=metadata["built"],
+            db_checksum=metadata["db_checksum"],
+            db_created=db_created,
+            data_created=metadata["data_created"],
             archive_path=abs_archive_path,
+            latest_path=metadata.get("latest_path", None),
         )
 
     def list_dbs(self) -> list[DBInfo]:
@@ -372,6 +378,54 @@ class DBManager:
 
         return sorted(sessions, key=lambda x: x.db_created)
 
+    def remove_db(self, db_uuid: str) -> bool:
+        session_dir = os.path.join(self.db_dir, db_uuid)
+        if os.path.exists(session_dir):
+            shutil.rmtree(session_dir)
+            return True
+        return False
+
+def db_metadata(build_dir: str) -> dict:
+    metadata_path = os.path.join(build_dir, "metadata.json")
+
+    if os.path.exists(metadata_path):
+        # supports v1 - v5
+        with open(metadata_path) as f:
+            metadata = json.load(f)
+            return {
+                "version": int(metadata["version"]),
+                "db_checksum": metadata["checksum"],
+                "data_created": metadata["built"],
+            }
+
+    latest_path = os.path.join(build_dir, "latest.json")
+    if os.path.exists(latest_path):
+        # supports v6+
+        with open(latest_path) as f:
+
+            metadata = json.load(f)
+            # example data:
+            # {
+            #  "status": "active",
+            #  "schemaVersion": "6.0.0",
+            #  "built": "2024-11-26T20:24:24Z",
+            #  "path": "vulnerability-db_v6.0.0_2024-11-25T01:31:56Z_1732652663.tar.zst",
+            #  "checksum": "sha256:1a0ec0ba815083d0ef50790c8c94307c822fd7d09632dee9c3edb6bf5a58e6ff"
+            # }
+            return {
+                "version": int(metadata["schemaVersion"].split(".")[0]),
+                "db_checksum": None, # we don't have this information
+                "db_created": metadata["built"],
+                "data_created": parse_datetime(metadata["path"].split("_")[2]),
+                "latest_path": os.path.abspath(latest_path),
+            }
+
+    msg = f"missing metadata.json and latest.json for DB"
+    raise DBInvalidException(msg)
+
+
+def parse_datetime(s: str) -> datetime.datetime:
+    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
 
 class GrypeDB:
     def __init__(self, bin_path: str, config_path: str = ""):
@@ -424,7 +478,7 @@ class GrypeDB:
 
         db_pattern = os.path.join(
             build_dir,
-            f"*_v{schema_version}_*.tar.*",
+            f"*_v{schema_version}[._]*.tar.*",
         )
 
         matches = glob.glob(db_pattern)

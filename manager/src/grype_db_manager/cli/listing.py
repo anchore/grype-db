@@ -9,7 +9,7 @@ from grype_db_manager.cli import config, error
 from grype_db_manager.db.format import Format
 
 
-@click.group(name="listing", help="manage the grype-db listing file")
+@click.group(name="listing", help="manage the grype-db listing file (only schemas v1-v5)")
 @click.pass_obj
 def group(_: config.Application) -> None:
     pass

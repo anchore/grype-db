@@ -24,6 +24,11 @@
       "schema": "5",
       "grype-version": "main",
       "supported": true
+    },
+    {
+      "schema": "6",
+      "grype-version": "main",
+      "supported": false
     }
   ]
 }
