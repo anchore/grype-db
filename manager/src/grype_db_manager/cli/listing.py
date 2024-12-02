@@ -110,7 +110,7 @@ def validate_listing(cfg: config.Application, listing_file: str) -> None:
         raise ValueError(msg)
 
     if cfg.validate.listing.override_grype_version and not cfg.validate.listing.override_db_schema_version:
-        msg = "ovrerride db schema version must be specified if override grype version is specified"
+        msg = "override db schema version must be specified if override grype version is specified"
         raise ValueError(msg)
 
     override_schema_release = None

@@ -22,7 +22,9 @@ Vulnerability = collections.namedtuple("Vulnerability", "id")
 class Grype:
     BIN = "grype"
 
-    def __init__(self, schema_version: int, store_root: str, update_url: str = "", release: str | None = None):
+    def __init__(self, schema_version: int | str, store_root: str, update_url: str = "", release: str | None = None):
+        if isinstance(schema_version, str):
+            schema_version = int(schema_version.split(".")[0])
         self.schema_version = schema_version
         if release:
             logging.warning(f"overriding grype release for schema={schema_version!r} with release={release!r}")
@@ -31,7 +33,7 @@ class Grype:
             self.release = schema.grype_version(schema_version)
         logging.debug(f"using grype release={self.release!r} for schema={schema_version!r}")
 
-        env = {}
+        env = self._env()
         if update_url:
             env["GRYPE_DB_UPDATE_URL"] = update_url
         self.tool = grype.Grype.install(version=self.release, path=os.path.join(store_root, self.release), env=env)
@@ -43,20 +45,29 @@ class Grype:
             obj = json.load(fh)
         return obj.keys()
 
+    def _env(self, env: dict[str, str] | None = None) -> dict[str, str]:
+        if not env:
+            env = os.environ.copy()
+        if self.schema_version >= 6:
+            env.update({
+                "GRYPE_EXP_DBV6": "true",
+            })
+        return env
+
     def update_db(self) -> None:
-        self.tool.run("db", "update", "-vv")
+        self.tool.run("db", "update", "-vv", env=self._env())
 
         # ensure the db cache is not empty for the current schema
         check_db_cache_dir(self.schema_version, os.path.join(self.tool.path, "db"))
 
     def import_db(self, db_path: str) -> None:
-        self.tool.run("db", "import", db_path)
+        self.tool.run("db", "import", db_path, env=self._env())
 
         # ensure the db cache is not empty for the current schema
         check_db_cache_dir(self.schema_version, os.path.join(self.tool.path, "db"))
 
     def run(self, user_input: str) -> str:
-        return self.tool.run("-o", "json", "-v", user_input)
+        return self.tool.run("-o", "json", "-v", user_input, env=self._env())
 
 
 class Report:
@@ -97,17 +108,17 @@ class Report:
         return packages, vulnerabilities
 
 
-def check_db_cache_dir(schema_version: str, db_runtime_dir: str) -> None:
+def check_db_cache_dir(schema_version: int, db_runtime_dir: str) -> None:
     """
     Ensure that there is a `metadata.json` file for the cache directory, which signals that there
     are files related to a database pull
     """
     # ensure the db cache is not empty for the current schema
-    if schema_version == "1":
+    if schema_version == 1:
         # older grype versions do not support schema-based cache directories
         db_metadata_file = os.path.join(db_runtime_dir, "metadata.json")
     else:
-        db_metadata_file = os.path.join(db_runtime_dir, schema_version, "metadata.json")
+        db_metadata_file = os.path.join(db_runtime_dir, str(schema_version), "metadata.json")
 
     if os.path.exists(db_metadata_file):
         # the metadata.json file exists and grype will be able to work with it

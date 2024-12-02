@@ -27,7 +27,7 @@
     },
     {
       "schema": "6",
-      "grype-version": "main",
+      "grype-version": "initial-db-dir",
       "supported": false
     }
   ]
