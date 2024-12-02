@@ -8,7 +8,7 @@ from tabulate import tabulate
 from yardstick.cli import config as ycfg
 from yardstick.cli.validate import validate as yardstick_validate
 
-from grype_db_manager import db, s3utils, grypedb
+from grype_db_manager import db, grypedb, s3utils
 from grype_db_manager.cli import config, error
 from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
@@ -59,6 +59,7 @@ def remove_db(cfg: config.Application, db_uuid: str) -> None:
     if db_manager.remove_db(db_uuid=db_uuid):
         click.echo(f"database {db_uuid!r} removed")
     click.echo(f"no database found with session id {db_uuid}")
+
 
 @group.command(name="build", help="build and validate a grype database")
 @click.option("--schema-version", "-s", required=True, help="the DB schema version to build")
@@ -131,7 +132,8 @@ def validate_db(
             db_manager.validate_namespaces(db_uuid=db_uuid)
         else:
             # TODO: implement me
-            raise NotImplementedError("namespace validation for schema v6+ is not yet implemented")
+            msg = "namespace validation for schema v6+ is not yet implemented"
+            raise NotImplementedError(msg)
 
     _validate_db(ctx, cfg, db_info, images, db_uuid, verbosity, recapture)
 
@@ -143,10 +145,19 @@ def validate_db(
     click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
 
 
-def _validate_db(ctx: click.Context, cfg: config.Application, db_info: grypedb.DBInfo, images: list[str], db_uuid: str, verbosity: int, recapture: bool) -> None:
+def _validate_db(
+    ctx: click.Context,
+    cfg: config.Application,
+    db_info: grypedb.DBInfo,
+    images: list[str],
+    db_uuid: str,
+    verbosity: int,
+    recapture: bool,
+) -> None:
     if db_info.schema_version >= 6:
         # TODO: not implemented yet
-        raise NotImplementedError("validation for schema v6+ is not yet implemented")
+        msg = "validation for schema v6+ is not yet implemented"
+        raise NotImplementedError(msg)
 
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
@@ -260,7 +271,8 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 
     if db_info.schema_version >= 6:
         if not os.path.exists(db_info.archive_path):
-            raise ValueError(f"latest.json file not found for DB {db_uuid!r}")
+            msg = f"latest.json file not found for DB {db_uuid!r}"
+            raise ValueError(msg)
 
         # /databases -> /databases/v6 , and is dynamic based on the schema version
         s3_path = f"{s3_path}/v{db_info.schema_version}"
@@ -282,7 +294,7 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
             bucket=s3_bucket,
             key=latest_key,
             path=db_info.latest_path,
-            CacheControl=f"public,max-age=300", # 5 minutes
+            CacheControl="public,max-age=300",  # 5 minutes
         )
 
         click.echo(f"DB latest.json {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
