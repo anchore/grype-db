@@ -29,7 +29,7 @@ boto3 = ">=1.28.16, <2"
 click = ">=8.1.6, <9"
 dataclass-wizard = ">=0.22.2, <1"
 iso8601 = ">=2.0.0, <3"
-requests = ">=2.31.0, <3"
+requests = "^2.32.3"
 semver = ">=3.0.1, <4"
 tabulate = ">=0.9.0, <1"
 zstandard = ">=0.21.0, <1"
@@ -67,6 +67,8 @@ testpaths = ["manager/tests"]
 cache_dir = ".cache/pytest"
 pythonpath = ["manager/src"]
 norecursedirs = ["data"]
+log_format = "%(levelname)-6s %(message)s"
+log_cli_level = "INFO"
 
 [tool.black]
 line-length = 130

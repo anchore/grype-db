@@ -74,12 +74,12 @@ def upload(bucket: str, key: str, contents: str, client_factory: type[ClientFact
 
 
 def upload_file(bucket: str, key: str, path: str, client_factory: type[ClientFactory] = ClientFactory, **kwargs) -> None:
-    logging.debug(f"uploading file={path} to s3 bucket={bucket} key={key}")
-
     if "ContentType" not in kwargs:
         content_type = mime.from_file(path)
         if content_type:
             kwargs["ContentType"] = content_type
+
+    logging.debug(f"uploading file={path} to s3 bucket={bucket} key={key} content-type={kwargs.get('ContentType', '')}")
 
     # boto is a little too verbose... let's tone that down just for a bit
     with LoggingContext(level=logging.WARNING):
