@@ -139,6 +139,13 @@ func (s States) EarliestTimestamp() (time.Time, error) {
 	if len(s) == 0 {
 		return time.Time{}, fmt.Errorf("cannot find earliest timestamp: no states provided")
 	}
+
+	// special case when there is exactly 1 state, return its timestamp even
+	// if it is nvd, because otherwise quality gates that pull only nvd deterministically fail.
+	if len(s) == 1 {
+		return s[0].Timestamp, nil
+	}
+
 	var earliest time.Time
 	for _, curState := range s {
 		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
