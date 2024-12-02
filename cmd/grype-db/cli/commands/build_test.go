@@ -48,6 +48,16 @@ func Test_earliestTimestamp(t *testing.T) {
 			want: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 		},
 		{
+			name: "single state, but it's nvd",
+			states: []provider.State{
+				{
+					Provider:  "nvd",
+					Timestamp: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			want: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+		},
+		{
 			name: "all states have provider nvd",
 			states: []provider.State{
 				{
