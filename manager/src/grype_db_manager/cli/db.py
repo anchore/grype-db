@@ -8,7 +8,7 @@ from tabulate import tabulate
 from yardstick.cli import config as ycfg
 from yardstick.cli.validate import validate as yardstick_validate
 
-from grype_db_manager import db, s3utils
+from grype_db_manager import db, s3utils, grypedb
 from grype_db_manager.cli import config, error
 from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
@@ -125,10 +125,6 @@ def validate_db(
         click.echo(f"no database found with session id {db_uuid}")
         return
 
-    if db_info.schema_version >= 6:
-        # TODO: not implemented yet
-        raise NotImplementedError("validation for schema v6+ is not yet implemented")
-
     if not skip_namespace_check:
         if db_info.schema_version < 6:
             # ensure the minimum number of namespaces are present
@@ -136,6 +132,21 @@ def validate_db(
         else:
             # TODO: implement me
             raise NotImplementedError("namespace validation for schema v6+ is not yet implemented")
+
+    _validate_db(ctx, cfg, db_info, images, db_uuid, verbosity, recapture)
+
+    logging.info(f"validating latest.json {db_uuid}")
+
+    if db_info.schema_version >= 6:
+        _validate_latest(cfg, db_info.latest_path, db_info.archive_path)
+
+    click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
+
+
+def _validate_db(ctx: click.Context, cfg: config.Application, db_info: grypedb.DBInfo, images: list[str], db_uuid: str, verbosity: int, recapture: bool) -> None:
+    if db_info.schema_version >= 6:
+        # TODO: not implemented yet
+        raise NotImplementedError("validation for schema v6+ is not yet implemented")
 
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
@@ -204,6 +215,31 @@ def validate_db(
         verbosity=verbosity,
         result_sets=[],
         all_result_sets=True,
+    )
+
+
+def _validate_latest(cfg: config.Application, latest_file: str, archive_path: str) -> None:
+    with open(latest_file) as f:
+        latest_obj = db.Latest.from_json(f.read())
+
+    if not cfg.validate.listing.image:
+        msg = "no image specified to validate against"
+        raise ValueError(msg)
+
+    if not cfg.validate.listing.minimum_packages:
+        msg = "minimum packages must be specified"
+        raise ValueError(msg)
+
+    if not cfg.validate.listing.minimum_vulnerabilities:
+        msg = "minimum vulnerabilities must be specified"
+        raise ValueError(msg)
+
+    db.latest.smoke_test(
+        latest_obj,
+        archive_path,
+        image=cfg.validate.listing.image,
+        minimum_packages=cfg.validate.listing.minimum_packages,
+        minimum_vulnerabilities=cfg.validate.listing.minimum_vulnerabilities,
     )
 
 
