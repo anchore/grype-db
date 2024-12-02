@@ -17,9 +17,8 @@ If you'd like to run a single test:
 ```shell
 # from the manager/tests/cli directory
 
-./run.sh <test-file-name>
+pytest . -vv -o log_cli=true -k <test-function-name>
 
 # e.g.
-# ./run.sh workflow-3-update-listing.sh
-# ./run.sh workflow-*db.sh
+# pytest . -vv -o log_cli=true -k test_workflow_4
 ```

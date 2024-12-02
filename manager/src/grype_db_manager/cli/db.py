@@ -54,6 +54,12 @@ def clear_dbs(cfg: config.Application) -> None:
         click.echo("no databases to clear")
 
 
+def remove_db(cfg: config.Application, db_uuid: str) -> None:
+    db_manager = DBManager(root_dir=cfg.data.root)
+    if db_manager.remove_db(db_uuid=db_uuid):
+        click.echo(f"database {db_uuid!r} removed")
+    click.echo(f"no database found with session id {db_uuid}")
+
 @group.command(name="build", help="build and validate a grype database")
 @click.option("--schema-version", "-s", required=True, help="the DB schema version to build")
 @click.pass_obj
@@ -119,9 +125,17 @@ def validate_db(
         click.echo(f"no database found with session id {db_uuid}")
         return
 
+    if db_info.schema_version >= 6:
+        # TODO: not implemented yet
+        raise NotImplementedError("validation for schema v6+ is not yet implemented")
+
     if not skip_namespace_check:
-        # ensure the minimum number of namespaces are present
-        db_manager.validate_namespaces(db_uuid=db_uuid)
+        if db_info.schema_version < 6:
+            # ensure the minimum number of namespaces are present
+            db_manager.validate_namespaces(db_uuid=db_uuid)
+        else:
+            # TODO: implement me
+            raise NotImplementedError("namespace validation for schema v6+ is not yet implemented")
 
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
@@ -208,22 +222,34 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
     db_manager = DBManager(root_dir=cfg.data.root)
     db_info = db_manager.get_db_info(db_uuid=db_uuid)
 
-    key = f"{s3_path}/{os.path.basename(db_info.archive_path)}"
+    if db_info.schema_version >= 6:
+        if not os.path.exists(db_info.archive_path):
+            raise ValueError(f"latest.json file not found for DB {db_uuid!r}")
 
-    # TODO: we have folks that require legacy behavior, where the content type was application/x-tar
-    kwargs = {}
-    if db_info.archive_path.endswith(".tar.gz"):
-        kwargs["ContentType"] = "application/x-tar"
+        # /databases -> /databases/v6 , and is dynamic based on the schema version
+        s3_path = f"{s3_path}/v{db_info.schema_version}"
+
+    db_key = f"{s3_path}/{os.path.basename(db_info.archive_path)}"
+    latest_key = f"{s3_path}/latest.json"
 
     s3utils.upload_file(
         bucket=s3_bucket,
-        key=key,
+        key=db_key,
         path=db_info.archive_path,
         CacheControl=f"public,max-age={ttl_seconds}",
-        **kwargs,
     )
 
-    click.echo(f"DB {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
+    click.echo(f"DB archive {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
+
+    if db_info.schema_version >= 6:
+        s3utils.upload_file(
+            bucket=s3_bucket,
+            key=latest_key,
+            path=db_info.latest_path,
+            CacheControl=f"public,max-age=300", # 5 minutes
+        )
+
+        click.echo(f"DB latest.json {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
 
 
 @group.command(name="build-and-upload", help="upload a grype database")
