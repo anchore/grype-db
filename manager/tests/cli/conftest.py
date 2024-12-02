@@ -8,6 +8,7 @@ from pathlib import Path
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
+
 class Format(Enum):
     RESET = "\033[0m"
     GREEN = "\033[1;32m"
@@ -21,6 +22,7 @@ class Format(Enum):
     def render(self, text: str) -> str:
         return f"{self.value}{text}{Format.RESET.value}"
 
+
 class CustomLogger(logging.Logger):
 
     def __init__(self, name, level=logging.NOTSET):
@@ -32,6 +34,7 @@ class CustomLogger(logging.Logger):
             message = f"[{self.test_function}] {message}"
         self.info(Format.GREEN.render(message))
 
+
 @pytest.fixture(scope="function")
 def logger(request):
     logging.setLoggerClass(CustomLogger)
@@ -42,6 +45,7 @@ def logger(request):
     logger.test_function = request.node.name
 
     return logger
+
 
 @pytest.fixture(scope="function", autouse=True)
 def change_to_cli_dir(request):
@@ -69,7 +73,6 @@ def change_to_cli_dir(request):
         os.chdir(original_dir)  # revert to the original directory
 
 
-
 @pytest.fixture(scope="session")
 def temporary_dir() -> str:
     with TemporaryDirectory() as tmp_dir:
@@ -81,6 +84,7 @@ def cli_env() -> dict[str, str]:
     env = os.environ.copy()
     env["PATH"] = f"{os.path.abspath('bin')}:{env['PATH']}"  # add `bin` to PATH
     return env
+
 
 class CommandHelper:
 
@@ -135,9 +139,11 @@ def log_lines(text: str, prefix: str, lgr, renderer=None):
             msg = renderer(msg)
         lgr(msg)
 
+
 @pytest.fixture
 def command(logger) -> CommandHelper:
     return CommandHelper(logger)
+
 
 class GrypeHelper:
     def __init__(self, bin_dir: str | Path | None = None):
@@ -192,6 +198,7 @@ class GrypeHelper:
                 raise RuntimeError("Grype binary build failed from feature branch")
 
         return GrypeHelper(bin_dir)
+
 
 @pytest.fixture(scope="session")
 def grype():

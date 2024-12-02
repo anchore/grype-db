@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 LISTING_FILENAME = "listing.json"
 
+
 # Entry is a dataclass that represents a single entry from a listing.json for schemas v1-v5.
 @dataclass
 class Entry:
@@ -44,6 +45,7 @@ class Entry:
         if not now:
             now = datetime.datetime.now(tz=datetime.timezone.utc)
         return (now - iso8601.parse_date(self.built)).days
+
 
 # Listing is a dataclass that represents the listing.json for schemas v1-v5.
 @dataclass
