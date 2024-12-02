@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.usefixtures("cli_env")
 def test_workflow_1(cli_env, command, logger):
     """
@@ -96,12 +97,14 @@ def test_workflow_3(cli_env, command, logger, tmp_path, grype):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
 
-    cli_env.update({
-        "AWS_ACCESS_KEY_ID": "test",
-        "AWS_SECRET_ACCESS_KEY": "test",
-        "AWS_REGION": "us-west-2",
-        "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
-    })
+    cli_env.update(
+        {
+            "AWS_ACCESS_KEY_ID": "test",
+            "AWS_SECRET_ACCESS_KEY": "test",
+            "AWS_REGION": "us-west-2",
+            "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
+        }
+    )
 
     grype = grype.install("v0.65.0", bin_dir)
 
@@ -119,10 +122,12 @@ def test_workflow_3(cli_env, command, logger, tmp_path, grype):
     assert "listing.json uploaded to s3://testbucket/grype/databases" in stdout
 
     # setup grype for DB updates and scans
-    cli_env.update({
-        "GRYPE_DB_UPDATE_URL": "http://localhost:4566/testbucket/grype/databases/listing.json",
-        "GRYPE_DB_CACHE_DIR": str(bin_dir)
-    })
+    cli_env.update(
+        {
+            "GRYPE_DB_UPDATE_URL": "http://localhost:4566/testbucket/grype/databases/listing.json",
+            "GRYPE_DB_CACHE_DIR": str(bin_dir),
+        }
+    )
 
     # validate grype DB listing and scanning
     stdout, _ = grype.run(f"db list", env=cli_env)
@@ -154,15 +159,17 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
 
-    cli_env.update({
-        "AWS_ACCESS_KEY_ID": "test",
-        "AWS_SECRET_ACCESS_KEY": "test",
-        "AWS_REGION": "us-west-2",
-        "SCHEMA_VERSION": "5",
-        "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION": "v0.65.0",
-        "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION": "5",
-        "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
-    })
+    cli_env.update(
+        {
+            "AWS_ACCESS_KEY_ID": "test",
+            "AWS_SECRET_ACCESS_KEY": "test",
+            "AWS_REGION": "us-west-2",
+            "SCHEMA_VERSION": "5",
+            "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION": "v0.65.0",
+            "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION": "5",
+            "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
+        }
+    )
 
     grype = grype.install("v0.65.0", bin_dir)
 
@@ -195,10 +202,12 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     assert "listing.json uploaded to s3://testbucket/grype/databases" in stdout
 
     # set grype environment variables
-    cli_env.update({
-        "GRYPE_DB_UPDATE_URL": "http://localhost:4566/testbucket/grype/databases/listing.json",
-        "GRYPE_DB_CACHE_DIR": str(bin_dir),
-    })
+    cli_env.update(
+        {
+            "GRYPE_DB_UPDATE_URL": "http://localhost:4566/testbucket/grype/databases/listing.json",
+            "GRYPE_DB_CACHE_DIR": str(bin_dir),
+        }
+    )
 
     # validate grype DB listing and scanning
     stdout, _ = grype.run("db list", env=cli_env)

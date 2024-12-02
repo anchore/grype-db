@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.usefixtures("cli_env")
 def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     """
@@ -11,17 +12,19 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
     schema_version = "6"
-    cli_env.update({
-        "AWS_ACCESS_KEY_ID": "test",
-        "AWS_SECRET_ACCESS_KEY": "test",
-        "AWS_REGION": "us-west-2",
-        "GRYPE_EXP_DBV6": "true", # while we are in development, we need to enable the experimental dbv6 feature flag
-        "GOWORK": "off", # workaround for Go 1.23+ parent directory module lookup
-        "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
-        "GOBIN": bin_dir,
-        "GRYPE_DB_UPDATE_URL": f"http://localhost:4566/testbucket/grype/databases/v{schema_version}/latest.json",
-        "GRYPE_DB_CACHE_DIR": str(bin_dir)
-    })
+    cli_env.update(
+        {
+            "AWS_ACCESS_KEY_ID": "test",
+            "AWS_SECRET_ACCESS_KEY": "test",
+            "AWS_REGION": "us-west-2",
+            "GRYPE_EXP_DBV6": "true",  # while we are in development, we need to enable the experimental dbv6 feature flag
+            "GOWORK": "off",  # workaround for Go 1.23+ parent directory module lookup
+            "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
+            "GOBIN": bin_dir,
+            "GRYPE_DB_UPDATE_URL": f"http://localhost:4566/testbucket/grype/databases/v{schema_version}/latest.json",
+            "GRYPE_DB_CACHE_DIR": str(bin_dir),
+        }
+    )
 
     # while we are in development, we need to use a git branch
     grype = grype.install("add-v6-feature-flag", bin_dir)
@@ -66,6 +69,7 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     logger.step("teardown: stop mock S3 and clean up")
     with command.pushd("s3-mock", logger):
         command.run("docker compose down -t 1 -v", env=cli_env)
+
 
 # TODO: introduce this when there is v6 matching logic implemented
 # @pytest.mark.usefixtures("cli_env")

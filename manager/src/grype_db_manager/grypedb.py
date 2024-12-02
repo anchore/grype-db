@@ -385,6 +385,7 @@ class DBManager:
             return True
         return False
 
+
 def db_metadata(build_dir: str) -> dict:
     metadata_path = os.path.join(build_dir, "metadata.json")
 
@@ -414,18 +415,19 @@ def db_metadata(build_dir: str) -> dict:
             # }
             return {
                 "version": int(metadata["schemaVersion"].split(".")[0]),
-                "db_checksum": None, # we don't have this information
+                "db_checksum": None,  # we don't have this information
                 "db_created": metadata["built"],
                 "data_created": parse_datetime(metadata["path"].split("_")[2]),
                 "latest_path": os.path.abspath(latest_path),
             }
 
-    msg = f"missing metadata.json and latest.json for DB"
+    msg = "missing metadata.json and latest.json for DB"
     raise DBInvalidException(msg)
 
 
 def parse_datetime(s: str) -> datetime.datetime:
-    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
+    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+
 
 class GrypeDB:
     def __init__(self, bin_path: str, config_path: str = ""):

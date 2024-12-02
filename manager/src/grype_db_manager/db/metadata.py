@@ -9,6 +9,7 @@ from dataclass_wizard import asdict, fromdict
 
 FILE = "metadata.json"
 
+
 # Metadata is a dataclass that represents the metadata.json for schemas v1-v5.
 @dataclass
 class Metadata:

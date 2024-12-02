@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import datetime
 import functools
 import json
 import logging
@@ -17,9 +16,11 @@ from dataclass_wizard import asdict, fromdict
 from grype_db_manager import grype
 
 if TYPE_CHECKING:
+    import datetime
     from collections.abc import Iterator
 
 LATEST_FILENAME = "latest.json"
+
 
 # Latest is a dataclass that represents the latest.json document for schemas v6.
 @dataclass
@@ -38,7 +39,6 @@ class Latest:
 
     # self-describing digest of the database archive referenced in path
     checksum: str = ""
-
 
     @classmethod
     def from_json(cls, contents: str) -> Latest:
@@ -82,10 +82,10 @@ def _http_server(directory: str, schema_version: str) -> Iterator[str]:
         pass
 
 
-def _log_dir(path: str, prefix: str = ""):
+def _log_dir(path: str, prefix: str = "") -> None:
     items = sorted(os.listdir(path))
     for i, item in enumerate(items):
-        is_last = (i == len(items) - 1)
+        is_last = i == len(items) - 1
         connector = "└── " if is_last else "├── "
         logging.info(f"{prefix}{connector}{item}")
         new_prefix = prefix + ("    " if is_last else "│   ")
@@ -93,13 +93,14 @@ def _log_dir(path: str, prefix: str = ""):
         if os.path.isdir(item_path):
             _log_dir(item_path, new_prefix)
 
+
 def _smoke_test(
-        schema_version: str,
-        listing_url: str,
-        image: str,
-        minimum_packages: int,
-        minimum_vulnerabilities: int,
-        store_root: str,
+    schema_version: str,
+    listing_url: str,
+    image: str,
+    minimum_packages: int,
+    minimum_vulnerabilities: int,
+    store_root: str,
 ) -> None:
     logging.info(f"testing grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
@@ -125,11 +126,11 @@ def _smoke_test(
 
 
 def smoke_test(
-        test_latest: Latest,
-        archive_path: str,
-        image: str,
-        minimum_packages: int,
-        minimum_vulnerabilities: int,
+    test_latest: Latest,
+    archive_path: str,
+    image: str,
+    minimum_packages: int,
+    minimum_vulnerabilities: int,
 ) -> None:
     # write the listing to a temp dir that is served up locally on an HTTP server. This is used by grype to locally
     # download the latest.json file and check that it works against S3 (since the listing entries have DB urls that
@@ -141,7 +142,7 @@ def smoke_test(
 
         major_version = test_latest.schema_version.split(".")[0]
 
-        sub_path = os.path.join(tempdir, "v"+major_version)
+        sub_path = os.path.join(tempdir, "v" + major_version)
         os.makedirs(sub_path, exist_ok=True)
 
         logging.info(listing_contents)
@@ -151,7 +152,6 @@ def smoke_test(
         # make the archive available at the expected location via symlink
         archive_dest = os.path.join(sub_path, test_latest.path)
         os.link(archive_path, archive_dest)
-
 
         # ensure grype can perform a db update for all supported schema versions. Note: we are only testing the
         # latest.json for the DB is usable (the download succeeds and grype and the update process, which does
@@ -166,4 +166,3 @@ def smoke_test(
                 minimum_vulnerabilities=minimum_vulnerabilities,
                 store_root=installation_path,
             )
-

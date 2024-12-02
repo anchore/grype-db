@@ -49,9 +49,11 @@ class Grype:
         if not env:
             env = os.environ.copy()
         if self.schema_version >= 6:
-            env.update({
-                "GRYPE_EXP_DBV6": "true",
-            })
+            env.update(
+                {
+                    "GRYPE_EXP_DBV6": "true",
+                },
+            )
         return env
 
     def update_db(self) -> None:
