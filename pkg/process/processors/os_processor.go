@@ -7,11 +7,12 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
 type osProcessor struct {
-	transformer data.OSTransformer
+	transformer any
 }
 
 func NewOSProcessor(transformer data.OSTransformer) data.Processor {
@@ -20,12 +21,30 @@ func NewOSProcessor(transformer data.OSTransformer) data.Processor {
 	}
 }
 
-func (p osProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func NewV2OSProcessor(transformer data.OSTransformerV2) data.Processor {
+	return &osProcessor{
+		transformer: transformer,
+	}
+}
+
+func (p osProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.OSVulnerabilityEntries(reader)
 	if err != nil {
 		return nil, err
+	}
+
+	var handle func(entry unmarshal.OSVulnerability) ([]data.Entry, error)
+	switch t := p.transformer.(type) {
+	case data.OSTransformer:
+		handle = func(entry unmarshal.OSVulnerability) ([]data.Entry, error) {
+			return t(entry)
+		}
+	case data.OSTransformerV2:
+		handle = func(entry unmarshal.OSVulnerability) ([]data.Entry, error) {
+			return t(entry, state)
+		}
 	}
 
 	for _, entry := range entries {
@@ -34,7 +53,7 @@ func (p osProcessor) Process(reader io.Reader) ([]data.Entry, error) {
 			continue
 		}
 
-		transformedEntries, err := p.transformer(entry)
+		transformedEntries, err := handle(entry)
 		if err != nil {
 			return nil, err
 		}

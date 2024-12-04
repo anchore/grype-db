@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/data"
-	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
+	"github.com/anchore/grype-db/pkg/process/internal/tests"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
@@ -24,10 +25,12 @@ func mockMSRCProcessorTransform(vulnerability unmarshal.MSRCVulnerability) ([]da
 func TestMSRCProcessor_Process(t *testing.T) {
 	f, err := os.Open("test-fixtures/msrc.json")
 	require.NoError(t, err)
-	defer testUtils.CloseFile(f)
+	defer tests.CloseFile(f)
 
 	processor := NewMSRCProcessor(mockMSRCProcessorTransform)
-	entries, err := processor.Process(f)
+	entries, err := processor.Process(f, provider.State{
+		Provider: "msrc",
+	})
 
 	require.NoError(t, err)
 	assert.Len(t, entries, 2)

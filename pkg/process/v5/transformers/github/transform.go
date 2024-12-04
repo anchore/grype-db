@@ -45,7 +45,7 @@ func Transform(vulnerability unmarshal.GitHubAdvisory) ([]data.Entry, error) {
 	var allVulns []grypeDB.Vulnerability
 
 	// Exclude entries marked as withdrawn
-	if vulnerability.Advisory.Withdrawn != nil {
+	if vulnerability.Advisory.Withdrawn != "" {
 		return nil, nil
 	}
 
