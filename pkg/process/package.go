@@ -117,7 +117,7 @@ func resolveExtension(overrideArchiveExtension string) (string, error) {
 	return extension, nil
 }
 
-var listingFiles = strset.New("listing.json", "latest.json", "history.json")
+var ignoreFiles = strset.New(grypeDBLegacyDistribution.ListingFileName, v6Distribution.LatestFileName, v6.ChecksumFileName)
 
 func populateTar(tarPath string) error {
 	originalDir, err := os.Getwd()
@@ -146,7 +146,7 @@ func populateTar(tarPath string) error {
 
 	var files []string
 	for _, fi := range fileInfos {
-		if !listingFiles.Has(fi.Name()) && !strings.Contains(fi.Name(), ".tar.") {
+		if !ignoreFiles.Has(fi.Name()) && !strings.Contains(fi.Name(), ".tar.") {
 			files = append(files, fi.Name())
 		}
 	}
