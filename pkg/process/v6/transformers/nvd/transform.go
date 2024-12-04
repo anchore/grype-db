@@ -39,19 +39,18 @@ func Transformer(cfg Config) data.NVDTransformerV2 {
 
 func transform(cfg Config, vulnerability unmarshal.NVDVulnerability, state provider.State) ([]data.Entry, error) {
 	in := []any{
-		internal.ProviderModel(state),
 		grypeDB.VulnerabilityHandle{
-			Name: vulnerability.ID,
+			Name:          vulnerability.ID,
+			Provider:      internal.ProviderModel(state),
+			ModifiedDate:  internal.ParseTime(vulnerability.LastModified),
+			PublishedDate: internal.ParseTime(vulnerability.Published),
+			Status:        string(getVulnStatus(vulnerability)),
 			BlobValue: &grypeDB.VulnerabilityBlob{
-				ID:            vulnerability.ID,
-				ProviderName:  state.Provider,
-				Assigners:     getAssigner(vulnerability),
-				Description:   strings.TrimSpace(vulnerability.Description()),
-				ModifiedDate:  internal.ParseTime(vulnerability.LastModified),
-				PublishedDate: internal.ParseTime(vulnerability.Published),
-				Status:        getVulnStatus(vulnerability),
-				References:    getReferences(vulnerability),
-				Severities:    getSeverities(vulnerability),
+				ID:          vulnerability.ID,
+				Assigners:   getAssigner(vulnerability),
+				Description: strings.TrimSpace(vulnerability.Description()),
+				References:  getReferences(vulnerability),
+				Severities:  getSeverities(vulnerability),
 			},
 		},
 	}
@@ -247,7 +246,7 @@ func getCPEs(in string) *grypeDB.Cpe {
 	}
 
 	return &grypeDB.Cpe{
-		Type:            atts.Part,
+		Part:            atts.Part,
 		Vendor:          atts.Vendor,
 		Product:         atts.Product,
 		Edition:         atts.Edition,

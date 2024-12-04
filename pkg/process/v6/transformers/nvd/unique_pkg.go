@@ -102,7 +102,7 @@ func platformPackageCandidates(tCfg Config, set uniquePkgTracker, c nvd.Configur
 	for _, application := range applicationNode.CpeMatch {
 		candidate, err := newPkgCandidate(tCfg, application)
 		if err != nil {
-			log.Debugf("unable processing uniquePkg with multiple platforms: %v", err)
+			log.Warnf("unable processing uniquePkg with multiple platforms: %v", err)
 			continue
 		}
 		if candidate == nil {
@@ -172,7 +172,7 @@ func _findUniquePkgs(tCfg Config, set uniquePkgTracker, c nvd.Configuration) {
 				// Do not halt all execution because of being unable to create
 				// a PkgCandidate. This can happen when a CPE is invalid which
 				// could avoid creating a database
-				log.Debugf("unable processing uniquePkg: %v", err)
+				log.Warnf("unable processing uniquePkg: %v", err)
 				continue
 			}
 			if candidate != nil {

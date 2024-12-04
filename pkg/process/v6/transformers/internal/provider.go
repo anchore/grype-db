@@ -7,14 +7,14 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 )
 
-func ProviderModel(state provider.State) grypeDB.Provider {
+func ProviderModel(state provider.State) *grypeDB.Provider {
 	var digest string
 	if state.Listing != nil {
 		if state.Listing.Algorithm != "" && state.Listing.Digest != "" {
 			digest = state.Listing.Algorithm + ":" + state.Listing.Digest
 		}
 	}
-	return grypeDB.Provider{
+	return &grypeDB.Provider{
 		ID:           state.Provider,
 		Version:      fmt.Sprintf("%d", state.Version),
 		Processor:    state.Processor,

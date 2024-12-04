@@ -60,9 +60,6 @@ func TestTransform(t *testing.T) {
 			data, ok := entry.Data.(transformers.RelatedEntries)
 			require.True(t, ok, "expected entry.Data to be of type RelatedEntries")
 
-			require.NotNil(t, data.Provider, "expected a Provider")
-			require.Equal(t, tt.wantCounts.providerCount, 1)
-
 			require.NotNil(t, data.VulnerabilityHandle, "expected a VulnerabilityHandle")
 			require.Equal(t, tt.wantCounts.vulnerabilityCount, 1)
 
@@ -72,6 +69,7 @@ func TestTransform(t *testing.T) {
 }
 
 func TestGetVulnerability(t *testing.T) {
+	now := time.Date(2024, 03, 01, 12, 0, 0, 0, time.UTC)
 	tests := []struct {
 		name     string
 		expected []grypeDB.VulnerabilityHandle
@@ -81,14 +79,18 @@ func TestGetVulnerability(t *testing.T) {
 			expected: []grypeDB.VulnerabilityHandle{
 				{
 					Name: "GHSA-2wgc-48g2-cj5w",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					ModifiedDate:  internal.ParseTime("2024-02-08T22:48:31Z"),
+					PublishedDate: internal.ParseTime("2024-01-30T20:56:46Z"),
+					WithdrawnDate: nil,
+					Status:        string(grypeDB.VulnerabilityActive),
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:            "GHSA-2wgc-48g2-cj5w",
-						ProviderName:  "github",
-						Description:   "vantage6 has insecure SSH configuration for node and server containers",
-						ModifiedDate:  internal.ParseTime("2024-02-08T22:48:31Z"),
-						PublishedDate: internal.ParseTime("2024-01-30T20:56:46Z"),
-						WithdrawnDate: nil,
-						Status:        grypeDB.VulnerabilityActive,
+						ID:          "GHSA-2wgc-48g2-cj5w",
+						Description: "vantage6 has insecure SSH configuration for node and server containers",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-2wgc-48g2-cj5w",
@@ -118,14 +120,18 @@ func TestGetVulnerability(t *testing.T) {
 			expected: []grypeDB.VulnerabilityHandle{
 				{
 					Name: "GHSA-3x74-v64j-qc3f",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					ModifiedDate:  internal.ParseTime("2024-03-21T17:48:19Z"),
+					PublishedDate: internal.ParseTime("2023-06-13T18:30:39Z"),
+					WithdrawnDate: internal.ParseTime("2023-06-28T23:54:39Z"),
+					Status:        string(grypeDB.VulnerabilityRejected),
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:            "GHSA-3x74-v64j-qc3f",
-						ProviderName:  "github",
-						Description:   "Withdrawn Advisory: CraftCMS Server-Side Template Injection vulnerability",
-						ModifiedDate:  internal.ParseTime("2024-03-21T17:48:19Z"),
-						PublishedDate: internal.ParseTime("2023-06-13T18:30:39Z"),
-						WithdrawnDate: internal.ParseTime("2023-06-28T23:54:39Z"),
-						Status:        grypeDB.VulnerabilityRejected,
+						ID:          "GHSA-3x74-v64j-qc3f",
+						Description: "Withdrawn Advisory: CraftCMS Server-Side Template Injection vulnerability",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-3x74-v64j-qc3f",
@@ -155,14 +161,18 @@ func TestGetVulnerability(t *testing.T) {
 			expected: []grypeDB.VulnerabilityHandle{
 				{
 					Name: "GHSA-vc9j-fhvv-8vrf",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					ModifiedDate:  internal.ParseTime("2023-01-09T05:03:39Z"),
+					PublishedDate: internal.ParseTime("2020-07-27T19:55:52Z"),
+					WithdrawnDate: nil,
+					Status:        string(grypeDB.VulnerabilityActive),
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:            "GHSA-vc9j-fhvv-8vrf",
-						ProviderName:  "github",
-						Description:   "Remote Code Execution in scratch-vm",
-						ModifiedDate:  internal.ParseTime("2023-01-09T05:03:39Z"),
-						PublishedDate: internal.ParseTime("2020-07-27T19:55:52Z"),
-						WithdrawnDate: nil,
-						Status:        grypeDB.VulnerabilityActive,
+						ID:          "GHSA-vc9j-fhvv-8vrf",
+						Description: "Remote Code Execution in scratch-vm",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-vc9j-fhvv-8vrf",
@@ -192,11 +202,15 @@ func TestGetVulnerability(t *testing.T) {
 			expected: []grypeDB.VulnerabilityHandle{
 				{
 					Name: "GHSA-6cwv-x26c-w2q4",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					Status: "active",
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:           "GHSA-6cwv-x26c-w2q4",
-						ProviderName: "github",
-						Status:       "active",
-						Description:  "Low severity vulnerability that affects notebook",
+						ID:          "GHSA-6cwv-x26c-w2q4",
+						Description: "Low severity vulnerability that affects notebook",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-6cwv-x26c-w2q4",
@@ -215,11 +229,15 @@ func TestGetVulnerability(t *testing.T) {
 				},
 				{
 					Name: "GHSA-p5wr-vp8g-q5p4",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					Status: "active",
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:           "GHSA-p5wr-vp8g-q5p4",
-						ProviderName: "github",
-						Status:       "active",
-						Description:  "Moderate severity vulnerability that affects Plone",
+						ID:          "GHSA-p5wr-vp8g-q5p4",
+						Description: "Moderate severity vulnerability that affects Plone",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-p5wr-vp8g-q5p4",
@@ -241,14 +259,18 @@ func TestGetVulnerability(t *testing.T) {
 			expected: []grypeDB.VulnerabilityHandle{
 				{
 					Name: "GHSA-6cwv-x26c-w2q4",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					ModifiedDate:  nil,
+					PublishedDate: nil,
+					WithdrawnDate: internal.ParseTime("2022-01-31T14:32:09Z"),
+					Status:        string(grypeDB.VulnerabilityRejected),
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:            "GHSA-6cwv-x26c-w2q4",
-						ProviderName:  "github",
-						Description:   "Low severity vulnerability that affects notebook",
-						ModifiedDate:  nil,
-						PublishedDate: nil,
-						WithdrawnDate: internal.ParseTime("2022-01-31T14:32:09Z"),
-						Status:        grypeDB.VulnerabilityRejected,
+						ID:          "GHSA-6cwv-x26c-w2q4",
+						Description: "Low severity vulnerability that affects notebook",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-6cwv-x26c-w2q4",
@@ -270,11 +292,15 @@ func TestGetVulnerability(t *testing.T) {
 			expected: []grypeDB.VulnerabilityHandle{
 				{
 					Name: "GHSA-p5wr-vp8g-q5p4",
+					Provider: &grypeDB.Provider{
+						ID:           "github",
+						Version:      "1",
+						DateCaptured: &now,
+					},
+					Status: string(grypeDB.VulnerabilityActive),
 					BlobValue: &grypeDB.VulnerabilityBlob{
-						ID:           "GHSA-p5wr-vp8g-q5p4",
-						ProviderName: "github",
-						Description:  "Moderate severity vulnerability that affects Plone",
-						Status:       grypeDB.VulnerabilityActive,
+						ID:          "GHSA-p5wr-vp8g-q5p4",
+						Description: "Moderate severity vulnerability that affects Plone",
 						References: []grypeDB.Reference{
 							{
 								URL: "https://github.com/advisories/GHSA-p5wr-vp8g-q5p4",
@@ -299,7 +325,7 @@ func TestGetVulnerability(t *testing.T) {
 			var results []grypeDB.VulnerabilityHandle
 
 			for _, advisory := range advisories {
-				result := getVulnerability(advisory, "github")
+				result := getVulnerability(advisory, provider.State{Provider: "github", Version: 1, Timestamp: now})
 				results = append(results, result)
 			}
 			if d := cmp.Diff(tt.expected, results); d != "" {

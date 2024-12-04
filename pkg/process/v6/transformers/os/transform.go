@@ -23,20 +23,19 @@ import (
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
 	in := []any{
-		internal.ProviderModel(state),
 		grypeDB.VulnerabilityHandle{
-			Name: vulnerability.Vulnerability.Name,
+			Name:          vulnerability.Vulnerability.Name,
+			Provider:      internal.ProviderModel(state),
+			Status:        string(grypeDB.VulnerabilityActive),
+			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
+			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
 			BlobValue: &grypeDB.VulnerabilityBlob{
-				ID:            vulnerability.Vulnerability.Name,
-				ProviderName:  state.Provider,
-				Assigners:     nil,
-				Description:   strings.TrimSpace(vulnerability.Vulnerability.Description),
-				Status:        grypeDB.VulnerabilityActive,
-				References:    getReferences(vulnerability),
-				Aliases:       getAliases(vulnerability),
-				Severities:    getSeverities(vulnerability),
-				ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
-				PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
+				ID:          vulnerability.Vulnerability.Name,
+				Assigners:   nil,
+				Description: strings.TrimSpace(vulnerability.Vulnerability.Description),
+				References:  getReferences(vulnerability),
+				Aliases:     getAliases(vulnerability),
+				Severities:  getSeverities(vulnerability),
 			},
 		},
 	}
@@ -269,16 +268,24 @@ func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {
 	}
 
 	versionFields := strings.Split(osVersion, ".")
-	var majorVersion, minorVersion string
+	var majorVersion, minorVersion, labelVersion string
 	majorVersion = versionFields[0]
-	if len(versionFields) > 1 {
-		minorVersion = versionFields[1]
+	if len(majorVersion) > 0 {
+		// is the first field a number?
+		_, err := strconv.Atoi(majorVersion[0:1])
+		if err != nil {
+			labelVersion = majorVersion
+			majorVersion = ""
+		} else if len(versionFields) > 1 {
+			minorVersion = versionFields[1]
+		}
 	}
 
 	return &grypeDB.OperatingSystem{
 		Name:         osName,
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
+		LabelVersion: labelVersion,
 		Codename:     codename.LookupOS(osName, majorVersion, minorVersion),
 	}
 }

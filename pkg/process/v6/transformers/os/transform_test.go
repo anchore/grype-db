@@ -32,8 +32,8 @@ func inputProviderState(name string) provider.State {
 	}
 }
 
-func expectedProvider(name string) grypeDB.Provider {
-	return grypeDB.Provider{
+func expectedProvider(name string) *grypeDB.Provider {
+	return &grypeDB.Provider{
 		ID:           name,
 		Version:      "12",
 		Processor:    "vunnel@1.2.3",
@@ -83,11 +83,11 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2018-19967",
+						Name:     "CVE-2018-19967",
+						Status:   "active",
+						Provider: expectedProvider("alpine"),
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2018-19967",
-							ProviderName: "alpine",
-							Status:       "active",
+							ID: "CVE-2018-19967",
 							References: []grypeDB.Reference{
 								{
 									URL: "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-19967",
@@ -102,7 +102,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("alpine"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: &grypeDB.OperatingSystem{Name: "alpine", MajorVersion: "3", MinorVersion: "9"},
@@ -126,11 +125,11 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "ALAS-2018-1106",
+						Name:     "ALAS-2018-1106",
+						Provider: expectedProvider("amazon"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "ALAS-2018-1106",
-							ProviderName: "amazon",
-							Status:       "active",
+							ID: "ALAS-2018-1106",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://alas.aws.amazon.com/AL2/ALAS-2018-1106.html",
@@ -146,7 +145,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("amazon"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
@@ -238,11 +236,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "ALAS-2021-1704",
+						Name:     "ALAS-2021-1704",
+						Provider: expectedProvider("amazon"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "ALAS-2021-1704",
-							ProviderName: "amazon",
-							Status:       "active",
+							ID: "ALAS-2021-1704",
+
 							References: []grypeDB.Reference{
 								{
 									URL: "https://alas.aws.amazon.com/AL2/ALAS-2021-1704.html",
@@ -258,7 +257,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("amazon"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
@@ -290,11 +288,11 @@ func TestTransform(t *testing.T) {
 				},
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "ALASKERNEL-5.4-2022-007",
+						Name:     "ALASKERNEL-5.4-2022-007",
+						Provider: expectedProvider("amazon"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "ALASKERNEL-5.4-2022-007",
-							ProviderName: "amazon",
-							Status:       "active",
+							ID: "ALASKERNEL-5.4-2022-007",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://alas.aws.amazon.com/AL2/ALASKERNEL-5.4-2022-007.html",
@@ -310,7 +308,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("amazon"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
@@ -342,11 +339,11 @@ func TestTransform(t *testing.T) {
 				},
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "ALASKERNEL-5.10-2022-005",
+						Name:     "ALASKERNEL-5.10-2022-005",
+						Provider: expectedProvider("amazon"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "ALASKERNEL-5.10-2022-005",
-							ProviderName: "amazon",
-							Status:       "active",
+							ID: "ALASKERNEL-5.10-2022-005",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://alas.aws.amazon.com/AL2/ALASKERNEL-5.10-2022-005.html",
@@ -362,7 +359,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("amazon"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
@@ -400,12 +396,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2023-29403",
+						Name:     "CVE-2023-29403",
+						Provider: expectedProvider("mariner"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2023-29403",
-							ProviderName: "mariner",
-							Status:       "active",
-							Description:  "CVE-2023-29403 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
+							ID:          "CVE-2023-29403",
+							Description: "CVE-2023-29403 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-29403",
@@ -420,7 +416,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("mariner"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: azure3OS,
@@ -444,11 +439,11 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2008-7220",
+						Name:     "CVE-2008-7220",
+						Provider: expectedProvider("debian"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2008-7220",
-							ProviderName: "debian",
-							Status:       "active",
+							ID: "CVE-2008-7220",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://security-tracker.debian.org/tracker/CVE-2008-7220",
@@ -463,7 +458,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("debian"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
@@ -523,11 +517,11 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2011-4623",
+						Name:     "CVE-2011-4623",
+						Provider: expectedProvider("debian"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2011-4623",
-							ProviderName: "debian",
-							Status:       "active",
+							ID: "CVE-2011-4623",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://security-tracker.debian.org/tracker/CVE-2011-4623",
@@ -542,7 +536,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("debian"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
@@ -560,11 +553,11 @@ func TestTransform(t *testing.T) {
 				},
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2008-5618",
+						Name:     "CVE-2008-5618",
+						Provider: expectedProvider("debian"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2008-5618",
-							ProviderName: "debian",
-							Status:       "active",
+							ID: "CVE-2008-5618",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://security-tracker.debian.org/tracker/CVE-2008-5618",
@@ -579,7 +572,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("debian"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
@@ -603,12 +595,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2021-37621",
+						Name:     "CVE-2021-37621",
+						Provider: expectedProvider("mariner"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2021-37621",
-							ProviderName: "mariner",
-							Status:       "active",
-							Description:  "CVE-2021-37621 affecting package exiv2 for versions less than 0.27.5-1. An upgraded version of the package is available that resolves this issue.",
+							ID:          "CVE-2021-37621",
+							Description: "CVE-2021-37621 affecting package exiv2 for versions less than 0.27.5-1. An upgraded version of the package is available that resolves this issue.",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2021-37621",
@@ -623,7 +615,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("mariner"),
+
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: mariner2OS,
@@ -648,12 +640,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2023-29404",
+						Name:     "CVE-2023-29404",
+						Provider: expectedProvider("mariner"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2023-29404",
-							ProviderName: "mariner",
-							Status:       "active",
-							Description:  "CVE-2023-29404 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
+							ID:          "CVE-2023-29404",
+							Description: "CVE-2023-29404 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-29404",
@@ -668,7 +660,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("mariner"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: mariner2OS,
@@ -692,13 +683,13 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "ELSA-2020-2550",
+						Name:          "ELSA-2020-2550",
+						Provider:      expectedProvider("oracle"),
+						Status:        "active",
+						PublishedDate: timeRef(time.Date(2020, 6, 15, 0, 0, 0, 0, time.UTC)),
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:            "ELSA-2020-2550",
-							ProviderName:  "oracle",
-							Status:        "active",
-							PublishedDate: timeRef(time.Date(2020, 6, 15, 0, 0, 0, 0, time.UTC)),
-							Aliases:       []string{"CVE-2020-13112"},
+							ID:      "ELSA-2020-2550",
+							Aliases: []string{"CVE-2020-13112"},
 							References: []grypeDB.Reference{
 								{
 									URL: "http://linux.oracle.com/errata/ELSA-2020-2550.html",
@@ -716,7 +707,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("oracle"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
@@ -767,12 +757,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2020-14350",
+						Name:     "CVE-2020-14350",
+						Provider: expectedProvider("oracle"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2020-14350",
-							Description:  "A flaw was found in PostgreSQL, where some PostgreSQL extensions did not use the search_path safely in their installation script. This flaw allows an attacker with sufficient privileges to trick an administrator into executing a specially crafted script during the extension's installation or update. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.",
-							ProviderName: "oracle",
-							Status:       "active",
+							ID:          "CVE-2020-14350",
+							Description: "A flaw was found in PostgreSQL, where some PostgreSQL extensions did not use the search_path safely in their installation script. This flaw allows an attacker with sufficient privileges to trick an administrator into executing a specially crafted script during the extension's installation or update. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://access.redhat.com/security/cve/CVE-2020-14350",
@@ -787,7 +777,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("oracle"),
+
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
@@ -862,12 +852,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2020-6819",
+						Name:     "CVE-2020-6819",
+						Provider: expectedProvider("redhat"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2020-6819",
-							ProviderName: "redhat",
-							Status:       "active",
-							Description:  "A flaw was found in Mozilla Firefox. A race condition can occur while running the nsDocShell destructor causing a use-after-free memory issue. The highest threat from this vulnerability is to data confidentiality and integrity as well as system availability.",
+							ID:          "CVE-2020-6819",
+							Description: "A flaw was found in Mozilla Firefox. A race condition can occur while running the nsDocShell destructor causing a use-after-free memory issue. The highest threat from this vulnerability is to data confidentiality and integrity as well as system availability.",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://access.redhat.com/security/cve/CVE-2020-6819",
@@ -891,7 +881,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("redhat"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,
@@ -953,12 +942,12 @@ func TestTransform(t *testing.T) {
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
-						Name: "CVE-2020-14350",
+						Name:     "CVE-2020-14350",
+						Provider: expectedProvider("redhat"),
+						Status:   "active",
 						BlobValue: &grypeDB.VulnerabilityBlob{
-							ID:           "CVE-2020-14350",
-							ProviderName: "redhat",
-							Status:       "active",
-							Description:  "A flaw was found in PostgreSQL, where some PostgreSQL extensions did not use the search_path safely in their installation script. This flaw allows an attacker with sufficient privileges to trick an administrator into executing a specially crafted script during the extension's installation or update. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.",
+							ID:          "CVE-2020-14350",
+							Description: "A flaw was found in PostgreSQL, where some PostgreSQL extensions did not use the search_path safely in their installation script. This flaw allows an attacker with sufficient privileges to trick an administrator into executing a specially crafted script during the extension's installation or update. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.",
 							References: []grypeDB.Reference{
 								{
 									URL: "https://access.redhat.com/security/cve/CVE-2020-14350",
@@ -982,7 +971,6 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Provider: expectedProvider("redhat"),
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,

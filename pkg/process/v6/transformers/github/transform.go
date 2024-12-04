@@ -15,8 +15,7 @@ import (
 
 func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]data.Entry, error) {
 	ins := []any{
-		internal.ProviderModel(state),
-		getVulnerability(vulnerability, state.Provider),
+		getVulnerability(vulnerability, state),
 	}
 
 	for _, a := range getAffectedPackage(vulnerability) {
@@ -26,24 +25,24 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 	return transformers.NewEntries(ins...), nil
 }
 
-func getVulnerability(vuln unmarshal.GitHubAdvisory, provider string) grypeDB.VulnerabilityHandle {
+func getVulnerability(vuln unmarshal.GitHubAdvisory, state provider.State) grypeDB.VulnerabilityHandle {
 	return grypeDB.VulnerabilityHandle{
-		Name: vuln.Advisory.GhsaID,
+		Name:          vuln.Advisory.GhsaID,
+		Provider:      internal.ProviderModel(state),
+		ModifiedDate:  internal.ParseTime(vuln.Advisory.Updated),
+		PublishedDate: internal.ParseTime(vuln.Advisory.Published),
+		WithdrawnDate: internal.ParseTime(vuln.Advisory.Withdrawn),
+		Status:        string(getVulnStatus(vuln)),
 		BlobValue: &grypeDB.VulnerabilityBlob{
-			ID:           vuln.Advisory.GhsaID,
-			ProviderName: provider,
+			ID: vuln.Advisory.GhsaID,
 			// it does not appear to be possible to get "credits" or any user information from the graphql API
 			// for security advisories (see https://docs.github.com/en/graphql/reference/queries#securityadvisories),
 			// thus assigner is left empty.
-			Assigners:     nil,
-			Description:   strings.TrimSpace(vuln.Advisory.Summary),
-			ModifiedDate:  internal.ParseTime(vuln.Advisory.Updated),
-			PublishedDate: internal.ParseTime(vuln.Advisory.Published),
-			WithdrawnDate: internal.ParseTime(vuln.Advisory.Withdrawn),
-			Status:        getVulnStatus(vuln),
-			References:    getReferences(vuln),
-			Aliases:       getAliases(vuln),
-			Severities:    getSeverities(vuln),
+			Assigners:   nil,
+			Description: strings.TrimSpace(vuln.Advisory.Summary),
+			References:  getReferences(vuln),
+			Aliases:     getAliases(vuln),
+			Severities:  getSeverities(vuln),
 		},
 	}
 }

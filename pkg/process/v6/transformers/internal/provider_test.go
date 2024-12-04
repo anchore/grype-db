@@ -14,7 +14,7 @@ func TestProviderModel(t *testing.T) {
 	tests := []struct {
 		name     string
 		state    provider.State
-		expected grypeDB.Provider
+		expected *grypeDB.Provider
 	}{
 		{
 			name: "valid state with listing",
@@ -28,7 +28,7 @@ func TestProviderModel(t *testing.T) {
 					Digest:    "abc123",
 				},
 			},
-			expected: grypeDB.Provider{
+			expected: &grypeDB.Provider{
 				ID:           "test-provider",
 				Version:      "2",
 				Processor:    "test-processor",
@@ -45,7 +45,7 @@ func TestProviderModel(t *testing.T) {
 				Timestamp: time.Date(2024, 11, 15, 12, 34, 56, 0, time.UTC),
 				Listing:   nil,
 			},
-			expected: grypeDB.Provider{
+			expected: &grypeDB.Provider{
 				ID:           "test-provider",
 				Version:      "1",
 				Processor:    "test-processor",
@@ -65,7 +65,7 @@ func TestProviderModel(t *testing.T) {
 					Digest:    "",
 				},
 			},
-			expected: grypeDB.Provider{
+			expected: &grypeDB.Provider{
 				ID:           "test-provider",
 				Version:      "3",
 				Processor:    "test-processor",

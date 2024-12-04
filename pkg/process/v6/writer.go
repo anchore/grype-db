@@ -69,10 +69,6 @@ func (w writer) Write(entries ...data.Entry) error {
 }
 
 func (w writer) writeEntry(entry transformers.RelatedEntries) error {
-	if err := w.store.AddProvider(&entry.Provider); err != nil {
-		return fmt.Errorf("unable to write provider to store: %w", err)
-	}
-
 	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
 		return fmt.Errorf("unable to write vulnerability to store: %w", err)
 	}
