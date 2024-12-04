@@ -21,6 +21,8 @@ curl -sSfL https://raw.githubusercontent.com/anchore/grype-db/main/install.sh | 
 curl -sSfL https://raw.githubusercontent.com/anchore/grype-db/main/install.sh | sh -s -- -b <DESTINATION_DIR> <RELEASE_VERSION>
 ```
 
+> [!IMPORTANT]  
+> You will require the `zstd` utility installed on your system to support the `package` command.
 
 ## Usage
 
@@ -39,6 +41,7 @@ grype-db pull [-g] [-p PROVIDER ...]
 grype-db build [-g] [--dir=DIR] [--schema=SCHEMA] [--skip-validation] [-p PROVIDER ...]
 
 # Package the already built DB file into an archive ready for upload and serving
+# note: you will require the zstd utility to be installed on your system
 grype-db package [--dir=DIR] [--publish-base-url=URL]
 ```
 
@@ -54,7 +57,7 @@ is created that is used in packaging and curation of the database file by this a
 and a `provider-metadata.json` file is created that includes the last successful run date for each provider.
 Use `-g` to generate the list of providers to pull based on the output of "vunnel list".
 
-The `package` command archives the `vulnerability.db`, `metadata.json` and `provider-metadata.json` files into a `tar.gz` file. Additionally, a `listing.json`
+The `package` command archives the `vulnerability.db` file into a `tar.zstd` file. Additionally, a `latest.json`
 is generated to aid in serving one or more database archives for downstream consumption, where the consuming application should
 use the listing file to discover available archives available for download. The base URL used to create the download URL for each
 database archive is controlled by the `package.base-url` configuration option.
