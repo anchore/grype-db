@@ -37,6 +37,9 @@ inputs:
     description: "Prefix build cache key with this value"
     required: true
     default: "f8b6d31dea"
+  tools:
+    description: "whether to install tools"
+    default: "true"
   bootstrap-apt-packages:
     description: "Space delimited list of tools to install via apt"
     default: "sqlite3 libsqlite3-dev"
@@ -85,6 +88,7 @@ runs:
     - name: Restore tool cache
       id: tool-cache
       uses: actions/cache@v3
+      if: inputs.tools == 'true'
       with:
         path: ${{ github.workspace }}/.tmp
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
@@ -104,7 +108,7 @@ runs:
 
     - name: (cache-miss) Bootstrap project tools
       shell: bash
-      if: steps.tool-cache.outputs.cache-hit != 'true'
+      if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'
       run: make bootstrap-tools
 
     - name: Restore go build cache
