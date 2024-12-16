@@ -1,8 +1,8 @@
 package process
 
 import (
-	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,101 +10,73 @@ import (
 	"time"
 
 	"github.com/scylladb/go-set/strset"
+	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/tarutil"
-	"github.com/anchore/grype-db/pkg/provider"
+	v6process "github.com/anchore/grype-db/pkg/process/v6"
 	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/legacy/distribution"
-	v6 "github.com/anchore/grype/grype/db/v6"
-	v6Distribution "github.com/anchore/grype/grype/db/v6/distribution"
+	grypeDBLegacy "github.com/anchore/grype/grype/db/v5"
+	grypeDBLegacyStore "github.com/anchore/grype/grype/db/v5/store"
 )
+
+// listingFiles is a set of files that should not be included in the archive
+var listingFiles = strset.New("listing.json", "latest.json", "history.json")
 
 func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
 	// check if metadata file exists, if so, then this
 	if _, err := os.Stat(filepath.Join(dbDir, grypeDBLegacyDistribution.MetadataFileName)); os.IsNotExist(err) {
-		return packageDB(dbDir, overrideArchiveExtension)
+		// TODO: detect from disk which version of the DB is present
+		return v6process.CreateArchive(dbDir, overrideArchiveExtension)
 	}
 	return packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension)
 }
 
-func packageDB(dbDir, overrideArchiveExtension string) error {
-	extension, err := resolveExtension(overrideArchiveExtension)
+func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) error { //nolint:funlen
+	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
+
+	fs := afero.NewOsFs()
+	metadata, err := grypeDBLegacyDistribution.NewMetadataFromDir(fs, dbDir)
 	if err != nil {
 		return err
 	}
-	log.WithFields("from", dbDir, "extension", extension).Info("packaging database")
 
-	s, err := v6.NewReader(v6.Config{DBDirPath: dbDir})
+	if metadata == nil {
+		return fmt.Errorf("no metadata found in %q", dbDir)
+	}
+
+	s, err := grypeDBLegacyStore.New(filepath.Join(dbDir, grypeDBLegacy.VulnerabilityStoreFileName), false)
 	if err != nil {
 		return fmt.Errorf("unable to open vulnerability store: %w", err)
 	}
 
-	metadata, err := s.GetDBMetadata()
-	if err != nil || metadata == nil {
-		return fmt.Errorf("unable to get vulnerability store metadata: %w", err)
-	}
-
-	if metadata.Model != v6.ModelVersion {
-		return fmt.Errorf("metadata model %d does not match vulnerability store model %d", v6.ModelVersion, metadata.Model)
-	}
-
-	providerModels, err := s.AllProviders()
+	id, err := s.GetID()
 	if err != nil {
-		return fmt.Errorf("unable to get all providers: %w", err)
+		return fmt.Errorf("unable to get vulnerability store ID: %w", err)
 	}
 
-	if len(providerModels) == 0 {
-		return fmt.Errorf("no providers found in the vulnerability store")
+	if id.SchemaVersion != metadata.Version {
+		return fmt.Errorf("metadata version %d does not match vulnerability store version %d", metadata.Version, id.SchemaVersion)
 	}
 
-	eldest, err := toProviders(providerModels).EarliestTimestamp()
+	u, err := url.Parse(publishBaseURL)
 	if err != nil {
 		return err
 	}
 
-	// output archive vulnerability-db_VERSION_OLDESTDATADATE_BUILTEPOCH.tar.gz, where:
-	// - VERSION: schema version in the form of v#.#.#
-	// - OLDESTDATADATE: RFC3338 formatted value of the oldest date capture date found for all contained providers
-	// - BUILTEPOCH: linux epoch formatted value of the database metadata built field
-	tarName := fmt.Sprintf(
-		"vulnerability-db_v%s_%s_%d.%s",
-		fmt.Sprintf("%d.%d.%d", metadata.Model, metadata.Revision, metadata.Addition),
-		eldest.UTC().Format(time.RFC3339),
-		metadata.BuildTimestamp.Unix(),
-		extension,
-	)
+	// we need a well-ordered string to append to the archive name to ensure uniqueness (to avoid overwriting
+	// existing archives in the CDN) as well as to ensure that multiple archives created in the same day are
+	// put in the correct order in the listing file. The DB timestamp represents the age of the data in the DB
+	// not when the DB was created. The trailer represents the time the DB was packaged.
+	trailer := fmt.Sprintf("%d", secondsSinceEpoch())
 
-	tarPath := filepath.Join(dbDir, tarName)
-
-	if err := populateTar(tarPath); err != nil {
-		return err
-	}
-
-	log.WithFields("path", tarPath).Info("created database archive")
-
-	return writeLatestDocument(tarPath, *metadata)
-}
-
-func toProviders(states []v6.Provider) provider.States {
-	var result provider.States
-	for _, state := range states {
-		result = append(result, provider.State{
-			Provider:  state.ID,
-			Timestamp: *state.DateCaptured,
-		})
-	}
-	return result
-}
-
-func resolveExtension(overrideArchiveExtension string) (string, error) {
-	var extension = "tar.zst"
-
+	var extension = "tar.gz"
 	if overrideArchiveExtension != "" {
 		extension = strings.TrimLeft(overrideArchiveExtension, ".")
 	}
 
 	var found bool
-	for _, valid := range []string{"tar.zst", "tar.xz", "tar.gz"} {
+	for _, valid := range []string{"tar.zst", "tar.gz"} {
 		if valid == extension {
 			found = true
 			break
@@ -112,14 +84,43 @@ func resolveExtension(overrideArchiveExtension string) (string, error) {
 	}
 
 	if !found {
-		return "", fmt.Errorf("unsupported archive extension %q", extension)
+		return fmt.Errorf("invalid archive extension %q", extension)
 	}
-	return extension, nil
+
+	// we attach a random value at the end of the file name to prevent from overwriting DBs in S3 that are already
+	// cached in the CDN. Ideally this would be based off of the archive checksum but a random string is simpler.
+	tarName := fmt.Sprintf(
+		"vulnerability-db_v%d_%s_%s.%s",
+		metadata.Version,
+		metadata.Built.Format(time.RFC3339),
+		trailer,
+		extension,
+	)
+	tarPath := path.Join(dbDir, tarName)
+
+	if err := populateLegacyTar(tarPath); err != nil {
+		return err
+	}
+
+	log.WithFields("path", tarPath).Info("created database archive")
+
+	entry, err := grypeDBLegacyDistribution.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
+	if err != nil {
+		return fmt.Errorf("unable to create listing entry from archive: %w", err)
+	}
+
+	listing := grypeDBLegacyDistribution.NewListing(entry)
+	listingPath := path.Join(dbDir, grypeDBLegacyDistribution.ListingFileName)
+	if err = listing.Write(listingPath); err != nil {
+		return err
+	}
+
+	log.WithFields("path", listingPath).Debug("created initial listing file")
+
+	return nil
 }
 
-var listingFiles = strset.New("listing.json", "latest.json", "history.json")
-
-func populateTar(tarPath string) error {
+func populateLegacyTar(tarPath string) error {
 	originalDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("unable to get CWD: %w", err)
@@ -158,28 +159,6 @@ func populateTar(tarPath string) error {
 	return nil
 }
 
-func writeLatestDocument(tarPath string, metadata v6.DBMetadata) error {
-	archive, err := v6Distribution.NewArchive(tarPath, *metadata.BuildTimestamp, metadata.Model, metadata.Revision, metadata.Addition)
-	if err != nil || archive == nil {
-		return fmt.Errorf("unable to create archive: %w", err)
-	}
-
-	doc := v6Distribution.NewLatestDocument(*archive)
-	if doc == nil {
-		return errors.New("unable to create latest document")
-	}
-
-	dbDir := filepath.Dir(tarPath)
-
-	latestPath := path.Join(dbDir, v6Distribution.LatestFileName)
-
-	fh, err := os.OpenFile(latestPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to create latest file: %w", err)
-	}
-
-	if err = doc.Write(fh); err != nil {
-		return fmt.Errorf("unable to write latest document: %w", err)
-	}
-	return nil
+func secondsSinceEpoch() int64 {
+	return time.Now().UTC().Unix()
 }

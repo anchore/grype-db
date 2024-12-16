@@ -78,7 +78,8 @@ func TestGetVulnerability(t *testing.T) {
 			name: "test-fixtures/GHSA-2wgc-48g2-cj5w.json",
 			expected: []grypeDB.VulnerabilityHandle{
 				{
-					Name: "GHSA-2wgc-48g2-cj5w",
+					Name:       "GHSA-2wgc-48g2-cj5w",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",
@@ -119,7 +120,8 @@ func TestGetVulnerability(t *testing.T) {
 			name: "test-fixtures/GHSA-3x74-v64j-qc3f.json",
 			expected: []grypeDB.VulnerabilityHandle{
 				{
-					Name: "GHSA-3x74-v64j-qc3f",
+					Name:       "GHSA-3x74-v64j-qc3f",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",
@@ -160,7 +162,8 @@ func TestGetVulnerability(t *testing.T) {
 			name: "test-fixtures/github-github-npm-0.json",
 			expected: []grypeDB.VulnerabilityHandle{
 				{
-					Name: "GHSA-vc9j-fhvv-8vrf",
+					Name:       "GHSA-vc9j-fhvv-8vrf",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",
@@ -201,7 +204,8 @@ func TestGetVulnerability(t *testing.T) {
 			name: "test-fixtures/github-github-python-0.json",
 			expected: []grypeDB.VulnerabilityHandle{
 				{
-					Name: "GHSA-6cwv-x26c-w2q4",
+					Name:       "GHSA-6cwv-x26c-w2q4",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",
@@ -228,7 +232,8 @@ func TestGetVulnerability(t *testing.T) {
 					},
 				},
 				{
-					Name: "GHSA-p5wr-vp8g-q5p4",
+					Name:       "GHSA-p5wr-vp8g-q5p4",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",
@@ -258,7 +263,8 @@ func TestGetVulnerability(t *testing.T) {
 			name: "test-fixtures/github-withdrawn.json",
 			expected: []grypeDB.VulnerabilityHandle{
 				{
-					Name: "GHSA-6cwv-x26c-w2q4",
+					Name:       "GHSA-6cwv-x26c-w2q4",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",
@@ -291,7 +297,8 @@ func TestGetVulnerability(t *testing.T) {
 			name: "test-fixtures/multiple-fixed-in-names.json",
 			expected: []grypeDB.VulnerabilityHandle{
 				{
-					Name: "GHSA-p5wr-vp8g-q5p4",
+					Name:       "GHSA-p5wr-vp8g-q5p4",
+					ProviderID: "github",
 					Provider: &grypeDB.Provider{
 						ID:           "github",
 						Version:      "1",

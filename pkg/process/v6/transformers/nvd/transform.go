@@ -41,6 +41,7 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability, state provi
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.ID,
+			ProviderID:    state.Provider,
 			Provider:      internal.ProviderModel(state),
 			ModifiedDate:  internal.ParseTime(vulnerability.LastModified),
 			PublishedDate: internal.ParseTime(vulnerability.Published),

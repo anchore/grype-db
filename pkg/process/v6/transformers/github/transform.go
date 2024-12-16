@@ -28,6 +28,7 @@ func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]
 func getVulnerability(vuln unmarshal.GitHubAdvisory, state provider.State) grypeDB.VulnerabilityHandle {
 	return grypeDB.VulnerabilityHandle{
 		Name:          vuln.Advisory.GhsaID,
+		ProviderID:    state.Provider,
 		Provider:      internal.ProviderModel(state),
 		ModifiedDate:  internal.ParseTime(vuln.Advisory.Updated),
 		PublishedDate: internal.ParseTime(vuln.Advisory.Published),
