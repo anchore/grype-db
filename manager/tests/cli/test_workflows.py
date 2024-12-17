@@ -26,8 +26,7 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
         }
     )
 
-    # while we are in development, we need to use a git branch
-    grype = grype.install("add-v6-feature-flag", bin_dir)
+    grype = grype.install("main", bin_dir)
 
     logger.step("setup: clear previous data")
     command.run("make clean-manager", env=cli_env)
