@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dustin/go-humanize"
+
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	v3 "github.com/anchore/grype-db/pkg/process/v3"
@@ -104,17 +106,39 @@ func getWriter(schemaVersion int, dataAge time.Time, directory string, states pr
 
 func build(results []providerResults, writer data.Writer, processors ...data.Processor) error {
 	lastUpdate := time.Now()
+	var totalRecords int
 	for _, result := range results {
-		log.WithFields("provider", result.provider.Provider, "count", result.count).Info("processing provider records")
-		idx := 0
+		totalRecords += int(result.count)
+	}
+	log.WithFields("total", humanize.Comma(int64(totalRecords))).Info("processing all records")
+
+	var recordsProcessed int
+
+	// for exponential moving average, choose an alpha between 0 and 1, where 1 biases towards the most recent sample
+	// and 0 biases towards the average of all samples.
+	rateWindow := newEMA(0.4)
+
+	for _, result := range results {
+		log.WithFields("provider", result.provider.Provider, "total", humanize.Comma(result.count)).Info("processing provider records")
+		providerRecordsProcessed := 0
+		recordsProcessedInStatusCycle := 0
 		for opener := range result.openers {
-			idx++
-			log.WithFields("entry", opener.String()).Tracef("processing")
+			providerRecordsProcessed++
+			recordsProcessed++
+			recordsProcessedInStatusCycle++
 			var processor data.Processor
 
 			if time.Since(lastUpdate) > 3*time.Second {
-				log.WithFields("provider", result.provider.Provider, "count", result.count, "processed", idx).Debug("processing provider records")
+				r := recordsPerSecond(recordsProcessedInStatusCycle, lastUpdate)
+				rateWindow.Add(r)
+
+				log.WithFields(
+					"provider", fmt.Sprintf("%q %1.0f/s (%1.2f%%)", result.provider.Provider, r, percent(providerRecordsProcessed, int(result.count))),
+					"overall", fmt.Sprintf("%1.2f%%", percent(recordsProcessed, totalRecords)),
+					"eta", eta(recordsProcessed, totalRecords, rateWindow.Average()).String(),
+				).Debug("status")
 				lastUpdate = time.Now()
+				recordsProcessedInStatusCycle = 0
 			}
 
 			f, err := opener.Open()
@@ -129,7 +153,6 @@ func build(results []providerResults, writer data.Writer, processors ...data.Pro
 			for _, candidate := range processors {
 				if candidate.IsSupported(envelope.Schema) {
 					processor = candidate
-					log.WithFields("schema", envelope.Schema).Trace("matched with processor")
 					break
 				}
 			}
@@ -152,4 +175,49 @@ func build(results []providerResults, writer data.Writer, processors ...data.Pro
 	log.Debugf("wrote all provider state")
 
 	return nil
+}
+
+type expMovingAverage struct {
+	alpha float64
+	value float64
+	count int
+}
+
+func newEMA(alpha float64) *expMovingAverage {
+	return &expMovingAverage{alpha: alpha}
+}
+
+func (e *expMovingAverage) Add(sample float64) {
+	if e.count == 0 {
+		e.value = sample // initialize with the first sample
+	} else {
+		e.value = e.alpha*sample + (1-e.alpha)*e.value
+	}
+	e.count++
+}
+
+func (e *expMovingAverage) Average() float64 {
+	return e.value
+}
+
+func recordsPerSecond(idx int, lastUpdate time.Time) float64 {
+	sec := time.Since(lastUpdate).Seconds()
+	if sec == 0 {
+		return 0
+	}
+	return float64(idx) / sec
+}
+
+func percent(idx, total int) float64 {
+	if total == 0 {
+		return 0
+	}
+	return float64(idx) / float64(total) * 100
+}
+
+func eta(idx, total int, rate float64) time.Duration {
+	if rate == 0 {
+		return 0
+	}
+	return time.Duration(float64(total-idx)/rate) * time.Second
 }

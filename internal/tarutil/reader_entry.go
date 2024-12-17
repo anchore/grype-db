@@ -33,6 +33,8 @@ func (t ReaderEntry) writeEntry(tw lowLevelWriter) error {
 }
 
 func writeEntry(tw lowLevelWriter, filename string, fileInfo os.FileInfo, opener func() (io.Reader, error)) error {
+	log.WithFields("path", filename).Trace("adding file to archive")
+
 	header, err := tar.FileInfoHeader(fileInfo, "")
 	if err != nil {
 		return err

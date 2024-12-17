@@ -25,6 +25,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.Vulnerability.Name,
+			ProviderID:    state.Provider,
 			Provider:      internal.ProviderModel(state),
 			Status:        string(grypeDB.VulnerabilityActive),
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
