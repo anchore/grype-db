@@ -24,12 +24,12 @@ func CreateArchive(dbDir, overrideArchiveExtension string) error {
 	log.WithFields("from", dbDir, "extension", extension).Info("packaging database")
 
 	cfg := v6.Config{DBDirPath: dbDir}
-	s, err := v6.NewReader(cfg)
+	r, err := v6.NewReader(cfg)
 	if err != nil {
 		return fmt.Errorf("unable to open vulnerability store: %w", err)
 	}
 
-	metadata, err := s.GetDBMetadata()
+	metadata, err := r.GetDBMetadata()
 	if err != nil || metadata == nil {
 		return fmt.Errorf("unable to get vulnerability store metadata: %w", err)
 	}
@@ -38,7 +38,7 @@ func CreateArchive(dbDir, overrideArchiveExtension string) error {
 		return fmt.Errorf("metadata model %d does not match vulnerability store model %d", v6.ModelVersion, metadata.Model)
 	}
 
-	providerModels, err := s.AllProviders()
+	providerModels, err := r.AllProviders()
 	if err != nil {
 		return fmt.Errorf("unable to get all providers: %w", err)
 	}
@@ -54,7 +54,7 @@ func CreateArchive(dbDir, overrideArchiveExtension string) error {
 
 	// output archive vulnerability-db_VERSION_OLDESTDATADATE_BUILTEPOCH.tar.gz, where:
 	// - VERSION: schema version in the form of v#.#.#
-	// - OLDESTDATADATE: RFC3338 formatted value of the oldest date capture date found for all contained providers
+	// - OLDESTDATADATE: RFC3339 formatted value (e.g. 2020-06-18T17:24:53Z) of the oldest date capture date found for all contained providers
 	// - BUILTEPOCH: linux epoch formatted value of the database metadata built field
 	tarName := fmt.Sprintf(
 		"vulnerability-db_v%s_%s_%d.%s",
