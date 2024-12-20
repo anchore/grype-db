@@ -49,7 +49,6 @@ func NewWriter(directory string, states provider.States) (data.Writer, error) {
 }
 
 func (w writer) Write(entries ...data.Entry) error {
-	log.WithFields("records", len(entries)).Trace("writing records to DB")
 	for _, entry := range entries {
 		if entry.DBSchemaVersion != grypeDB.ModelVersion {
 			return fmt.Errorf("wrong schema version: want %+v got %+v", grypeDB.ModelVersion, entry.DBSchemaVersion)
@@ -57,6 +56,7 @@ func (w writer) Write(entries ...data.Entry) error {
 
 		switch row := entry.Data.(type) {
 		case transformers.RelatedEntries:
+			log.WithFields("vuln", row.VulnerabilityHandle.Name, "affected-packages", len(row.Related)).Trace("writing")
 			if err := w.writeEntry(row); err != nil {
 				return fmt.Errorf("unable to write entry to store: %w", err)
 			}

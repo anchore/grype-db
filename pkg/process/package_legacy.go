@@ -3,24 +3,30 @@ package process
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype/grype/db/legacy/distribution"
+	"github.com/anchore/grype-db/internal/tarutil"
+	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/legacy/distribution"
 	grypeDBLegacy "github.com/anchore/grype/grype/db/v5"
 	grypeDBLegacyStore "github.com/anchore/grype/grype/db/v5/store"
 )
+
+// listingFiles is a set of files that should not be included in the archive
+var listingFiles = strset.New("listing.json", "latest.json", "history.json")
 
 func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) error { //nolint:funlen
 	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
 
 	fs := afero.NewOsFs()
-	metadata, err := distribution.NewMetadataFromDir(fs, dbDir)
+	metadata, err := grypeDBLegacyDistribution.NewMetadataFromDir(fs, dbDir)
 	if err != nil {
 		return err
 	}
@@ -54,17 +60,10 @@ func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) err
 	// not when the DB was created. The trailer represents the time the DB was packaged.
 	trailer := fmt.Sprintf("%d", secondsSinceEpoch())
 
-	// TODO (alex): supporting tar.zst
-	// var extension = "tar.zst"
 	var extension = "tar.gz"
-
 	if overrideArchiveExtension != "" {
 		extension = strings.TrimLeft(overrideArchiveExtension, ".")
 	}
-	// TODO (alex): supporting tar.zst
-	// else if metadata.Version < 5 {
-	// 	extension = "tar.gz"
-	// }
 
 	var found bool
 	for _, valid := range []string{"tar.zst", "tar.gz"} {
@@ -89,24 +88,63 @@ func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) err
 	)
 	tarPath := path.Join(dbDir, tarName)
 
-	if err := populateTar(tarPath); err != nil {
+	if err := populateLegacyTar(tarPath); err != nil {
 		return err
 	}
 
 	log.WithFields("path", tarPath).Info("created database archive")
 
-	entry, err := distribution.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
+	entry, err := grypeDBLegacyDistribution.NewListingEntryFromArchive(fs, *metadata, tarPath, u)
 	if err != nil {
 		return fmt.Errorf("unable to create listing entry from archive: %w", err)
 	}
 
-	listing := distribution.NewListing(entry)
-	listingPath := path.Join(dbDir, distribution.ListingFileName)
+	listing := grypeDBLegacyDistribution.NewListing(entry)
+	listingPath := path.Join(dbDir, grypeDBLegacyDistribution.ListingFileName)
 	if err = listing.Write(listingPath); err != nil {
 		return err
 	}
 
 	log.WithFields("path", listingPath).Debug("created initial listing file")
+
+	return nil
+}
+
+func populateLegacyTar(tarPath string) error {
+	originalDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("unable to get CWD: %w", err)
+	}
+
+	dbDir, tarName := filepath.Split(tarPath)
+
+	if dbDir != "" {
+		if err = os.Chdir(dbDir); err != nil {
+			return fmt.Errorf("unable to cd to build dir: %w", err)
+		}
+
+		defer func() {
+			if err = os.Chdir(originalDir); err != nil {
+				log.Errorf("unable to cd to original dir: %v", err)
+			}
+		}()
+	}
+
+	fileInfos, err := os.ReadDir("./")
+	if err != nil {
+		return fmt.Errorf("unable to list db directory: %w", err)
+	}
+
+	var files []string
+	for _, fi := range fileInfos {
+		if !listingFiles.Has(fi.Name()) && !strings.Contains(fi.Name(), ".tar.") {
+			files = append(files, fi.Name())
+		}
+	}
+
+	if err = tarutil.PopulateWithPaths(tarName, files...); err != nil {
+		return fmt.Errorf("unable to create db archive: %w", err)
+	}
 
 	return nil
 }

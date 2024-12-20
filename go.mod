@@ -2,18 +2,17 @@ module github.com/anchore/grype-db
 
 go 1.23.2
 
-toolchain go1.23.4
-
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.86.1
-	github.com/anchore/syft v1.18.1
+	github.com/anchore/grype v0.86.2-0.20241218195423-d94e68a680dc
+	github.com/anchore/syft v1.18.2-0.20241216153735-397eb9c10acd
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1
+	github.com/dustin/go-humanize v1.0.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-test/deep v1.1.1
 	github.com/google/go-cmp v0.6.0
@@ -102,13 +101,12 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/cli v27.4.0+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v27.4.0+incompatible // indirect
+	github.com/docker/docker v27.4.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/elliotchance/phpserialize v1.4.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -245,8 +243,6 @@ require (
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.34.2 // indirect
 )
-
-replace github.com/mholt/archiver/v3 v3.5.1 => github.com/anchore/archiver/v3 v3.5.2
 
 // this is a breaking change, so we need to pin the version until glebarez/go-sqlite is updated to use internal/libc
 replace modernc.org/sqlite v1.33.0 => modernc.org/sqlite v1.32.0
