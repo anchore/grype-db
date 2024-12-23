@@ -232,7 +232,6 @@ v3_expected_namespaces = [
     "wolfi:rolling",
 ]
 
-
 def expected_namespaces(schema_version: int) -> list[str]:
     if schema_version <= 3:
         return v3_expected_namespaces
@@ -257,6 +256,9 @@ class DBInvalidException(Exception):
 
 
 class DBNamespaceException(Exception):
+    pass
+
+class DBProviderException(Exception):
     pass
 
 
@@ -285,6 +287,20 @@ class DBManager:
 
         return db_uuid
 
+    def list_providers(self, db_uuid: str) -> list[str]:
+        _, build_dir = self.db_paths(db_uuid=db_uuid)
+        # a sqlite3 db
+        db_path = os.path.join(build_dir, "vulnerability.db")
+
+        # select distinct values in the "namespace" column of the "vulnerability" table
+        con = sqlite3.connect(db_path)
+        crsr = con.cursor()
+        crsr.execute("SELECT DISTINCT id FROM providers")
+        result = crsr.fetchall()
+        con.close()
+
+        return sorted([r[0] for r in result])
+
     def list_namespaces(self, db_uuid: str) -> list[str]:
         _, build_dir = self.db_paths(db_uuid=db_uuid)
         # a sqlite3 db
@@ -304,6 +320,15 @@ class DBManager:
         con.close()
 
         return sorted([r[0] for r in result])
+
+    def validate_providers(self, db_uuid: str, expected: list[str]) -> None:
+        missing_providers = set(expected) - set(self.list_providers(db_uuid=db_uuid))
+
+        if missing_providers:
+            msg = f"missing providers in DB {db_uuid!r}: {sorted(missing_providers)!r}"
+            raise DBProviderException(msg)
+
+        logging.info(f"minimum expected providers present in {db_uuid!r}")
 
     def validate_namespaces(self, db_uuid: str) -> None:
         db_info = self.get_db_info(db_uuid)

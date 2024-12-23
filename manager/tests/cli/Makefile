@@ -8,8 +8,8 @@ RESET := $(shell tput -T linux sgr0)
 test: virtual-env-check ## Run CLI tests
 	 pytest . -vv -o log_cli=true
 
-.PHONY: vunnel-data
-vunnel-data: cli-test-data/vunnel/oracle
+.PHONY: vunnel-oracle-data
+vunnel-oracle-data: cli-test-data/vunnel/oracle
 
 cli-test-data/vunnel/oracle: ## Prepare oracle data for CLI tests
 	mkdir -p cli-test-data/vunnel

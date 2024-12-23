@@ -103,7 +103,7 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
     "--skip-namespace-check",
     "skip_namespace_check",
     is_flag=True,
-    help="do not ensure the minimum expected namespaces are present",
+    help="do not ensure the minimum expected namespaces are present (for v6+ this is a providers-based check)",
 )
 @click.argument("db-uuid")
 @click.pass_obj
@@ -131,9 +131,8 @@ def validate_db(
             # ensure the minimum number of namespaces are present
             db_manager.validate_namespaces(db_uuid=db_uuid)
         else:
-            # TODO: implement me
-            msg = "namespace validation for schema v6+ is not yet implemented"
-            raise NotImplementedError(msg)
+            # ensure the minimum number of namespaces are present
+            db_manager.validate_providers(db_uuid=db_uuid, expected=cfg.validate.expected_providers)
 
     _validate_db(ctx, cfg, db_info, images, db_uuid, verbosity, recapture)
 
@@ -154,15 +153,15 @@ def _validate_db(
     verbosity: int,
     recapture: bool,
 ) -> None:
-    if db_info.schema_version >= 6:
-        # TODO: not implemented yet
-        msg = "validation for schema v6+ is not yet implemented"
-        raise NotImplementedError(msg)
-
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
     grype_version = db.schema.grype_version(db_info.schema_version)
+    basis_grype_version = grype_version
+
+    if db_info.schema_version >= 6:
+        # TODO: we don't have any published v6 grype databases yet
+        basis_grype_version = db.schema.grype_version(5)
 
     result_sets = {}
     for idx, rs in enumerate(cfg.validate.gates):
@@ -189,10 +188,11 @@ def _validate_db(
                         label="custom-db",
                         name="grype",
                         version=grype_version + f"+import-db={db_info.archive_path}",
+                        profile="v6",
                     ),
                     ycfg.Tool(
                         name="grype",
-                        version=grype_version,
+                        version=basis_grype_version,
                     ),
                 ],
             ),
@@ -200,7 +200,13 @@ def _validate_db(
 
     yardstick_cfg = ycfg.Application(
         profiles=ycfg.Profiles(
-            data={},
+            data={
+                "grype[custom-db]": {
+                    "v6": {
+                      "config_path": "./.grype-db-v6.yaml"
+                    },
+                },
+            },
         ),
         store_root=cfg.data.yardstick_root,
         default_max_year=cfg.validate.default_max_year,
@@ -308,7 +314,7 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
     "--skip-namespace-check",
     "skip_namespace_check",
     is_flag=True,
-    help="do not ensure the minimum expected namespaces are present",
+    help="do not ensure the minimum expected namespaces are present (for v6+ this is a providers-based check)",
 )
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.pass_obj

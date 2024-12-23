@@ -7,6 +7,7 @@ import logging
 import os
 import tempfile
 import threading
+from datetime import datetime
 from dataclasses import dataclass
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from typing import TYPE_CHECKING
@@ -16,7 +17,6 @@ from dataclass_wizard import asdict, fromdict
 from grype_db_manager import grype
 
 if TYPE_CHECKING:
-    import datetime
     from collections.abc import Iterator
 
 LATEST_FILENAME = "latest.json"
@@ -32,7 +32,7 @@ class Latest:
     schema_version: str | None = None
 
     # timestamp the database was built
-    built: datetime.datetime | None = None
+    built: datetime | None = None
 
     # path to a DB archive relative to the listing file hosted location (NOT the absolute URL)
     path: str = ""
