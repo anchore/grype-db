@@ -1,5 +1,6 @@
 import pytest
 
+from grype_db_manager.db import schema
 
 @pytest.mark.usefixtures("cli_env")
 def test_workflow_1(cli_env, command, logger):
@@ -9,7 +10,7 @@ def test_workflow_1(cli_env, command, logger):
 
     logger.step("setup: clear previous data")
     command.run("make clean-manager", env=cli_env)
-    command.run("make vunnel-data", env=cli_env)
+    command.run("make vunnel-oracle-data", env=cli_env)
 
     logger.step("case 1: create the DB")
     stdout, _ = command.run("grype-db-manager -v db build -s 5", env=cli_env)
@@ -34,7 +35,7 @@ def test_workflow_2(cli_env, command, logger):
 
     logger.step("setup: create the DB")
     command.run("make clean-manager", env=cli_env)
-    command.run("make vunnel-data", env=cli_env)
+    command.run("make vunnel-oracle-data", env=cli_env)
 
     # create the database
     stdout, _ = command.run("grype-db-manager -v db build -s 5", env=cli_env)
@@ -159,23 +160,24 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
 
+    schema_version = "5"
     cli_env.update(
         {
             "AWS_ACCESS_KEY_ID": "test",
             "AWS_SECRET_ACCESS_KEY": "test",
             "AWS_REGION": "us-west-2",
-            "SCHEMA_VERSION": "5",
+            "SCHEMA_VERSION": schema_version,
             "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION": "v0.65.0",
             "GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION": "5",
             "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
         }
     )
 
-    grype = grype.install("v0.65.0", bin_dir)
+    grype = grype.install(schema.grype_version(schema_version), bin_dir)
 
     logger.step("setup: clean manager and prepare data")
     command.run("make clean-manager", env=cli_env)
-    command.run("make vunnel-data", env=cli_env)
+    command.run("make vunnel-oracle-data", env=cli_env)
     command.run("make install-oracle-labels", env=cli_env)
 
     logger.step("setup: start mock S3 and upload initial data")

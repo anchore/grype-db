@@ -27,7 +27,7 @@
     },
     {
       "schema": "6",
-      "grype-version": "initial-db-dir",
+      "grype-version": "feat/v6-query-api",
       "supported": false
     }
   ]

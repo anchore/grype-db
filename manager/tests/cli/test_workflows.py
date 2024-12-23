@@ -1,5 +1,7 @@
 import pytest
 
+from grype_db_manager.db import schema
+
 
 @pytest.mark.usefixtures("cli_env")
 def test_workflow_1(cli_env, command, logger, tmp_path, grype):
@@ -18,6 +20,7 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
             "AWS_SECRET_ACCESS_KEY": "test",
             "AWS_REGION": "us-west-2",
             "GRYPE_EXP_DBV6": "true",  # while we are in development, we need to enable the experimental dbv6 feature flag
+            "GRYPE_DB_AUTO_UPDATE": "false", # disable auto-updating the database to avoid unexpected behavior
             "GOWORK": "off",  # workaround for Go 1.23+ parent directory module lookup
             "PATH": f"{bin_dir}:{cli_env['PATH']}",  # ensure `bin` directory is in PATH
             "GOBIN": bin_dir,
@@ -26,11 +29,11 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
         }
     )
 
-    grype = grype.install("main", bin_dir)
+    grype = grype.install(schema.grype_version(schema_version), bin_dir)
 
     logger.step("setup: clear previous data")
     command.run("make clean-manager", env=cli_env)
-    command.run("make vunnel-data", env=cli_env)
+    command.run("make vunnel-oracle-data", env=cli_env)
 
     logger.step("setup: start mock S3")
     with command.pushd("s3-mock", logger):
@@ -54,9 +57,8 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     stdout, _ = grype.run("db update -v", env=cli_env)
     assert "Vulnerability database updated" in stdout
 
-    # TODO: introduce this when there is v6 matching logic implemented
-    # stdout, _ = grype.run("--platform linux/amd64 --by-cve alpine:3.2", env=cli_env)
-    # assert "CVE-2016-2148" in stdout
+    stdout, _ = grype.run("--platform linux/amd64 --by-cve alpine:3.2", env=cli_env)
+    assert "CVE-2016-2148" in stdout
 
     logger.step("case 4: delete the DB")
     command.run("grype-db-manager db clear", env=cli_env)
@@ -70,60 +72,59 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
         command.run("docker compose down -t 1 -v", env=cli_env)
 
 
-# TODO: introduce this when there is v6 matching logic implemented
-# @pytest.mark.usefixtures("cli_env")
-# def test_workflow_2(cli_env, command, logger):
-#     """
-#     workflow 2: validate DB
-#     This test creates a database from raw vunnel data and performs validations via the quality gate.
-#     """
-#
-#     logger.step("setup: create the DB")
-#     command.run("make clean-manager", env=cli_env)
-#     command.run("make vunnel-data", env=cli_env)
-#
-#     # create the database
-#     stdout, _ = command.run("grype-db-manager -v db build -s 6", env=cli_env)
-#     assert stdout.strip(), "Expected non-empty output"
-#     db_id = stdout.splitlines()[-1]  # Get the last line as the DB ID
-#
-#     ### case 1: fail DB validation (too many unknowns) ###
-#     logger.step("case 1: fail DB validation (too many unknowns)")
-#     command.run("make clean-yardstick-labels", env=cli_env)
-#
-#     # workaround for Go 1.23+ parent directory module lookup
-#     cli_env["GOWORK"] = "off"
-#
-#     stdout, _ = command.run(
-#         f"grype-db-manager db validate {db_id} -vvv --skip-namespace-check --recapture",
-#         env=cli_env,
-#         expect_fail=True,
-#     )
-#     assert "current indeterminate matches % is greater than 10%" in stdout
-#
-#     ### case 2: fail DB validation (missing namespaces) ###
-#     logger.step("case 2: fail DB validation (missing namespaces)")
-#     command.run("make clean-yardstick-labels", env=cli_env)
-#
-#     logger.info("installing labels")
-#     command.run("make install-oracle-labels", env=cli_env)
-#
-#     _, stderr = command.run(
-#         f"grype-db-manager db validate {db_id} -vvv",
-#         env=cli_env,
-#         expect_fail=True,
-#     )
-#     assert "missing namespaces in DB" in stderr
-#
-#     ### case 3: pass DB validation ###
-#     logger.step("case 3: pass DB validation")
-#     command.run("make clean-yardstick-labels", env=cli_env)
-#
-#     logger.info("installing labels")
-#     command.run("make install-oracle-labels", env=cli_env)
-#
-#     stdout, _ = command.run(
-#         f"grype-db-manager db validate {db_id} -vvv --skip-namespace-check",
-#         env=cli_env,
-#     )
-#     assert "Quality gate passed!" in stdout
+@pytest.mark.usefixtures("cli_env")
+def test_workflow_2(cli_env, command, logger):
+    """
+    workflow 2: validate DB
+    This test creates a database from raw vunnel data and performs validations via the quality gate.
+    """
+
+    logger.step("setup: create the DB")
+    command.run("make clean-manager", env=cli_env)
+    command.run("make vunnel-oracle-data", env=cli_env)
+
+    # create the database
+    stdout, _ = command.run("grype-db-manager -v db build -s 6", env=cli_env)
+    assert stdout.strip(), "Expected non-empty output"
+    db_id = stdout.splitlines()[-1]  # Get the last line as the DB ID
+
+    ### case 1: fail DB validation (too many unknowns) ###
+    logger.step("case 1: fail DB validation (too many unknowns)")
+    command.run("make clean-yardstick-labels", env=cli_env)
+
+    # workaround for Go 1.23+ parent directory module lookup
+    cli_env["GOWORK"] = "off"
+
+    stdout, _ = command.run(
+        f"grype-db-manager db validate {db_id} -vvv --recapture",
+        env=cli_env,
+        expect_fail=True,
+    )
+    assert "current indeterminate matches % is greater than 10%" in stdout
+
+    ### case 2: fail DB validation (missing providers) ###
+    logger.step("case 2: fail DB validation (missing providers)")
+    command.run("make clean-yardstick-labels", env=cli_env)
+
+    logger.info("installing labels")
+    command.run("make install-oracle-labels", env=cli_env)
+
+    _, stderr = command.run(
+        f"grype-db-manager db validate {db_id} -vvv",
+        env=cli_env,
+        expect_fail=True,
+    )
+    assert "missing providers in DB" in stderr
+
+    ### case 3: pass DB validation ###
+    logger.step("case 3: pass DB validation")
+    command.run("make clean-yardstick-labels", env=cli_env)
+
+    logger.info("installing labels")
+    command.run("make install-oracle-labels", env=cli_env)
+
+    stdout, _ = command.run(
+        f"grype-db-manager db validate {db_id} -vvv",
+        env=cli_env,
+    )
+    assert "Quality gate passed!" in stdout

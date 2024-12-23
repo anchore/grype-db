@@ -108,6 +108,46 @@ class TestDBManager:
         dbm.list_namespaces.assert_called_once()
         dbm.get_db_info.assert_called_once()
 
+    @pytest.mark.parametrize(
+        "listed_providers, schema_version, expect_error",
+        [
+            pytest.param([], 6, True, id="empty"),
+            pytest.param(["nvd"], 6, True, id="too few providers"),
+            pytest.param(grypedb.expected_providers(6), 6, False, id="v6 matches"),
+            pytest.param(grypedb.expected_providers(6) + ["extra_items"], 6, False, id="v6 with extra items"),
+            pytest.param(list(grypedb.expected_providers(6))[:-5], 6, True, id="v6 missing items"),
+        ],
+    )
+    def test_validate_providers(self, tmp_path: pathlib.Path, mocker, schema_version, listed_providers, expect_error):
+        assert len(grypedb.expected_providers(schema_version)) > 0
+
+        dbm = grypedb.DBManager(root_dir=tmp_path.as_posix())
+        session_id = dbm.new_session()
+
+        # patch list_namespaces to return a mock
+        dbm.list_providers = mocker.MagicMock()
+        dbm.list_providers.return_value = listed_providers
+
+        # patch db_info to return a mock
+        dbm.get_db_info = mocker.MagicMock()
+        dbm.get_db_info.return_value = grypedb.DBInfo(
+            uuid="",
+            schema_version=schema_version,
+            db_checksum="",
+            db_created="",
+            data_created="",
+            archive_path="",
+        )
+
+        if expect_error:
+            with pytest.raises(grypedb.DBProviderException):
+                dbm.validate_providers(session_id)
+        else:
+            dbm.validate_providers(session_id)
+
+        dbm.list_providers.assert_called_once()
+        dbm.get_db_info.assert_called_once()
+
 
 class TestGrypeDB:
     def test_list_installed(self, top_level_fixture):

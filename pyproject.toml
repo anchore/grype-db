@@ -36,7 +36,7 @@ zstandard = ">=0.21.0, <1"
 colorlog = "^6.7.0"
 mergedeep = "^1.3.4"
 pyyaml = ">=5.0.1, <7"
-yardstick = {git = "https://github.com/anchore/yardstick", rev = "v0.10.0"}
+yardstick = {git = "https://github.com/anchore/yardstick", rev = "v0.11.0"}
 # yardstick = {path = "../yardstick", develop = true}
 # vunnel = {path = "../vunnel", develop = true}
 colr = "^0.9.1"
