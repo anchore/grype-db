@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.86.2-0.20241218195423-d94e68a680dc
+	github.com/anchore/grype v0.86.2-0.20241223182831-3baa3d2ca99a
 	github.com/anchore/syft v1.18.2-0.20241216153735-397eb9c10acd
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1

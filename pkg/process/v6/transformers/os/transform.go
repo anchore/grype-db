@@ -60,9 +60,8 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 		}
 
 		aph := grypeDB.AffectedPackageHandle{
-			OperatingSystem: getOperatingSystem(group.osName, group.osVersion),
+			OperatingSystem: getOperatingSystem(group.osName, group.id, group.osVersion),
 			Package:         getPackage(group),
-
 			BlobValue: &grypeDB.AffectedPackageBlob{
 				CVEs:       getAliases(vuln),
 				Qualifiers: qualifiers,
@@ -170,6 +169,7 @@ func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
 
 type groupIndex struct {
 	name      string
+	id        string
 	osName    string
 	osVersion string
 	module    string
@@ -177,7 +177,7 @@ type groupIndex struct {
 
 func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OSFixedIn {
 	grouped := make(map[groupIndex][]unmarshal.OSFixedIn)
-	osName, osVersion := getOSInfo(vuln.Vulnerability.NamespaceName)
+	osName, osID, osVersion := getOSInfo(vuln.Vulnerability.NamespaceName)
 
 	for _, fixedIn := range vuln.Vulnerability.FixedIn {
 		var mod string
@@ -186,6 +186,7 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 		}
 		g := groupIndex{
 			name:      fixedIn.Name,
+			id:        osID,
 			osName:    osName,
 			osVersion: osVersion,
 			module:    mod,
@@ -218,42 +219,36 @@ func getPackage(group groupIndex) *grypeDB.Package {
 	}
 }
 
-func getOSInfo(group string) (string, string) {
-	// derived from enterprise feed groups, expected to be of the form {distroID}:{version}
+func getOSInfo(group string) (string, string, string) {
+	// derived from enterprise feed groups, expected to be of the form {distro release ID}:{version}
 	feedGroupComponents := strings.Split(group, ":")
 
-	return normalizeOsName(feedGroupComponents[0], feedGroupComponents[1]), feedGroupComponents[1]
-}
-
-// add new fields to OS schema: release-id, release-version-id
-// update vunnel providers to emit these fields (they are based on the /etc/os-release values)
-// update this code to STOP parsing namespace and start using those new fields
-// now when a user searches by OS (from the /etc/os-release values) they will get the correct results
-// what's missing:
-//   - when to search by major version vs major.minor version...
-//   - edge/rolling behavior
-//   - aliases: user has centos 8, but the feed has rhel 8, use that instead
-func normalizeOsName(name, version string) string {
-	if strings.ToLower(name) == "mariner" {
+	id := feedGroupComponents[0]
+	version := feedGroupComponents[1]
+	if strings.ToLower(id) == "mariner" {
 		verFields := strings.Split(version, ".")
 		majorVersionStr := verFields[0]
 		majorVer, err := strconv.Atoi(majorVersionStr)
 		if err == nil {
 			if majorVer >= 3 {
-				name = string(distro.Azure)
+				id = string(distro.Azure)
 			}
 		}
 	}
-	d, ok := distro.IDMapping[name]
-	if !ok {
-		log.WithFields("distro", name).Warn("unknown distro name")
 
-		return name
+	return normalizeOsName(id), id, version
+}
+
+func normalizeOsName(id string) string {
+	d, ok := distro.IDMapping[id]
+	if !ok {
+		log.WithFields("distro", id).Warn("unknown distro name")
+
+		return id
 	}
 
 	distroName := d.String()
 
-	// TODO: this doesn't seem right
 	switch d {
 	case distro.OracleLinux:
 		distroName = "oracle"
@@ -263,7 +258,7 @@ func normalizeOsName(name, version string) string {
 	return distroName
 }
 
-func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {
+func getOperatingSystem(osName, osID, osVersion string) *grypeDB.OperatingSystem {
 	if osName == "" || osVersion == "" {
 		return nil
 	}
@@ -284,6 +279,7 @@ func getOperatingSystem(osName, osVersion string) *grypeDB.OperatingSystem {
 
 	return &grypeDB.OperatingSystem{
 		Name:         osName,
+		ReleaseID:    osID,
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
 		LabelVersion: labelVersion,

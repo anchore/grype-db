@@ -44,32 +44,45 @@ func expectedProvider(name string) *grypeDB.Provider {
 
 func TestTransform(t *testing.T) {
 
+	alpineOS := &grypeDB.OperatingSystem{
+		Name:         "alpine",
+		ReleaseID:    "alpine",
+		MajorVersion: "3",
+		MinorVersion: "9",
+	}
+
 	amazonOS := &grypeDB.OperatingSystem{
 		Name:         "amazon",
+		ReleaseID:    "amzn",
 		MajorVersion: "2",
 	}
 	azure3OS := &grypeDB.OperatingSystem{
 		Name:         "azurelinux",
+		ReleaseID:    "azurelinux",
 		MajorVersion: "3",
 		MinorVersion: "0", // TODO: is this right?
 	}
 	debian8OS := &grypeDB.OperatingSystem{
 		Name:         "debian",
+		ReleaseID:    "debian",
 		MajorVersion: "8",
 		Codename:     "jessie",
 	}
 
 	mariner2OS := &grypeDB.OperatingSystem{
 		Name:         "mariner",
+		ReleaseID:    "mariner",
 		MajorVersion: "2",
 		MinorVersion: "0", // TODO: is this right?
 	}
 	ol8OS := &grypeDB.OperatingSystem{
 		Name:         "oracle",
+		ReleaseID:    "ol",
 		MajorVersion: "8",
 	}
 	rhel8OS := &grypeDB.OperatingSystem{
 		Name:         "redhat",
+		ReleaseID:    "rhel",
 		MajorVersion: "8",
 	}
 	tests := []struct {
@@ -105,7 +118,7 @@ func TestTransform(t *testing.T) {
 					},
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
-							OperatingSystem: &grypeDB.OperatingSystem{Name: "alpine", MajorVersion: "3", MinorVersion: "9"},
+							OperatingSystem: alpineOS,
 							Package:         &grypeDB.Package{Type: "apk", Name: "xen"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
@@ -1098,6 +1111,128 @@ func TestTransform(t *testing.T) {
 			if diff := cmp.Diff(test.want, actual); diff != "" {
 				t.Errorf("data entries mismatch (-want +got):\n%s", diff)
 			}
+		})
+	}
+}
+
+func TestGetOperatingSystem(t *testing.T) {
+	tests := []struct {
+		name      string
+		osName    string
+		osID      string
+		osVersion string
+		expected  *grypeDB.OperatingSystem
+	}{
+		{
+			name:      "works with given args",
+			osName:    "alpine",
+			osID:      "alpine",
+			osVersion: "3.10",
+			expected: &grypeDB.OperatingSystem{
+				Name:         "alpine",
+				ReleaseID:    "alpine",
+				MajorVersion: "3",
+				MinorVersion: "10",
+				LabelVersion: "",
+				Codename:     "",
+			},
+		},
+		{
+			name:      "does codename lookup (debian)",
+			osName:    "debian",
+			osID:      "debian",
+			osVersion: "11",
+			expected: &grypeDB.OperatingSystem{
+				Name:         "debian",
+				ReleaseID:    "debian",
+				MajorVersion: "11",
+				MinorVersion: "",
+				LabelVersion: "",
+				Codename:     "bullseye",
+			},
+		},
+		{
+			name:      "does codename lookup (ubuntu)",
+			osName:    "ubuntu",
+			osID:      "ubuntu",
+			osVersion: "22.04",
+			expected: &grypeDB.OperatingSystem{
+				Name:         "ubuntu",
+				ReleaseID:    "ubuntu",
+				MajorVersion: "22",
+				MinorVersion: "04",
+				LabelVersion: "",
+				Codename:     "jammy",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getOperatingSystem(tt.osName, tt.osID, tt.osVersion)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetOSInfo(t *testing.T) {
+	tests := []struct {
+		name       string
+		group      string
+		expectedOS string
+		expectedID string
+		expectedV  string
+	}{
+		{
+			name:       "alpine 3.10",
+			group:      "alpine:3.10",
+			expectedOS: "alpine",
+			expectedID: "alpine",
+			expectedV:  "3.10",
+		},
+		{
+			name:       "debian bullseye",
+			group:      "debian:11",
+			expectedOS: "debian",
+			expectedID: "debian",
+			expectedV:  "11",
+		},
+		{
+			name:       "mariner version 1",
+			group:      "mariner:1.0",
+			expectedOS: "mariner",
+			expectedID: "mariner",
+			expectedV:  "1.0",
+		},
+		{
+			name:       "mariner version 3 (azurelinux conversion)",
+			group:      "mariner:3.0",
+			expectedOS: "azurelinux",
+			expectedID: "azurelinux",
+			expectedV:  "3.0",
+		},
+		{
+			name:       "ubuntu focal",
+			group:      "ubuntu:20.04",
+			expectedOS: "ubuntu",
+			expectedID: "ubuntu",
+			expectedV:  "20.04",
+		},
+		{
+			name:       "oracle linux",
+			group:      "ol:8",
+			expectedOS: "oracle", // normalize name
+			expectedID: "ol",     // keep original ID
+			expectedV:  "8",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			osName, id, version := getOSInfo(tt.group)
+			require.Equal(t, tt.expectedOS, osName)
+			require.Equal(t, tt.expectedID, id)
+			require.Equal(t, tt.expectedV, version)
 		})
 	}
 }
