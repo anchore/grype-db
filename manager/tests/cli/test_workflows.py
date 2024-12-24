@@ -1,6 +1,7 @@
 import pytest
 
 from grype_db_manager.db import schema
+from grype_db_manager.cli import config
 
 
 @pytest.mark.usefixtures("cli_env")
@@ -28,6 +29,9 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
             "GRYPE_DB_CACHE_DIR": str(bin_dir),
         }
     )
+
+    cfg = config.load()
+    image = cfg.validate.gates[0].images[0]
 
     grype = grype.install(schema.grype_version(schema_version), bin_dir)
 
@@ -57,8 +61,8 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     stdout, _ = grype.run("db update -v", env=cli_env)
     assert "Vulnerability database updated" in stdout
 
-    stdout, _ = grype.run("--platform linux/amd64 --by-cve alpine:3.2", env=cli_env)
-    assert "CVE-2016-2148" in stdout
+    stdout, _ = grype.run(f"--platform linux/amd64 {image}", env=cli_env)
+    assert "ELSA-2021-9314" in stdout
 
     logger.step("case 4: delete the DB")
     command.run("grype-db-manager db clear", env=cli_env)
