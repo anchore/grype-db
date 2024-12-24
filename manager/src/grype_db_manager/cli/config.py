@@ -81,7 +81,7 @@ class Validate:
     default_max_year: int = 2021
     gates: list[ValidateDB] = field(default_factory=list)
     listing: ValidateListing = field(default_factory=ValidateListing)
-
+    expected_providers: list[str] = field(default_factory=list)
 
 @dataclass()
 class ListingReplica:

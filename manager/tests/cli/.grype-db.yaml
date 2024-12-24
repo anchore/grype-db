@@ -4,7 +4,7 @@ provider:
   root: cli-test-data/vunnel
 
   configs:
-    # let's use a single provider that we can show in isolation the setup is generally working. We don't
+    # let's use a limited set of providers that we can show in isolation the setup is generally working. We don't
     # need all providers / an entire database to test the workflow.
     - name: oracle
       kind: vunnel

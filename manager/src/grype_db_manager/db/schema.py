@@ -23,7 +23,7 @@ class SchemaEntry:
 class SchemaMapping:
     Available: list[SchemaEntry] = field(default_factory=list)
 
-    def grype_version(self, schema_version: int) -> str | None:
+    def grype_version(self, schema_version: int | str) -> str | None:
         schema_version = str(schema_version)
         for entry in self.Available:
             if entry.schema == schema_version:
@@ -77,7 +77,7 @@ def _load() -> SchemaMapping:
     return cfg
 
 
-def grype_version(schema_version: int) -> str:
+def grype_version(schema_version: int | str) -> str:
     return _load().grype_version(schema_version)
 
 
