@@ -52,7 +52,7 @@ func TestTransform(t *testing.T) {
 	}
 
 	amazonOS := &grypeDB.OperatingSystem{
-		Name:         "amazon",
+		Name:         "amazonlinux",
 		ReleaseID:    "amzn",
 		MajorVersion: "2",
 	}
@@ -76,7 +76,7 @@ func TestTransform(t *testing.T) {
 		MinorVersion: "0", // TODO: is this right?
 	}
 	ol8OS := &grypeDB.OperatingSystem{
-		Name:         "oracle",
+		Name:         "oraclelinux",
 		ReleaseID:    "ol",
 		MajorVersion: "8",
 	}
@@ -1221,8 +1221,8 @@ func TestGetOSInfo(t *testing.T) {
 		{
 			name:       "oracle linux",
 			group:      "ol:8",
-			expectedOS: "oracle", // normalize name
-			expectedID: "ol",     // keep original ID
+			expectedOS: "oraclelinux", // normalize name
+			expectedID: "ol",          // keep original ID
 			expectedV:  "8",
 		},
 	}
