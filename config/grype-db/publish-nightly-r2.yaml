@@ -26,7 +26,7 @@ provider:
   vunnel:
     executor: docker
     docker-tag: latest
-    generate-configs: true
+    generate-configs: false
     env:
       GITHUB_TOKEN: $GITHUB_TOKEN
       NVD_API_KEY: $NVD_API_KEY
