@@ -202,9 +202,7 @@ def _validate_db(
         profiles=ycfg.Profiles(
             data={
                 "grype[custom-db]": {
-                    "v6": {
-                      "config_path": "./.grype-db-v6.yaml"
-                    },
+                    "v6": {"config_path": "./.grype-db-v6.yaml"},
                 },
             },
         ),

@@ -27,7 +27,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 			Name:          vulnerability.Vulnerability.Name,
 			ProviderID:    state.Provider,
 			Provider:      internal.ProviderModel(state),
-			Status:        string(grypeDB.VulnerabilityActive),
+			Status:        grypeDB.VulnerabilityActive,
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
 			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
 			BlobValue: &grypeDB.VulnerabilityBlob{

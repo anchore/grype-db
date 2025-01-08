@@ -2,6 +2,7 @@ import pytest
 
 from grype_db_manager.db import schema
 
+
 @pytest.mark.usefixtures("cli_env")
 def test_workflow_1(cli_env, command, logger):
     """

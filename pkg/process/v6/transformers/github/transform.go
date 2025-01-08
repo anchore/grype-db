@@ -33,7 +33,7 @@ func getVulnerability(vuln unmarshal.GitHubAdvisory, state provider.State) grype
 		ModifiedDate:  internal.ParseTime(vuln.Advisory.Updated),
 		PublishedDate: internal.ParseTime(vuln.Advisory.Published),
 		WithdrawnDate: internal.ParseTime(vuln.Advisory.Withdrawn),
-		Status:        string(getVulnStatus(vuln)),
+		Status:        getVulnStatus(vuln),
 		BlobValue: &grypeDB.VulnerabilityBlob{
 			ID: vuln.Advisory.GhsaID,
 			// it does not appear to be possible to get "credits" or any user information from the graphql API

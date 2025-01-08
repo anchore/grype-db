@@ -36,6 +36,8 @@ validate:
     minimum-vulnerabilities: 400
 
   default-max-year: 2021
+  expectedProviders:
+   - "alpine"
   gates:
     - gate:
         max_f1_regression: 0.15

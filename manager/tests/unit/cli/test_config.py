@@ -62,6 +62,19 @@ log:
 schemaMappingFile: ''
 validate:
   defaultMaxYear: 2021
+  expectedProviders:
+    - alpine
+    - amazon
+    - chainguard
+    - debian
+    - github
+    - mariner
+    - nvd
+    - oracle
+    - rhel
+    - sles
+    - ubuntu
+    - wolfi
   gates: []
   listing:
     image: null
@@ -107,6 +120,8 @@ log:
 schemaMappingFile: mapping.json
 validate:
   defaultMaxYear: 2021
+  expectedProviders:
+    - alpine
   gates:
     - allowEmptyResultsForSchemas:
         - 1

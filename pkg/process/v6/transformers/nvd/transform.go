@@ -45,7 +45,7 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability, state provi
 			Provider:      internal.ProviderModel(state),
 			ModifiedDate:  internal.ParseTime(vulnerability.LastModified),
 			PublishedDate: internal.ParseTime(vulnerability.Published),
-			Status:        string(getVulnStatus(vulnerability)),
+			Status:        getVulnStatus(vulnerability),
 			BlobValue: &grypeDB.VulnerabilityBlob{
 				ID:          vulnerability.ID,
 				Assigners:   getAssigner(vulnerability),

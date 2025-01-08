@@ -232,6 +232,7 @@ v3_expected_namespaces = [
     "wolfi:rolling",
 ]
 
+
 def expected_namespaces(schema_version: int) -> list[str]:
     if schema_version <= 3:
         return v3_expected_namespaces
@@ -257,6 +258,7 @@ class DBInvalidException(Exception):
 
 class DBNamespaceException(Exception):
     pass
+
 
 class DBProviderException(Exception):
     pass
@@ -322,6 +324,10 @@ class DBManager:
         return sorted([r[0] for r in result])
 
     def validate_providers(self, db_uuid: str, expected: list[str]) -> None:
+        if not expected:
+            msg = "expected at least one provider"
+            raise DBProviderException(msg)
+
         missing_providers = set(expected) - set(self.list_providers(db_uuid=db_uuid))
 
         if missing_providers:

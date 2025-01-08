@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.86.2-0.20241223182831-3baa3d2ca99a
+	github.com/anchore/grype v0.86.2-0.20250108222253-c1e8b0bcaf09
 	github.com/anchore/syft v1.18.2-0.20241216153735-397eb9c10acd
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1
@@ -114,7 +114,7 @@ require (
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/github/go-spdx/v2 v2.3.2 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
@@ -223,7 +223,7 @@ require (
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
