@@ -9,12 +9,24 @@ provider:
   # for every new provider that is added.
   #
   # Any providers that should be excluded from processing should be added to the 'provider.vunnel.excludeProviders' list.
-  configs: []
+  configs:
+    - name: nvd
+    - name: alpine
+    - name: amazon
+    - name: chainguard
+    - name: debian
+    - name: github
+    - name: mariner
+    - name: oracle
+    - name: rhel
+    - name: sles
+    - name: ubuntu
+    - name: wolfi
 
   vunnel:
     executor: docker
     docker-tag: latest
-    generate-configs: true
+    generate-configs: false
     env:
       GITHUB_TOKEN: $GITHUB_TOKEN
       NVD_API_KEY: $NVD_API_KEY
