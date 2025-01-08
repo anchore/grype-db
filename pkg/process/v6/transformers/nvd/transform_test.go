@@ -62,7 +62,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2018, 7, 5, 13, 52, 30, 627000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2018, 5, 24, 14, 29, 0, 390000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2018-5487",
 							Assigners:   []string{"security-alert@netapp.com"},
@@ -138,7 +138,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2020, 3, 31, 2, 15, 12, 667000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2018, 8, 20, 20, 29, 1, 347000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2018-1000222",
 							Assigners:   []string{"cve@mitre.org"},
@@ -226,7 +226,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2018, 5, 23, 14, 41, 49, 73000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2018, 4, 17, 20, 29, 0, 410000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2018-10189",
 							Assigners:   []string{"cve@mitre.org"},
@@ -309,7 +309,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2016, 11, 28, 19, 50, 59, 600000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2016, 11, 22, 17, 59, 0, 180000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2015-8978",
 							Assigners:   []string{"cve@mitre.org"},
@@ -368,7 +368,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2022, 9, 3, 3, 34, 19, 933000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2022, 3, 10, 17, 47, 45, 383000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2022-26488",
 							Assigners:   []string{"cve@mitre.org"},
@@ -475,7 +475,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2023, 9, 29, 15, 55, 24, 533000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2022, 2, 18, 20, 15, 17, 583000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2022-0543",
 							Assigners:   []string{"security@debian.org"},
@@ -570,7 +570,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2021, 12, 10, 19, 57, 6, 357000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2021, 5, 27, 19, 15, 7, 880000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2020-10729",
 							Assigners:   []string{"secalert@redhat.com"},
@@ -661,7 +661,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2023, 8, 26, 2, 25, 42, 957000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2023, 8, 22, 22, 15, 8, 460000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2023-38733",
 							Assigners:   []string{"psirt@us.ibm.com"},
@@ -749,7 +749,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2023, 12, 14, 10, 15, 7, 947000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2023, 11, 9, 17, 15, 8, 757000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2023-45283",
 							Assigners:   []string{"security@golang.org"},
@@ -860,7 +860,7 @@ func TestTransform(t *testing.T) {
 						Provider:      expectedProvider("nvd"),
 						ModifiedDate:  timeRef(time.Date(2023, 12, 14, 10, 15, 7, 947000000, time.UTC)),
 						PublishedDate: timeRef(time.Date(2023, 11, 9, 17, 15, 8, 757000000, time.UTC)),
-						Status:        string(grypeDB.VulnerabilityActive),
+						Status:        grypeDB.VulnerabilityActive,
 						BlobValue: &grypeDB.VulnerabilityBlob{
 							ID:          "CVE-2023-45283",
 							Assigners:   []string{"security@golang.org"},
