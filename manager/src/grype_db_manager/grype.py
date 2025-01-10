@@ -134,6 +134,7 @@ def check_db_cache_dir(schema_version: int, db_runtime_dir: str) -> None:
     for _f in os.listdir(db_runtime_dir):
         logging.error(f"{_f}")
 
+    msg = f"db import appears to have failed, was expecting path: {db_metadata_file}"
     raise RuntimeError(
-        "db import appears to have failed, was expecting path: %s" % db_metadata_file,
+        msg,
     )

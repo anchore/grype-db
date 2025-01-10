@@ -8,9 +8,9 @@ __all__ = [
     "Latest",
     "Listing",
     "Metadata",
+    "capture_results",
     "latest",
     "listing",
     "metadata",
     "schema",
-    "capture_results",
 ]

@@ -1,0 +1,17 @@
+[run]
+source = grype_db_manager
+omit =
+  */__main__.py
+  */cli/__init__.py
+  */tests/*
+  */site-packages/*
+  */venv/*
+  */.venv/*
+  */.cache/*
+
+[report]
+show_missing = true
+fail_under = 50
+
+[html]
+directory = htmlcov

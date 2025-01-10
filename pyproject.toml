@@ -29,23 +29,21 @@ boto3 = ">=1.28.16, <2"
 click = ">=8.1.6, <9"
 dataclass-wizard = ">=0.22.2, <1"
 iso8601 = ">=2.0.0, <3"
-requests = "^2.32.3"
+requests = ">=2.32.3, <3"
 semver = ">=3.0.1, <4"
 tabulate = ">=0.9.0, <1"
 zstandard = ">=0.21.0, <1"
-colorlog = "^6.7.0"
-mergedeep = "^1.3.4"
+colorlog = ">=6.7.0, <7"
+mergedeep = ">=1.3.4, <2"
 pyyaml = ">=5.0.1, <7"
-yardstick = {git = "https://github.com/anchore/yardstick", rev = "v0.11.0"}
 # yardstick = {path = "../yardstick", develop = true}
 # vunnel = {path = "../vunnel", develop = true}
-colr = "^0.9.1"
-pyyaml-include = "^1.3.1"
-python-magic = "^0.4.27"
+pyyaml-include = ">=1.3.1, <2"
+python-magic = ">=0.4.27, <1"
+yardstick = ">=0.12.0, <1"
 
 
 [tool.poetry.group.dev.dependencies]
-black = ">=23.7.0,<25"
 mypy = ">=1.4.1, <2"
 pytest = ">=7.4.0, <8"
 pytest-sugar = ">=0.9.7"
@@ -54,9 +52,10 @@ pytest-cov = ">=4.1.0"
 pytest-picked = ">=0.5.0"
 pytest-mock = ">=3.11.1"
 pytest-xdist = ">=3.3.1"
-ruff = "0.0.282" # the ruff project is pretty early, even a patch bump tends to break stuff
-types-requests = "^2.31.0.2"
-moto = "^4.1.14"
+ruff = ">=0.0.282, <1"
+types-requests = ">=2.31.0.2, <3"
+moto = ">=4.1.14, <5"
+coverage = {extras = ["toml"], version = "^7.6.10"}
 
 [build-system]
 requires = ["poetry-core"]
@@ -70,24 +69,15 @@ norecursedirs = ["data"]
 log_format = "%(levelname)-6s %(message)s"
 log_cli_level = "INFO"
 
-[tool.black]
-line-length = 130
-
-[tool.coverage.run]
-source = ['grype_db_manager']
-omit = [
-  ".*",
-  "*/site-packages/*",
-  "*/venv/*",
-  "*/tests/*",
-  "*/src/grype_db_manager/__main__.py",
-  "*/src/grype_db_manager/cli/__init__.py",
-]
-
 [tool.ruff]
 cache-dir = ".cache/ruff"
 # allow for a wide-birth relative to what black will correct to
 line-length = 150
+extend-exclude = [
+  "**/tests/**",
+]
+
+[tool.ruff.lint]
 select = [
   "A",   # flake8-builtins
   "ANN", # flake8-annotations
@@ -132,8 +122,6 @@ ignore = [
   "ANN401", # should allow for typing.Any in *args and **kwargs
   "ANN002", # don't require type annotations for arbirary *args
   "ANN003", # don't require type annotations for arbirary **kwargs
-  "ANN101", # annotating self if useless on an instance method
-  "ANN102", # annotating cls if useless on a class method
   "ANN204", # annotating return type of __init__ and __post_init__ is useless
   "ARG001", # unused args are ok, as they communicate intent in interfaces, even if not used in impls.
   "ARG002", # unused args are ok, as they communicate intent in interfaces, even if not used in impls.
@@ -146,9 +134,6 @@ ignore = [
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)` -- not compatible with python 3.9 (even with __future__ import)
 ]
 
-extend-exclude = [
-  "**/tests/**",
-]
 
-[tool.ruff.pylint]
+[tool.ruff.lint.pylint]
 max-args = 8

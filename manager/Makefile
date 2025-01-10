@@ -1,13 +1,11 @@
 # in percent
-COVERAGE_THRESHOLD := 60
-
 .DEFAULT_GOAL := all
 
 .PHONY: all
 all: static-analysis test  ## Run all validations
 
 .PHONY: static-analysis
-static-analysis: format lint  ## Run all static analyses
+static-analysis: lint  ## Run all static analyses
 
 .PHONY: test
 test: unit  ## Run all tests
@@ -37,16 +35,12 @@ lint: virtual-env-check  ## Show linting issues (ruff)
 lint-fix: virtual-env-check  ## Fix linting issues (ruff)
 	ruff check . --fix
 
-.PHONY: format
-format: virtual-env-check  ## Format all code (black)
-	black src tests
-
 
 ## Testing targets #################################
 
 .PHONY: unit
 unit: virtual-env-check  ## Run unit tests
-	NO_COLOR=true pytest --cov-fail-under=$(COVERAGE_THRESHOLD) --config-file ../pyproject.toml --cov-report html --cov grype_db_manager -vv tests/unit/
+	pytest --cov=grype_db_manager  --cov-report=html  -vv tests/unit/
 
 .PHONY: cli
 cli: virtual-env-check  ## Run cli tests

@@ -146,4 +146,4 @@ def hash_file(path: str) -> str:
                 break
             hasher.update(data)
 
-    return "sha256:%s" % hasher.hexdigest()
+    return f"sha256:{hasher.hexdigest()}"
