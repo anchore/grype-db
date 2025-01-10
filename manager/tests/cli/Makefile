@@ -17,6 +17,7 @@ cli-test-data/vunnel/oracle: ## Prepare oracle data for CLI tests
 
 .PHONY: install-oracle-labels
 install-oracle-labels:
+	mkdir -p cli-test-data/yardstick/labels
 	cp -a ../../../data/vulnerability-match-labels/labels/docker.io+oraclelinux* ./cli-test-data/yardstick/labels/
 
 virtual-env-check:

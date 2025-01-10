@@ -191,7 +191,7 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
 
     # build, validate, and upload the database
     stdout, _ = command.run(
-        "grype-db-manager db build-and-upload --schema-version 5 --skip-namespace-check",
+        f"grype-db-manager db build-and-upload --schema-version {schema_version} --skip-namespace-check",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout
@@ -200,7 +200,7 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     logger.step("case 2: update the listing file based on the DB uploaded")
 
     # update the listing file and validate
-    stdout, _ = command.run("grype-db-manager listing update", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -v listing update", env=cli_env)
     assert "Validation passed" in stdout
     assert "listing.json uploaded to s3://testbucket/grype/databases" in stdout
 

@@ -159,9 +159,20 @@ def _validate_db(
     grype_version = db.schema.grype_version(db_info.schema_version)
     basis_grype_version = grype_version
 
+    yardstick_profile_data = ycfg.Profiles()
+    profile_name = None
     if db_info.schema_version >= 6:
         # TODO: we don't have any published v6 grype databases yet
         basis_grype_version = db.schema.grype_version(5)
+        # TODO: we can remove this once v6 lands on grype@main without a feature flag
+        profile_name = "v6"
+        yardstick_profile_data = ycfg.Profiles(
+            data={
+                "grype[custom-db]": {
+                    profile_name: {"config_path": "./.grype-v6.yaml"},
+                },
+            },
+        )
 
     result_sets = {}
     for idx, rs in enumerate(cfg.validate.gates):
@@ -188,7 +199,7 @@ def _validate_db(
                         label="custom-db",
                         name="grype",
                         version=grype_version + f"+import-db={db_info.archive_path}",
-                        profile="v6",
+                        profile=profile_name,
                     ),
                     ycfg.Tool(
                         name="grype",
@@ -199,13 +210,7 @@ def _validate_db(
         )
 
     yardstick_cfg = ycfg.Application(
-        profiles=ycfg.Profiles(
-            data={
-                "grype[custom-db]": {
-                    "v6": {"config_path": "./.grype-db-v6.yaml"},
-                },
-            },
-        ),
+        profiles=yardstick_profile_data,
         store_root=cfg.data.yardstick_root,
         default_max_year=cfg.validate.default_max_year,
         result_sets=result_sets,

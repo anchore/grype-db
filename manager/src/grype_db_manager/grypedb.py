@@ -15,6 +15,7 @@ import sys
 import uuid
 
 import requests
+import xxhash
 
 from grype_db_manager.db.format import Format
 
@@ -430,6 +431,16 @@ def db_metadata(build_dir: str) -> dict:
                 "data_created": metadata["built"],
             }
 
+    db_path = os.path.join(build_dir, "vulnerability.db")
+    if not os.path.exists(db_path):
+        msg = "missing vulnerability.db for DB"
+        raise DBInvalidException(msg)
+
+    db_checksum = xxhash.xxh64()
+    with open(db_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            db_checksum.update(chunk)
+
     latest_path = os.path.join(build_dir, "latest.json")
     if os.path.exists(latest_path):
         # supports v6+
@@ -446,7 +457,7 @@ def db_metadata(build_dir: str) -> dict:
             # }
             return {
                 "version": int(metadata["schemaVersion"].split(".")[0]),
-                "db_checksum": None,  # we don't have this information
+                "db_checksum": "xxh64:"+db_checksum.hexdigest(),
                 "db_created": metadata["built"],
                 "data_created": parse_datetime(metadata["path"].split("_")[2]),
                 "latest_path": os.path.abspath(latest_path),
