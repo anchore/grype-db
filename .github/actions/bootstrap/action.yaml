@@ -13,10 +13,6 @@ inputs:
     description: "Go version to install"
     required: true
     default: "1.23.x"
-  python-version:
-    description: "Python version to install"
-    required: true
-    default: "3.11"
   poetry-version:
     description: "Poetry version to install"
     required: true
@@ -52,10 +48,10 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       if: inputs.python == 'true'
       with:
-        python-version: ${{ inputs.python-version }}
+        python-version-file: "pyproject.toml"
 
     - name: Install poetry
       if: inputs.python == 'true'
@@ -69,9 +65,9 @@ runs:
       id: cache
       with:
         path: ~/.virtualenvs
-        key: ${{ inputs.cache-key-prefix }}-python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('poetry.lock') }}
+        key: ${{ inputs.cache-key-prefix }}-${{ hashFiles('poetry.lock') }}
         restore-keys: |
-          ${{ inputs.cache-key-prefix }}-python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}
+          ${{ inputs.cache-key-prefix }}-
 
     - name: Setup Poetry config
       if: inputs.python == 'true'
