@@ -3,7 +3,6 @@ package processors
 
 import (
 	"io"
-	"regexp"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -46,13 +45,16 @@ func (p matchExclusionProcessor) Process(reader io.Reader, _ provider.State) ([]
 	return results, nil
 }
 
-var v1MatchExclusionSchemaPattern = regexp.MustCompile(`https://.*/vunnel/.*/match-exclusion/schema-1\.\d+\.\d+\.json`)
-
 func (p matchExclusionProcessor) IsSupported(schemaURL string) bool {
-	if !v1MatchExclusionSchemaPattern.MatchString(schemaURL) {
-		log.WithFields("schema", schemaURL).Trace("unsupported match-exclusion schema version")
+	if !hasSchemaSegment(schemaURL, "match-exclusion") {
 		return false
 	}
 
-	return true
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse match-exclusion schema version")
+		return false
+	}
+
+	return parsedVersion.Major == 1
 }

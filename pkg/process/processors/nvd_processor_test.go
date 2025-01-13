@@ -53,11 +53,6 @@ func TestNvdProcessor_IsSupported(t *testing.T) {
 			expected:  true,
 		},
 		{
-			name:      "invalid schema URL with different path",
-			schemaURL: "https://example.com/other/path/vulnerability/nvd/schema-1.4.7.json",
-			expected:  false,
-		},
-		{
 			name:      "invalid schema URL with unsupported version",
 			schemaURL: "https://example.com/vunnel/path/vulnerability/nvd/schema-2.0.0.json",
 			expected:  false,

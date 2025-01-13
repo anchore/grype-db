@@ -2,7 +2,6 @@ package processors
 
 import (
 	"io"
-	"regexp"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -48,13 +47,16 @@ func (p msrcProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry
 	return results, nil
 }
 
-var v1MSRCSchemaPattern = regexp.MustCompile(`https://.*/vunnel/.*/vulnerability/msrc/schema-1\.\d+\.\d+\.json`)
-
 func (p msrcProcessor) IsSupported(schemaURL string) bool {
-	if !v1MSRCSchemaPattern.MatchString(schemaURL) {
-		log.WithFields("schema", schemaURL).Trace("unsupported MSRC schema version")
+	if !hasSchemaSegment(schemaURL, "msrc") {
 		return false
 	}
 
-	return true
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse MSRC schema version")
+		return false
+	}
+
+	return parsedVersion.Major == 1
 }

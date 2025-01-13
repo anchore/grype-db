@@ -3,7 +3,6 @@ package processors
 
 import (
 	"io"
-	"regexp"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -64,13 +63,16 @@ func (p osProcessor) Process(reader io.Reader, state provider.State) ([]data.Ent
 	return results, nil
 }
 
-var v1OSSchemaPattern = regexp.MustCompile(`https://.*/vunnel/.*/vulnerability/os/schema-1\.\d+\.\d+\.json`)
-
 func (p osProcessor) IsSupported(schemaURL string) bool {
-	if !v1OSSchemaPattern.MatchString(schemaURL) {
-		log.WithFields("schema", schemaURL).Trace("unsupported OS schema version")
+	if !hasSchemaSegment(schemaURL, "os") {
 		return false
 	}
 
-	return true
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse OS schema version")
+		return false
+	}
+
+	return parsedVersion.Major == 1
 }

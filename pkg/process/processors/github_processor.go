@@ -3,7 +3,6 @@ package processors
 
 import (
 	"io"
-	"regexp"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -64,13 +63,16 @@ func (p githubProcessor) Process(reader io.Reader, state provider.State) ([]data
 	return results, nil
 }
 
-var v1GHSASchemaPattern = regexp.MustCompile(`https://.*/vunnel/.*/vulnerability/github-security-advisory/schema-1\.\d+\.\d+\.json`)
-
 func (p githubProcessor) IsSupported(schemaURL string) bool {
-	if !v1GHSASchemaPattern.MatchString(schemaURL) {
-		log.WithFields("schema", schemaURL).Trace("unsupported GHSA schema version")
+	if !hasSchemaSegment(schemaURL, "github-security-advisory") {
 		return false
 	}
 
-	return true
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse GHSA schema version")
+		return false
+	}
+
+	return parsedVersion.Major == 1
 }

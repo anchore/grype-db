@@ -2,7 +2,6 @@ package processors
 
 import (
 	"io"
-	"regexp"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -63,13 +62,16 @@ func (p nvdProcessor) Process(reader io.Reader, state provider.State) ([]data.En
 	return results, nil
 }
 
-var v1NVDSchemaPattern = regexp.MustCompile(`https://.*/vunnel/.*/vulnerability/nvd/schema-1\.\d+\.\d+\.json`)
-
 func (p nvdProcessor) IsSupported(schemaURL string) bool {
-	if !v1NVDSchemaPattern.MatchString(schemaURL) {
-		log.WithFields("schema", schemaURL).Trace("unsupported NVD schema version")
+	if !hasSchemaSegment(schemaURL, "nvd") {
 		return false
 	}
 
-	return true
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse NVD schema version")
+		return false
+	}
+
+	return parsedVersion.Major == 1
 }
