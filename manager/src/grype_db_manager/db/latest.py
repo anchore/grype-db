@@ -8,6 +8,9 @@ import os
 import tempfile
 import threading
 from dataclasses import dataclass
+
+# note: this is needed for dataclass loading from json (do not port to a type check block)
+from datetime import datetime  # noqa: TC003
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from typing import TYPE_CHECKING
 
@@ -17,7 +20,6 @@ from grype_db_manager import grype
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from datetime import datetime
 
 LATEST_FILENAME = "latest.json"
 

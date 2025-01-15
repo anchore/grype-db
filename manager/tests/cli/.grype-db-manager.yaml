@@ -25,7 +25,10 @@ distribution:
 
 validate:
   expected-providers:
+    # this is what we expect for the test...
     - oracle
+    # this next value is not true, but we include it to check if we can detect missing providers
+    - nvd
   listing:
     image: "docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495"
     minimum-packages: 10          # 14 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
