@@ -11,6 +11,7 @@
 **Note**: Currently, Grype-DB is built only for Linux and macOS.
 
 ### Recommended
+
 ```bash
 curl -sSfL https://raw.githubusercontent.com/anchore/grype-db/main/install.sh | sh -s -- -b /usr/local/bin
 ```
@@ -78,7 +79,7 @@ The build command can take the following options:
 grype-db build [-g] [--dir=DIR] [--schema=SCHEMA] [--skip-validation] [-p PROVIDER ...]
 ```
 
-### Package the Database 
+### Package the Database
 
 You can package the `vulnerability.db`, for example to serve the data or for use in CI. Note that you will need the zstd utility to be installed on your system to usethe `package` subcommand.
 
@@ -142,8 +143,6 @@ If you're running `grype-db` for the first time, you can set up using the follow
 
 First, [create a GitHub access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) to authenticate to the GitHub API. (Tokens can be generated on [this GitHub settings page](https://github.com/settings/tokens).) No specific permissions are needed. Using restrictive permissions settings and creating a short-lived token is highly recommended.
 
-
-
 Set your token as an environment variable:
 
 ```sh
@@ -205,12 +204,14 @@ For every change in the data shape over time, a new schema is created (see the D
 Once a schema has been created, the previous schema should be considered locked unless making bug fixes or updates related to [vunnel](https://github.com/anchore/vunnel), or otherwise upstream data shape changes.
 
 If the development being done requires any of the following, then a **new schema is required to be created** (over further developing the current schema):
+
 - If a previous version of grype using the same schema would not function with the new changes
 - If the current version of grype using a previously published database (but still the same schema) would not function with the new changes
 
 Where "would not function" means either grype will error out during processing, or the results are otherwise compromised (e.g. missing data that otherwise could/should have been found and reported).
 
 The following kinds of changes **do not necessarily require a new schema**:
+
 - Adding a new data source
 - Removing an existing data source (as long as the grype matchers are not requiring its presence)
 
@@ -218,8 +219,8 @@ There are plenty of grey areas between these cases (e.g. changing the expected s
 
 This repo is responsible for publishing DBs with the latest vulnerability data for every supported schema daily.
 This is achieved with the [Daily Data Sync](https://github.com/anchore/grype-db/actions/workflows/daily-data-sync.yaml) and [Daily DB Publisher](https://github.com/anchore/grype-db/actions/workflows/daily-db-publisher.yaml) GitHub Actions workflows.
-Which schemas are built and which grype versions are used to verify functionality is controlled with the `grype-schema-version-mapping.json` file in the root of this repo 
-(see the DEVELOPING.md for more details). 
+Which schemas are built and which grype versions are used to verify functionality is controlled with the `grype-schema-version-mapping.json` file in the root of this repo
+(see the DEVELOPING.md for more details).
 
 ## Configuration
 
