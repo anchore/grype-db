@@ -13,7 +13,7 @@ vunnel-oracle-data: cli-test-data/vunnel/oracle
 
 cli-test-data/vunnel/oracle: ## Prepare oracle data for CLI tests
 	mkdir -p cli-test-data/vunnel
-	oras pull ghcr.io/anchore/grype-db/data/oracle:latest && go run ../../../cmd/grype-db cache restore --path ./grype-db-cache.tar.gz
+	../../../.tool/oras pull ghcr.io/anchore/grype-db/data/oracle:latest && go run ../../../cmd/grype-db cache restore --path ./grype-db-cache.tar.gz
 
 .PHONY: install-oracle-labels
 install-oracle-labels:
