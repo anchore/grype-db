@@ -160,8 +160,8 @@ func getPackageType(ecosystem string) string {
 
 func getPackage(group groupIndex) *grypeDB.Package {
 	return &grypeDB.Package{
-		Name: group.name,
-		Type: getPackageType(group.ecosystem),
+		Name:      group.name,
+		Ecosystem: getPackageType(group.ecosystem),
 	}
 }
 
