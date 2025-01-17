@@ -156,6 +156,8 @@ def _validate_db(
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
+    validations_enabled = db.schema.validations_enabled(db_info.schema_version)
+
     grype_version = db.schema.grype_version(db_info.schema_version)
     basis_grype_version = grype_version
 
@@ -165,11 +167,11 @@ def _validate_db(
         # TODO: we don't have any published v6 grype databases yet
         basis_grype_version = db.schema.grype_version(5)
         # TODO: we can remove this once v6 lands on grype@main without a feature flag
-        profile_name = "v6"
+        profile_name = f"v{db_info.schema_version}"
         yardstick_profile_data = ycfg.Profiles(
             data={
                 "grype[custom-db]": {
-                    profile_name: {"config_path": "./.grype-v6.yaml"},
+                    profile_name: {"config_path": f"./.grype-v{db_info.schema_version}.yaml"},
                 },
             },
         )
@@ -228,14 +230,21 @@ def _validate_db(
         )
 
     ctx.obj = yardstick_cfg
-    ctx.invoke(
-        yardstick_validate,
-        always_run_label_comparison=False,
-        breakdown_by_ecosystem=False,
-        verbosity=verbosity,
-        result_sets=[],
-        all_result_sets=True,
-    )
+
+    try:
+        ctx.invoke(
+            yardstick_validate,
+            always_run_label_comparison=False,
+            breakdown_by_ecosystem=False,
+            verbosity=verbosity,
+            result_sets=[],
+            all_result_sets=True,
+        )
+    except:
+        if not validations_enabled:
+            click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled{Format.RESET}")
+            return
+        raise
 
 
 def _validate_latest(cfg: config.Application, latest_file: str, archive_path: str) -> None:

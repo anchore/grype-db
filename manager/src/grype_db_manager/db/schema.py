@@ -17,11 +17,19 @@ class SchemaEntry:
     schema: str
     grype_version: str
     supported: bool
+    validate: bool = True
 
 
 @dataclass
 class SchemaMapping:
     Available: list[SchemaEntry] = field(default_factory=list)
+
+    def validations_enabled(self, schema_version: int | str) -> bool:
+        schema_version = str(schema_version)
+        for entry in self.Available:
+            if entry.schema == schema_version:
+                return entry.validate
+        return True
 
     def grype_version(self, schema_version: int | str) -> str | None:
         schema_version = str(schema_version)
@@ -75,6 +83,10 @@ def _load() -> SchemaMapping:
         raise RuntimeError(msg)
 
     return cfg
+
+
+def validations_enabled(schema_version: int | str) -> bool:
+    return _load().validations_enabled(schema_version)
 
 
 def grype_version(schema_version: int | str) -> str:
