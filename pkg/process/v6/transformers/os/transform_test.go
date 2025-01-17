@@ -119,7 +119,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: alpineOS,
-							Package:         &grypeDB.Package{Type: "apk", Name: "xen"},
+							Package:         &grypeDB.Package{Ecosystem: "apk", Name: "xen"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -164,8 +164,8 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
 							Package: &grypeDB.Package{
-								Name: "389-ds-base",
-								Type: "rpm",
+								Name:      "389-ds-base",
+								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-14648"},
@@ -180,8 +180,8 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
 							Package: &grypeDB.Package{
-								Name: "389-ds-base-debuginfo",
-								Type: "rpm",
+								Name:      "389-ds-base-debuginfo",
+								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-14648"},
@@ -196,8 +196,8 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
 							Package: &grypeDB.Package{
-								Name: "389-ds-base-devel",
-								Type: "rpm",
+								Name:      "389-ds-base-devel",
+								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-14648"},
@@ -212,8 +212,8 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
 							Package: &grypeDB.Package{
-								Name: "389-ds-base-libs",
-								Type: "rpm",
+								Name:      "389-ds-base-libs",
+								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-14648"},
@@ -228,8 +228,8 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
 							Package: &grypeDB.Package{
-								Name: "389-ds-base-snmp",
-								Type: "rpm",
+								Name:      "389-ds-base-snmp",
+								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-14648"},
@@ -276,7 +276,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "kernel"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
 								Ranges: []grypeDB.AffectedRange{
@@ -289,7 +289,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "kernel-headers"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel-headers"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
 								Ranges: []grypeDB.AffectedRange{
@@ -328,7 +328,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "kernel"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
 								Ranges: []grypeDB.AffectedRange{
@@ -341,7 +341,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "kernel-headers"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel-headers"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
 								Ranges: []grypeDB.AffectedRange{
@@ -380,7 +380,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "kernel"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
 								Ranges: []grypeDB.AffectedRange{
@@ -393,7 +393,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: amazonOS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "kernel-headers"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel-headers"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
 								Ranges: []grypeDB.AffectedRange{
@@ -438,7 +438,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: azure3OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "golang"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "golang"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -481,7 +481,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
-							Package:         &grypeDB.Package{Type: "deb", Name: "asterisk"},
+							Package:         &grypeDB.Package{Ecosystem: "deb", Name: "asterisk"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -493,7 +493,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
-							Package:         &grypeDB.Package{Type: "deb", Name: "auth2db"},
+							Package:         &grypeDB.Package{Ecosystem: "deb", Name: "auth2db"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -505,7 +505,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
-							Package:         &grypeDB.Package{Type: "deb", Name: "exaile"},
+							Package:         &grypeDB.Package{Ecosystem: "deb", Name: "exaile"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -517,7 +517,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
-							Package:         &grypeDB.Package{Type: "deb", Name: "wordpress"},
+							Package:         &grypeDB.Package{Ecosystem: "deb", Name: "wordpress"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -560,7 +560,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
-							Package:         &grypeDB.Package{Type: "deb", Name: "rsyslog"},
+							Package:         &grypeDB.Package{Ecosystem: "deb", Name: "rsyslog"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -597,7 +597,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: debian8OS,
-							Package:         &grypeDB.Package{Type: "deb", Name: "rsyslog"},
+							Package:         &grypeDB.Package{Ecosystem: "deb", Name: "rsyslog"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -642,7 +642,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: mariner2OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "exiv2"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "exiv2"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -687,7 +687,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: mariner2OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "golang"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "golang"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -735,7 +735,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "libexif"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "libexif"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2020-13112"},
 								Ranges: []grypeDB.AffectedRange{
@@ -748,7 +748,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "libexif-devel"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "libexif-devel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2020-13112"},
 								Ranges: []grypeDB.AffectedRange{
@@ -761,7 +761,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "libexif-dummy"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "libexif-dummy"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2020-13112"},
 								Ranges: []grypeDB.AffectedRange{
@@ -807,7 +807,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "postgresql"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
 									RpmModularity: "postgresql:10",
@@ -828,7 +828,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "postgresql"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
 									RpmModularity: "postgresql:12",
@@ -849,7 +849,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: ol8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "postgresql"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
 									RpmModularity: "postgresql:9.6",
@@ -911,7 +911,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "firefox"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "firefox"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -936,7 +936,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "thunderbird"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "thunderbird"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -1002,7 +1002,7 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "postgresql"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
 									RpmModularity: "postgresql:10",
@@ -1031,7 +1031,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "postgresql"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
 									RpmModularity: "postgresql:12",
@@ -1060,7 +1060,7 @@ func TestTransform(t *testing.T) {
 						},
 						grypeDB.AffectedPackageHandle{
 							OperatingSystem: rhel8OS,
-							Package:         &grypeDB.Package{Type: "rpm", Name: "postgresql"},
+							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
 									RpmModularity: "postgresql:9.6",

@@ -352,8 +352,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "vantage6",
-						Type: "python",
+						Name:      "vantage6",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2024-21653"},
@@ -378,8 +378,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "craftcms/cms",
-						Type: "packagist",
+						Name:      "craftcms/cms",
+						Ecosystem: "packagist",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2023-30179"},
@@ -404,8 +404,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "scratch-vm",
-						Type: "npm",
+						Name:      "scratch-vm",
+						Ecosystem: "npm",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2020-14000"},
@@ -430,8 +430,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Type: "python",
-						Name: "notebook",
+						Ecosystem: "python",
+						Name:      "notebook",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs:       []string{"CVE-2018-8768"},
@@ -446,8 +446,8 @@ func TestGetAffectedPackage(t *testing.T) {
 				},
 				{
 					Package: &grypeDB.Package{
-						Type: "python",
-						Name: "Plone",
+						Ecosystem: "python",
+						Name:      "Plone",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
@@ -466,8 +466,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "Plone",
-						Type: "python",
+						Name:      "Plone",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
@@ -487,8 +487,8 @@ func TestGetAffectedPackage(t *testing.T) {
 				},
 				{
 					Package: &grypeDB.Package{
-						Name: "Plone",
-						Type: "python",
+						Name:      "Plone",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
@@ -508,8 +508,8 @@ func TestGetAffectedPackage(t *testing.T) {
 				},
 				{
 					Package: &grypeDB.Package{
-						Name: "Plone-debug",
-						Type: "python",
+						Name:      "Plone-debug",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
