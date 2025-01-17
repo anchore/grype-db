@@ -9,6 +9,7 @@ on:
 env:
   CGO_ENABLED: "0"
   SLACK_NOTIFICATIONS: true
+  ORAS: ./.tmp/oras
 
 jobs:
   discover-providers:
@@ -26,7 +27,7 @@ jobs:
 
       - name: Login to ghcr.io
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | ${ORAS} login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Read configured providers
         id: read-providers
@@ -58,7 +59,7 @@ jobs:
 
       - name: Login to ghcr.io
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | ${ORAS} login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Download the existing provider state
         run: bash -c "make download-provider-cache provider=${{ matrix.provider }} date=latest || true"
@@ -104,7 +105,7 @@ jobs:
 
       - name: Login to ghcr.io
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | ${ORAS} login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Aggregate vulnerability data
         run: make aggregate-all-provider-cache

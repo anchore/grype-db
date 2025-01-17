@@ -16,6 +16,7 @@ RELEASE_CMD := $(TEMP_DIR)/goreleaser release --rm-dist
 SNAPSHOT_CMD := $(RELEASE_CMD) --skip-publish --skip-sign --snapshot
 CHRONICLE_CMD = $(TEMP_DIR)/chronicle
 GLOW_CMD = $(TEMP_DIR)/glow
+ORAS = $(TEMP_DIR)/oras
 
 # Tool versions #################################
 GOLANGCILINT_VERSION = v1.63.4
@@ -25,6 +26,7 @@ CHRONICLE_VERSION = v0.8.0
 GORELEASER_VERSION = v1.26.2
 CRANE_VERSION=v0.16.1
 GLOW_VERSION := v1.5.0
+ORAS_VERSION := v1.2.2
 
 # Formatting variables #################################
 BOLD := $(shell tput -T linux bold)
@@ -115,6 +117,7 @@ bootstrap-tools: $(TEMP_DIR)
 	GOBIN="$(abspath $(TEMP_DIR))" go install github.com/google/go-containerregistry/cmd/crane@$(CRANE_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
+	GOBIN="$(realpath $(TEMP_DIR))" go install oras.land/oras/cmd/oras@$(ORAS_VERSION)
 
 .PHONY: bootstrap-go
 bootstrap-go:
@@ -216,7 +219,7 @@ show-providers:
 .PHONY: download-provider-cache
 download-provider-cache:
 	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "oras pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
 
 .PHONY: refresh-provider-cache
 refresh-provider-cache:
@@ -230,7 +233,7 @@ upload-provider-cache: ci-check
 	@rm -f $(DB_ARCHIVE)
 	$(GRYPE_DB) cache status -p $(provider)
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
-	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
 
 .PHONY: aggregate-all-provider-cache
@@ -245,7 +248,7 @@ upload-all-provider-cache: ci-check
 	@rm -f $(DB_ARCHIVE)
 	$(GRYPE_DB) cache status
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
-	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
 
 
@@ -253,7 +256,7 @@ upload-all-provider-cache: ci-check
 download-all-provider-cache:
 	$(call title,Downloading and restoring all of todays provider data cache)
 	@rm -f $(DB_ARCHIVE)
-	@bash -c "oras pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
 
 
 ## Code and data generation targets #################################

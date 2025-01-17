@@ -10,6 +10,7 @@ on:
 
 env:
   CGO_ENABLED: "0"
+  ORAS: ./.tmp/oras
 
 jobs:
 
@@ -127,7 +128,7 @@ jobs:
 
       - name: Login to ghcr.io
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | ${ORAS} login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Pull vulnerability data
         run: make download-all-provider-cache
