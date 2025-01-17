@@ -73,8 +73,10 @@ jobs:
         uses: ./.github/actions/bootstrap
 
       - name: Login to ghcr.io
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+        run: make ci-oras-ghcr-login
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
 
       - name: Pull vulnerability data
         run: make download-all-provider-cache

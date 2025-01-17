@@ -12,6 +12,7 @@
 
 # tools
 .mise.toml
+.tool
 
 # default data directories
 /vunnel
