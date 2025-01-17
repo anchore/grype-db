@@ -28,7 +28,7 @@
     {
       "schema": "6",
       "grype-version": "feat/v6-query-api",
-      "supported": false
+      "supported": true
     }
   ]
 }
