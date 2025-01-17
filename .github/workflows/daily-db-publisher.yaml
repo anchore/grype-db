@@ -22,7 +22,6 @@ env:
   CGO_ENABLED: "0"
   SLACK_NOTIFICATIONS: true
   FORCE_COLOR: true
-  ORAS: ./.tmp/oras
 
 jobs:
   discover-schema-versions:
@@ -74,8 +73,10 @@ jobs:
         uses: ./.github/actions/bootstrap
 
       - name: Login to ghcr.io
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | ${ORAS} login ghcr.io --username ${{ github.actor }} --password-stdin
+        run: make ci-oras-ghcr-login
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
 
       - name: Pull vulnerability data
         run: make download-all-provider-cache

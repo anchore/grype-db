@@ -86,12 +86,12 @@ runs:
       run: make bootstrap-python
 
     - name: Restore tool cache
-      id: tool-cache
-      uses: actions/cache@v3
       if: inputs.tools == 'true'
+      id: tool-cache
+      uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
       with:
-        path: ${{ github.workspace }}/.tmp
-        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('Makefile') }}
+        path: ${{ github.workspace }}/.tool
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}
 
     # note: we need to keep restoring the go mod cache before bootstrapping tools since `go install` is used in
     # some installations of project tools.

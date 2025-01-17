@@ -42,7 +42,6 @@ env:
   GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_DB_SCHEMA_VERSION: ${{ github.event.inputs.schema-version }}
   GRYPE_DB_MANAGER_VALIDATE_LISTING_OVERRIDE_GRYPE_VERSION: ${{ github.event.inputs.grype-branch }}
   FORCE_COLOR: true
-  ORAS: ./.tmp/oras
 
 jobs:
   publish-staging-db:
@@ -62,8 +61,10 @@ jobs:
         uses: ./.github/actions/bootstrap
 
       - name: Login to ghcr.io
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | ${ORAS} login ghcr.io --username ${{ github.actor }} --password-stdin
+        run: make ci-oras-ghcr-login
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
 
       - name: Setup tmate session
         # note about workflow dispatch inputs and booleans:

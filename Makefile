@@ -1,7 +1,9 @@
 BIN = grype-db
+OWNER = anchore
 
 SOURCE_REPO_URL = https://github.com/anchore/grype-db
 TEMP_DIR = ./.tmp
+TOOL_DIR = .tool
 RESULTS_DIR = $(TEMP_DIR)/results
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
@@ -10,13 +12,16 @@ GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date -u +"%y-%m-%d")
 
 # Command templates #################################
-LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml
-GOIMPORTS_CMD := $(TEMP_DIR)/gosimports -local github.com/anchore
-RELEASE_CMD := $(TEMP_DIR)/goreleaser release --rm-dist
-SNAPSHOT_CMD := $(RELEASE_CMD) --skip-publish --skip-sign --snapshot
-CHRONICLE_CMD = $(TEMP_DIR)/chronicle
-GLOW_CMD = $(TEMP_DIR)/glow
-ORAS = $(TEMP_DIR)/oras
+BINNY = $(TOOL_DIR)/binny
+LINT_CMD = $(TOOL_DIR)/golangci-lint run --config .golangci.yaml
+GOIMPORTS_CMD := $(TOOL_DIR)/gosimports -local github.com/anchore
+RELEASE_CMD = $(TOOL_DIR)/goreleaser release --rm-dist
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot
+CHRONICLE_CMD = $(TOOL_DIR)/chronicle
+GLOW_CMD = $(TOOL_DIR)/glow
+ORAS = $(TOOL_DIR)/oras
+BOUNCER = $(TOOL_DIR)/bouncer
+CRANE = $(TOOL_DIR)/crane
 
 # Tool versions #################################
 GOLANGCILINT_VERSION = v1.63.4
@@ -41,8 +46,6 @@ SUCCESS := $(BOLD)$(GREEN)
 # Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
 COVERAGE_THRESHOLD := 55
-RELEASE_CMD=$(TEMP_DIR)/goreleaser release --rm-dist
-SNAPSHOT_CMD=$(RELEASE_CMD) --skip-publish --snapshot
 DIST_DIR=./dist
 CHANGELOG := CHANGELOG.md
 SNAPSHOT_DIR=./snapshot
@@ -108,16 +111,14 @@ bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools bootstrap-python  ## Downloa
 bootstrap-python:
 	cd manager && make bootstrap
 
+# note: we need to assume that binny and task have not already been installed
+$(BINNY):
+	@mkdir -p $(TOOL_DIR)
+	@curl -sSfL https://raw.githubusercontent.com/$(OWNER)/binny/main/install.sh | sh -s -- -b $(TOOL_DIR)
+
 .PHONY: bootstrap-tools
-bootstrap-tools: $(TEMP_DIR)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TEMP_DIR)/ $(GOLANGCILINT_VERSION)
-	curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMP_DIR)/ $(BOUNCER_VERSION)
-	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
-	.github/scripts/goreleaser-install.sh -b $(TEMP_DIR)/ $(GORELEASER_VERSION)
-	GOBIN="$(abspath $(TEMP_DIR))" go install github.com/google/go-containerregistry/cmd/crane@$(CRANE_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install oras.land/oras/cmd/oras@$(ORAS_VERSION)
+bootstrap-tools: $(BINNY)
+	$(BINNY) install
 
 .PHONY: bootstrap-go
 bootstrap-go:
@@ -157,13 +158,13 @@ check-go-mod-tidy:
 
 .PHONY: check-licenses
 check-licenses:
-	$(TEMP_DIR)/bouncer check ./cmd/$(BIN)
+	$(BOUNCER) check ./cmd/$(BIN)
 
 
 ## Testing targets #################################
 
 .PHONY: unit
-unit: ## Run Go unit tests (with coverage)
+unit: $(TEMP_DIR) ## Run Go unit tests (with coverage)
 	$(call title,Running Go unit tests)
 	GOEXPERIMENT=nocoverageredesign go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
@@ -216,6 +217,12 @@ show-providers:
 	@# this is used in CI to generate a job matrix, pulling data for each provider concurrently
 	@$(GRYPE_DB) list-providers -q -o json
 
+.PHONY: ci-oras-ghcr-login
+ci-oras-ghcr-login:
+	@[ -n "$(GITHUB_USERNAME)" ] || (echo "Error: GITHUB_USERNAME environment variable is not set" && exit 1)
+	@[ -n "$(GITHUB_TOKEN)" ] || (echo "Error: GITHUB_TOKEN environment variable is not set" && exit 1)
+	echo $(GITHUB_TOKEN) | $(ORAS) login ghcr.io --username $(GITHUB_USERNAME) --password-stdin
+
 .PHONY: download-provider-cache
 download-provider-cache:
 	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
@@ -234,7 +241,7 @@ upload-provider-cache: ci-check
 	$(GRYPE_DB) cache status -p $(provider)
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
 	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
+	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
 
 .PHONY: aggregate-all-provider-cache
 aggregate-all-provider-cache:
@@ -249,7 +256,7 @@ upload-all-provider-cache: ci-check
 	$(GRYPE_DB) cache status
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
 	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
+	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
 
 
 .PHONY: download-all-provider-cache
@@ -271,7 +278,7 @@ generate-processor-code:
 .PHONY: build
 build: $(SNAPSHOT_DIR) ## Build release snapshot binaries and packages
 
-$(SNAPSHOT_DIR): ## Build snapshot release binaries and packages
+$(SNAPSHOT_DIR): $(TEMP_DIR)  ## Build snapshot release binaries and packages
 	$(call title,Building snapshot artifacts)
 
 	# create a config with the dist dir overridden
@@ -294,7 +301,7 @@ release:
 	@.github/scripts/trigger-release.sh
 
 .PHONY: release
-ci-release: ci-check clean-dist $(CHANGELOG) ## Build and publish final binaries and packages. Intended to be run only on macOS.
+ci-release: ci-check $(TEMP_DIR) clean-dist $(CHANGELOG) ## Build and publish final binaries and packages. Intended to be run only on macOS.
 	$(call title,Publishing release artifacts)
 
 	# create a config with the dist dir overridden
