@@ -70,3 +70,11 @@ tools:
     method: github-release
     with:
       repo: oras-project/oras
+
+  - name: crane
+    version:
+      want: v0.20.3
+    method: go-install
+    with:
+      module: github.com/google/go-containerregistry
+      entrypoint: cmd/crane
