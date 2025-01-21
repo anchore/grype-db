@@ -224,14 +224,14 @@ def _http_server(directory: str) -> Iterator[str]:
 
 
 def _smoke_test(
-    schema_version: str,
+    schema_version: str | int,
     listing_url: str,
     image: str,
     minimum_packages: int,
     minimum_vulnerabilities: int,
     store_root: str,
 ) -> None:
-    logging.info(f"testing grype schema-version={schema_version!r}")
+    logging.info(f"testing listing.json grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
         store_root=store_root,
@@ -293,6 +293,8 @@ def smoke_test(
 
             else:
                 schema_versions = schema.supported_schema_versions()
+                # only accept schema versions up through v5
+                schema_versions = [s for s in schema_versions if s <= 5]
                 logging.info(f"testing all supported schema-versions={schema_versions}")
                 for schema_version in schema_versions:
                     _smoke_test(

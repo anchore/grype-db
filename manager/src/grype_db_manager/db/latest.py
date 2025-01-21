@@ -104,7 +104,7 @@ def _smoke_test(
     minimum_vulnerabilities: int,
     store_root: str,
 ) -> None:
-    logging.info(f"testing grype schema-version={schema_version!r}")
+    logging.info(f"testing latest.json grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
         store_root=store_root,
