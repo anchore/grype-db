@@ -51,7 +51,7 @@ def test_workflow_2(cli_env, command, logger):
     cli_env["GOWORK"] = "off"
 
     stdout, _ = command.run(
-        f"grype-db-manager db validate {db_id} -vvv --skip-namespace-check --recapture",
+        f"grype-db-manager  -vv db validate {db_id} --skip-namespace-check --recapture",
         env=cli_env,
         expect_fail=True,
     )
@@ -65,7 +65,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     _, stderr = command.run(
-        f"grype-db-manager db validate {db_id} -vvv",
+        f"grype-db-manager -vv db validate {db_id}",
         env=cli_env,
         expect_fail=True,
     )
@@ -79,7 +79,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     stdout, _ = command.run(
-        f"grype-db-manager db validate {db_id} -vvv --skip-namespace-check",
+        f"grype-db-manager -vv db validate {db_id} --skip-namespace-check",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout

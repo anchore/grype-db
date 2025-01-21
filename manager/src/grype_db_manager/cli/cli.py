@@ -11,17 +11,17 @@ from grype_db_manager.cli import config, db, listing, tool
 from grype_db_manager.db.format import Format
 
 
-@click.option("--verbose", "-v", default=False, help="show more verbose logging", count=True)
+@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.option("--config", "-c", "config_path", default=None, help="override config path")
 @click.group(help="A tool for publishing validated grype databases to S3 for distribution.")
 @click.version_option(package_name=package_name, message="%(prog)s %(version)s")
 @click.pass_context
-def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None:
+def cli(ctx: click.core.Context, verbosity: int, config_path: str | None) -> None:
     import logging.config
 
     import colorlog
 
-    ctx.obj = config.load(path=config_path)
+    ctx.obj = config.load(path=config_path, verbosity=verbosity)
 
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
         def __init__(self, *args: Any, **kwargs: Any):
@@ -35,9 +35,9 @@ def cli(ctx: click.core.Context, verbose: bool, config_path: str | None) -> None
             return super().format(record)
 
     log_level = ctx.obj.log.level
-    if verbose == 1:
+    if verbosity == 1:
         log_level = "DEBUG"
-    elif verbose >= 2:
+    elif verbosity >= 2:
         log_level = "TRACE"
 
     logging.config.dictConfig(

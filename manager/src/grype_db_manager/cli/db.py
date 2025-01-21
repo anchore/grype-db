@@ -97,7 +97,6 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
     multiple=True,
     help="the image (or images) to validate with (default is to use all configured images)",
 )
-@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
 @click.option(
     "--skip-namespace-check",
@@ -114,7 +113,6 @@ def validate_db(
     cfg: config.Application,
     db_uuid: str,
     images: list[str],
-    verbosity: int,
     recapture: bool,
     skip_namespace_check: bool,
     force: bool,
@@ -136,7 +134,7 @@ def validate_db(
             # ensure the minimum number of namespaces are present
             db_manager.validate_providers(db_uuid=db_uuid, expected=cfg.validate.expected_providers)
 
-    _validate_db(ctx, cfg, db_info, images, db_uuid, verbosity, recapture, force=force)
+    _validate_db(ctx, cfg, db_info, images, db_uuid, recapture, force=force)
 
     if db_info.schema_version >= 6:
         logging.info(f"validating latest.json {db_uuid}")
@@ -151,7 +149,6 @@ def _validate_db(
     db_info: grypedb.DBInfo,
     images: list[str],
     db_uuid: str,
-    verbosity: int,
     recapture: bool,
     force: bool = False,
 ) -> None:
@@ -238,7 +235,7 @@ def _validate_db(
             yardstick_validate,
             always_run_label_comparison=False,
             breakdown_by_ecosystem=False,
-            verbosity=verbosity,
+            verbosity=cfg.verbosity,
             result_sets=[],
             all_result_sets=True,
         )
@@ -330,7 +327,6 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
     is_flag=True,
     help="do not ensure the minimum expected namespaces are present (for v6+ this is a providers-based check)",
 )
-@click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
 @click.pass_obj
 @click.pass_context
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
@@ -341,7 +337,6 @@ def build_and_upload_db(
     skip_validate: bool,
     skip_namespace_check: bool,
     dry_run: bool,
-    verbosity: bool,
 ) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
@@ -355,7 +350,7 @@ def build_and_upload_db(
         click.echo(f"{Format.ITALIC}Skipping validation of DB {db_uuid!r}{Format.RESET}")
     else:
         click.echo(f"{Format.BOLD}Validating DB {db_uuid!r}{Format.RESET}")
-        ctx.invoke(validate_db, db_uuid=db_uuid, verbosity=verbosity, skip_namespace_check=skip_namespace_check)
+        ctx.invoke(validate_db, db_uuid=db_uuid, skip_namespace_check=skip_namespace_check)
 
     if not dry_run:
         click.echo(f"{Format.BOLD}Uploading DB {db_uuid!r}{Format.RESET}")

@@ -47,3 +47,4 @@ validate:
       allow_empty_results_for_schemas: [1,2,3]
       images:
         - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
+verbosity: 2

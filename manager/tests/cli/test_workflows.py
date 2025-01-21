@@ -101,7 +101,7 @@ def test_workflow_2(cli_env, command, logger):
 
     # note: we add --force to ensure we're checking validations (even if it's disabled for the schema)
     stdout, _ = command.run(
-        f"grype-db-manager db validate {db_id} --skip-namespace-check --force -vvv --recapture",
+        f"grype-db-manager -vv db validate {db_id} --skip-namespace-check --force --recapture",
         env=cli_env,
         expect_fail=True,
     )
@@ -115,7 +115,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     _, stderr = command.run(
-        f"grype-db-manager db validate {db_id} --force -vvv",
+        f"grype-db-manager -vv db validate {db_id} --force",
         env=cli_env,
         expect_fail=True,
     )
@@ -129,7 +129,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     stdout, _ = command.run(
-        f"grype-db-manager db validate {db_id} --skip-namespace-check --force -vvv",
+        f"grype-db-manager -vv db validate {db_id} --skip-namespace-check --force",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout

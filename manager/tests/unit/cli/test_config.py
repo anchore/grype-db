@@ -82,6 +82,7 @@ validate:
     minimumVulnerabilities: null
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
+verbosity: 0
 """
 
     assert actual == expected
@@ -148,6 +149,7 @@ validate:
     minimumVulnerabilities: 400
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
+verbosity: 2
 """
 
     assert actual == expected
