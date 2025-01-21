@@ -294,8 +294,8 @@ def smoke_test(
             else:
                 schema_versions = schema.supported_schema_versions()
                 # only accept schema versions up through v5
-                schema_versions = [s for s in schema_versions if s <= 5]
-                logging.info(f"testing all supported schema-versions={schema_versions}")
+                schema_versions = [s for s in schema_versions if int(s) <= 5]
+                logging.info(f"testing listing.json all supported schema-versions={schema_versions}")
                 for schema_version in schema_versions:
                     _smoke_test(
                         schema_version=schema_version,

@@ -105,6 +105,7 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
     is_flag=True,
     help="do not ensure the minimum expected namespaces are present (for v6+ this is a providers-based check)",
 )
+@click.option("--force", "-f", is_flag=True, help="force validation even if disabled for the schema version")
 @click.argument("db-uuid")
 @click.pass_obj
 @click.pass_context
@@ -116,6 +117,7 @@ def validate_db(
     verbosity: int,
     recapture: bool,
     skip_namespace_check: bool,
+    force: bool,
 ) -> None:
     logging.info(f"validating DB {db_uuid}")
 
@@ -134,11 +136,10 @@ def validate_db(
             # ensure the minimum number of namespaces are present
             db_manager.validate_providers(db_uuid=db_uuid, expected=cfg.validate.expected_providers)
 
-    _validate_db(ctx, cfg, db_info, images, db_uuid, verbosity, recapture)
-
-    logging.info(f"validating latest.json {db_uuid}")
+    _validate_db(ctx, cfg, db_info, images, db_uuid, verbosity, recapture, force=force)
 
     if db_info.schema_version >= 6:
+        logging.info(f"validating latest.json {db_uuid}")
         _validate_latest(cfg, db_info.latest_path, db_info.archive_path)
 
     click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
@@ -152,11 +153,12 @@ def _validate_db(
     db_uuid: str,
     verbosity: int,
     recapture: bool,
+    force: bool = False,
 ) -> None:
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
-    validations_enabled = db.schema.validations_enabled(db_info.schema_version)
+    validations_enabled = True if force else db.schema.validations_enabled(db_info.schema_version)
 
     grype_version = db.schema.grype_version(db_info.schema_version)
     basis_grype_version = grype_version
@@ -242,7 +244,7 @@ def _validate_db(
         )
     except:
         if not validations_enabled:
-            click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled{Format.RESET}")
+            click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, ignoring failure{Format.RESET}")
             return
         raise
 

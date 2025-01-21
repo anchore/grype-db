@@ -99,14 +99,15 @@ def test_workflow_2(cli_env, command, logger):
     # workaround for Go 1.23+ parent directory module lookup
     cli_env["GOWORK"] = "off"
 
+    # note: we add --force to ensure we're checking validations (even if it's disabled for the schema)
     stdout, _ = command.run(
-        f"grype-db-manager db validate {db_id} --skip-namespace-check -vvv --recapture",
+        f"grype-db-manager db validate {db_id} --skip-namespace-check --force -vvv --recapture",
         env=cli_env,
         expect_fail=True,
     )
     assert "current indeterminate matches % is greater than 10%" in stdout
 
-    ### case 2: fail DB validation (missing providers) ###
+    ## case 2: fail DB validation (missing providers) ###
     logger.step("case 2: fail DB validation (missing providers)")
     command.run("make clean-yardstick-labels", env=cli_env)
 
@@ -114,7 +115,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     _, stderr = command.run(
-        f"grype-db-manager db validate {db_id} -vvv",
+        f"grype-db-manager db validate {db_id} --force -vvv",
         env=cli_env,
         expect_fail=True,
     )
@@ -128,7 +129,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     stdout, _ = command.run(
-        f"grype-db-manager db validate {db_id} --skip-namespace-check -vvv",
+        f"grype-db-manager db validate {db_id} --skip-namespace-check --force -vvv",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout
