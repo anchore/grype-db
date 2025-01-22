@@ -70,19 +70,6 @@ func (w writer) Write(entries ...data.Entry) error {
 }
 
 func (w writer) writeEntry(entry transformers.RelatedEntries) error {
-	if entry.VulnerabilityHandle.Provider != nil {
-		if _, ok := w.providerCache[entry.VulnerabilityHandle.Provider.ID]; !ok {
-			p := entry.VulnerabilityHandle.Provider
-			if err := w.store.AddProvider(p); err != nil {
-				return fmt.Errorf("unable to write provider to store: %w", err)
-			}
-			w.providerCache[p.ID] = *p
-		} else {
-			// exists! don't attempt to write it again
-			entry.VulnerabilityHandle.Provider = nil
-		}
-	}
-
 	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
 		return fmt.Errorf("unable to write vulnerability to store: %w", err)
 	}

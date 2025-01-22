@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.86.2-0.20250117141603-66197338303a
+	github.com/anchore/grype v0.86.2-0.20250122222636-e2267a0ee11c
 	github.com/anchore/syft v1.18.2-0.20241216153735-397eb9c10acd
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1
@@ -77,10 +77,10 @@ require (
 	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
 	github.com/anchore/packageurl-go v0.1.1-0.20241018175412-5c22e6360c4f // indirect
-	github.com/anchore/stereoscope v0.0.12 // indirect
+	github.com/anchore/stereoscope v0.0.13 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/aquasecurity/go-pep440-version v0.0.0-20210121094942-22b2f8951d46 // indirect
-	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492 // indirect
+	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
+	github.com/aquasecurity/go-version v0.0.1 // indirect
 	github.com/aws/aws-sdk-go v1.44.288 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/becheran/wildmatch-go v1.0.0 // indirect
