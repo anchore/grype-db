@@ -8,6 +8,7 @@ import (
 )
 
 type RelatedEntries struct {
+	Provider            grypeDB.Provider
 	VulnerabilityHandle grypeDB.VulnerabilityHandle
 	Related             []any
 }
@@ -17,6 +18,8 @@ func NewEntries(models ...any) []data.Entry {
 
 	for _, model := range models {
 		switch m := model.(type) {
+		case grypeDB.Provider:
+			entry.Provider = m
 		case grypeDB.VulnerabilityHandle:
 			entry.VulnerabilityHandle = m
 		case grypeDB.AffectedPackageHandle:

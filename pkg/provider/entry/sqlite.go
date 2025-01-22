@@ -98,7 +98,7 @@ func sqliteOpeners(resultPaths []string) (<-chan Opener, int64, error) {
 
 			current += len(models)
 
-			log.WithFields("count", current).Trace("records read from the provider cache DB")
+			//log.WithFields("count", current).Trace("records read from the provider cache DB")
 
 			// note: returning an error will stop future batches
 			return nil

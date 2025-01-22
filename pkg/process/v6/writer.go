@@ -14,9 +14,10 @@ import (
 var _ data.Writer = (*writer)(nil)
 
 type writer struct {
-	dbPath string
-	store  grypeDB.ReadWriter
-	states provider.States
+	dbPath        string
+	store         grypeDB.ReadWriter
+	providerCache map[string]grypeDB.Provider
+	states        provider.States
 }
 
 type ProviderMetadata struct {
@@ -42,9 +43,10 @@ func NewWriter(directory string, states provider.States) (data.Writer, error) {
 	}
 
 	return &writer{
-		dbPath: cfg.DBFilePath(),
-		store:  s,
-		states: states,
+		dbPath:        cfg.DBFilePath(),
+		providerCache: make(map[string]grypeDB.Provider),
+		store:         s,
+		states:        states,
 	}, nil
 }
 
@@ -56,7 +58,6 @@ func (w writer) Write(entries ...data.Entry) error {
 
 		switch row := entry.Data.(type) {
 		case transformers.RelatedEntries:
-			log.WithFields("vuln", row.VulnerabilityHandle.Name, "affected-packages", len(row.Related)).Trace("writing")
 			if err := w.writeEntry(row); err != nil {
 				return fmt.Errorf("unable to write entry to store: %w", err)
 			}
@@ -69,6 +70,19 @@ func (w writer) Write(entries ...data.Entry) error {
 }
 
 func (w writer) writeEntry(entry transformers.RelatedEntries) error {
+	if entry.VulnerabilityHandle.Provider != nil {
+		if _, ok := w.providerCache[entry.VulnerabilityHandle.Provider.ID]; !ok {
+			p := entry.VulnerabilityHandle.Provider
+			if err := w.store.AddProvider(p); err != nil {
+				return fmt.Errorf("unable to write provider to store: %w", err)
+			}
+			w.providerCache[p.ID] = *p
+		} else {
+			// exists! don't attempt to write it again
+			entry.VulnerabilityHandle.Provider = nil
+		}
+	}
+
 	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
 		return fmt.Errorf("unable to write vulnerability to store: %w", err)
 	}
