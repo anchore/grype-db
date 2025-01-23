@@ -137,7 +137,11 @@ def validate_db(
     _validate_db(ctx, cfg, db_info, images, db_uuid, recapture, force=force)
 
     if db_info.schema_version >= 6:
-        logging.info(f"validating latest.json {db_uuid}")
+        validations_enabled = db.schema.validations_enabled(db_info.schema_version)
+        if not validations_enabled and not force:
+            click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, skipping{Format.RESET}")
+            return
+
         _validate_latest(cfg, db_info.latest_path, db_info.archive_path)
 
     click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation passed{Format.RESET}")
@@ -265,6 +269,8 @@ def _validate_latest(cfg: config.Application, latest_file: str, archive_path: st
     if not cfg.validate.listing.minimum_vulnerabilities:
         msg = "minimum vulnerabilities must be specified"
         raise ValueError(msg)
+
+    logging.debug(f"validating latest.json with {cfg.validate.listing.image}")
 
     db.latest.smoke_test(
         latest_obj,
