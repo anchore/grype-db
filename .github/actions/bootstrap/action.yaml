@@ -47,7 +47,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v5
       if: inputs.go == 'true'
       with:
         go-version: ${{ inputs.go-version }}
