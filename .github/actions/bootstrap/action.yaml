@@ -52,7 +52,7 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       if: inputs.python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
