@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 LISTING_FILENAME = "listing.json"
 
 
+# Entry is a dataclass that represents a single entry from a listing.json for schemas v1-v5.
 @dataclass
 class Entry:
     built: str
@@ -46,6 +47,7 @@ class Entry:
         return (now - iso8601.parse_date(self.built)).days
 
 
+# Listing is a dataclass that represents the listing.json for schemas v1-v5.
 @dataclass
 class Listing:
     available: dict[int, list[Entry]]
@@ -222,14 +224,14 @@ def _http_server(directory: str) -> Iterator[str]:
 
 
 def _smoke_test(
-    schema_version: str,
+    schema_version: str | int,
     listing_url: str,
     image: str,
     minimum_packages: int,
     minimum_vulnerabilities: int,
     store_root: str,
 ) -> None:
-    logging.info(f"testing grype schema-version={schema_version!r}")
+    logging.info(f"testing listing.json grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
         store_root=store_root,
@@ -291,7 +293,9 @@ def smoke_test(
 
             else:
                 schema_versions = schema.supported_schema_versions()
-                logging.info(f"testing all supported schema-versions={schema_versions}")
+                # only accept schema versions up through v5
+                schema_versions = [s for s in schema_versions if int(s) <= 5]
+                logging.info(f"testing listing.json all supported schema-versions={schema_versions}")
                 for schema_version in schema_versions:
                     _smoke_test(
                         schema_version=schema_version,

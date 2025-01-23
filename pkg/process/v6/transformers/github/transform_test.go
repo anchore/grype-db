@@ -88,7 +88,7 @@ func TestGetVulnerability(t *testing.T) {
 					ModifiedDate:  internal.ParseTime("2024-02-08T22:48:31Z"),
 					PublishedDate: internal.ParseTime("2024-01-30T20:56:46Z"),
 					WithdrawnDate: nil,
-					Status:        string(grypeDB.VulnerabilityActive),
+					Status:        grypeDB.VulnerabilityActive,
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "GHSA-2wgc-48g2-cj5w",
 						Description: "vantage6 has insecure SSH configuration for node and server containers",
@@ -130,7 +130,7 @@ func TestGetVulnerability(t *testing.T) {
 					ModifiedDate:  internal.ParseTime("2024-03-21T17:48:19Z"),
 					PublishedDate: internal.ParseTime("2023-06-13T18:30:39Z"),
 					WithdrawnDate: internal.ParseTime("2023-06-28T23:54:39Z"),
-					Status:        string(grypeDB.VulnerabilityRejected),
+					Status:        grypeDB.VulnerabilityRejected,
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "GHSA-3x74-v64j-qc3f",
 						Description: "Withdrawn Advisory: CraftCMS Server-Side Template Injection vulnerability",
@@ -172,7 +172,7 @@ func TestGetVulnerability(t *testing.T) {
 					ModifiedDate:  internal.ParseTime("2023-01-09T05:03:39Z"),
 					PublishedDate: internal.ParseTime("2020-07-27T19:55:52Z"),
 					WithdrawnDate: nil,
-					Status:        string(grypeDB.VulnerabilityActive),
+					Status:        grypeDB.VulnerabilityActive,
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "GHSA-vc9j-fhvv-8vrf",
 						Description: "Remote Code Execution in scratch-vm",
@@ -273,7 +273,7 @@ func TestGetVulnerability(t *testing.T) {
 					ModifiedDate:  nil,
 					PublishedDate: nil,
 					WithdrawnDate: internal.ParseTime("2022-01-31T14:32:09Z"),
-					Status:        string(grypeDB.VulnerabilityRejected),
+					Status:        grypeDB.VulnerabilityRejected,
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "GHSA-6cwv-x26c-w2q4",
 						Description: "Low severity vulnerability that affects notebook",
@@ -304,7 +304,7 @@ func TestGetVulnerability(t *testing.T) {
 						Version:      "1",
 						DateCaptured: &now,
 					},
-					Status: string(grypeDB.VulnerabilityActive),
+					Status: grypeDB.VulnerabilityActive,
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "GHSA-p5wr-vp8g-q5p4",
 						Description: "Moderate severity vulnerability that affects Plone",
@@ -352,8 +352,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "vantage6",
-						Type: "python",
+						Name:      "vantage6",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2024-21653"},
@@ -378,8 +378,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "craftcms/cms",
-						Type: "packagist",
+						Name:      "craftcms/cms",
+						Ecosystem: "packagist",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2023-30179"},
@@ -404,8 +404,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "scratch-vm",
-						Type: "npm",
+						Name:      "scratch-vm",
+						Ecosystem: "npm",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2020-14000"},
@@ -430,8 +430,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Type: "python",
-						Name: "notebook",
+						Ecosystem: "python",
+						Name:      "notebook",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs:       []string{"CVE-2018-8768"},
@@ -446,8 +446,8 @@ func TestGetAffectedPackage(t *testing.T) {
 				},
 				{
 					Package: &grypeDB.Package{
-						Type: "python",
-						Name: "Plone",
+						Ecosystem: "python",
+						Name:      "Plone",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
@@ -466,8 +466,8 @@ func TestGetAffectedPackage(t *testing.T) {
 			expected: []grypeDB.AffectedPackageHandle{
 				{
 					Package: &grypeDB.Package{
-						Name: "Plone",
-						Type: "python",
+						Name:      "Plone",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
@@ -487,8 +487,8 @@ func TestGetAffectedPackage(t *testing.T) {
 				},
 				{
 					Package: &grypeDB.Package{
-						Name: "Plone",
-						Type: "python",
+						Name:      "Plone",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
@@ -508,8 +508,8 @@ func TestGetAffectedPackage(t *testing.T) {
 				},
 				{
 					Package: &grypeDB.Package{
-						Name: "Plone-debug",
-						Type: "python",
+						Name:      "Plone-debug",
+						Ecosystem: "python",
 					},
 					BlobValue: &grypeDB.AffectedPackageBlob{
 						CVEs: []string{"CVE-2017-5524"},

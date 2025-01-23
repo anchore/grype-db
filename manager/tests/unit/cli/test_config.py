@@ -62,6 +62,19 @@ log:
 schemaMappingFile: ''
 validate:
   defaultMaxYear: 2021
+  expectedProviders:
+    - alpine
+    - amazon
+    - chainguard
+    - debian
+    - github
+    - mariner
+    - nvd
+    - oracle
+    - rhel
+    - sles
+    - ubuntu
+    - wolfi
   gates: []
   listing:
     image: null
@@ -69,6 +82,7 @@ validate:
     minimumVulnerabilities: null
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
+verbosity: 0
 """
 
     assert actual == expected
@@ -107,6 +121,8 @@ log:
 schemaMappingFile: mapping.json
 validate:
   defaultMaxYear: 2021
+  expectedProviders:
+    - alpine
   gates:
     - allowEmptyResultsForSchemas:
         - 1
@@ -133,6 +149,7 @@ validate:
     minimumVulnerabilities: 400
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
+verbosity: 2
 """
 
     assert actual == expected

@@ -1,9 +1,23 @@
 # validate:
 
 listing:
-  image: "centos:8.2.2004"
-  minimum-packages: 85
-  minimum-vulnerabilities: 400
+  image: "alpine:3.9.2"
+  minimum-packages: 10
+  minimum-vulnerabilities: 90
+
+expected-providers:
+  - alpine
+  - amazon
+  - chainguard
+  - debian
+  - github
+  - mariner
+  - nvd
+  - oracle
+  - rhel
+  - sles
+  - ubuntu
+  - wolfi
 
 default-max-year: 2021
 gates:

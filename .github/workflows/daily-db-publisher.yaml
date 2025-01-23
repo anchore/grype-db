@@ -85,10 +85,10 @@ jobs:
         run: |
           poetry run \
             grype-db-manager \
+              -vv \
               -c ./config/grype-db-manager/publish-production.yaml \
               db build-and-upload \
-                --schema-version ${{ matrix.schema-version }} \
-                -vvv
+                --schema-version ${{ matrix.schema-version }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}

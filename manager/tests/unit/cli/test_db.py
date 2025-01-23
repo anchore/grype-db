@@ -34,5 +34,4 @@ def test_upload_db(mocker, test_dir_path, redact_aws_credentials):
         bucket="testbucket",
         key="grype/databases/archive.tar.gz",
         CacheControl="public,max-age=31536000",
-        ContentType="application/x-tar",  # this is legacy behavior, remove me
     )

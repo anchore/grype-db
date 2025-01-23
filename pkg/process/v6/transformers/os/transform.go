@@ -27,7 +27,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 			Name:          vulnerability.Vulnerability.Name,
 			ProviderID:    state.Provider,
 			Provider:      internal.ProviderModel(state),
-			Status:        string(grypeDB.VulnerabilityActive),
+			Status:        grypeDB.VulnerabilityActive,
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
 			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
 			BlobValue: &grypeDB.VulnerabilityBlob{
@@ -199,7 +199,7 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 
 func getPackageType(osName string) string {
 	switch osName {
-	case "redhat", "amazon", "oracle", "sles", "mariner", "azurelinux":
+	case "redhat", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
 		return string(pkg.RpmPkg)
 	case "ubuntu", "debian":
 		return string(pkg.DebPkg)
@@ -214,8 +214,8 @@ func getPackageType(osName string) string {
 
 func getPackage(group groupIndex) *grypeDB.Package {
 	return &grypeDB.Package{
-		Type: getPackageType(group.osName),
-		Name: group.name,
+		Ecosystem: getPackageType(group.osName),
+		Name:      group.name,
 	}
 }
 
@@ -247,15 +247,7 @@ func normalizeOsName(id string) string {
 		return id
 	}
 
-	distroName := d.String()
-
-	switch d {
-	case distro.OracleLinux:
-		distroName = "oracle"
-	case distro.AmazonLinux:
-		distroName = "amazon"
-	}
-	return distroName
+	return d.String()
 }
 
 func getOperatingSystem(osName, osID, osVersion string) *grypeDB.OperatingSystem {

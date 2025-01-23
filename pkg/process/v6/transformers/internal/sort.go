@@ -8,7 +8,7 @@ func (a ByAffectedPackage) Len() int      { return len(a) }
 func (a ByAffectedPackage) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByAffectedPackage) Less(i, j int) bool {
 	if a[i].Package.Name == a[j].Package.Name {
-		if a[i].Package.Type == a[j].Package.Type {
+		if a[i].Package.Ecosystem == a[j].Package.Ecosystem {
 			for _, b := range a[i].BlobValue.Ranges {
 				for _, c := range a[j].BlobValue.Ranges {
 					if b.Version.Constraint != c.Version.Constraint {
@@ -17,7 +17,7 @@ func (a ByAffectedPackage) Less(i, j int) bool {
 				}
 			}
 		}
-		return a[i].Package.Type < a[j].Package.Type
+		return a[i].Package.Ecosystem < a[j].Package.Ecosystem
 	}
 	return a[i].Package.Name < a[j].Package.Name
 }

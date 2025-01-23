@@ -24,6 +24,12 @@
       "schema": "5",
       "grype-version": "main",
       "supported": true
+    },
+    {
+      "schema": "6",
+      "grype-version": "feat/v6-query-api",
+      "supported": true,
+      "validate": false
     }
   ]
 }

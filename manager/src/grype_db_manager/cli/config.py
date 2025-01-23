@@ -81,6 +81,22 @@ class Validate:
     default_max_year: int = 2021
     gates: list[ValidateDB] = field(default_factory=list)
     listing: ValidateListing = field(default_factory=ValidateListing)
+    expected_providers: list[str] = field(
+        default_factory=lambda: [
+            "alpine",
+            "amazon",
+            "chainguard",
+            "debian",
+            "github",
+            "mariner",
+            "nvd",
+            "oracle",
+            "rhel",
+            "sles",
+            "ubuntu",
+            "wolfi",
+        ],
+    )
 
 
 @dataclass()
@@ -111,6 +127,7 @@ class Data:
 
 @dataclass
 class Application:
+    verbosity: int = 0
     data: Data = field(default_factory=Data)
     log: Log = field(default_factory=Log)
     schema_mapping_file: str = ""  # default is to use built-in schema mapping
@@ -176,9 +193,10 @@ class Application:
 def load(
     path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS,
     wire_values: bool = True,
+    verbosity: int = 0,
     env: Mapping | None = None,
 ) -> Application:
-    cfg = _load_paths(path, wire_values=wire_values, env=env)
+    cfg = _load_paths(path, wire_values=wire_values, env=env, verbosity=verbosity)
 
     if not cfg:
         msg = "no config found"
@@ -191,6 +209,7 @@ def _load_paths(
     path: None | str | list[str] | tuple[str],
     wire_values: bool = True,
     env: Mapping | None = None,
+    verbosity: int = 0,
 ) -> Application | None:
     if not path:
         path = DEFAULT_CONFIGS
@@ -209,7 +228,7 @@ def _load_paths(
             return _load(p, wire_values=wire_values, env=env)
 
         # use the default application config
-        return Application()
+        return Application(verbosity=verbosity)
 
     msg = f"invalid path type {type(path)}"
     raise ValueError(msg)

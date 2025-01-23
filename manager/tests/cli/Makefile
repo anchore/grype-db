@@ -6,11 +6,19 @@ CYAN := $(shell tput -T linux setaf 6)
 RESET := $(shell tput -T linux sgr0)
 
 test: virtual-env-check ## Run CLI tests
-	./run.sh
+	 pytest . -vv -o log_cli=true
 
-cli-test-data/vunnel/oracle: ## Prepare data for CLI tests
+.PHONY: vunnel-oracle-data
+vunnel-oracle-data: cli-test-data/vunnel/oracle
+
+cli-test-data/vunnel/oracle: ## Prepare oracle data for CLI tests
 	mkdir -p cli-test-data/vunnel
 	../../../.tool/oras pull ghcr.io/anchore/grype-db/data/oracle:latest && go run ../../../cmd/grype-db cache restore --path ./grype-db-cache.tar.gz
+
+.PHONY: install-oracle-labels
+install-oracle-labels:
+	mkdir -p cli-test-data/yardstick/labels
+	cp -a ../../../data/vulnerability-match-labels/labels/docker.io+oraclelinux* ./cli-test-data/yardstick/labels/
 
 virtual-env-check:
 	@ if [ "${VIRTUAL_ENV}" = "" ]; then \

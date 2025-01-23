@@ -1,0 +1,3 @@
+# TODO: delete me once v6 lands on grype@main without a feature flag
+exp:
+  dbv6: true

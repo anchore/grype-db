@@ -87,10 +87,7 @@ def _is_result_set_stale(
     if _is_db_checksums_stale(result_set_object, db_info):
         return True
 
-    if _is_result_set_consistent(result_set_object, request_images):
-        return True
-
-    return False
+    return bool(_is_result_set_consistent(result_set_object, request_images))
 
 
 def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_images: list[str]) -> bool:
@@ -149,7 +146,8 @@ def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grype
 
 def guess_tool_orientation(tools: list[str]) -> tuple[str, str]:
     if len(tools) != 2:
-        raise RuntimeError("expected 2 tools, got %s" % tools)
+        msg = f"expected 2 tools, got {tools}"
+        raise RuntimeError(msg)
 
     current_tool = None
     latest_release_tool = None
