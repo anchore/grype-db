@@ -59,7 +59,7 @@ runs:
 
     - name: Install poetry
       if: inputs.python == 'true'
-      uses: abatilo/actions-poetry@v2.2.0
+      uses: abatilo/actions-poetry@v4.0.0
       with:
         poetry-version: ${{ inputs.poetry-version }}
 
