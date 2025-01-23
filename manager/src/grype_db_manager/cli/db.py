@@ -155,7 +155,11 @@ def _validate_db(
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
-    validations_enabled = True if force else db.schema.validations_enabled(db_info.schema_version)
+
+    validations_enabled = db.schema.validations_enabled(db_info.schema_version)
+    if not validations_enabled and not force:
+        click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, skipping{Format.RESET}")
+        return
 
     grype_version = db.schema.grype_version(db_info.schema_version)
     basis_grype_version = grype_version
@@ -240,7 +244,7 @@ def _validate_db(
             all_result_sets=True,
         )
     except:
-        if not validations_enabled:
+        if not validations_enabled and force:
             click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, ignoring failure{Format.RESET}")
             return
         raise
