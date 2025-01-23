@@ -248,7 +248,7 @@ def _validate_db(
             all_result_sets=True,
         )
     except:
-        if not validations_enabled and force:
+        if not validations_enabled and not force:
             click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, ignoring failure{Format.RESET}")
             return
         raise
