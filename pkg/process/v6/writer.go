@@ -70,6 +70,7 @@ func (w writer) Write(entries ...data.Entry) error {
 }
 
 func (w writer) writeEntry(entry transformers.RelatedEntries) error {
+	log.WithFields("entry", entry.String()).Trace("writing entry")
 	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
 		return fmt.Errorf("unable to write vulnerability to store: %w", err)
 	}

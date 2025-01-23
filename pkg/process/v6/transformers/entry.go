@@ -2,6 +2,7 @@ package transformers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/anchore/grype-db/pkg/data"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
@@ -34,4 +35,17 @@ func NewEntries(models ...any) []data.Entry {
 			Data:            entry,
 		},
 	}
+}
+
+func (re RelatedEntries) String() string {
+	var pkgs []string
+	for _, r := range re.Related {
+		switch v := r.(type) {
+		case grypeDB.AffectedPackageHandle:
+			pkgs = append(pkgs, v.Package.String())
+		case grypeDB.AffectedCPEHandle:
+			pkgs = append(pkgs, fmt.Sprintf("%s/%s", v.CPE.Vendor, v.CPE.Product))
+		}
+	}
+	return fmt.Sprintf("vuln=%q provider=%q entries=%d: %s", re.VulnerabilityHandle.Name, re.VulnerabilityHandle.ProviderID, len(re.Related), strings.Join(pkgs, ", "))
 }
