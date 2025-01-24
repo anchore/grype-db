@@ -13,12 +13,12 @@
     {
       "schema": "3",
       "grype-version": "v0.40.1",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "4",
       "grype-version": "v0.50.2",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "5",

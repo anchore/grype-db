@@ -9,15 +9,11 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
-	v3 "github.com/anchore/grype-db/pkg/process/v3"
-	v4 "github.com/anchore/grype-db/pkg/process/v4"
 	v5 "github.com/anchore/grype-db/pkg/process/v5"
 	v6 "github.com/anchore/grype-db/pkg/process/v6"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/entry"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-	grypeDBv3 "github.com/anchore/grype/grype/db/v3"
-	grypeDBv4 "github.com/anchore/grype/grype/db/v4"
 	grypeDBv5 "github.com/anchore/grype/grype/db/v5"
 	grypeDBv6 "github.com/anchore/grype/grype/db/v6"
 )
@@ -76,10 +72,6 @@ type providerResults struct {
 
 func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 	switch cfg.SchemaVersion {
-	case grypeDBv3.SchemaVersion:
-		return v3.Processors(), nil
-	case grypeDBv4.SchemaVersion:
-		return v4.Processors(), nil
 	case grypeDBv5.SchemaVersion:
 		return v5.Processors(v5.NewConfig(v5.WithCPEParts(cfg.IncludeCPEParts), v5.WithInferNVDFixVersions(cfg.InferNVDFixVersions))), nil
 	case grypeDBv6.ModelVersion:
@@ -91,10 +83,6 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 
 func getWriter(schemaVersion int, dataAge time.Time, directory string, states provider.States) (data.Writer, error) {
 	switch schemaVersion {
-	case grypeDBv3.SchemaVersion:
-		return v3.NewWriter(directory, dataAge)
-	case grypeDBv4.SchemaVersion:
-		return v4.NewWriter(directory, dataAge)
 	case grypeDBv5.SchemaVersion:
 		return v5.NewWriter(directory, dataAge, states)
 	case grypeDBv6.ModelVersion:
