@@ -60,7 +60,7 @@ runs:
         poetry-version: ${{ inputs.poetry-version }}
 
     - name: Cache Poetry virtualenv
-      uses: actions/cache@v4
+      uses: actions/cache@v4.2.0
       if: inputs.python == 'true' && inputs.use-poetry-cache == 'true'
       id: cache
       with:
@@ -84,7 +84,7 @@ runs:
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
-      uses: actions/cache@f4b3439a656ba812b8cb417d2d49f9c810103092 # v3.4.0
+      uses: actions/cache@36f1e144e1c8edb0a652766b484448563d8baf46 # v3.4.0
       with:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}
@@ -94,7 +94,7 @@ runs:
     - name: Restore go module cache
       id: go-mod-cache
       if: inputs.go == 'true' && inputs.use-go-cache == 'true'
-      uses: actions/cache@v4
+      uses: actions/cache@v4.2.0
       with:
         path: |
           ~/go/pkg/mod
@@ -110,7 +110,7 @@ runs:
     - name: Restore go build cache
       id: go-cache
       if: inputs.go == 'true' && inputs.use-go-cache == 'true'
-      uses: actions/cache@v4
+      uses: actions/cache@v4.2.0
       with:
         path: |
           ~/.cache/go-build
