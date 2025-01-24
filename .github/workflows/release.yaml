@@ -86,7 +86,7 @@ jobs:
       - name: Read supported schema versions
         id: read-schema-versions
         run: |
-          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | .schema]'`
+          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | select(.validate != false) | .schema]'`
           echo "schema-versions=$content" >> $GITHUB_OUTPUT
 
   quality-gate-acceptance-test:
