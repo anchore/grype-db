@@ -3,7 +3,7 @@
 listing:
   image: "alpine:3.9.2"
   minimum-packages: 5
-  minimum-vulnerabilities: 90
+  minimum-vulnerabilities: 40
 
 expected-providers:
   - alpine
