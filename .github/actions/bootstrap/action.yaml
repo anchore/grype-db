@@ -28,11 +28,11 @@ inputs:
   cache-key-prefix:
     description: "Prefix all cache keys with this value"
     required: true
-    default: "831180ac25"
+    default: "831180ac26"
   build-cache-key-prefix:
     description: "Prefix build cache key with this value"
     required: true
-    default: "f8b6d31dea"
+    default: "f8b6d31deb"
   tools:
     description: "whether to install tools"
     default: "true"
