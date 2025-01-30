@@ -13,10 +13,14 @@ inputs:
     description: "Go version to install"
     required: true
     default: "1.23.x"
+  python-version:
+    description: "Python version to install"
+    required: true
+    default: "3.12"
   poetry-version:
     description: "Poetry version to install"
     required: true
-    default: "1.5.1"
+    default: "1.8.5"
   use-go-cache:
     description: "Restore go cache"
     required: true
@@ -28,11 +32,11 @@ inputs:
   cache-key-prefix:
     description: "Prefix all cache keys with this value"
     required: true
-    default: "831180ac25"
+    default: "831180ac26"
   build-cache-key-prefix:
     description: "Prefix build cache key with this value"
     required: true
-    default: "f8b6d31dea"
+    default: "f8b6d31deb"
   tools:
     description: "whether to install tools"
     default: "true"
@@ -51,11 +55,11 @@ runs:
     - uses: actions/setup-python@v5
       if: inputs.python == 'true'
       with:
-        python-version-file: "pyproject.toml"
+        python-version: ${{ inputs.python-version }}
 
     - name: Install poetry
       if: inputs.python == 'true'
-      uses: abatilo/actions-poetry@v4.0.0
+      uses: abatilo/actions-poetry@65c61eae400c65c9510a584af85138c1ae19bbc0 # v3.0.2
       with:
         poetry-version: ${{ inputs.poetry-version }}
 
