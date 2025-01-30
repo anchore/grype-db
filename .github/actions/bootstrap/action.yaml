@@ -16,7 +16,7 @@ inputs:
   poetry-version:
     description: "Poetry version to install"
     required: true
-    default: "1.5.1"
+    default: "1.8.3"
   use-go-cache:
     description: "Restore go cache"
     required: true
@@ -28,11 +28,11 @@ inputs:
   cache-key-prefix:
     description: "Prefix all cache keys with this value"
     required: true
-    default: "831180ac25"
+    default: "248da13e00"
   build-cache-key-prefix:
     description: "Prefix build cache key with this value"
     required: true
-    default: "f8b6d31dea"
+    default: "cf2bc1b338"
   tools:
     description: "whether to install tools"
     default: "true"
@@ -43,31 +43,31 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
       if: inputs.go == 'true'
       with:
         go-version: ${{ inputs.go-version }}
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
       if: inputs.python == 'true'
       with:
         python-version-file: "pyproject.toml"
 
     - name: Install poetry
       if: inputs.python == 'true'
-      uses: abatilo/actions-poetry@v4.0.0
+      uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       with:
         poetry-version: ${{ inputs.poetry-version }}
 
     - name: Cache Poetry virtualenv
-      uses: actions/cache@v4.2.0
+      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
       if: inputs.python == 'true' && inputs.use-poetry-cache == 'true'
       id: cache
       with:
         path: ~/.virtualenvs
-        key: ${{ inputs.cache-key-prefix }}-${{ hashFiles('poetry.lock') }}
+        key: ${{ inputs.cache-key-prefix }}-python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}-${{ hashFiles('poetry.lock') }}
         restore-keys: |
-          ${{ inputs.cache-key-prefix }}-
+          ${{ inputs.cache-key-prefix }}-python-${{ inputs.python-version }}-poetry-${{ inputs.poetry-version }}
 
     - name: Setup Poetry config
       if: inputs.python == 'true'
@@ -94,7 +94,7 @@ runs:
     - name: Restore go module cache
       id: go-mod-cache
       if: inputs.go == 'true' && inputs.use-go-cache == 'true'
-      uses: actions/cache@v4.2.0
+      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
       with:
         path: |
           ~/go/pkg/mod
@@ -110,7 +110,7 @@ runs:
     - name: Restore go build cache
       id: go-cache
       if: inputs.go == 'true' && inputs.use-go-cache == 'true'
-      uses: actions/cache@v4.2.0
+      uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
       with:
         path: |
           ~/.cache/go-build
