@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	v6process "github.com/anchore/grype-db/pkg/process/v6"
-	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/legacy/distribution"
+	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/v5/distribution"
 )
 
 func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {

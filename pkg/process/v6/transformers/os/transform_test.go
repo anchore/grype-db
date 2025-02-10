@@ -901,7 +901,6 @@ func TestTransform(t *testing.T) {
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
 										Version: "3.1",
-										Score:   8.8,
 									},
 									Rank: 2,
 								},
@@ -994,7 +993,6 @@ func TestTransform(t *testing.T) {
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:H",
 										Version: "3.1",
-										Score:   7.1,
 									},
 									Rank: 2,
 								},

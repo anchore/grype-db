@@ -271,7 +271,6 @@ func getSeverities(vuln unmarshal.NVDVulnerability) []grypeDB.Severity {
 			Value: grypeDB.CVSSSeverity{
 				Vector:  sev.Vector,
 				Version: sev.Version,
-				Score:   sev.BaseScore,
 			},
 			Source: sev.Source,
 			Rank:   priority,
