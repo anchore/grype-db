@@ -187,7 +187,6 @@ func getSeverities(vulnerability unmarshal.GitHubAdvisory) []grypeDB.Severity {
 			Value: grypeDB.CVSSSeverity{
 				Vector:  vulnerability.Advisory.CVSS.VectorString,
 				Version: vulnerability.Advisory.CVSS.Version,
-				Score:   vulnerability.Advisory.CVSS.BaseMetrics.BaseScore,
 			},
 		})
 	}

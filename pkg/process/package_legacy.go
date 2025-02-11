@@ -14,8 +14,8 @@ import (
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/tarutil"
-	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/legacy/distribution"
 	grypeDBLegacy "github.com/anchore/grype/grype/db/v5"
+	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/v5/distribution"
 	grypeDBLegacyStore "github.com/anchore/grype/grype/db/v5/store"
 )
 

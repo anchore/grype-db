@@ -108,7 +108,6 @@ func TestGetVulnerability(t *testing.T) {
 								Value: grypeDB.CVSSSeverity{
 									Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
 									Version: "3.1",
-									Score:   6.5,
 								},
 							},
 						},
@@ -150,7 +149,6 @@ func TestGetVulnerability(t *testing.T) {
 								Value: grypeDB.CVSSSeverity{
 									Vector:  "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
 									Version: "3.1",
-									Score:   9.8,
 								},
 							},
 						},
@@ -192,7 +190,6 @@ func TestGetVulnerability(t *testing.T) {
 								Value: grypeDB.CVSSSeverity{
 									Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 									Version: "3.1",
-									Score:   9.8,
 								},
 							},
 						},

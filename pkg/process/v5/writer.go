@@ -16,8 +16,8 @@ import (
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype/grype/db/legacy/distribution"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
+	"github.com/anchore/grype/grype/db/v5/distribution"
 	grypeDBStore "github.com/anchore/grype/grype/db/v5/store"
 )
 

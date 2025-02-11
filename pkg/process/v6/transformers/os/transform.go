@@ -338,7 +338,6 @@ func getSeverities(vuln unmarshal.OSVulnerability) []grypeDB.Severity {
 			Value: grypeDB.CVSSSeverity{
 				Vector:  vendorSeverity.VectorString,
 				Version: vendorSeverity.Version,
-				Score:   vendorSeverity.BaseMetrics.BaseScore,
 			},
 			Rank: 2,
 			// TODO: source?
