@@ -57,28 +57,25 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Install poetry
-      if: inputs.python == 'true'
-      uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
-      with:
-        poetry-version: ${{ inputs.poetry-version }}
-
-    - name: Cache Poetry virtualenv
-      uses: actions/cache@v4.2.0
-      if: inputs.python == 'true' && inputs.use-poetry-cache == 'true'
-      id: cache
-      with:
-        path: ~/.virtualenvs
-        key: ${{ inputs.cache-key-prefix }}-${{ hashFiles('poetry.lock') }}
-        restore-keys: |
-          ${{ inputs.cache-key-prefix }}-
-
-    - name: Setup Poetry config
+    - name: Install Poetry
       if: inputs.python == 'true'
       shell: bash
       run: |
-        poetry config virtualenvs.in-project false
-        poetry config virtualenvs.path ~/.virtualenvs
+        pipx install poetry==${{ inputs.poetry-version }}
+
+    - name: Cache Poetry cache
+      uses: actions/cache@v4
+      if: inputs.python == 'true'
+      with:
+        path: ~/.cache/pypoetry
+        key: poetry-cache-${{ runner.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}
+
+    - name: Cache Packages
+      uses: actions/cache@v4
+      if: inputs.python == 'true'
+      with:
+        path: ~/.local
+        key: poetry-local-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
 
     - name: Bootstrap python dependencies
       if: inputs.python == 'true'
