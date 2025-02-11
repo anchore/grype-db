@@ -30,7 +30,7 @@ jobs:
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Pull vulnerability data"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
       pull-date: ${{ steps.timestamp.outputs.date }}
