@@ -15,6 +15,8 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
     schema_version = "6"
+    # deep copy cli_env to avoid modifying the original
+    cli_env = cli_env.copy()
     cli_env.update(
         {
             "AWS_ACCESS_KEY_ID": "test",
@@ -100,11 +102,12 @@ def test_workflow_2(cli_env, command, logger):
     cli_env["GOWORK"] = "off"
 
     # note: we add --force to ensure we're checking validations (even if it's disabled for the schema)
-    stdout, _ = command.run(
+    stdout, stderr = command.run(
         f"grype-db-manager -vv db validate {db_id} --skip-namespace-check --force --recapture",
         env=cli_env,
         expect_fail=True,
     )
+
     assert "current indeterminate matches % is greater than 10%" in stdout
 
     ## case 2: fail DB validation (missing providers) ###
