@@ -93,34 +93,10 @@ runs:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}
 
-    # note: we need to keep restoring the go mod cache before bootstrapping tools since `go install` is used in
-    # some installations of project tools.
-    - name: Restore go module cache
-      id: go-mod-cache
-      if: inputs.go == 'true' && inputs.use-go-cache == 'true'
-      uses: actions/cache@v4.2.0
-      with:
-        path: |
-          ~/go/pkg/mod
-        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-go-module-${{ inputs.go-version }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ inputs.cache-key-prefix }}-${{ runner.os }}-go-module-${{ inputs.go-version }}-
-
     - name: (cache-miss) Bootstrap project tools
       shell: bash
       if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'
       run: make bootstrap-tools
-
-    - name: Restore go build cache
-      id: go-cache
-      if: inputs.go == 'true' && inputs.use-go-cache == 'true'
-      uses: actions/cache@v4.2.0
-      with:
-        path: |
-          ~/.cache/go-build
-        key: ${{ inputs.cache-key-prefix }}-${{ inputs.build-cache-key-prefix }}-${{ runner.os }}-go-build-${{ inputs.go-version }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ inputs.cache-key-prefix }}-${{ inputs.build-cache-key-prefix }}-${{ runner.os }}-go-build-${{ inputs.go-version }}-
 
     - name: (cache-miss) Bootstrap go dependencies
       shell: bash
