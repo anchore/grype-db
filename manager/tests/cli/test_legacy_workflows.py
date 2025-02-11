@@ -99,6 +99,8 @@ def test_workflow_3(cli_env, command, logger, tmp_path, grype):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
 
+    # deep copy cli_env to avoid modifying the original
+    cli_env = cli_env.copy()
     cli_env.update(
         {
             "AWS_ACCESS_KEY_ID": "test",
@@ -162,6 +164,8 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     bin_dir.mkdir(parents=True, exist_ok=True)
 
     schema_version = "5"
+    # deep copy cli_env to avoid modifying the original
+    cli_env = cli_env.copy()
     cli_env.update(
         {
             "AWS_ACCESS_KEY_ID": "test",
