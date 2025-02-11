@@ -16,7 +16,7 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Static-Analysis:
     name: "Static analysis"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
@@ -30,7 +30,7 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Unit-Test-Go:
     name: "Unit tests (Go)"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
@@ -46,7 +46,7 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Unit-Test-Python:
     name: "Unit tests (Python)"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
@@ -62,7 +62,7 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Build-Snapshot-Artifacts:
     name: "Build snapshot artifacts"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
 
@@ -91,7 +91,7 @@ jobs:
 
   Discover-Schema-Versions:
     name: "Discover supported schema versions"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
@@ -144,7 +144,7 @@ jobs:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
     name: "CLI tests (Go-Linux)"
     needs: [Build-Snapshot-Artifacts]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
 

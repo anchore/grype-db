@@ -76,7 +76,7 @@ jobs:
           false
 
   read-schema-versions:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
@@ -91,7 +91,7 @@ jobs:
 
   quality-gate-acceptance-test:
     needs: read-schema-versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.read-schema-versions.outputs.schema-versions)}}
