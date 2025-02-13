@@ -9,7 +9,7 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 )
 
-func TestNormalizeSeverity(t *testing.T) {
+func TestFillInMissingSeverity(t *testing.T) {
 	tests := []struct {
 		name              string
 		handle            *grypeDB.VulnerabilityHandle
@@ -108,7 +108,7 @@ func TestNormalizeSeverity(t *testing.T) {
 				}
 			}
 
-			w.normalizeSeverity(tt.handle)
+			w.fillInMissingSeverity(tt.handle)
 
 			if tt.handle == nil || tt.handle.BlobValue == nil {
 				return

@@ -75,7 +75,7 @@ func (w writer) Write(entries ...data.Entry) error {
 func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 	log.WithFields("entry", entry.String()).Trace("writing entry")
 
-	w.normalizeSeverity(&entry.VulnerabilityHandle)
+	w.fillInMissingSeverity(&entry.VulnerabilityHandle)
 
 	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
 		return fmt.Errorf("unable to write vulnerability to store: %w", err)
@@ -102,7 +102,10 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 	return nil
 }
 
-func (w *writer) normalizeSeverity(handle *grypeDB.VulnerabilityHandle) {
+// fillInMissingSeverity will add a severity entry to the vulnerability record if it is missing, empty, or "unknown".
+// The upstream NVD record is used to fill in these missing values. Note that the NVD provider is always guaranteed
+// to be processed first before other providers.
+func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 	if handle == nil {
 		return
 	}
