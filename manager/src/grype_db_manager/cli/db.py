@@ -159,7 +159,6 @@ def _validate_db(
     # resolve tool versions and install them
     yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
 
-
     validations_enabled = db.schema.validations_enabled(db_info.schema_version)
     if not validations_enabled and not force:
         click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, skipping{Format.RESET}")

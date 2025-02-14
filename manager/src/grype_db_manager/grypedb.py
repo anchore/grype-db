@@ -285,7 +285,7 @@ class DBManager:
 
         session_dir = os.path.join(self.db_dir, db_uuid)
         with open(os.path.join(session_dir, "timestamp"), "w") as f:
-            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            now = datetime.datetime.now(tz=datetime.UTC)
             f.write(now.isoformat())
 
         return db_uuid
@@ -445,7 +445,6 @@ def db_metadata(build_dir: str) -> dict:
     if os.path.exists(latest_path):
         # supports v6+
         with open(latest_path) as f:
-
             metadata = json.load(f)
             # example data:
             # {
@@ -457,7 +456,7 @@ def db_metadata(build_dir: str) -> dict:
             # }
             return {
                 "version": int(metadata["schemaVersion"].split(".")[0]),
-                "db_checksum": "xxh64:"+db_checksum.hexdigest(),
+                "db_checksum": "xxh64:" + db_checksum.hexdigest(),
                 "db_created": metadata["built"],
                 "data_created": parse_datetime(metadata["path"].split("_")[2]),
                 "latest_path": os.path.abspath(latest_path),
@@ -468,7 +467,7 @@ def db_metadata(build_dir: str) -> dict:
 
 
 def parse_datetime(s: str) -> datetime.datetime:
-    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
 
 
 class GrypeDB:

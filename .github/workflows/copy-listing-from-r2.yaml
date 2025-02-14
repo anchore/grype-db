@@ -28,7 +28,7 @@ jobs:
 
       - name: Upload listing file
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
               -c ./config/grype-db-manager/publish-production.yaml \
                 listing upload listing.json

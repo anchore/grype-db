@@ -54,11 +54,7 @@ def register_mapping(file: str) -> None:
 
 @lru_cache
 def _mapping() -> dict[str, Any]:
-    content = (
-        files("grype_db_manager.data").joinpath("schema-info.json").read_text()
-        if _mapping_file_content is None
-        else _mapping_file_content
-    )
+    content = files("grype_db_manager.data").joinpath("schema-info.json").read_text() if _mapping_file_content is None else _mapping_file_content
     return json.loads(content)
 
 

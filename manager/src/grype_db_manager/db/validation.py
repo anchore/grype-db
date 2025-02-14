@@ -102,9 +102,7 @@ def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_ima
         if s.config and "grype" in s.config.tool:
             grype_requests_by_image[s.config.full_image].append(s.request)
 
-    missing_grype_requests = [
-        image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2
-    ]
+    missing_grype_requests = [image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2]
 
     if missing_grype_requests:
         logging.warning(f"result-set has missing grype requests: {missing_grype_requests}")

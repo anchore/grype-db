@@ -89,7 +89,7 @@ jobs:
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-databases != 'false'
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
               -vv \
               -c ./config/grype-db-manager/publish-staging.yaml \
@@ -105,7 +105,7 @@ jobs:
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-listing != 'false'
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
               -c ./config/grype-db-manager/publish-staging.yaml \
                 listing update

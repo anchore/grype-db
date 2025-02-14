@@ -69,8 +69,10 @@ def get_section_index(value: int, min_value: int, max_value: int, sections: int,
 def rgb_ansi(r: int, g: int, b: int) -> str:
     return f"\033[38;2;{r};{g};{b}m"
 
+
 def reset_ansi() -> str:
     return "\033[0m"
+
 
 def format_value_red_green_spectrum(
     value: int,
