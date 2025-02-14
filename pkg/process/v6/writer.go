@@ -2,6 +2,7 @@ package v6
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/anchore/grype-db/internal/log"
@@ -18,6 +19,7 @@ type writer struct {
 	store         grypeDB.ReadWriter
 	providerCache map[string]grypeDB.Provider
 	states        provider.States
+	severityCache map[string]grypeDB.Severity
 }
 
 type ProviderMetadata struct {
@@ -47,6 +49,7 @@ func NewWriter(directory string, states provider.States) (data.Writer, error) {
 		providerCache: make(map[string]grypeDB.Provider),
 		store:         s,
 		states:        states,
+		severityCache: make(map[string]grypeDB.Severity),
 	}, nil
 }
 
@@ -69,8 +72,11 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w writer) writeEntry(entry transformers.RelatedEntries) error {
+func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 	log.WithFields("entry", entry.String()).Trace("writing entry")
+
+	w.fillInMissingSeverity(&entry.VulnerabilityHandle)
+
 	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
 		return fmt.Errorf("unable to write vulnerability to store: %w", err)
 	}
@@ -94,6 +100,82 @@ func (w writer) writeEntry(entry transformers.RelatedEntries) error {
 	}
 
 	return nil
+}
+
+// fillInMissingSeverity will add a severity entry to the vulnerability record if it is missing, empty, or "unknown".
+// The upstream NVD record is used to fill in these missing values. Note that the NVD provider is always guaranteed
+// to be processed first before other providers.
+func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
+	if handle == nil {
+		return
+	}
+
+	blob := handle.BlobValue
+	if blob == nil {
+		return
+	}
+
+	id := strings.ToLower(blob.ID)
+	isCVE := strings.HasPrefix(id, "cve-")
+	if strings.ToLower(handle.ProviderID) == "nvd" && isCVE {
+		if len(blob.Severities) > 0 {
+			w.severityCache[id] = blob.Severities[0]
+		}
+		return
+	}
+
+	if !isCVE {
+		return
+	}
+
+	// parse all string severities and remove all unknown values
+	sevs := filterUnknownSeverities(blob.Severities)
+
+	topSevStr := "none"
+	if len(sevs) > 0 {
+		switch v := sevs[0].Value.(type) {
+		case string:
+			topSevStr = v
+		case fmt.Stringer:
+			topSevStr = v.String()
+		default:
+			topSevStr = fmt.Sprintf("%v", sevs[0].Value)
+		}
+	}
+
+	if len(sevs) > 0 {
+		return // already has a severity, don't normalize
+	}
+
+	// add the top NVD severity value
+	nvdSev, ok := w.severityCache[id]
+	if !ok {
+		log.WithFields("id", blob.ID).Trace("unable to find NVD severity")
+		return
+	}
+
+	log.WithFields("id", blob.ID, "provider", handle.Provider, "sev-from", topSevStr, "sev-to", nvdSev).Trace("overriding irrelevant severity with data from NVD record")
+	sevs = append([]grypeDB.Severity{nvdSev}, sevs...)
+	handle.BlobValue.Severities = sevs
+}
+
+func filterUnknownSeverities(sevs []grypeDB.Severity) []grypeDB.Severity {
+	var out []grypeDB.Severity
+	for _, s := range sevs {
+		if isKnownSeverity(s) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func isKnownSeverity(s grypeDB.Severity) bool {
+	switch v := s.Value.(type) {
+	case string:
+		return v != "" && strings.ToLower(v) != "unknown"
+	default:
+		return v != nil
+	}
 }
 
 func (w writer) Close() error {
