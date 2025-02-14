@@ -11,6 +11,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/syft/syft/pkg"
 )
 
 func Transform(vulnerability unmarshal.GitHubAdvisory, state provider.State) ([]data.Entry, error) {
@@ -142,17 +143,31 @@ func getPackageType(ecosystem string) string {
 	ecosystem = strings.ToLower(ecosystem)
 	switch ecosystem {
 	case "composer":
-		return "php-composer"
-	case "rust":
-		return "rust-crate"
+		return string(pkg.PhpComposerPkg)
+	case "rust", "cargo":
+		return string(pkg.RustPkg)
 	case "dart":
-		return "dart-pub"
-	case "nuget":
-		return "dotnet"
-	case "go":
-		return "go-module"
-	case "java":
-		return "maven" // TODO: consider jenkins-plugin as a separate type.  For now can determine based off of groupID
+		return string(pkg.DartPubPkg)
+	case "nuget", ".net":
+		return string(pkg.DotnetPkg)
+	case "go", "golang":
+		return string(pkg.GoModulePkg)
+	case "maven", "java":
+		return string(pkg.JavaPkg)
+	case "npm":
+		return string(pkg.NpmPkg)
+	case "pypi", "python", "pip":
+		return string(pkg.PythonPkg)
+	case "swift":
+		return string(pkg.SwiftPkg)
+	case "rubygems", "ruby", "gem":
+		return string(pkg.GemPkg)
+	case "apk":
+		return string(pkg.ApkPkg)
+	case "rpm":
+		return string(pkg.RpmPkg)
+	case "deb":
+		return string(pkg.DebPkg)
 	}
 
 	return ecosystem
