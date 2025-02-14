@@ -22,7 +22,7 @@ virtual-env-check:
 .PHONY: bootstrap
 bootstrap:  ## Install all dependencies
 	$(call title,Bootstrapping dependencies)
-	poetry install
+	poetry install --with dev
 
 
 ## Static analysis targets #################################

@@ -207,7 +207,7 @@ update-test-fixtures:
 		 	-o json \
 		 		centos:8.2.2004 > publish/test-fixtures/centos-8.2.2004.json
 	dos2unix publish/test-fixtures/centos-8.2.2004.json
-	cd test/acceptance && poetry install && poetry run python grype-ingest.py capture-test-fixtures
+	cd test/acceptance && poetry install --with dev && poetry run python grype-ingest.py capture-test-fixtures
 
 
 ## Data management targets #################################
