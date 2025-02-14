@@ -83,7 +83,7 @@ jobs:
 
       - name: Generate and upload DB (schema ${{ matrix.schema-version }})
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
               -vv \
               -c ./config/grype-db-manager/publish-production-r2.yaml \
@@ -130,7 +130,7 @@ jobs:
 
       - name: Publish listing file
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
               -c ./config/grype-db-manager/publish-production-r2.yaml \
                 listing update

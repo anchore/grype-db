@@ -95,11 +95,11 @@ all: static-analysis test ## Run all checks (linting, license checks, unit, and 
 
 .PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
 static-analysis: check-go-mod-tidy lint check-licenses
-	cd manager && poetry run make static-analysis
+	cd manager && uv run make static-analysis
 
 .PHONY: test
 test: unit cli ## Run all tests
-	cd manager && poetry run make test
+	cd manager && uv run make test
 
 
 ## Bootstrapping targets #################################
@@ -172,19 +172,19 @@ unit: $(TEMP_DIR) ## Run Go unit tests (with coverage)
 .PHONY: unit-python
 unit-python: ## Run Python unit tests (with coverage)
 	$(call title,Running Python unit tests)
-	cd manager && poetry run make unit
+	cd manager && make unit
 
 .PHONY: db-acceptance
 db-acceptance: ## Run acceptance tests
 	$(call title,"Running DB acceptance tests (schema=$(schema))")
-	poetry run ./test/db/acceptance.sh $(schema)
+	uv run ./test/db/acceptance.sh $(schema)
 
 .PHONY: cli
 cli: cli-go cli-python ## Run all CLI tests
 
 .PHONY: cli-python
 cli-python:  ## Run python CLI tests
-	cd manager && poetry run make cli
+	cd manager && uv run make cli
 
 .PHONY: cli-go
 cli-go: $(SNAPSHOT_DIR)  ## Run go CLI tests
@@ -192,22 +192,6 @@ cli-go: $(SNAPSHOT_DIR)  ## Run go CLI tests
 	$(SNAPSHOT_BIN) version
 	GRYPE_DB_BINARY_LOCATION='$(SNAPSHOT_BIN)' \
 		go test -count=1 -timeout=15m -v ./test/cli
-
-
-## Test-fixture-related targets #################################
-
-.PHONY: update-test-fixtures
-update-test-fixtures:
-	docker run \
-		--pull always \
-		--rm \
-		-it \
-		anchore/grype:latest \
-			-q \
-		 	-o json \
-		 		centos:8.2.2004 > publish/test-fixtures/centos-8.2.2004.json
-	dos2unix publish/test-fixtures/centos-8.2.2004.json
-	cd test/acceptance && poetry install && poetry run python grype-ingest.py capture-test-fixtures
 
 
 ## Data management targets #################################

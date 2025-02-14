@@ -45,8 +45,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
 
     if missing_basenames:
         logging.warning(
-            f"missing {len(missing_basenames)} databases in S3 which were in the existing"
-            " listing file (removing entries in the next listing file)",
+            f"missing {len(missing_basenames)} databases in S3 which were in the existing listing file (removing entries in the next listing file)",
         )
         for basename in missing_basenames:
             logging.warning(f"  - {basename}")

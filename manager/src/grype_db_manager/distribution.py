@@ -133,7 +133,7 @@ def age_from_basename(basename: str) -> int | None:
 
 
 def _now() -> datetime.datetime:
-    return datetime.datetime.now(tz=datetime.timezone.utc)
+    return datetime.datetime.now(tz=datetime.UTC)
 
 
 def hash_file(path: str) -> str:

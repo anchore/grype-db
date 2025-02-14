@@ -17,16 +17,8 @@ inputs:
     description: "Python version to install"
     required: true
     default: "3.12"
-  poetry-version:
-    description: "Poetry version to install"
-    required: true
-    default: "1.8.5"
   use-go-cache:
     description: "Restore go cache"
-    required: true
-    default: "true"
-  use-poetry-cache:
-    description: "Restore poetry cache"
     required: true
     default: "true"
   cache-key-prefix:
@@ -52,30 +44,16 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
 
+    - name: Install uv
+      if: inputs.python == 'true'
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
     - uses: actions/setup-python@v5
       if: inputs.python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
-
-    - name: Install Poetry
-      if: inputs.python == 'true'
-      shell: bash
-      run: |
-        pipx install poetry==${{ inputs.poetry-version }}
-
-    - name: Cache Poetry cache
-      uses: actions/cache@v4
-      if: inputs.python == 'true'
-      with:
-        path: ~/.cache/pypoetry
-        key: poetry-cache-${{ runner.os }}-${{ inputs.python-version }}-${{ inputs.poetry-version }}
-
-    - name: Cache Packages
-      uses: actions/cache@v4
-      if: inputs.python == 'true'
-      with:
-        path: ~/.local
-        key: poetry-local-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
 
     - name: Bootstrap python dependencies
       if: inputs.python == 'true'

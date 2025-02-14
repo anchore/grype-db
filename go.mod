@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20230725134548-c21dafa1ec5a
-	github.com/anchore/grype v0.87.1-0.20250211173554-1573bd980b6c
+	github.com/anchore/grype v0.87.1-0.20250213225744-bb90ead7720b
 	github.com/anchore/syft v1.19.0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1
@@ -246,7 +246,7 @@ require (
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.25.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
 	golang.org/x/tools v0.29.0 // indirect

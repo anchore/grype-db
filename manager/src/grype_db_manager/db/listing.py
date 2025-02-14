@@ -43,7 +43,7 @@ class Entry:
 
     def age_in_days(self, now: datetime.datetime | None = None) -> int:
         if not now:
-            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            now = datetime.datetime.now(tz=datetime.UTC)
         return (now - iso8601.parse_date(self.built)).days
 
 
