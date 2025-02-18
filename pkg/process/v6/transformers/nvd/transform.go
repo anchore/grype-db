@@ -176,19 +176,12 @@ func getRanges(cfg Config, matches applicationMatches) []grypeDB.AffectedRange {
 }
 
 func getRange(cfg Config, match nvd.CpeMatch) *grypeDB.AffectedRange {
-	constraint := buildConstraints(match)
-	fix := getFix(cfg, match)
-
-	if constraint == "" && fix == nil {
-		return nil
-	}
-
 	return &grypeDB.AffectedRange{
 		Version: grypeDB.AffectedVersion{
 			Type:       "",
-			Constraint: constraint,
+			Constraint: buildConstraints(match),
 		},
-		Fix: fix,
+		Fix: getFix(cfg, match),
 	}
 }
 

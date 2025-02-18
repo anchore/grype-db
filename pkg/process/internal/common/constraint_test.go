@@ -15,6 +15,10 @@ func TestEnforceSemVerConstraint(t *testing.T) {
 			value:    "None",
 			expected: "",
 		},
+		{
+			value:    "",
+			expected: "",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.value, func(t *testing.T) {
