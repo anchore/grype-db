@@ -224,7 +224,7 @@ func buildConstraint(match nvd.CpeMatch) string {
 			constraints = append(constraints, fmt.Sprintf("= %s", version))
 		}
 	}
-	
+
 	return strings.Join(constraints, ", ")
 }
 
