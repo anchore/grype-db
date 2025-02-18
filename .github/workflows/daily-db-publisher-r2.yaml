@@ -29,7 +29,7 @@ jobs:
     # a) booleans come across as string types :(
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
     if: ${{ github.event.inputs.publish-databases != 'false' }}
-    name: "Pull vulnerability data"
+    name: "Discover schemas"
     runs-on: ubuntu-24.04
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
@@ -53,7 +53,7 @@ jobs:
     # a) booleans come across as string types :(
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
     if: ${{ github.event.inputs.publish-databases != 'false' }}
-    name: "Generate and publish DBs"
+    name: "Publish"
     needs: discover-schema-versions
     runs-on: ubuntu-22.04-4core-16gb
     strategy:
@@ -103,54 +103,9 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
         if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
 
-  publish-listing-file:
-    # fun! https://github.com/actions/runner/issues/491#issuecomment-850884422
-    # essentially even if the workflow dispatch job is skipping steps, we still want to run this step.
-    # however, if not running from a workflow dispatch then we want the job ordering to be honored.
-    # also...
-    # note about workflow dispatch inputs and booleans:
-    # a) booleans come across as string types :(
-    # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
-    if: |
-      always() &&
-      (needs.generate-and-publish-dbs.result == 'success' || needs.generate-and-publish-dbs.result == 'skipped') &&
-      github.event.inputs.publish-listing != 'false'
-
-    name: "Publish listing file"
-    needs: generate-and-publish-dbs
-    runs-on: ubuntu-22.04-4core-16gb
-    steps:
-
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
-        with:
-          submodules: true
-
-      - name: Bootstrap environment
-        uses: ./.github/actions/bootstrap
-
-      - name: Publish listing file
-        run: |
-          uv run \
-            grype-db-manager \
-              -c ./config/grype-db-manager/publish-production-r2.yaml \
-                listing update
-        env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_CLOUDFLARE_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_CLOUDFLARE_SECRET_ACCESS_KEY }}
-            GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
-
-      - uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 #v3.16.2
-        with:
-          status: ${{ job.status }}
-          fields: workflow,eventName,job
-          text: Publishing the Grype DB listing file has failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
-
   sync-listing-file-to-s3:
     name: "Sync listing file to S3"
     needs:
-      - publish-listing-file
+      - generate-and-publish-dbs
     uses: ./.github/workflows/copy-listing-from-r2.yaml
     secrets: inherit

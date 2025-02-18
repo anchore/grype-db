@@ -9,7 +9,7 @@ from yardstick.cli import config as ycfg
 from yardstick.cli.validate import validate as yardstick_validate
 
 from grype_db_manager import db, grypedb, s3utils
-from grype_db_manager.cli import config, error
+from grype_db_manager.cli import config, error, listing
 from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
 
@@ -280,12 +280,13 @@ def _validate_latest(cfg: config.Application, latest_file: str, archive_path: st
     )
 
 
-@group.command(name="upload", help="upload a grype database")
+@group.command(name="upload", help="upload a grype database and update listing")
 @click.option("--ttl-seconds", "-t", default=DEFAULT_TTL_SECONDS, help="the TTL for the uploaded DB (should be relatively high)")
 @click.argument("db-uuid")
 @click.pass_obj
+@click.pass_context
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
-def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
+def upload_db(ctx: click.core.Context, cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
     if cfg.assert_aws_credentials:
         s3utils.check_credentials()
 
@@ -324,6 +325,8 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
         )
 
         click.echo(f"DB latest.json {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
+    else:
+        ctx.invoke(listing.upload_listing)
 
 
 @group.command(name="build-and-upload", help="upload a grype database")
