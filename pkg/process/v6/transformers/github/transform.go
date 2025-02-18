@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -11,6 +12,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/db/v6/name"
 	"github.com/anchore/syft/syft/pkg"
 )
 
@@ -79,17 +81,11 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 }
 
 func getRanges(fixedInEntry unmarshal.GithubFixedIn) []grypeDB.AffectedRange {
-	constraint := common.EnforceSemVerConstraint(fixedInEntry.Range)
-
-	if constraint == "" {
-		return nil
-	}
-
 	return []grypeDB.AffectedRange{
 		{
 			Version: grypeDB.AffectedVersion{
 				Type:       getAffectedVersionFormat(fixedInEntry),
-				Constraint: constraint,
+				Constraint: common.EnforceSemVerConstraint(fixedInEntry.Range),
 			},
 			Fix: getFix(fixedInEntry),
 		},
@@ -139,44 +135,47 @@ func groupFixedIns(vuln unmarshal.GitHubAdvisory) map[groupIndex][]unmarshal.Git
 	return grouped
 }
 
-func getPackageType(ecosystem string) string {
+func getPackageType(ecosystem string) pkg.Type {
 	ecosystem = strings.ToLower(ecosystem)
 	switch ecosystem {
 	case "composer":
-		return string(pkg.PhpComposerPkg)
+		return pkg.PhpComposerPkg
 	case "rust", "cargo":
-		return string(pkg.RustPkg)
+		return pkg.RustPkg
 	case "dart":
-		return string(pkg.DartPubPkg)
+		return pkg.DartPubPkg
 	case "nuget", ".net":
-		return string(pkg.DotnetPkg)
+		return pkg.DotnetPkg
 	case "go", "golang":
-		return string(pkg.GoModulePkg)
+		return pkg.GoModulePkg
 	case "maven", "java":
-		return string(pkg.JavaPkg)
+		return pkg.JavaPkg
 	case "npm":
-		return string(pkg.NpmPkg)
+		return pkg.NpmPkg
 	case "pypi", "python", "pip":
-		return string(pkg.PythonPkg)
+		return pkg.PythonPkg
 	case "swift":
-		return string(pkg.SwiftPkg)
+		return pkg.SwiftPkg
 	case "rubygems", "ruby", "gem":
-		return string(pkg.GemPkg)
+		return pkg.GemPkg
 	case "apk":
-		return string(pkg.ApkPkg)
+		return pkg.ApkPkg
 	case "rpm":
-		return string(pkg.RpmPkg)
+		return pkg.RpmPkg
 	case "deb":
-		return string(pkg.DebPkg)
+		return pkg.DebPkg
 	}
 
-	return ecosystem
+	log.Warnf("using unknown ecosystem intead of syft pkg type (this will probably cause issues when matching): %q", ecosystem)
+
+	return pkg.Type(ecosystem)
 }
 
 func getPackage(group groupIndex) *grypeDB.Package {
+	t := getPackageType(group.ecosystem)
 	return &grypeDB.Package{
-		Name:      group.name,
-		Ecosystem: getPackageType(group.ecosystem),
+		Name:      name.Normalize(group.name, t),
+		Ecosystem: string(t),
 	}
 }
 

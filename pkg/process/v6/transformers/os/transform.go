@@ -17,6 +17,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/db/v6/name"
 	"github.com/anchore/grype/grype/distro"
 	"github.com/anchore/syft/syft/pkg"
 )
@@ -198,25 +199,26 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 	return grouped
 }
 
-func getPackageType(osName string) string {
+func getPackageType(osName string) pkg.Type {
 	switch osName {
 	case "redhat", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
-		return string(pkg.RpmPkg)
+		return pkg.RpmPkg
 	case "ubuntu", "debian":
-		return string(pkg.DebPkg)
+		return pkg.DebPkg
 	case "alpine", "chainguard", "wolfi":
-		return string(pkg.ApkPkg)
+		return pkg.ApkPkg
 	case "windows":
-		return "msrc-kb"
+		return pkg.KbPkg
 	}
 
 	return ""
 }
 
 func getPackage(group groupIndex) *grypeDB.Package {
+	t := getPackageType(group.osName)
 	return &grypeDB.Package{
-		Ecosystem: getPackageType(group.osName),
-		Name:      group.name,
+		Ecosystem: string(t),
+		Name:      name.Normalize(group.name, t),
 	}
 }
 

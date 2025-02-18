@@ -334,7 +334,7 @@ wheels = [
 
 [[package]]
 name = "grype-db-manager"
-version = "0.28.0.post15+761a9c7"
+version = "0.28.0.post16+a94a28d"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },

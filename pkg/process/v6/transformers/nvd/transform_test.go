@@ -395,6 +395,12 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2022-26488"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										// match all versions
+										Version: grypeDB.AffectedVersion{Constraint: ""},
+									},
+								},
 							},
 							CPE: &grypeDB.Cpe{
 								Part:           "a",
@@ -406,6 +412,12 @@ func TestTransform(t *testing.T) {
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2022-26488"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										// match all versions
+										Version: grypeDB.AffectedVersion{Constraint: ""},
+									},
+								},
 							},
 							CPE: &grypeDB.Cpe{
 								Part:    "a",
@@ -523,6 +535,12 @@ func TestTransform(t *testing.T) {
 										"cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
 										"cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
 										"cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
+									},
+								},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										// match all versions
+										Version: grypeDB.AffectedVersion{Constraint: ""},
 									},
 								},
 							},
