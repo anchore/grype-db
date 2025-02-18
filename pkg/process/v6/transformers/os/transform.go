@@ -53,10 +53,16 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 	var afs []grypeDB.AffectedPackageHandle
 	groups := groupFixedIns(vuln)
 	for group, fixedIns := range groups {
+		// we only care about a single qualifier: rpm modules. The important thing to note about this is that
+		// a package with no module vs a package with a module should be detectable in the DB.
 		var qualifiers *grypeDB.AffectedPackageQualifiers
-		if group.module != "" {
+		if group.format == "rpm" {
+			module := "" // means the target package must have no module (where as nil means the module has no sway on matching)
+			if group.hasModule {
+				module = group.module
+			}
 			qualifiers = &grypeDB.AffectedPackageQualifiers{
-				RpmModularity: group.module,
+				RpmModularity: &module,
 			}
 		}
 
@@ -174,7 +180,9 @@ type groupIndex struct {
 	id        string
 	osName    string
 	osVersion string
+	hasModule bool
 	module    string
+	format    string
 }
 
 func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OSFixedIn {
@@ -191,7 +199,9 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 			id:        osID,
 			osName:    osName,
 			osVersion: osVersion,
+			hasModule: fixedIn.Module != nil,
 			module:    mod,
+			format:    fixedIn.VersionFormat,
 		}
 
 		grouped[g] = append(grouped[g], fixedIn)
