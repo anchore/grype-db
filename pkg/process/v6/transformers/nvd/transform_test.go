@@ -56,7 +56,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2018-5487",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -128,7 +128,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2018-1000222",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -212,7 +212,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2018-10189",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -291,7 +291,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2015-8978",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -346,7 +346,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2022-26488",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -461,7 +461,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2022-0543",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -560,7 +560,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2020-10729",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -647,7 +647,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2023-38733",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -731,7 +731,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2023-45283",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),
@@ -840,7 +840,7 @@ func TestTransform(t *testing.T) {
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "CVE-2023-45283",
 						ProviderID:    "nvd",
 						Provider:      expectedProvider("nvd"),

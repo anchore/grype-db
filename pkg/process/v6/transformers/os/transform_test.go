@@ -95,7 +95,7 @@ func TestTransform(t *testing.T) {
 			provider: "alpine",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2018-19967",
 						Status:     "active",
 						ProviderID: "alpine",
@@ -138,7 +138,7 @@ func TestTransform(t *testing.T) {
 			provider: "amazon",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALAS-2018-1106",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -255,7 +255,7 @@ func TestTransform(t *testing.T) {
 			provider: "amazon",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALAS-2021-1704",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -310,7 +310,7 @@ func TestTransform(t *testing.T) {
 					),
 				},
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALASKERNEL-5.4-2022-007",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -364,7 +364,7 @@ func TestTransform(t *testing.T) {
 					),
 				},
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALASKERNEL-5.10-2022-005",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -424,7 +424,7 @@ func TestTransform(t *testing.T) {
 			provider: "mariner",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2023-29403",
 						ProviderID: "mariner",
 						Provider:   expectedProvider("mariner"),
@@ -469,7 +469,7 @@ func TestTransform(t *testing.T) {
 			provider: "debian",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2008-7220",
 						ProviderID: "debian",
 						Provider:   expectedProvider("debian"),
@@ -548,7 +548,7 @@ func TestTransform(t *testing.T) {
 			provider: "debian",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2011-4623",
 						ProviderID: "debian",
 						Provider:   expectedProvider("debian"),
@@ -585,7 +585,7 @@ func TestTransform(t *testing.T) {
 					),
 				},
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2008-5618",
 						ProviderID: "debian",
 						Provider:   expectedProvider("debian"),
@@ -628,7 +628,7 @@ func TestTransform(t *testing.T) {
 			provider: "mariner",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2021-37621",
 						ProviderID: "mariner",
 						Provider:   expectedProvider("mariner"),
@@ -675,7 +675,7 @@ func TestTransform(t *testing.T) {
 			provider: "mariner",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2023-29404",
 						ProviderID: "mariner",
 						Provider:   expectedProvider("mariner"),
@@ -720,7 +720,7 @@ func TestTransform(t *testing.T) {
 			provider: "oracle",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "ELSA-2020-2550",
 						ProviderID:    "oracle",
 						Provider:      expectedProvider("oracle"),
@@ -798,7 +798,7 @@ func TestTransform(t *testing.T) {
 			provider: "oracle",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2020-14350",
 						ProviderID: "oracle",
 						Provider:   expectedProvider("oracle"),
@@ -894,7 +894,7 @@ func TestTransform(t *testing.T) {
 			provider: "redhat",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2020-6819",
 						ProviderID: "redhat",
 						Provider:   expectedProvider("redhat"),
@@ -988,7 +988,7 @@ func TestTransform(t *testing.T) {
 			provider: "redhat",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2020-14350",
 						ProviderID: "redhat",
 						Provider:   expectedProvider("redhat"),
