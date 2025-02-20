@@ -326,7 +326,7 @@ def upload_db(ctx: click.core.Context, cfg: config.Application, db_uuid: str, tt
 
         click.echo(f"DB latest.json {db_uuid!r} uploaded to s3://{s3_bucket}/{s3_path}")
     else:
-        ctx.invoke(listing.upload_listing)
+        ctx.invoke(listing.update_listing)
 
 
 @group.command(name="build-and-upload", help="upload a grype database")
