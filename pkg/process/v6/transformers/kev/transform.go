@@ -37,9 +37,9 @@ func getKev(kev unmarshal.KnownExploitedVulnerability) grypeDB.KnownExploitedVul
 	}
 }
 
-func getURLs(aux []string, notes string) ([]string, string) {
-	bracketPattern := regexp.MustCompile(`\[(https?:\/\/[^\]]+)\]`)
+var bracketURLPattern = regexp.MustCompile(`\[(https?://[^\]]+)\]`)
 
+func getURLs(aux []string, notes string) ([]string, string) {
 	// let's keep the URLs we find in order but also deduplicate them since we're combining URLs from multiple sources
 	urlSet := strset.New()
 	var urls []string
@@ -53,7 +53,7 @@ func getURLs(aux []string, notes string) ([]string, string) {
 			part = strings.TrimSpace(part)
 
 			if strings.HasPrefix(strings.ToLower(part), "http") {
-				url := strings.ReplaceAll(part, "\\/", "/")
+				url := part
 				if !urlSet.Has(url) {
 					urlSet.Add(url)
 					urls = append(urls, url)
@@ -68,10 +68,10 @@ func getURLs(aux []string, notes string) ([]string, string) {
 
 	// ...then add URLs from the other fields
 	for _, text := range aux {
-		matches := bracketPattern.FindAllStringSubmatch(text, -1)
+		matches := bracketURLPattern.FindAllStringSubmatch(text, -1)
 		for _, match := range matches {
 			if len(match) > 1 {
-				url := strings.ReplaceAll(match[1], "\\/", "/")
+				url := match[1]
 				if !urlSet.Has(url) {
 					urlSet.Add(url)
 					urls = append(urls, url)
