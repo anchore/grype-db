@@ -5,6 +5,7 @@ import (
 
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/processors"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers/epss"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/github"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/kev"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/nvd"
@@ -45,5 +46,6 @@ func Processors(cfg Config) []data.Processor {
 		processors.NewV2NVDProcessor(nvd.Transformer(cfg.NVD)),
 		processors.NewV2OSProcessor(os.Transform),
 		processors.NewV2KEVProcessor(kev.Transform),
+		processors.NewV2EPSSProcessor(epss.Transform),
 	}
 }

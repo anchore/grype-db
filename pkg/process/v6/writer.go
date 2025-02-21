@@ -114,6 +114,10 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 			if err := w.store.AddKnownExploitedVulnerabilities(&row); err != nil {
 				return fmt.Errorf("unable to write known exploited vulnerability to store: %w", err)
 			}
+		case grypeDB.EpssHandle:
+			if err := w.store.AddEpss(&row); err != nil {
+				return fmt.Errorf("unable to write EPSS to store: %w", err)
+			}
 		default:
 			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
 		}
