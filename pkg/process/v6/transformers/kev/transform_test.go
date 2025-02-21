@@ -26,13 +26,11 @@ func TestTransform(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		provider string
-		want     []transformers.RelatedEntries
+		name string
+		want []transformers.RelatedEntries
 	}{
 		{
-			name:     "test-fixtures/go-case.json",
-			provider: "alpine",
+			name: "test-fixtures/go-case.json",
 			want: []transformers.RelatedEntries{
 				{
 					Provider: &grypeDB.Provider{
