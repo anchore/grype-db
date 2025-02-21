@@ -30,6 +30,8 @@ func NewEntries(models ...any) []data.Entry {
 			entry.Related = append(entry.Related, m)
 		case grypeDB.Provider:
 			entry.Provider = &m
+		case grypeDB.EpssHandle:
+			entry.Related = append(entry.Related, m)
 		default:
 			panic(fmt.Sprintf("unsupported model type: %T", m))
 		}
