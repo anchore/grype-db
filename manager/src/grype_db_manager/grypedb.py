@@ -449,13 +449,13 @@ def db_metadata(build_dir: str) -> dict:
             # example data:
             # {
             #  "status": "active",
-            #  "schemaVersion": "6.0.0",
+            #  "schemaVersion": "v6.0.0",
             #  "built": "2024-11-26T20:24:24Z",
             #  "path": "vulnerability-db_v6.0.0_2024-11-25T01:31:56Z_1732652663.tar.zst",
             #  "checksum": "sha256:1a0ec0ba815083d0ef50790c8c94307c822fd7d09632dee9c3edb6bf5a58e6ff"
             # }
             return {
-                "version": int(metadata["schemaVersion"].split(".")[0]),
+                "version": int(metadata["schemaVersion"].split(".")[0].removeprefix("v")),
                 "db_checksum": "xxh64:" + db_checksum.hexdigest(),
                 "db_created": metadata["built"],
                 "data_created": parse_datetime(metadata["path"].split("_")[2]),
