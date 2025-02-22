@@ -24,7 +24,7 @@ class Grype:
 
     def __init__(self, schema_version: int | str, store_root: str, update_url: str = "", release: str | None = None):
         if isinstance(schema_version, str):
-            schema_version = int(schema_version.split(".")[0])
+            schema_version = int(schema_version.split(".")[0].removeprefix("v"))
         self.schema_version = schema_version
         if release:
             logging.warning(f"overriding grype release for schema={schema_version!r} with release={release!r}")
