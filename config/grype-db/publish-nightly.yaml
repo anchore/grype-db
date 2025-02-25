@@ -15,7 +15,9 @@ provider:
     - name: amazon
     - name: chainguard
     - name: debian
+    - name: epss
     - name: github
+    - name: kev
     - name: mariner
     - name: oracle
     - name: rhel
@@ -35,4 +37,5 @@ pull:
   parallelism: 4
 
 package:
+  # required for v5
   publish-base-url: https://toolbox-data.anchore.io/grype/databases
