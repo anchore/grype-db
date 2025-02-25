@@ -197,16 +197,24 @@ func (o CvssSummaries) Len() int {
 func (o CvssSummaries) Less(i, j int) bool {
 	iEntry := o[i]
 	jEntry := o[j]
-	iV := iEntry.version()
-	jV := jEntry.version()
-	if iV == jV {
-		if iEntry.Type == Primary && jEntry.Type == Secondary {
+
+	// first compare by type (Primary/Secondary)
+	if iEntry.Type != jEntry.Type {
+		return iEntry.Type == Secondary
+	}
+
+	// prefer NVD as primary source
+	if iEntry.Source != jEntry.Source {
+		if iEntry.Source == "nvd@nist.gov" {
 			return false
-		} else if iEntry.Type == Secondary && jEntry.Type == Primary {
+		} else if jEntry.Source == "nvd@nist.gov" {
 			return true
 		}
-		return false
 	}
+
+	// if types are the same, then compare by version
+	iV := iEntry.version()
+	jV := jEntry.version()
 	return iV.LessThan(jV)
 }
 

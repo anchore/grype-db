@@ -254,9 +254,9 @@ func getCPEs(in string) *grypeDB.Cpe {
 func getSeverities(vuln unmarshal.NVDVulnerability) []grypeDB.Severity {
 	sevs := nvd.CvssSummaries(vuln.CVSS()).Sorted()
 	var results []grypeDB.Severity
-	for i, sev := range sevs {
+	for _, sev := range sevs {
 		priority := 2
-		if i == 0 {
+		if sev.Type == nvd.Primary {
 			priority = 1
 		}
 		results = append(results, grypeDB.Severity{
