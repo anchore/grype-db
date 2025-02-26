@@ -200,13 +200,10 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     )
     assert "Quality gate passed!" in stdout
     assert "' uploaded to s3://testbucket/grype/databases" in stdout
-
-    logger.step("case 2: update the listing file based on the DB uploaded")
-
-    # update the listing file and validate
-    stdout, _ = command.run("grype-db-manager -v listing update", env=cli_env)
     assert "Validation passed" in stdout
     assert "listing.json uploaded to s3://testbucket/grype/databases" in stdout
+
+    logger.step("case 2: update the listing file based on the DB uploaded")
 
     # set grype environment variables
     cli_env.update(

@@ -20,8 +20,11 @@ def test_upload_db(mocker, test_dir_path, redact_aws_credentials):
         archive_path="some/path/to/archive.tar.gz",
     )
 
-    s3_mock = mocker.patch("grype_db_manager.cli.db.s3utils")
-    s3_mock.upload_file.return_value = None
+    s3_db_mock = mocker.patch("grype_db_manager.cli.db.s3utils")
+    s3_db_mock.upload_file.return_value = None
+
+    listing_mock = mocker.patch("grype_db_manager.cli.listing.update_listing")
+    listing_mock.return_value = None
 
     runner = CliRunner()
     result = runner.invoke(cli.cli, f"-c {config_path} db upload some-db-uuid".split())
@@ -29,9 +32,12 @@ def test_upload_db(mocker, test_dir_path, redact_aws_credentials):
     assert result.exit_code == 0
 
     # ensure the s3 mock was called with the right arguments
-    s3_mock.upload_file.assert_called_once_with(
+    s3_db_mock.upload_file.assert_called_once_with(
         path="some/path/to/archive.tar.gz",
         bucket="testbucket",
         key="grype/databases/archive.tar.gz",
         CacheControl="public,max-age=31536000",
     )
+
+    # ensure the listing mock was called once
+    listing_mock.assert_called_once()
