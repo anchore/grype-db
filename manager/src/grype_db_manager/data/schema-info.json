@@ -22,7 +22,7 @@
     },
     {
       "schema": "5",
-      "grype-version": "main",
+      "grype-version": "v0.87.0",
       "supported": true
     },
     {
