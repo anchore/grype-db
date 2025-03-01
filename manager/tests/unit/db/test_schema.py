@@ -10,7 +10,8 @@ def test_grype_version():
     assert "v0.12.1" == schema.grype_version(2)
     assert "v0.40.1" == schema.grype_version(3)
     assert "v0.50.2" == schema.grype_version(4)
-    assert "main" == schema.grype_version(5)
+    assert "v0.87.0" == schema.grype_version(5)
+    assert "main" == schema.grype_version(6)
 
 
 def test_supported_schema_versions():
