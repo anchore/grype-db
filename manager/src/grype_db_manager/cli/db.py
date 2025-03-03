@@ -169,18 +169,16 @@ def _validate_db(
 
     yardstick_profile_data = ycfg.Profiles()
     profile_name = None
-    if db_info.schema_version >= 6:
-        # TODO: we don't have any published v6 grype databases yet
-        basis_grype_version = db.schema.grype_version(5)
-        # TODO: we can remove this once v6 lands on grype@main without a feature flag
-        profile_name = f"v{db_info.schema_version}"
-        yardstick_profile_data = ycfg.Profiles(
-            data={
-                "grype[custom-db]": {
-                    profile_name: {"config_path": f"./.grype-v{db_info.schema_version}.yaml"},
-                },
-            },
-        )
+    # this is a good example of how to add a custom profile configuration by a profile when working on a new schema version
+    # if db_info.schema_version >= 6:
+    #     profile_name = f"v{db_info.schema_version}"
+    #     yardstick_profile_data = ycfg.Profiles(
+    #         data={
+    #             "grype[custom-db]": {
+    #                 profile_name: {"config_path": f"./.grype-v{db_info.schema_version}.yaml"},
+    #             },
+    #         },
+    #     )
 
     result_sets = {}
     for idx, rs in enumerate(cfg.validate.gates):
