@@ -28,8 +28,7 @@
     {
       "schema": "6",
       "grype-version": "main",
-      "supported": true,
-      "validate": false
+      "supported": true
     }
   ]
 }
