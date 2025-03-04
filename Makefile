@@ -24,7 +24,7 @@ BOUNCER = $(TOOL_DIR)/bouncer
 CRANE = $(TOOL_DIR)/crane
 
 # Tool versions #################################
-GOLANGCILINT_VERSION = v1.64.5
+GOLANGCILINT_VERSION = v1.64.6
 GOSIMPORTS_VERSION := v0.3.8
 BOUNCER_VERSION = v0.4.0
 CHRONICLE_VERSION = v0.8.0
