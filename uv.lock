@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.11, <3.14"
 
 [[package]]
@@ -334,7 +335,6 @@ wheels = [
 
 [[package]]
 name = "grype-db-manager"
-version = "0.28.0.post16+a94a28d"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
