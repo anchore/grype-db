@@ -3,25 +3,30 @@
     {
       "schema": "1",
       "grype-version": "v0.7.0",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "2",
       "grype-version": "v0.12.1",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "3",
       "grype-version": "v0.40.1",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "4",
       "grype-version": "v0.50.2",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "5",
+      "grype-version": "v0.87.0",
+      "supported": true
+    },
+    {
+      "schema": "6",
       "grype-version": "main",
       "supported": true
     }

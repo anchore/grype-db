@@ -61,21 +61,28 @@ log:
   level: INFO
 schemaMappingFile: ''
 validate:
-  db:
-    defaultMaxYear: 2021
-    gate:
-      f1ScoreThreshold: 0.0
-      introducedFnsThreshold: 0
-      unlabeledMatchesThreshold: 10.0
-    grype:
-      config: ''
-    images: []
+  defaultMaxYear: 2021
+  expectedProviders:
+    - alpine
+    - amazon
+    - chainguard
+    - debian
+    - github
+    - mariner
+    - nvd
+    - oracle
+    - rhel
+    - sles
+    - ubuntu
+    - wolfi
+  gates: []
   listing:
     image: null
     minimumPackages: null
     minimumVulnerabilities: null
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
+verbosity: 0
 """
 
     assert actual == expected
@@ -113,22 +120,36 @@ log:
   level: INFO
 schemaMappingFile: mapping.json
 validate:
-  db:
-    defaultMaxYear: 2021
-    gate:
-      f1ScoreThreshold: 0.0
-      introducedFnsThreshold: 0
-      unlabeledMatchesThreshold: 10.0
-    grype:
-      config: ''
-    images:
-      - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
+  defaultMaxYear: 2021
+  expectedProviders:
+    - alpine
+  gates:
+    - allowEmptyResultsForSchemas:
+        - 1
+        - 2
+        - 3
+      gate:
+        allowedNamespaces: []
+        candidateToolLabel: candidate
+        failOnEmptyMatchSet: true
+        maxF1Regression: 0.15
+        maxNewFalseNegatives: 10
+        maxUnlabeledPercent: 50
+        maxYear: 2021
+        name: default
+        referenceToolLabel: reference
+        requiredNamespaces: []
+      grype:
+        config: ''
+      images:
+        - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
   listing:
     image: centos:8.2.2004
     minimumPackages: 85
     minimumVulnerabilities: 400
     overrideDbSchemaVersion: null
     overrideGrypeVersion: null
+verbosity: 2
 """
 
     assert actual == expected

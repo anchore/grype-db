@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/scylladb/go-set/strset"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -62,7 +63,7 @@ func CacheRestore(app *application.Application) *cobra.Command {
 		Short:   "restore provider cache from a backup archive",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return cacheRestore(cfg)
 			}))
@@ -200,6 +201,18 @@ func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
 
 	tr := tar.NewReader(gr)
 
+	rootPath, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	rootPath, err = filepath.Abs(rootPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	var restoredAny bool
+	fs := afero.NewOsFs()
 	for {
 		header, err := tr.Next()
 
@@ -217,35 +230,130 @@ func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
 			continue
 		}
 
-		log.WithFields("path", header.Name).Trace("extracting file")
+		restoredAny = true
 
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.Mkdir(header.Name, 0755); err != nil {
-				return fmt.Errorf("failed to create directory: %w", err)
-			}
-		case tar.TypeReg:
-			parentPath := filepath.Dir(header.Name)
-			if parentPath != "" {
-				if err := os.MkdirAll(parentPath, 0755); err != nil {
-					return fmt.Errorf("failed to create parent directory %q for file %q: %w", parentPath, header.Name, err)
-				}
-			}
-
-			outFile, err := os.Create(header.Name)
-			if err != nil {
-				return fmt.Errorf("failed to create file: %w", err)
-			}
-			if err := safeCopy(outFile, tr); err != nil {
-				return fmt.Errorf("failed to copy file: %w", err)
-			}
-			if err := outFile.Close(); err != nil {
-				return fmt.Errorf("failed to close file: %w", err)
-			}
-
-		default:
-			log.WithFields("name", header.Name, "type", header.Typeflag).Warn("unknown file type in backup archive")
+		if err := processTarHeader(fs, rootPath, header, tr); err != nil {
+			return err
 		}
+	}
+
+	if !restoredAny {
+		return fmt.Errorf("no provider data was restored")
+	}
+	return nil
+}
+
+func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader io.Reader) error {
+	// clean the path to avoid traversal (removes "..", ".", etc.)
+	cleanedPath := cleanPathRelativeToRoot(rootPath, header.Name)
+
+	if err := detectPathTraversal(rootPath, cleanedPath); err != nil {
+		return err
+	}
+
+	log.WithFields("path", cleanedPath).Trace("extracting file")
+
+	switch header.Typeflag {
+	case tar.TypeDir:
+		if err := fs.Mkdir(cleanedPath, 0755); err != nil {
+			return fmt.Errorf("failed to create directory: %w", err)
+		}
+	case tar.TypeSymlink:
+		if err := handleSymlink(fs, rootPath, cleanedPath, header.Linkname); err != nil {
+			return fmt.Errorf("failed to create symlink: %w", err)
+		}
+	case tar.TypeReg:
+		if err := handleFile(fs, cleanedPath, reader); err != nil {
+			return fmt.Errorf("failed to handle file: %w", err)
+		}
+	default:
+		log.WithFields("name", cleanedPath, "type", header.Typeflag).Warn("unknown file type in backup archive")
+	}
+	return nil
+}
+
+func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader) error {
+	if cleanedPath == "" {
+		return fmt.Errorf("empty path")
+	}
+
+	parentPath := filepath.Dir(cleanedPath)
+	if parentPath != "" {
+		if err := fs.MkdirAll(parentPath, 0755); err != nil {
+			return fmt.Errorf("failed to create parent directory %q for file %q: %w", parentPath, cleanedPath, err)
+		}
+	}
+
+	outFile, err := fs.Create(cleanedPath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	if err := safeCopy(outFile, reader); err != nil {
+		return fmt.Errorf("failed to copy file: %w", err)
+	}
+	if err := outFile.Close(); err != nil {
+		return fmt.Errorf("failed to close file: %w", err)
+	}
+	return nil
+}
+
+func handleSymlink(fs afero.Fs, rootPath, cleanedPath, linkName string) error {
+	if err := detectLinkTraversal(rootPath, cleanedPath, linkName); err != nil {
+		return err
+	}
+
+	linkReader, ok := fs.(afero.LinkReader)
+	if !ok {
+		return afero.ErrNoReadlink
+	}
+
+	// check if the symlink already exists and is pointing to the correct target
+	if linkTarget, err := linkReader.ReadlinkIfPossible(cleanedPath); err == nil {
+		if linkTarget == linkName {
+			return nil
+		}
+
+		if err := fs.Remove(cleanedPath); err != nil {
+			return fmt.Errorf("failed to remove existing symlink: %w", err)
+		}
+	}
+
+	linker, ok := fs.(afero.Linker)
+	if !ok {
+		return afero.ErrNoSymlink
+	}
+
+	if err := linker.SymlinkIfPossible(linkName, cleanedPath); err != nil {
+		return fmt.Errorf("failed to create symlink: %w", err)
+	}
+	return nil
+}
+
+func cleanPathRelativeToRoot(rootPath, path string) string {
+	return filepath.Join(rootPath, filepath.Clean(path))
+}
+
+func detectLinkTraversal(rootPath, cleanedPath, linkTarget string) error {
+	linkTarget = filepath.Clean(linkTarget)
+	if filepath.IsAbs(linkTarget) {
+		return detectPathTraversal(rootPath, linkTarget)
+	}
+
+	linkTarget = filepath.Join(filepath.Dir(cleanedPath), linkTarget)
+
+	if !strings.HasPrefix(linkTarget, rootPath) {
+		return fmt.Errorf("symlink points outside root: %s -> %s", cleanedPath, linkTarget)
+	}
+	return nil
+}
+
+func detectPathTraversal(rootPath, cleanedPath string) error {
+	if cleanedPath == "" {
+		return nil
+	}
+
+	if !strings.HasPrefix(cleanedPath, rootPath) {
+		return fmt.Errorf("path traversal detected: %s", cleanedPath)
 	}
 	return nil
 }

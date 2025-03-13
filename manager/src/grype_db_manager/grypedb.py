@@ -15,6 +15,7 @@ import sys
 import uuid
 
 import requests
+import xxhash
 
 from grype_db_manager.db.format import Format
 
@@ -32,7 +33,11 @@ DB_DIR = "dbs"
 # however, its important to use the file for the same version of vunnel used by grype-db to build the DB, which
 # isn't always possible to know. Ideally this version info would be captured in the vunnel data directory directly.
 # For the meantime this is a snapshot of the expected namespaces for vunnel 0.17.2 in Oct 2023 (boo! 👻).
-expected_namespaces = [
+v5_additional_namespaces = [
+    "mariner:distro:azurelinux:3.0",
+]
+
+v4_expected_namespaces = [
     "alpine:distro:alpine:3.10",
     "alpine:distro:alpine:3.11",
     "alpine:distro:alpine:3.12",
@@ -126,6 +131,7 @@ expected_namespaces = [
     "ubuntu:distro:ubuntu:22.10",
     "ubuntu:distro:ubuntu:23.04",
     "ubuntu:distro:ubuntu:23.10",
+    "ubuntu:distro:ubuntu:24.04",
     "wolfi:distro:wolfi:rolling",
 ]
 
@@ -223,8 +229,17 @@ v3_expected_namespaces = [
     "ubuntu:22.10",
     "ubuntu:23.04",
     "ubuntu:23.10",
+    "ubuntu:24.04",
     "wolfi:rolling",
 ]
+
+
+def expected_namespaces(schema_version: int) -> list[str]:
+    if schema_version <= 3:
+        return v3_expected_namespaces
+    if schema_version == 4:
+        return v4_expected_namespaces
+    return v4_expected_namespaces + v5_additional_namespaces
 
 
 @dataclasses.dataclass
@@ -235,6 +250,7 @@ class DBInfo:
     db_created: datetime.datetime
     data_created: datetime.datetime
     archive_path: str
+    latest_path: str | None = None
 
 
 class DBInvalidException(Exception):
@@ -242,6 +258,10 @@ class DBInvalidException(Exception):
 
 
 class DBNamespaceException(Exception):
+    pass
+
+
+class DBProviderException(Exception):
     pass
 
 
@@ -265,15 +285,35 @@ class DBManager:
 
         session_dir = os.path.join(self.db_dir, db_uuid)
         with open(os.path.join(session_dir, "timestamp"), "w") as f:
-            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            now = datetime.datetime.now(tz=datetime.UTC)
             f.write(now.isoformat())
 
         return db_uuid
+
+    def list_providers(self, db_uuid: str) -> list[str]:
+        _, build_dir = self.db_paths(db_uuid=db_uuid)
+        # a sqlite3 db
+        db_path = os.path.join(build_dir, "vulnerability.db")
+
+        # select distinct values in the "namespace" column of the "vulnerability" table
+        con = sqlite3.connect(db_path)
+        crsr = con.cursor()
+        crsr.execute("SELECT DISTINCT id FROM providers")
+        result = crsr.fetchall()
+        con.close()
+
+        return sorted([r[0] for r in result])
 
     def list_namespaces(self, db_uuid: str) -> list[str]:
         _, build_dir = self.db_paths(db_uuid=db_uuid)
         # a sqlite3 db
         db_path = os.path.join(build_dir, "vulnerability.db")
+
+        # check if there is a metadata.json file in the build directory
+        metadata_path = os.path.join(build_dir, "metadata.json")
+        if not os.path.exists(metadata_path):
+            msg = f"missing metadata.json for DB {db_uuid!r}"
+            raise DBInvalidException(msg)
 
         # select distinct values in the "namespace" column of the "vulnerability" table
         con = sqlite3.connect(db_path)
@@ -284,11 +324,22 @@ class DBManager:
 
         return sorted([r[0] for r in result])
 
+    def validate_providers(self, db_uuid: str, expected: list[str]) -> None:
+        if not expected:
+            msg = "expected at least one provider"
+            raise DBProviderException(msg)
+
+        missing_providers = set(expected) - set(self.list_providers(db_uuid=db_uuid))
+
+        if missing_providers:
+            msg = f"missing providers in DB {db_uuid!r}: {sorted(missing_providers)!r}"
+            raise DBProviderException(msg)
+
+        logging.info(f"minimum expected providers present in {db_uuid!r}")
+
     def validate_namespaces(self, db_uuid: str) -> None:
         db_info = self.get_db_info(db_uuid)
-
-        expected = v3_expected_namespaces if db_info.schema_version <= 3 else expected_namespaces
-
+        expected = expected_namespaces(db_info.schema_version)
         missing_namespaces = set(expected) - set(self.list_namespaces(db_uuid=db_uuid))
 
         if missing_namespaces:
@@ -310,14 +361,8 @@ class DBManager:
             with open(timestamp_path) as f:
                 db_created_timestamp = datetime.datetime.fromisoformat(f.read())
 
-        # read info from the metadata file in build/metadata.json
-        metadata_path = os.path.join(session_dir, "build", "metadata.json")
-        if not os.path.exists(metadata_path):
-            msg = f"missing metadata.json for DB {db_uuid!r}"
-            raise DBInvalidException(msg)
-
-        with open(metadata_path) as f:
-            metadata = json.load(f)
+        # read info from the metadata file in build/metadata.json (v1 - v5) or build/latest.json (v6+)
+        metadata = db_metadata(build_dir=os.path.join(session_dir, "build"))
 
         stage_dir, _ = self.db_paths(db_uuid=db_uuid)
         db_pattern = os.path.join(
@@ -335,13 +380,18 @@ class DBManager:
 
         abs_archive_path = os.path.abspath(matches[0])
 
+        db_created = db_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if "db_created" in metadata:
+            db_created = metadata["db_created"]
+
         return DBInfo(
             uuid=db_uuid,
             schema_version=metadata["version"],
-            db_checksum=metadata["checksum"],
-            db_created=db_created_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            data_created=metadata["built"],
+            db_checksum=metadata["db_checksum"],
+            db_created=db_created,
+            data_created=metadata["data_created"],
             archive_path=abs_archive_path,
+            latest_path=metadata.get("latest_path", None),
         )
 
     def list_dbs(self) -> list[DBInfo]:
@@ -359,6 +409,65 @@ class DBManager:
                 logging.debug(f"failed to get info for session {db_uuid!r}: {e}")
 
         return sorted(sessions, key=lambda x: x.db_created)
+
+    def remove_db(self, db_uuid: str) -> bool:
+        session_dir = os.path.join(self.db_dir, db_uuid)
+        if os.path.exists(session_dir):
+            shutil.rmtree(session_dir)
+            return True
+        return False
+
+
+def db_metadata(build_dir: str) -> dict:
+    metadata_path = os.path.join(build_dir, "metadata.json")
+
+    if os.path.exists(metadata_path):
+        # supports v1 - v5
+        with open(metadata_path) as f:
+            metadata = json.load(f)
+            return {
+                "version": int(metadata["version"]),
+                "db_checksum": metadata["checksum"],
+                "data_created": metadata["built"],
+            }
+
+    db_path = os.path.join(build_dir, "vulnerability.db")
+    if not os.path.exists(db_path):
+        msg = "missing vulnerability.db for DB"
+        raise DBInvalidException(msg)
+
+    db_checksum = xxhash.xxh64()
+    with open(db_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            db_checksum.update(chunk)
+
+    latest_path = os.path.join(build_dir, "latest.json")
+    if os.path.exists(latest_path):
+        # supports v6+
+        with open(latest_path) as f:
+            metadata = json.load(f)
+            # example data:
+            # {
+            #  "status": "active",
+            #  "schemaVersion": "v6.0.0",
+            #  "built": "2024-11-26T20:24:24Z",
+            #  "path": "vulnerability-db_v6.0.0_2024-11-25T01:31:56Z_1732652663.tar.zst",
+            #  "checksum": "sha256:1a0ec0ba815083d0ef50790c8c94307c822fd7d09632dee9c3edb6bf5a58e6ff"
+            # }
+            return {
+                "version": int(metadata["schemaVersion"].split(".")[0].removeprefix("v")),
+                "db_checksum": "xxh64:" + db_checksum.hexdigest(),
+                "db_created": metadata["built"],
+                "data_created": parse_datetime(metadata["path"].split("_")[2]),
+                "latest_path": os.path.abspath(latest_path),
+            }
+
+    msg = "missing metadata.json and latest.json for DB"
+    raise DBInvalidException(msg)
+
+
+def parse_datetime(s: str) -> datetime.datetime:
+    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
 
 
 class GrypeDB:
@@ -412,7 +521,7 @@ class GrypeDB:
 
         db_pattern = os.path.join(
             build_dir,
-            f"*_v{schema_version}_*.tar.*",
+            f"*_v{schema_version}[._]*.tar.*",
         )
 
         matches = glob.glob(db_pattern)

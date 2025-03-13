@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
+	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -45,7 +45,10 @@ func Build(app *application.Application) *cobra.Command {
 		Short:   "build a SQLite DB from the vulnerability feeds data for a particular schema version",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if err := validateCPEParts(cfg.Build.IncludeCPEParts); err != nil {
+				return err
+			}
 			return app.Run(cmd.Context(), async(func() error {
 				return runBuild(cfg)
 			}))
@@ -55,6 +58,19 @@ func Build(app *application.Application) *cobra.Command {
 	commonConfiguration(app, cmd, &cfg)
 
 	return cmd
+}
+
+func validateCPEParts(parts []string) error {
+	validParts := strset.New("a", "o", "h")
+	for _, part := range parts {
+		if !validParts.Has(part) {
+			return fmt.Errorf("invalid CPE part: %s", part)
+		}
+	}
+	if len(parts) == 0 {
+		return errors.New("no CPE parts provided")
+	}
+	return nil
 }
 
 func runBuild(cfg buildConfig) error {
@@ -91,11 +107,18 @@ func runBuild(cfg buildConfig) error {
 		return fmt.Errorf("unable to get provider states: %w", err)
 	}
 
+	earliest, err := provider.States(states).EarliestTimestamp()
+	if err != nil {
+		return fmt.Errorf("unable to get earliest timestamp: %w", err)
+	}
+
 	return process.Build(process.BuildConfig{
-		SchemaVersion: cfg.SchemaVersion,
-		Directory:     cfg.Directory,
-		States:        states,
-		Timestamp:     earliestTimestamp(states),
+		SchemaVersion:       cfg.SchemaVersion,
+		Directory:           cfg.Directory,
+		States:              states,
+		Timestamp:           earliest,
+		IncludeCPEParts:     cfg.IncludeCPEParts,
+		InferNVDFixVersions: cfg.InferNVDFixVersions,
 	})
 }
 
@@ -127,14 +150,4 @@ func providerStates(skipValidation bool, providers []provider.Provider) ([]provi
 		log.Debugf("state validated for all providers")
 	}
 	return states, nil
-}
-
-func earliestTimestamp(states []provider.State) time.Time {
-	earliest := states[0].Timestamp
-	for _, s := range states {
-		if s.Timestamp.Before(earliest) {
-			earliest = s.Timestamp
-		}
-	}
-	return earliest
 }

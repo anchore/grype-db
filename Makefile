@@ -1,7 +1,9 @@
 BIN = grype-db
+OWNER = anchore
 
 SOURCE_REPO_URL = https://github.com/anchore/grype-db
 TEMP_DIR = ./.tmp
+TOOL_DIR = .tool
 RESULTS_DIR = $(TEMP_DIR)/results
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
@@ -10,21 +12,26 @@ GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date -u +"%y-%m-%d")
 
 # Command templates #################################
-LINT_CMD = $(TEMP_DIR)/golangci-lint run --config .golangci.yaml
-GOIMPORTS_CMD := $(TEMP_DIR)/gosimports -local github.com/anchore
-RELEASE_CMD := $(TEMP_DIR)/goreleaser release --rm-dist
-SNAPSHOT_CMD := $(RELEASE_CMD) --skip-publish --skip-sign --snapshot
-CHRONICLE_CMD = $(TEMP_DIR)/chronicle
-GLOW_CMD = $(TEMP_DIR)/glow
+BINNY = $(TOOL_DIR)/binny
+LINT_CMD = $(TOOL_DIR)/golangci-lint run --config .golangci.yaml
+GOIMPORTS_CMD := $(TOOL_DIR)/gosimports -local github.com/anchore
+RELEASE_CMD = $(TOOL_DIR)/goreleaser release --rm-dist
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot
+CHRONICLE_CMD = $(TOOL_DIR)/chronicle
+GLOW_CMD = $(TOOL_DIR)/glow
+ORAS = $(TOOL_DIR)/oras
+BOUNCER = $(TOOL_DIR)/bouncer
+CRANE = $(TOOL_DIR)/crane
 
 # Tool versions #################################
-GOLANGCILINT_VERSION = v1.54.2
-GOSIMPORTS_VERSION := v0.3.7
+GOLANGCILINT_VERSION = v1.64.6
+GOSIMPORTS_VERSION := v0.3.8
 BOUNCER_VERSION = v0.4.0
-CHRONICLE_VERSION = v0.6.0
-GORELEASER_VERSION = v1.13.0
+CHRONICLE_VERSION = v0.8.0
+GORELEASER_VERSION = v1.26.2
 CRANE_VERSION=v0.16.1
 GLOW_VERSION := v1.5.0
+ORAS_VERSION := v1.2.2
 
 # Formatting variables #################################
 BOLD := $(shell tput -T linux bold)
@@ -39,8 +46,6 @@ SUCCESS := $(BOLD)$(GREEN)
 # Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
 COVERAGE_THRESHOLD := 55
-RELEASE_CMD=$(TEMP_DIR)/goreleaser release --rm-dist
-SNAPSHOT_CMD=$(RELEASE_CMD) --skip-publish --snapshot
 DIST_DIR=./dist
 CHANGELOG := CHANGELOG.md
 SNAPSHOT_DIR=./snapshot
@@ -90,11 +95,11 @@ all: static-analysis test ## Run all checks (linting, license checks, unit, and 
 
 .PHONY: static-analysis  ## Run all static analysis checks (linting and license checks)
 static-analysis: check-go-mod-tidy lint check-licenses
-	cd manager && poetry run make static-analysis
+	cd manager && uv run make static-analysis
 
 .PHONY: test
 test: unit cli ## Run all tests
-	cd manager && poetry run make test
+	cd manager && uv run make test
 
 
 ## Bootstrapping targets #################################
@@ -106,15 +111,14 @@ bootstrap: $(TEMP_DIR) bootstrap-go bootstrap-tools bootstrap-python  ## Downloa
 bootstrap-python:
 	cd manager && make bootstrap
 
+# note: we need to assume that binny and task have not already been installed
+$(BINNY):
+	@mkdir -p $(TOOL_DIR)
+	@curl -sSfL https://raw.githubusercontent.com/$(OWNER)/binny/main/install.sh | sh -s -- -b $(TOOL_DIR)
+
 .PHONY: bootstrap-tools
-bootstrap-tools: $(TEMP_DIR)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TEMP_DIR)/ $(GOLANGCILINT_VERSION)
-	curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMP_DIR)/ $(BOUNCER_VERSION)
-	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
-	.github/scripts/goreleaser-install.sh -b $(TEMP_DIR)/ $(GORELEASER_VERSION)
-	GOBIN="$(abspath $(TEMP_DIR))" go install github.com/google/go-containerregistry/cmd/crane@$(CRANE_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
+bootstrap-tools: $(BINNY)
+	$(BINNY) install
 
 .PHONY: bootstrap-go
 bootstrap-go:
@@ -154,33 +158,33 @@ check-go-mod-tidy:
 
 .PHONY: check-licenses
 check-licenses:
-	$(TEMP_DIR)/bouncer check ./cmd/$(BIN)
+	$(BOUNCER) check ./cmd/$(BIN)
 
 
 ## Testing targets #################################
 
 .PHONY: unit
-unit: ## Run Go unit tests (with coverage)
+unit: $(TEMP_DIR) ## Run Go unit tests (with coverage)
 	$(call title,Running Go unit tests)
-	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
+	GOEXPERIMENT=nocoverageredesign go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: unit-python
 unit-python: ## Run Python unit tests (with coverage)
 	$(call title,Running Python unit tests)
-	cd manager && poetry run make unit
+	cd manager && make unit
 
 .PHONY: db-acceptance
 db-acceptance: ## Run acceptance tests
 	$(call title,"Running DB acceptance tests (schema=$(schema))")
-	poetry run ./test/db/acceptance.sh $(schema)
+	uv run ./test/db/acceptance.sh $(schema)
 
 .PHONY: cli
 cli: cli-go cli-python ## Run all CLI tests
 
 .PHONY: cli-python
 cli-python:  ## Run python CLI tests
-	cd manager && poetry run make cli
+	cd manager && uv run make cli
 
 .PHONY: cli-go
 cli-go: $(SNAPSHOT_DIR)  ## Run go CLI tests
@@ -190,22 +194,6 @@ cli-go: $(SNAPSHOT_DIR)  ## Run go CLI tests
 		go test -count=1 -timeout=15m -v ./test/cli
 
 
-## Test-fixture-related targets #################################
-
-.PHONY: update-test-fixtures
-update-test-fixtures:
-	docker run \
-		--pull always \
-		--rm \
-		-it \
-		anchore/grype:latest \
-			-q \
-		 	-o json \
-		 		centos:8.2.2004 > publish/test-fixtures/centos-8.2.2004.json
-	dos2unix publish/test-fixtures/centos-8.2.2004.json
-	cd test/acceptance && poetry install && poetry run python grype-ingest.py capture-test-fixtures
-
-
 ## Data management targets #################################
 
 .PHONY: show-providers
@@ -213,10 +201,16 @@ show-providers:
 	@# this is used in CI to generate a job matrix, pulling data for each provider concurrently
 	@$(GRYPE_DB) list-providers -q -o json
 
+.PHONY: ci-oras-ghcr-login
+ci-oras-ghcr-login:
+	@[ -n "$(GITHUB_USERNAME)" ] || (echo "Error: GITHUB_USERNAME environment variable is not set" && exit 1)
+	@[ -n "$(GITHUB_TOKEN)" ] || (echo "Error: GITHUB_TOKEN environment variable is not set" && exit 1)
+	echo $(GITHUB_TOKEN) | $(ORAS) login ghcr.io --username $(GITHUB_USERNAME) --password-stdin
+
 .PHONY: download-provider-cache
 download-provider-cache:
 	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "oras pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
 
 .PHONY: refresh-provider-cache
 refresh-provider-cache:
@@ -230,8 +224,8 @@ upload-provider-cache: ci-check
 	@rm -f $(DB_ARCHIVE)
 	$(GRYPE_DB) cache status -p $(provider)
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
-	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
+	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
 
 .PHONY: aggregate-all-provider-cache
 aggregate-all-provider-cache:
@@ -245,23 +239,30 @@ upload-all-provider-cache: ci-check
 	@rm -f $(DB_ARCHIVE)
 	$(GRYPE_DB) cache status
 	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
-	oras push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(TEMP_DIR)/crane tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
+	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
 
 
 .PHONY: download-all-provider-cache
 download-all-provider-cache:
 	$(call title,Downloading and restoring all of todays provider data cache)
 	@rm -f $(DB_ARCHIVE)
-	@bash -c "oras pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
 
+
+## Code and data generation targets #################################
+
+.PHONY: generate-processor-code
+generate-processor-code:
+	go generate ./pkg/process
+	make format
 
 ## Build-related targets #################################
 
 .PHONY: build
 build: $(SNAPSHOT_DIR) ## Build release snapshot binaries and packages
 
-$(SNAPSHOT_DIR): ## Build snapshot release binaries and packages
+$(SNAPSHOT_DIR): $(TEMP_DIR)  ## Build snapshot release binaries and packages
 	$(call title,Building snapshot artifacts)
 
 	# create a config with the dist dir overridden
@@ -284,7 +285,7 @@ release:
 	@.github/scripts/trigger-release.sh
 
 .PHONY: release
-ci-release: ci-check clean-dist $(CHANGELOG) ## Build and publish final binaries and packages. Intended to be run only on macOS.
+ci-release: ci-check $(TEMP_DIR) clean-dist $(CHANGELOG) ## Build and publish final binaries and packages. Intended to be run only on macOS.
 	$(call title,Publishing release artifacts)
 
 	# create a config with the dist dir overridden

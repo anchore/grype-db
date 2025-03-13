@@ -17,13 +17,21 @@ class SchemaEntry:
     schema: str
     grype_version: str
     supported: bool
+    validate: bool = True
 
 
 @dataclass
 class SchemaMapping:
     Available: list[SchemaEntry] = field(default_factory=list)
 
-    def grype_version(self, schema_version: int) -> str | None:
+    def validations_enabled(self, schema_version: int | str) -> bool:
+        schema_version = str(schema_version)
+        for entry in self.Available:
+            if entry.schema == schema_version:
+                return entry.validate
+        return True
+
+    def grype_version(self, schema_version: int | str) -> str | None:
         schema_version = str(schema_version)
         for entry in self.Available:
             if entry.schema == schema_version:
@@ -46,11 +54,7 @@ def register_mapping(file: str) -> None:
 
 @lru_cache
 def _mapping() -> dict[str, Any]:
-    content = (
-        files("grype_db_manager.data").joinpath("schema-info.json").read_text()
-        if _mapping_file_content is None
-        else _mapping_file_content
-    )
+    content = files("grype_db_manager.data").joinpath("schema-info.json").read_text() if _mapping_file_content is None else _mapping_file_content
     return json.loads(content)
 
 
@@ -77,7 +81,11 @@ def _load() -> SchemaMapping:
     return cfg
 
 
-def grype_version(schema_version: int) -> str:
+def validations_enabled(schema_version: int | str) -> bool:
+    return _load().validations_enabled(schema_version)
+
+
+def grype_version(schema_version: int | str) -> str:
     return _load().grype_version(schema_version)
 
 

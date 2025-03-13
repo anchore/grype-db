@@ -3,10 +3,10 @@ package processors
 
 import (
 	"io"
-	"strings"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
@@ -20,7 +20,7 @@ func NewMatchExclusionProcessor(transformer data.MatchExclusionTransformer) data
 	}
 }
 
-func (p matchExclusionProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+func (p matchExclusionProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.MatchExclusions(reader)
@@ -46,15 +46,15 @@ func (p matchExclusionProcessor) Process(reader io.Reader) ([]data.Entry, error)
 }
 
 func (p matchExclusionProcessor) IsSupported(schemaURL string) bool {
-	matchesSchemaType := strings.Contains(schemaURL, "https://raw.githubusercontent.com/anchore/vunnel/main/schema/match-exclusion/schema-")
-	if !matchesSchemaType {
+	if !hasSchemaSegment(schemaURL, "match-exclusion") {
 		return false
 	}
 
-	if !strings.HasSuffix(schemaURL, "schema-1.0.0.json") {
-		log.WithFields("schema", schemaURL).Trace("unsupported match-exclusion schema version")
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse match-exclusion schema version")
 		return false
 	}
 
-	return true
+	return parsedVersion.Major == 1
 }

@@ -18,15 +18,19 @@ import (
 // data shape dictated by vunnel "provider workspace state" schema definition
 
 type State struct {
-	location         string
-	root             string
-	Provider         string    `json:"provider"`
-	Schema           Schema    `json:"schema"`
-	URLs             []string  `json:"urls"`
-	Timestamp        time.Time `json:"timestamp"`
-	Listing          *File     `json:"listing"`
-	Store            string    `json:"store"`
-	resultFileStates []File
+	location            string
+	root                string
+	Provider            string    `json:"provider"`
+	Version             int       `json:"version"`
+	DistributionVersion int       `json:"distribution_version"`
+	Processor           string    `json:"processor"`
+	Schema              Schema    `json:"schema"`
+	URLs                []string  `json:"urls"`
+	Timestamp           time.Time `json:"timestamp"`
+	Listing             *File     `json:"listing"`
+	Store               string    `json:"store"`
+	Stale               bool      `json:"stale"`
+	resultFileStates    []File
 }
 
 type Schema struct {
@@ -129,4 +133,39 @@ func (s States) Names() []string {
 		names = append(names, state.Provider)
 	}
 	return names
+}
+
+func (s States) EarliestTimestamp() (time.Time, error) {
+	if len(s) == 0 {
+		return time.Time{}, fmt.Errorf("cannot find earliest timestamp: no states provided")
+	}
+
+	// special case when there is exactly 1 state, return its timestamp even
+	// if it is nvd, because otherwise quality gates that pull only nvd deterministically fail.
+	if len(s) == 1 {
+		return s[0].Timestamp, nil
+	}
+
+	var earliest time.Time
+	for _, curState := range s {
+		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
+		if curState.Provider == "nvd" {
+			log.WithFields("provider", curState.Provider).Debug("not considering data age for provider")
+			continue
+		}
+		if earliest.IsZero() {
+			earliest = curState.Timestamp
+			continue
+		}
+		if curState.Timestamp.Before(earliest) {
+			earliest = curState.Timestamp
+		}
+	}
+
+	if earliest.IsZero() {
+		return time.Time{}, fmt.Errorf("unable to determine earliest timestamp")
+	}
+
+	log.WithFields("timestamp", earliest).Debug("earliest data timestamp")
+	return earliest, nil
 }

@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
 DB_SUFFIXES = {".tar.gz", ".tar.zst"}
-MAX_DB_AGE = 120  # ~4 months in days
-MINIMUM_DB_COUNT = MAX_DB_AGE  # number of db entries per schema
+MAX_DB_AGE = 3  # old db listings are making the file large and slowing download times
+MINIMUM_DB_COUNT = 3  # always include at least 2 databases, no matter how old
 
 
 def listing_entries_dbs_in_s3(
@@ -67,7 +67,7 @@ def listing_entries_dbs_in_s3(
             meta = metadata.from_archive(path=local_path)
 
             # create a new listing entry and add it to the listing
-            url = f"{download_url_prefix}/{s3_path}/{basename}"
+            url = f"{download_url_prefix.strip('/')}/{s3_path.strip('/')}/{basename.strip('/')}"
             url = urlunparse(urlparse(url))  # normalize the url
 
             yield listing.Entry(
@@ -133,7 +133,7 @@ def age_from_basename(basename: str) -> int | None:
 
 
 def _now() -> datetime.datetime:
-    return datetime.datetime.now(tz=datetime.timezone.utc)
+    return datetime.datetime.now(tz=datetime.UTC)
 
 
 def hash_file(path: str) -> str:
@@ -146,4 +146,4 @@ def hash_file(path: str) -> str:
                 break
             hasher.update(data)
 
-    return "sha256:%s" % hasher.hexdigest()
+    return f"sha256:{hasher.hexdigest()}"

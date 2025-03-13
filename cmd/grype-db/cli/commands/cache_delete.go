@@ -42,7 +42,7 @@ func CacheDelete(app *application.Application) *cobra.Command {
 		Short:   "delete all provider cache",
 		Args:    cobra.NoArgs,
 		PreRunE: app.Setup(&cfg),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return app.Run(cmd.Context(), async(func() error {
 				return cacheDelete(cfg)
 			}))

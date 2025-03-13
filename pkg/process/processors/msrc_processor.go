@@ -2,10 +2,10 @@ package processors
 
 import (
 	"io"
-	"strings"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
@@ -21,8 +21,8 @@ func NewMSRCProcessor(transformer data.MSRCTransformer) data.Processor {
 	}
 }
 
-// Parse reads all entries in all metadata matching the supported schema and produces vulnerabilities and their corresponding metadata
-func (p msrcProcessor) Process(reader io.Reader) ([]data.Entry, error) {
+// Process reads all entries in all metadata matching the supported schema and produces vulnerabilities and their corresponding metadata
+func (p msrcProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.MSRCVulnerabilityEntries(reader)
@@ -48,15 +48,15 @@ func (p msrcProcessor) Process(reader io.Reader) ([]data.Entry, error) {
 }
 
 func (p msrcProcessor) IsSupported(schemaURL string) bool {
-	matchesSchemaType := strings.Contains(schemaURL, "https://raw.githubusercontent.com/anchore/vunnel/main/schema/vulnerability/msrc/schema-")
-	if !matchesSchemaType {
+	if !hasSchemaSegment(schemaURL, "msrc") {
 		return false
 	}
 
-	if !strings.HasSuffix(schemaURL, "schema-1.0.0.json") {
-		log.WithFields("schema", schemaURL).Trace("unsupported MSRC schema version")
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse MSRC schema version")
 		return false
 	}
 
-	return true
+	return parsedVersion.Major == 1
 }

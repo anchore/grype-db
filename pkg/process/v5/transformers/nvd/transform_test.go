@@ -9,11 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	testUtils "github.com/anchore/grype-db/pkg/process/tests"
+	testUtils "github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v5"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
+	"github.com/anchore/grype/grype/version"
 )
 
 func TestUnmarshalNVDVulnerabilitiesEntries(t *testing.T) {
@@ -30,6 +32,7 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 
 	tests := []struct {
 		name       string
+		config     Config
 		numEntries int
 		fixture    string
 		vulns      []grypeDB.Vulnerability
@@ -155,7 +158,8 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					Namespace:         "nvd:cpe",
 					CPEs:              []string{"cpe:2.3:a:mautic:mautic:*:*:*:*:*:*:*:*"}, // note: entry was dedupicated
 					Fix: grypeDB.Fix{
-						State: "unknown",
+						Versions: []string{"2.13.0"},
+						State:    "fixed",
 					},
 				},
 			},
@@ -457,8 +461,11 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					VersionFormat:          "unknown",
 					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
-					Fix:                    grypeDB.Fix{State: "unknown"},
-					Advisories:             nil,
+					Fix: grypeDB.Fix{
+						Versions: []string{"2.9.6"},
+						State:    "fixed",
+					},
+					Advisories: nil,
 				},
 				{
 					ID:          "CVE-2020-10729",
@@ -472,8 +479,11 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 					VersionFormat:          "unknown",
 					CPEs:                   []string{"cpe:2.3:a:redhat:ansible_engine:*:*:*:*:*:*:*:*"},
 					RelatedVulnerabilities: nil,
-					Fix:                    grypeDB.Fix{State: "unknown"},
-					Advisories:             nil,
+					Fix: grypeDB.Fix{
+						Versions: []string{"2.9.6"},
+						State:    "fixed",
+					},
+					Advisories: nil,
 				},
 			},
 			metadata: grypeDB.VulnerabilityMetadata{
@@ -587,10 +597,121 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "Platform CPE first in CPE config list",
+			numEntries: 1,
+			fixture:    "test-fixtures/CVE-2023-45283-platform-cpe-first.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-45283",
+					PackageName: "go",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 1.20.11 || >= 1.21.0-0, < 1.21.4",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						Versions: []string{"1.20.11", "1.21.4"},
+						State:    "fixed",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-45283",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"http://www.openwall.com/lists/oss-security/2023/12/05/2",
+					"https://go.dev/cl/540277",
+					"https://go.dev/cl/541175",
+					"https://go.dev/issue/63713",
+					"https://go.dev/issue/64028",
+					"https://groups.google.com/g/golang-announce/c/4tU8LZfBFkY",
+					"https://groups.google.com/g/golang-dev/c/6ypN5EjibjM/m/KmLVYH_uAgAJ",
+					"https://pkg.go.dev/vuln/GO-2023-2185",
+					"https://security.netapp.com/advisory/ntap-20231214-0008/",
+				},
+				Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(7.5, 3.9, 3.6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
+		{
+			name:       "Platform CPE last in CPE config list",
+			numEntries: 1,
+			fixture:    "test-fixtures/CVE-2023-45283-platform-cpe-last.json",
+			vulns: []grypeDB.Vulnerability{
+				{
+					ID:          "CVE-2023-45283",
+					PackageName: "go",
+					Namespace:   "nvd:cpe",
+					PackageQualifiers: []qualifier.Qualifier{platformcpe.Qualifier{
+						Kind: "platform-cpe",
+						CPE:  "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+					}},
+					VersionConstraint:      "< 1.20.11 || >= 1.21.0-0, < 1.21.4",
+					VersionFormat:          "unknown",
+					CPEs:                   []string{"cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*"},
+					RelatedVulnerabilities: nil,
+					Fix: grypeDB.Fix{
+						Versions: []string{"1.20.11", "1.21.4"},
+						State:    "fixed",
+					},
+					Advisories: nil,
+				},
+			},
+			metadata: grypeDB.VulnerabilityMetadata{
+				ID:           "CVE-2023-45283",
+				Namespace:    "nvd:cpe",
+				DataSource:   "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
+				RecordSource: "nvdv2:nvdv2:cves",
+				Severity:     "High",
+				URLs: []string{
+					"http://www.openwall.com/lists/oss-security/2023/12/05/2",
+					"https://go.dev/cl/540277",
+					"https://go.dev/cl/541175",
+					"https://go.dev/issue/63713",
+					"https://go.dev/issue/64028",
+					"https://groups.google.com/g/golang-announce/c/4tU8LZfBFkY",
+					"https://groups.google.com/g/golang-dev/c/6ypN5EjibjM/m/KmLVYH_uAgAJ",
+					"https://pkg.go.dev/vuln/GO-2023-2185",
+					"https://security.netapp.com/advisory/ntap-20231214-0008/",
+				},
+				Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
+				Cvss: []grypeDB.Cvss{
+					{
+						VendorMetadata: nil,
+						Metrics:        grypeDB.NewCvssMetrics(7.5, 3.9, 3.6),
+						Vector:         "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+						Version:        "3.1",
+						Source:         "nvd@nist.gov",
+						Type:           "Primary",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.config == (Config{}) {
+				test.config = defaultConfig()
+			}
 			f, err := os.Open(test.fixture)
 			require.NoError(t, err)
 			t.Cleanup(func() {
@@ -602,7 +723,7 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 
 			var vulns []grypeDB.Vulnerability
 			for _, entry := range entries {
-				dataEntries, err := Transform(entry.Cve)
+				dataEntries, err := transform(test.config, entry.Cve)
 				require.NoError(t, err)
 
 				for _, entry := range dataEntries {
@@ -625,6 +746,331 @@ func TestParseAllNVDVulnerabilityEntries(t *testing.T) {
 			if diff := cmp.Diff(test.vulns, vulns); diff != "" {
 				t.Errorf("vulnerabilities do not match (-want +got):\n%s", diff)
 			}
+		})
+	}
+}
+
+func TestGetVersionFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		cpes     []string
+		expected version.Format
+	}{
+		{
+			name:     "detects JVM format from name",
+			input:    "java_se",
+			cpes:     []string{},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from CPEs",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:openjdk:11:update53:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (zulu)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:zula:zulu:15:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (jdk)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:jdk:11.0:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "detects JVM format from another CPE (jre)",
+			input:    "other_product",
+			cpes:     []string{"cpe:2.3:a:oracle:jre:11.0:*:*:*:*:*:*:*"},
+			expected: version.JVMFormat,
+		},
+		{
+			name:     "returns unknown format for non-JVM product and non-JVM CPEs",
+			input:    "non_jvm_product",
+			cpes:     []string{"cpe:2.3:a:some_other_product:product_name:1.0:*:*:*:*:*:*"},
+			expected: version.UnknownFormat,
+		},
+		{
+			name:     "handles invalid CPE gracefully",
+			input:    "non_jvm_product",
+			cpes:     []string{"invalid_cpe_format"},
+			expected: version.UnknownFormat,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			format := getVersionFormat(tt.input, tt.cpes)
+			assert.Equal(t, tt.expected, format)
+		})
+	}
+}
+
+func TestGetFix(t *testing.T) {
+	tests := []struct {
+		name     string
+		matches  []nvd.CpeMatch
+		expected grypeDB.Fix
+	}{
+		{
+			name: "Equals",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:   "cpe:2.3:a:vendor:product:2.2.0:*:*:*:*:target:*:*",
+					Vulnerable: true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "VersionEndExcluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:            "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionEndExcluding: strRef("2.3.0"),
+					Vulnerable:          true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"2.3.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "VersionEndIncluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:            "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionEndIncluding: strRef("2.3.0"),
+					Vulnerable:          true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "VersionStartExcluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartExcluding: strRef("2.3.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "VersionStartIncluding",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "Version Range",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndIncluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "Multiple Version Ranges",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndIncluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartExcluding: strRef("3.3.0"),
+					VersionEndExcluding:   strRef("3.5.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"3.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "Empty end exclude treated as unknown",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartExcluding: strRef("3.3.0"),
+					VersionEndExcluding:   strRef(""),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "Multiple fixes with deduplication",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("3.3.0"),
+					VersionEndExcluding:   strRef("3.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("0"),
+					VersionEndExcluding:   strRef("1.7.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target-2:*:*",
+					VersionStartIncluding: strRef("0"),
+					VersionEndExcluding:   strRef("1.7.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"1.7.0", "3.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "< version as end in a separate affected >= range",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.5.0"),
+					VersionEndExcluding:   strRef("3.5.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"3.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "< version as start in a separate affected <= range",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.1.0"),
+					VersionEndIncluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "< range with same version affected == critera",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:   "cpe:2.3:a:vendor:product:2.5.0:*:*:*:*:target:*:*",
+					Vulnerable: true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+		{
+			name: "< range with another unaffected entry",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("2.5.0"),
+					Vulnerable:            true,
+				},
+				{
+					Criteria:   "cpe:2.3:a:vendor:product:2.5.0:*:*:*:*:target:*:*",
+					Vulnerable: false,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: []string{"2.5.0"},
+				State:    "fixed",
+			},
+		},
+		{
+			name: "treat * in < as unknown fix state",
+			matches: []nvd.CpeMatch{
+				{
+					Criteria:              "cpe:2.3:a:vendor:product:*:*:*:*:*:target:*:*",
+					VersionStartIncluding: strRef("2.3.0"),
+					VersionEndExcluding:   strRef("*"),
+					Vulnerable:            true,
+				},
+			},
+			expected: grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fix := getFix(tt.matches, true)
+			assert.Equal(t, tt.expected, fix)
+		})
+
+		t.Run(tt.name+" don't infer NVD fixes", func(t *testing.T) {
+			fix := getFix(tt.matches, false)
+			assert.Equal(t, grypeDB.Fix{
+				Versions: nil,
+				State:    "unknown",
+			}, fix)
 		})
 	}
 }

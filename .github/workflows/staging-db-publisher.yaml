@@ -53,7 +53,7 @@ jobs:
       contents: read
     steps:
 
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
         with:
           submodules: true
 
@@ -61,15 +61,17 @@ jobs:
         uses: ./.github/actions/bootstrap
 
       - name: Login to ghcr.io
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | oras login ghcr.io --username ${{ github.actor }} --password-stdin
+        run: make ci-oras-ghcr-login
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
 
       - name: Setup tmate session
         # note about workflow dispatch inputs and booleans:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.run-tmate != 'false'
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 #v3.17
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 #v3.19
         timeout-minutes: ${{ fromJSON(github.event.inputs.tmate-duration) }}
         with:
           limit-access-to-actor: true
@@ -87,12 +89,12 @@ jobs:
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-databases != 'false'
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
+              -vv \
               -c ./config/grype-db-manager/publish-staging.yaml \
                 db build-and-upload \
-                  --schema-version ${{ github.event.inputs.schema-version }} \
-                  -vvv
+                  --schema-version ${{ github.event.inputs.schema-version }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
@@ -103,7 +105,7 @@ jobs:
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-listing != 'false'
         run: |
-          poetry run \
+          uv run \
             grype-db-manager \
               -c ./config/grype-db-manager/publish-staging.yaml \
                 listing update

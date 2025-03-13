@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/scylladb/go-set/strset"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,6 +23,7 @@ func newUniquePkgTrackerFromSlice(candidates []pkgCandidate) uniquePkgTracker {
 func TestFindUniquePkgs(t *testing.T) {
 	tests := []struct {
 		name     string
+		config   Config
 		nodes    []nvd.Node
 		operator *nvd.Operator
 		expected uniquePkgTracker
@@ -62,7 +64,7 @@ func TestFindUniquePkgs(t *testing.T) {
 			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{}),
 		},
 		{
-			name: "skip-os",
+			name: "skip-os-by-default",
 			nodes: []nvd.Node{
 				{
 					CpeMatch: []nvd.CpeMatch{
@@ -74,6 +76,29 @@ func TestFindUniquePkgs(t *testing.T) {
 				},
 			},
 			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{}),
+		},
+		{
+			name: "include-os-explicitly",
+			config: Config{
+				CPEParts: strset.New("a", "o"),
+			},
+			nodes: []nvd.Node{
+				{
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:   "cpe:2.3:o:vendor:product:2.2.0:*:*:*:*:target:*:*",
+							Vulnerable: true,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "product",
+					Vendor:         "vendor",
+					TargetSoftware: "target",
+				},
+			}),
 		},
 		{
 			name: "duplicate-by-product",
@@ -310,11 +335,102 @@ func TestFindUniquePkgs(t *testing.T) {
 				},
 			}),
 		},
+		{
+			name:     "single platform CPE as first element",
+			operator: opRef(nvd.And),
+			nodes: []nvd.Node{
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+							MatchCriteriaID: "902B8056-9E37-443B-8905-8AA93E2447FB",
+							Vulnerable:      false,
+						},
+					},
+				},
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:              "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding:   strRef("1.22.2"),
+							VersionStartIncluding: strRef("1.22"),
+							MatchCriteriaID:       "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:            true,
+						},
+						{
+							Criteria:            "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding: strRef("1.21.8"),
+							MatchCriteriaID:     "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:          true,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "go",
+					Vendor:         "golang",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+				},
+			}),
+		},
+		{
+			name:     "single platform CPE as last element",
+			operator: opRef(nvd.And),
+			nodes: []nvd.Node{
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:              "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding:   strRef("1.22.2"),
+							VersionStartIncluding: strRef("1.22"),
+							MatchCriteriaID:       "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:            true,
+						},
+						{
+							Criteria:            "cpe:2.3:a:golang:go:*:*:*:*:*:*:*:*",
+							VersionEndExcluding: strRef("1.21.8"),
+							MatchCriteriaID:     "5EBE5E1C-C881-4A76-9E36-4FB7C48427E6",
+							Vulnerable:          true,
+						},
+					},
+				},
+				{
+					Negate:   boolRef(false),
+					Operator: nvd.Or,
+					CpeMatch: []nvd.CpeMatch{
+						{
+							Criteria:        "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+							MatchCriteriaID: "902B8056-9E37-443B-8905-8AA93E2447FB",
+							Vulnerable:      false,
+						},
+					},
+				},
+			},
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "go",
+					Vendor:         "golang",
+					TargetSoftware: ANY,
+					PlatformCPE:    "cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*",
+				},
+			}),
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := findUniquePkgs(nvd.Configuration{Nodes: test.nodes, Operator: test.operator})
+			if test.config == (Config{}) {
+				test.config = defaultConfig()
+			}
+			actual := findUniquePkgs(test.config, nvd.Configuration{Nodes: test.nodes, Operator: test.operator})
 			missing, extra := test.expected.Diff(actual)
 			if len(missing) != 0 {
 				for _, c := range missing {
@@ -478,7 +594,7 @@ func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
 	}
 	tracker := newUniquePkgTracker()
 	for _, c := range candidates {
-		candidate, err := newPkgCandidate(applicationNode, c.PlatformCPE)
+		candidate, err := newPkgCandidate(defaultConfig(), applicationNode, c.PlatformCPE)
 		require.NoError(t, err)
 		tracker.Add(*candidate, cpeMatch)
 	}
@@ -488,14 +604,15 @@ func Test_UniquePackageTrackerHandlesOnlyPlatformDiff(t *testing.T) {
 func TestPlatformPackageCandidates(t *testing.T) {
 	type testCase struct {
 		name        string
-		config      nvd.Configuration
+		config      Config
+		state       nvd.Configuration
 		wantChanged bool
 		wantSet     uniquePkgTracker
 	}
 	tests := []testCase{
 		{
 			name: "application X platform",
-			config: nvd.Configuration{
+			state: nvd.Configuration{
 				Negate: nil,
 				Nodes: []nvd.Node{
 					{
@@ -553,7 +670,7 @@ func TestPlatformPackageCandidates(t *testing.T) {
 		},
 		{
 			name: "top-level OR is excluded",
-			config: nvd.Configuration{
+			state: nvd.Configuration{
 				Operator: opRef(nvd.Or),
 			},
 			wantChanged: false,
@@ -561,14 +678,14 @@ func TestPlatformPackageCandidates(t *testing.T) {
 		},
 		{
 			name: "top-level nil op is excluded",
-			config: nvd.Configuration{
+			state: nvd.Configuration{
 				Operator: nil,
 			},
 			wantChanged: false,
 		},
 		{
 			name: "single hardware node results in exclusion",
-			config: nvd.Configuration{
+			state: nvd.Configuration{
 				Negate: nil,
 				Nodes: []nvd.Node{
 					{
@@ -607,8 +724,11 @@ func TestPlatformPackageCandidates(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.config == (Config{}) {
+				tc.config = defaultConfig()
+			}
 			set := newUniquePkgTracker()
-			result := platformPackageCandidates(set, tc.config)
+			result := platformPackageCandidates(tc.config, set, tc.state)
 			assert.Equal(t, result, tc.wantChanged)
 			if tc.wantSet == nil {
 				tc.wantSet = newUniquePkgTracker()
@@ -629,8 +749,18 @@ func boolRef(b bool) *bool {
 	return &b
 }
 
-func mustNewPackage(t *testing.T, match nvd.CpeMatch, platformCPE string) pkgCandidate {
-	p, err := newPkgCandidate(match, platformCPE)
+func mustNewPackage(t *testing.T, match nvd.CpeMatch, platformCPE string, cfg ...Config) pkgCandidate {
+	var tCfg *Config
+	switch len(cfg) {
+	case 0:
+		c := defaultConfig()
+		tCfg = &c
+	case 1:
+		tCfg = &cfg[0]
+	default:
+		t.Fatalf("too many configs provided")
+	}
+	p, err := newPkgCandidate(*tCfg, match, platformCPE)
 	require.NoError(t, err)
 	return *p
 }

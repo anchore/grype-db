@@ -1,7 +1,11 @@
 package nvd
 
 import (
+	"slices"
 	"sort"
+	"strings"
+
+	"github.com/scylladb/go-set/strset"
 
 	"github.com/anchore/grype-db/internal"
 	"github.com/anchore/grype-db/pkg/data"
@@ -12,9 +16,33 @@ import (
 	"github.com/anchore/grype/grype/db/v5/namespace"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier"
 	"github.com/anchore/grype/grype/db/v5/pkg/qualifier/platformcpe"
+	"github.com/anchore/grype/grype/pkg"
+	"github.com/anchore/grype/grype/version"
+	"github.com/anchore/syft/syft/cpe"
 )
 
-func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
+type Config struct {
+	CPEParts            *strset.Set
+	InferNVDFixVersions bool
+}
+
+func defaultConfig() Config {
+	return Config{
+		CPEParts:            strset.New("a"),
+		InferNVDFixVersions: true,
+	}
+}
+
+func Transformer(cfg Config) data.NVDTransformer {
+	if cfg == (Config{}) {
+		cfg = defaultConfig()
+	}
+	return func(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
+		return transform(cfg, vulnerability)
+	}
+}
+
+func transform(cfg Config, vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	// TODO: stop capturing record source in the vulnerability metadata record (now that feed groups are not real)
 	recordSource := "nvdv2:nvdv2:cves"
 
@@ -25,7 +53,7 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 
 	entryNamespace := grypeNamespace.String()
 
-	uniquePkgs := findUniquePkgs(vulnerability.Configurations...)
+	uniquePkgs := findUniquePkgs(cfg, vulnerability.Configurations...)
 
 	// extract all links
 	var links []string
@@ -60,14 +88,12 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 		allVulns = append(allVulns, grypeDB.Vulnerability{
 			ID:                vulnerability.ID,
 			PackageQualifiers: qualifiers,
-			VersionConstraint: buildConstraints(uniquePkgs.Matches(p)),
-			VersionFormat:     "unknown",
+			VersionConstraint: buildConstraints(matches),
+			VersionFormat:     strings.ToLower(getVersionFormat(p.Product, orderedCPEs).String()),
 			PackageName:       grypeNamespace.Resolver().Normalize(p.Product),
 			Namespace:         entryNamespace,
 			CPEs:              orderedCPEs,
-			Fix: grypeDB.Fix{
-				State: grypeDB.UnknownFixState,
-			},
+			Fix:               getFix(matches, cfg.InferNVDFixVersions),
 		})
 	}
 
@@ -85,6 +111,76 @@ func Transform(vulnerability unmarshal.NVDVulnerability) ([]data.Entry, error) {
 	}
 
 	return transformers.NewEntries(allVulns, metadata), nil
+}
+
+func getVersionFormat(name string, cpes []string) version.Format {
+	if pkg.HasJvmPackageName(name) {
+		return version.JVMFormat
+	}
+	for _, c := range cpes {
+		att, err := cpe.NewAttributes(c)
+		if err != nil {
+			continue
+		}
+		if pkg.HasJvmPackageName(att.Product) {
+			return version.JVMFormat
+		}
+	}
+	return version.UnknownFormat
+}
+
+func getFix(matches []nvd.CpeMatch, inferNVDFixVersions bool) grypeDB.Fix {
+	if !inferNVDFixVersions {
+		return grypeDB.Fix{
+			State: grypeDB.UnknownFixState,
+		}
+	}
+
+	possiblyFixed := strset.New()
+	knownAffected := strset.New()
+	unspecifiedSet := strset.New("*", "-", "*")
+
+	for _, match := range matches {
+		if !match.Vulnerable {
+			continue
+		}
+
+		if match.VersionEndExcluding != nil && !unspecifiedSet.Has(*match.VersionEndExcluding) {
+			possiblyFixed.Add(*match.VersionEndExcluding)
+		}
+
+		if match.VersionStartIncluding != nil && !unspecifiedSet.Has(*match.VersionStartIncluding) {
+			knownAffected.Add(*match.VersionStartIncluding)
+		}
+
+		if match.VersionEndIncluding != nil && !unspecifiedSet.Has(*match.VersionEndIncluding) {
+			knownAffected.Add(*match.VersionEndIncluding)
+		}
+
+		matchCPE, err := cpe.New(match.Criteria, cpe.DeclaredSource)
+		if err != nil {
+			continue
+		}
+
+		if !unspecifiedSet.Has(matchCPE.Attributes.Version) {
+			knownAffected.Add(matchCPE.Attributes.Version)
+		}
+	}
+
+	possiblyFixed.Remove(knownAffected.List()...)
+
+	var fixes []string
+	fixState := grypeDB.UnknownFixState
+	if possiblyFixed.Size() > 0 {
+		fixState = grypeDB.FixedState
+		fixes = possiblyFixed.List()
+		slices.Sort(fixes)
+	}
+
+	return grypeDB.Fix{
+		Versions: fixes,
+		State:    fixState,
+	}
 }
 
 func getCvss(cvss ...nvd.CvssSummary) []grypeDB.Cvss {

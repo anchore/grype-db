@@ -22,6 +22,7 @@ import (
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/internal/ui"
 	"github.com/anchore/grype-db/internal/utils"
+	"github.com/anchore/grype/grype"
 )
 
 const Name = internal.ApplicationName
@@ -39,7 +40,7 @@ func New() *Application {
 
 func (a *Application) Setup(opts options.Interface) func(cmd *cobra.Command, args []string) error {
 	v := newViper()
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
 		// bind options to viper
 		if opts != nil {
 			if err := opts.BindFlags(cmd.Flags(), v); err != nil {
@@ -169,6 +170,7 @@ func setupLogger(app *Config) error {
 	}
 
 	log.Set(l)
+	grype.SetLogger(l)
 
 	return nil
 }

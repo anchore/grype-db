@@ -7,7 +7,8 @@ well as acceptance testing. You will require the following:
 
 - Python 3.8+ installed on your system. Consider using [pyenv](https://github.com/pyenv/pyenv) if you do not have a 
   preference for managing python interpreter installations.
-  
+- `zstd` binary utility if you are packaging v6+ DB schemas
+- _(optional)_ `xz` binary utility if you have specifically overridden the package command options
 
 - [Poetry](https://python-poetry.org/) installed for dependency and virtualenv management for python dependencies, to install:
 

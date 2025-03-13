@@ -9,7 +9,7 @@ from grype_db_manager.cli import config, error
 from grype_db_manager.db.format import Format
 
 
-@click.group(name="listing", help="manage the grype-db listing file")
+@click.group(name="listing", help="manage the grype-db listing file (only schemas v1-v5)")
 @click.pass_obj
 def group(_: config.Application) -> None:
     pass
@@ -45,8 +45,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
 
     if missing_basenames:
         logging.warning(
-            f"missing {len(missing_basenames)} databases in S3 which were in the existing"
-            " listing file (removing entries in the next listing file)",
+            f"missing {len(missing_basenames)} databases in S3 which were in the existing listing file (removing entries in the next listing file)",
         )
         for basename in missing_basenames:
             logging.warning(f"  - {basename}")
@@ -70,6 +69,9 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
         max_age_days=distribution.MAX_DB_AGE,
         minimum_elements=distribution.MINIMUM_DB_COUNT,
     )
+
+    # sort all listing elements by URL (which is by timestamp)
+    the_listing.sort()
 
     total_entries = sum([len(v) for k, v in the_listing.available.items()])
     logging.info(f"wrote {total_entries} total database entries to the listing")
@@ -107,7 +109,7 @@ def validate_listing(cfg: config.Application, listing_file: str) -> None:
         raise ValueError(msg)
 
     if cfg.validate.listing.override_grype_version and not cfg.validate.listing.override_db_schema_version:
-        msg = "ovrerride db schema version must be specified if override grype version is specified"
+        msg = "override db schema version must be specified if override grype version is specified"
         raise ValueError(msg)
 
     override_schema_release = None
@@ -173,10 +175,11 @@ def upload_listing(cfg: config.Application, listing_file: str, ttl_seconds: int)
 
 @group.command(name="update", help="recreate a listing based off of S3 state, validate it, and upload it")
 @click.option("--dry-run", "-d", default=False, help="do not upload the listing file to S3", is_flag=True)
+@click.option("--skip-validate", default=False, help="skip validation of the listing file", is_flag=True)
 @click.pass_obj
 @click.pass_context
 @error.handle_exception(handle=(ValueError, s3utils.CredentialsError))
-def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool) -> None:
+def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bool, skip_validate: bool) -> None:
     if dry_run:
         click.echo(f"{Format.ITALIC}Dry run! Will skip uploading the listing file to S3{Format.RESET}")
     elif cfg.assert_aws_credentials:
@@ -185,8 +188,11 @@ def update_listing(ctx: click.core.Context, cfg: config.Application, dry_run: bo
     click.echo(f"{Format.BOLD}Creating listing file from S3 state{Format.RESET}")
     listing_file_name = ctx.invoke(create_listing)
 
-    click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")
-    ctx.invoke(validate_listing, listing_file=listing_file_name)
+    if not skip_validate:
+        click.echo(f"{Format.BOLD}Validating listing file {listing_file_name!r}{Format.RESET}")
+        ctx.invoke(validate_listing, listing_file=listing_file_name)
+    else:
+        click.echo(f"{Format.ITALIC}Skipping the validation of the listing file{Format.RESET}")
 
     if not dry_run:
         click.echo(f"{Format.BOLD}Uploading listing file {listing_file_name!r}{Format.RESET}")

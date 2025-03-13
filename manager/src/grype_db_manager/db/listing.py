@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 LISTING_FILENAME = "listing.json"
 
 
+# Entry is a dataclass that represents a single entry from a listing.json for schemas v1-v5.
 @dataclass
 class Entry:
     built: str
@@ -42,10 +43,11 @@ class Entry:
 
     def age_in_days(self, now: datetime.datetime | None = None) -> int:
         if not now:
-            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            now = datetime.datetime.now(tz=datetime.UTC)
         return (now - iso8601.parse_date(self.built)).days
 
 
+# Listing is a dataclass that represents the listing.json for schemas v1-v5.
 @dataclass
 class Listing:
     available: dict[int, list[Entry]]
@@ -65,6 +67,8 @@ class Listing:
         return asdict(self)
 
     def prune(self, max_age_days: int, minimum_elements: int, now: datetime.datetime | None = None) -> None:
+        self.sort()
+
         for schema_version, entries in self.available.items():
             kept = []
             pruned = []
@@ -81,19 +85,8 @@ class Listing:
                 else:
                     kept.append(entry)
 
-            # latest elements are in the back
-            pruned.sort(
-                key=lambda x: iso8601.parse_date(x.built),
-            )
-
             while len(kept) < minimum_elements and len(pruned) > 0:
-                kept.append(pruned.pop())
-
-            # latest elements are in the front
-            kept.sort(
-                key=lambda x: iso8601.parse_date(x.built),
-                reverse=True,
-            )
+                kept.append(pruned.pop(0))
 
             if not pruned:
                 logging.debug(f"no entries to prune from schema version {schema_version}")
@@ -113,7 +106,7 @@ class Listing:
 
         # keep listing entries sorted by date (rfc3339 formatted entries, which iso8601 is a superset of)
         self.available[entry.version].sort(
-            key=lambda x: iso8601.parse_date(x.built),
+            key=lambda x: x.url,
             reverse=True,
         )
 
@@ -159,6 +152,10 @@ class Listing:
 
     def latest(self, schema_version: int) -> Entry:
         return self.available[schema_version][0]
+
+    def sort(self) -> None:
+        for _, v in self.available.items():
+            v.sort(key=lambda x: x.url, reverse=True)
 
 
 def has_suffix(el: str, suffixes: set[str] | None) -> bool:
@@ -227,14 +224,14 @@ def _http_server(directory: str) -> Iterator[str]:
 
 
 def _smoke_test(
-    schema_version: str,
+    schema_version: str | int,
     listing_url: str,
     image: str,
     minimum_packages: int,
     minimum_vulnerabilities: int,
     store_root: str,
 ) -> None:
-    logging.info(f"testing grype schema-version={schema_version!r}")
+    logging.info(f"testing listing.json grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
         store_root=store_root,
@@ -273,7 +270,7 @@ def smoke_test(
         installation_path = os.path.join(tempdir, "grype-install")
 
         # way too verbose!
-        # logging.info(listing_contents)
+        logging.info(listing_contents)
         with open(os.path.join(tempdir, LISTING_FILENAME), "w") as f:
             f.write(listing_contents)
 
@@ -296,7 +293,9 @@ def smoke_test(
 
             else:
                 schema_versions = schema.supported_schema_versions()
-                logging.info(f"testing all supported schema-versions={schema_versions}")
+                # only accept schema versions up through v5
+                schema_versions = [s for s in schema_versions if int(s) <= 5]
+                logging.info(f"testing listing.json all supported schema-versions={schema_versions}")
                 for schema_version in schema_versions:
                     _smoke_test(
                         schema_version=schema_version,

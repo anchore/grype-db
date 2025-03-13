@@ -10,6 +10,7 @@ import mergedeep
 import yaml
 from dataclass_wizard import asdict, fromdict
 from yamlinclude import YamlIncludeConstructor
+from yardstick.cli.config import Validation
 
 from grype_db_manager import db, s3utils
 
@@ -49,8 +50,8 @@ class Grype:
 class ValidateDB:
     images: list[str] = field(default_factory=list)
     grype: Grype = field(default_factory=Grype)
-    default_max_year: int = 2021
-    gate: db.validation.GateConfig = field(default_factory=db.validation.GateConfig)
+    gate: Validation = field(default_factory=Validation)
+    allow_empty_results_for_schemas: list[int] = field(default_factory=list)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)
@@ -77,8 +78,25 @@ class ValidateListing:
 
 @dataclass()
 class Validate:
-    db: ValidateDB = field(default_factory=ValidateDB)
+    default_max_year: int = 2021
+    gates: list[ValidateDB] = field(default_factory=list)
     listing: ValidateListing = field(default_factory=ValidateListing)
+    expected_providers: list[str] = field(
+        default_factory=lambda: [
+            "alpine",
+            "amazon",
+            "chainguard",
+            "debian",
+            "github",
+            "mariner",
+            "nvd",
+            "oracle",
+            "rhel",
+            "sles",
+            "ubuntu",
+            "wolfi",
+        ],
+    )
 
 
 @dataclass()
@@ -109,6 +127,7 @@ class Data:
 
 @dataclass
 class Application:
+    verbosity: int = 0
     data: Data = field(default_factory=Data)
     log: Log = field(default_factory=Log)
     schema_mapping_file: str = ""  # default is to use built-in schema mapping
@@ -174,9 +193,10 @@ class Application:
 def load(
     path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS,
     wire_values: bool = True,
+    verbosity: int = 0,
     env: Mapping | None = None,
 ) -> Application:
-    cfg = _load_paths(path, wire_values=wire_values, env=env)
+    cfg = _load_paths(path, wire_values=wire_values, env=env, verbosity=verbosity)
 
     if not cfg:
         msg = "no config found"
@@ -189,6 +209,7 @@ def _load_paths(
     path: None | str | list[str] | tuple[str],
     wire_values: bool = True,
     env: Mapping | None = None,
+    verbosity: int = 0,
 ) -> Application | None:
     if not path:
         path = DEFAULT_CONFIGS
@@ -207,7 +228,7 @@ def _load_paths(
             return _load(p, wire_values=wire_values, env=env)
 
         # use the default application config
-        return Application()
+        return Application(verbosity=verbosity)
 
     msg = f"invalid path type {type(path)}"
     raise ValueError(msg)
@@ -242,13 +263,6 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
     override_from_environment(cfg, prefix="GRYPE_DB_MANAGER", env=env)
 
     if wire_values:
-        # wire up the gate configuration so any gates created will use values from the application config
-        db.validation.set_default_gate_config(cfg.validate.db.gate)
-        gate_instance = db.validation.Gate(None, None)
-        if gate_instance.config != cfg.validate.db.gate:
-            msg = f"failed to set default gate config: {gate_instance.config} != {cfg.validate.db.gate}"
-            raise ValueError(msg)
-
         # setup the endpoint url and region for all s3 calls
         if cfg.distribution.s3_endpoint_url:
             sys.stderr.write(f"Overriding S3 endpoint URL: {cfg.distribution.s3_endpoint_url}\n")

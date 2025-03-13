@@ -63,7 +63,7 @@ def listing_s3_mock(redact_aws_credentials):
         lst = db.Listing.from_json(contents)
 
         # create a DB entry for each artifact
-        url_prefix = "https://toolbox-data.anchore.io/"
+        url_prefix = "http://localhost:4566/"
         for entries in lst.available.values():
             for entry in entries:
                 db_bucket_path = entry.url.removeprefix(url_prefix)
@@ -110,19 +110,19 @@ def create_tar_gz(built: str, version: int):
             "create-new-db",
             0,
             [
-                "grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
-                "grype/databases/vulnerability-db_v2_2023-08-08T01:33:25Z_a89e961c0943175eb6a0.tar.gz",
-                "grype/databases/vulnerability-db_v3_2023-08-08T01:33:25Z_c6eb70d1d2bcff836ede.tar.gz",
-                "grype/databases/vulnerability-db_v4_2023-08-08T01:33:25Z_fe44be95fbb6ae335497.tar.gz",
-                "grype/databases/vulnerability-db_v5_2023-08-08T01:33:25Z_1072b8f15e5d53338836.tar.gz",
+                "databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz",
+                "databases/vulnerability-db_v2_2024-08-22T01:31:37Z_1724340410.tar.gz",
+                "databases/vulnerability-db_v3_2024-08-22T01:31:37Z_1724340460.tar.gz",
+                "databases/vulnerability-db_v4_2024-08-22T01:31:37Z_1724340541.tar.gz",
+                "databases/vulnerability-db_v5_2024-08-22T01:31:37Z_1724340606.tar.gz",
             ],
             [
                 "discovered 5 new database candidates to add to the listing",
-                "new db: grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
-                "downloading file from s3 bucket=testbucket key=grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz",
+                "new db: databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz",
+                "downloading file from s3 bucket=testbucket key=databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz",
                 # note that the download URL isn't right relative to production values (where the existing listing was pulled from)
                 # but instead it's correct relative to the configuration, which specifies a localhost route.
-                "adding new listing entry: Entry(built='2023-08-08T01:33:25Z', version=1, url='http://localhost:4566/testbucket/grype/databases/vulnerability-db_v1_2023-08-08T01:33:25Z_45f59b141d7256bf2c4d.tar.gz', checksum='sha256:9ece0b838be60974aee62087cf366b84e5b7cb74e7a665d86de7735aca927d36')",
+                "adding new listing entry: Entry(built='2024-08-22T01:31:37Z', version=1, url='http://localhost:4566/testbucket/databases/vulnerability-db_v1_2024-08-22T01:31:37Z_1724340381.tar.gz', checksum='sha256:7a62753ddb1f12994fdcd41244106cc459406620c522cb32c54da46b12b86634')",
                 "wrote 15 total database entries to the listing",
             ],
             id="create-new-db",
@@ -137,7 +137,7 @@ def test_create_listing(
     # contains an application config file
     config_dir_path = test_dir_path(f"fixtures/listing/{case_dir}")
     listing_s3_mock(config_dir_path, extra_dbs=extra_dbs)
-    mock_file_age.return_value = 42  # needs to be less than distribution.MAX_DB_AGE
+    mock_file_age.return_value = 2  # needs to be less than distribution.MAX_DB_AGE
 
     with utils.set_directory(config_dir_path):
         with open("expected-listing.json") as f:
