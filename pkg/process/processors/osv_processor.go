@@ -8,8 +8,6 @@ import (
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-
-	"github.com/google/osv-scanner/pkg/models"
 )
 
 type osvProcessor struct {
@@ -36,14 +34,14 @@ func (p osvProcessor) Process(reader io.Reader, state provider.State) ([]data.En
 		return nil, err
 	}
 
-	var handle func(entry models.Vulnerability) ([]data.Entry, error)
+	var handle func(entry unmarshal.OSVVulnerability) ([]data.Entry, error)
 	switch t := p.transformer.(type) {
 	case data.OSVTransformer:
-		handle = func(entry models.Vulnerability) ([]data.Entry, error) {
+		handle = func(entry unmarshal.OSVVulnerability) ([]data.Entry, error) {
 			return t(entry)
 		}
 	case data.OSVTransformerV2:
-		handle = func(entry models.Vulnerability) ([]data.Entry, error) {
+		handle = func(entry unmarshal.OSVVulnerability) ([]data.Entry, error) {
 			return t(entry, state)
 		}
 	}

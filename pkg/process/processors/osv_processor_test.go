@@ -4,16 +4,16 @@ import (
 	"os"
 	"testing"
 
-	osvModels "github.com/google/osv-scanner/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/internal/tests"
 	"github.com/anchore/grype-db/pkg/provider"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
-func mockOSVProcessorTransform(vulnerability osvModels.Vulnerability) ([]data.Entry, error) {
+func mockOSVProcessorTransform(vulnerability unmarshal.OSVVulnerability) ([]data.Entry, error) {
 	return []data.Entry{
 		{
 			DBSchemaVersion: 0,

@@ -3,8 +3,6 @@ package data
 import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-
-	osvModels "github.com/google/osv-scanner/pkg/models"
 )
 
 // Transformers are functions that know how ta take individual data shapes defined in the unmarshal package and
@@ -18,7 +16,7 @@ type MSRCTransformer func(entry unmarshal.MSRCVulnerability) ([]Entry, error)
 type NVDTransformer func(entry unmarshal.NVDVulnerability) ([]Entry, error)
 type OSTransformer func(entry unmarshal.OSVulnerability) ([]Entry, error)
 type MatchExclusionTransformer func(entry unmarshal.MatchExclusion) ([]Entry, error)
-type OSVTransformer func(entry osvModels.Vulnerability) ([]Entry, error)
+type OSVTransformer func(entry unmarshal.OSVVulnerability) ([]Entry, error)
 
 // all v2 transformers (schema v6+)
 type GitHubTransformerV2 func(entry unmarshal.GitHubAdvisory, state provider.State) ([]Entry, error)
@@ -26,7 +24,7 @@ type MSRCTransformerV2 func(entry unmarshal.MSRCVulnerability, state provider.St
 type NVDTransformerV2 func(entry unmarshal.NVDVulnerability, state provider.State) ([]Entry, error)
 type OSTransformerV2 func(entry unmarshal.OSVulnerability, state provider.State) ([]Entry, error)
 type MatchExclusionTransformerV2 func(entry unmarshal.MatchExclusion, state provider.State) ([]Entry, error)
-type OSVTransformerV2 func(entry osvModels.Vulnerability, state provider.State) ([]Entry, error)
+type OSVTransformerV2 func(entry unmarshal.OSVVulnerability, state provider.State) ([]Entry, error)
 
 type KnownExploitedVulnerabilityTransformerV2 func(entry unmarshal.KnownExploitedVulnerability, state provider.State) ([]Entry, error)
 
