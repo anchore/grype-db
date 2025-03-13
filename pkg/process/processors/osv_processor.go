@@ -2,7 +2,6 @@ package processors
 
 import (
 	"io"
-	"strings"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -14,8 +13,8 @@ type osvProcessor struct {
 	transformer data.OSVTransformerV2
 }
 
-func NewV2OSVProcessor(transformer data.OSTransformerV2) data.Processor {
-	return &osProcessor{
+func NewV2OSVProcessor(transformer data.OSVTransformerV2) data.Processor {
+	return &osvProcessor{
 		transformer: transformer,
 	}
 }
@@ -41,15 +40,15 @@ func (p osvProcessor) Process(reader io.Reader, state provider.State) ([]data.En
 }
 
 func (p osvProcessor) IsSupported(schemaURL string) bool {
-	matchesSchemaType := strings.Contains(schemaURL, "https://raw.githubusercontent.com/anchore/vunnel/main/schema/vulnerability/osv/schema-")
-	if !matchesSchemaType {
+	if !hasSchemaSegment(schemaURL, "osv") {
 		return false
 	}
 
-	if !strings.HasSuffix(schemaURL, "schema-1.6.1.json") {
-		log.WithFields("schema", schemaURL).Trace("unsupported OSV schema version")
+	parsedVersion, err := parseVersion(schemaURL)
+	if err != nil {
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse NVD schema version")
 		return false
 	}
 
-	return true
+	return parsedVersion.Major == 1
 }

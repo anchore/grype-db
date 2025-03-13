@@ -35,3 +35,49 @@ func TestV2OSVProcessor_Process(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, entries, 2)
 }
+
+func TestOSVProcessor_IsSupported(t *testing.T) {
+	tests := []struct {
+		name      string
+		schemaURL string
+		want      bool
+	}{
+		{
+			name:      "one actually used by vunnel is supported",
+			schemaURL: "https://raw.githubusercontent.com/anchore/vunnel/main/schema/vulnerability/osv/schema-1.5.0.json",
+			want:      true,
+		},
+		{
+			name:      "osv schema 1.6.1 is supported",
+			schemaURL: "https://example.com/osv/schema-1.6.1.json",
+			want:      true,
+		},
+		{
+			name:      "osv schema 1.5.0 is supported",
+			schemaURL: "https://example.com/osv/schema-1.5.0.json",
+			want:      true,
+		},
+		{
+			name:      "lower major version is not supported",
+			schemaURL: "https://example.com/osv/schema-0.4.0.json",
+			want:      false,
+		},
+		{
+			name:      "higher schema is not supported",
+			schemaURL: "https://example.com/osv/schema-2.4.0.json",
+			want:      false,
+		},
+		{
+			name:      "non-osv schema is not supported",
+			schemaURL: "https://example.com/nvd/schema-1.4.0.json",
+			want:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := NewV2OSVProcessor(mockOSVProcessorTransform)
+			assert.Equal(t, tt.want, p.IsSupported(tt.schemaURL))
+		})
+	}
+}
