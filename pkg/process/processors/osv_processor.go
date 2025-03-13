@@ -11,13 +11,7 @@ import (
 )
 
 type osvProcessor struct {
-	transformer any
-}
-
-func NewOSVProcessor(transformer data.OSVTransformer) data.Processor {
-	return &osvProcessor{
-		transformer: transformer,
-	}
+	transformer data.OSVTransformerV2
 }
 
 func NewV2OSVProcessor(transformer data.OSTransformerV2) data.Processor {
@@ -34,20 +28,8 @@ func (p osvProcessor) Process(reader io.Reader, state provider.State) ([]data.En
 		return nil, err
 	}
 
-	var handle func(entry unmarshal.OSVVulnerability) ([]data.Entry, error)
-	switch t := p.transformer.(type) {
-	case data.OSVTransformer:
-		handle = func(entry unmarshal.OSVVulnerability) ([]data.Entry, error) {
-			return t(entry)
-		}
-	case data.OSVTransformerV2:
-		handle = func(entry unmarshal.OSVVulnerability) ([]data.Entry, error) {
-			return t(entry, state)
-		}
-	}
-
 	for _, entry := range entries {
-		transformedEntries, err := handle(entry)
+		transformedEntries, err := p.transformer(entry, state)
 		if err != nil {
 			return nil, err
 		}

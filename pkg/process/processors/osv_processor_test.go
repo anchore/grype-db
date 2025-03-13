@@ -13,7 +13,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
-func mockOSVProcessorTransform(vulnerability unmarshal.OSVVulnerability) ([]data.Entry, error) {
+func mockOSVProcessorTransform(vulnerability unmarshal.OSVVulnerability, state provider.State) ([]data.Entry, error) {
 	return []data.Entry{
 		{
 			DBSchemaVersion: 0,
@@ -22,12 +22,12 @@ func mockOSVProcessorTransform(vulnerability unmarshal.OSVVulnerability) ([]data
 	}, nil
 }
 
-func TestOSVProcessor_Process(t *testing.T) {
+func TestV2OSVProcessor_Process(t *testing.T) {
 	f, err := os.Open("test-fixtures/osv.json")
 	require.NoError(t, err)
 	defer tests.CloseFile(f)
 
-	processor := NewOSVProcessor(mockOSVProcessorTransform)
+	processor := NewV2OSVProcessor(mockOSVProcessorTransform)
 	entries, err := processor.Process(f, provider.State{
 		Provider: "osv",
 	})
