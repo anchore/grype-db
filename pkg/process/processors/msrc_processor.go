@@ -1,3 +1,4 @@
+//nolint:dupl
 package processors
 
 import (
@@ -11,7 +12,7 @@ import (
 
 // msrcProcessor defines the regular expression needed to signal what is supported
 type msrcProcessor struct {
-	transformer data.MSRCTransformer
+	transformer any
 }
 
 // NewMSRCProcessor creates a new instance of msrcProcessor particular to MSRC
@@ -21,8 +22,13 @@ func NewMSRCProcessor(transformer data.MSRCTransformer) data.Processor {
 	}
 }
 
-// Process reads all entries in all metadata matching the supported schema and produces vulnerabilities and their corresponding metadata
-func (p msrcProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry, error) {
+func NewV2MSRCProcessor(transformer data.MSRCTransformerV2) data.Processor {
+	return &msrcProcessor{
+		transformer: transformer,
+	}
+}
+
+func (p msrcProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
 	entries, err := unmarshal.MSRCVulnerabilityEntries(reader)
@@ -30,13 +36,25 @@ func (p msrcProcessor) Process(reader io.Reader, _ provider.State) ([]data.Entry
 		return nil, err
 	}
 
+	var handle func(entry unmarshal.MSRCVulnerability) ([]data.Entry, error)
+	switch t := p.transformer.(type) {
+	case data.MSRCTransformer:
+		handle = func(entry unmarshal.MSRCVulnerability) ([]data.Entry, error) {
+			return t(entry)
+		}
+	case data.MSRCTransformerV2:
+		handle = func(entry unmarshal.MSRCVulnerability) ([]data.Entry, error) {
+			return t(entry, state)
+		}
+	}
+
 	for _, entry := range entries {
-		if entry.ID == "" {
+		if entry.IsEmpty() {
 			log.Warn("dropping empty MSRC entry")
 			continue
 		}
 
-		transformedEntries, err := p.transformer(entry)
+		transformedEntries, err := handle(entry)
 		if err != nil {
 			return nil, err
 		}
