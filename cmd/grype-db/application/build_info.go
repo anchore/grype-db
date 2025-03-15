@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	grypeDB "github.com/anchore/grype/grype/db"
+	grypeDB "github.com/anchore/grype/grype/db/v6"
 )
 
 const valueNotProvided = "[not provided]"
@@ -70,6 +70,6 @@ func ReadBuildInfo() BuildInfo {
 		GoVersion:      runtime.Version(),
 		Compiler:       runtime.Compiler,
 		Platform:       platform,
-		DBSchema:       grypeDB.SchemaVersion,
+		DBSchema:       grypeDB.ModelVersion,
 	}
 }
