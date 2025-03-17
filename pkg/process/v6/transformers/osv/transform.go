@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/google/osv-scanner/pkg/models"
+
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -15,8 +17,6 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/db/v6/name"
 	"github.com/anchore/syft/syft/pkg"
-
-	"github.com/google/osv-scanner/pkg/models"
 )
 
 func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) ([]data.Entry, error) {

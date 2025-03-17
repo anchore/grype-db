@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/osv-scanner/pkg/models"
+	"github.com/stretchr/testify/require"
+
 	"github.com/anchore/grype-db/pkg/process/v6/internal/tests"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
-
 	grypeDB "github.com/anchore/grype/grype/db/v6"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/osv-scanner/pkg/models"
-	"github.com/stretchr/testify/require"
 )
 
 var timeVal = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
