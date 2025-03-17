@@ -145,18 +145,22 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange {
 		return nil
 	}
 
-	rangeType := normalizeRangeType(r.Type)
 	var constraint string
+	updateConstraint := func(c string) {
+		if constraint == "" {
+			constraint = c
+		} else {
+			constraint = common.AndConstraints(constraint, c)
+		}
+	}
+
+	rangeType := normalizeRangeType(r.Type)
 	for _, e := range r.Events {
-		if e.Introduced != "" {
-			constraint = fmt.Sprintf("%s >=", e.Introduced)
-		} else if e.LastAffected != "" {
-			eventConstraint := fmt.Sprintf("<= %s", e.LastAffected)
-			if constraint == "" {
-				constraint = eventConstraint
-			} else {
-				constraint = common.AndConstraints(constraint, eventConstraint)
-			}
+		switch {
+		case e.Introduced != "" && e.Introduced != "0":
+			constraint = fmt.Sprintf(">= %s", e.Introduced)
+		case e.LastAffected != "":
+			updateConstraint(fmt.Sprintf("<= %s", e.LastAffected))
 			// We don't know the fix if last affected is set
 			ranges = append(ranges, grypeDB.AffectedRange{
 				Version: grypeDB.AffectedVersion{
@@ -166,13 +170,8 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange {
 			})
 			// Reset the constraint
 			constraint = ""
-		} else if e.Fixed != "" {
-			eventConstraint := fmt.Sprintf("<= %s", e.Fixed)
-			if constraint == "" {
-				constraint = eventConstraint
-			} else {
-				constraint = common.AndConstraints(constraint, eventConstraint)
-			}
+		case e.Fixed != "":
+			updateConstraint(fmt.Sprintf("< %s", e.Fixed))
 			ranges = append(ranges, grypeDB.AffectedRange{
 				Fix: normalizeFix(e.Fixed),
 				Version: grypeDB.AffectedVersion{
@@ -274,13 +273,11 @@ func normalizeSeverity(severity models.Severity) (grypeDB.Severity, error) {
 				Vector:  vector,
 				Version: version,
 			},
-			Rank: 1,
 		}, nil
 	default:
 		return grypeDB.Severity{
 			Scheme: grypeDB.UnknownSeverityScheme,
 			Value:  severity.Score,
-			Rank:   1,
 		}, nil
 	}
 }
@@ -293,6 +290,16 @@ func getSeverities(vuln unmarshal.OSVVulnerability) ([]grypeDB.Severity, error) 
 			return nil, err
 		}
 		severities = append(severities, severity)
+	}
+
+	for _, affected := range vuln.Affected {
+		for _, sev := range affected.Severity {
+			severity, err := normalizeSeverity(sev)
+			if err != nil {
+				return nil, err
+			}
+			severities = append(severities, severity)
+		}
 	}
 
 	return severities, nil

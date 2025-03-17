@@ -49,27 +49,11 @@
   "references": [
     {
       "type": "WEB",
-      "url": "http://lists.opensuse.org/opensuse-security-announce/2020-10/msg00011.html"
-    },
-    {
-      "type": "WEB",
-      "url": "https://hackerone.com/reports/922597"
-    },
-    {
-      "type": "WEB",
-      "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/4OOYAMJVLLCLXDTHW3V5UXNULZBBK4O6/"
-    },
-    {
-      "type": "WEB",
       "url": "https://nodejs.org/en/blog/vulnerability/september-2020-security-releases/"
     },
     {
       "type": "WEB",
       "url": "https://security.gentoo.org/glsa/202101-07"
-    },
-    {
-      "type": "WEB",
-      "url": "https://security.netapp.com/advisory/ntap-20201009-0004/"
     }
   ],
   "published": "2024-03-06T11:08:09.371Z",
