@@ -23,6 +23,10 @@ func EnforceSemVerConstraint(constraint string) string {
 	return strings.ReplaceAll(strings.Join(forceSemVerPattern.FindAllString(constraint, -1), ", "), " ", "")
 }
 
+func AndConstraints(c ...string) string {
+	return strings.Join(c, " ")
+}
+
 func OrConstraints(c ...string) string {
 	return strings.Join(c, " || ")
 }
