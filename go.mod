@@ -2,6 +2,8 @@ module github.com/anchore/grype-db
 
 go 1.24.0
 
+toolchain go1.24.1
+
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/OneOfOne/xxhash v1.2.8
@@ -31,7 +33,7 @@ require (
 	github.com/pkg/profile v1.7.0
 	github.com/scylladb/go-set v1.0.3-0.20200225121959-cc7b2070d91e
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3
-	github.com/spf13/afero v1.12.0
+	github.com/spf13/afero v1.14.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.19.0
