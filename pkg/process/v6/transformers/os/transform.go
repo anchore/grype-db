@@ -67,7 +67,7 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 		}
 
 		aph := grypeDB.AffectedPackageHandle{
-			OperatingSystem: getOperatingSystem(group.osName, group.id, group.osVersion),
+			OperatingSystem: getOperatingSystem(group.osName, group.id, group.osVersion, group.osDesignator),
 			Package:         getPackage(group),
 			BlobValue: &grypeDB.AffectedPackageBlob{
 				CVEs:       getAliases(vuln),
@@ -176,18 +176,19 @@ func deriveConstraintFromFix(fixVersion, vulnerabilityID string) string {
 }
 
 type groupIndex struct {
-	name      string
-	id        string
-	osName    string
-	osVersion string
-	hasModule bool
-	module    string
-	format    string
+	name         string
+	id           string
+	osName       string
+	osVersion    string
+	osDesignator string
+	hasModule    bool
+	module       string
+	format       string
 }
 
 func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OSFixedIn {
 	grouped := make(map[groupIndex][]unmarshal.OSFixedIn)
-	osName, osID, osVersion := getOSInfo(vuln.Vulnerability.NamespaceName)
+	osName, osID, osVersion, osDesignator := getOSInfo(vuln.Vulnerability.NamespaceName)
 
 	for _, fixedIn := range vuln.Vulnerability.FixedIn {
 		var mod string
@@ -195,13 +196,14 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 			mod = *fixedIn.Module
 		}
 		g := groupIndex{
-			name:      fixedIn.Name,
-			id:        osID,
-			osName:    osName,
-			osVersion: osVersion,
-			hasModule: fixedIn.Module != nil,
-			module:    mod,
-			format:    fixedIn.VersionFormat,
+			name:         fixedIn.Name,
+			id:           osID,
+			osName:       osName,
+			osVersion:    osVersion,
+			osDesignator: osDesignator,
+			hasModule:    fixedIn.Module != nil,
+			module:       mod,
+			format:       fixedIn.VersionFormat,
 		}
 
 		grouped[g] = append(grouped[g], fixedIn)
@@ -232,12 +234,18 @@ func getPackage(group groupIndex) *grypeDB.Package {
 	}
 }
 
-func getOSInfo(group string) (string, string, string) {
+func getOSInfo(group string) (string, string, string, string) {
 	// derived from enterprise feed groups, expected to be of the form {distro release ID}:{version}
 	feedGroupComponents := strings.Split(group, ":")
 
 	id := feedGroupComponents[0]
 	version := feedGroupComponents[1]
+	designator := ""
+	if strings.Contains(feedGroupComponents[1], "-") {
+		versionParts := strings.Split(feedGroupComponents[1], "-")
+		designator = versionParts[1]
+		version = versionParts[0]
+	}
 	if strings.ToLower(id) == "mariner" {
 		verFields := strings.Split(version, ".")
 		majorVersionStr := verFields[0]
@@ -249,7 +257,7 @@ func getOSInfo(group string) (string, string, string) {
 		}
 	}
 
-	return normalizeOsName(id), id, version
+	return normalizeOsName(id), id, version, designator
 }
 
 func normalizeOsName(id string) string {
@@ -263,7 +271,7 @@ func normalizeOsName(id string) string {
 	return d.String()
 }
 
-func getOperatingSystem(osName, osID, osVersion string) *grypeDB.OperatingSystem {
+func getOperatingSystem(osName, osID, osVersion, osDesignator string) *grypeDB.OperatingSystem {
 	if osName == "" || osVersion == "" {
 		return nil
 	}
@@ -288,6 +296,7 @@ func getOperatingSystem(osName, osID, osVersion string) *grypeDB.OperatingSystem
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
 		LabelVersion: labelVersion,
+		Designator:   osDesignator,
 		Codename:     codename.LookupOS(osName, majorVersion, minorVersion),
 	}
 }
