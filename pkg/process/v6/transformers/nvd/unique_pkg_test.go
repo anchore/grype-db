@@ -50,7 +50,7 @@ func TestFindUniquePkgs(t *testing.T) {
 				}),
 		},
 		{
-			name: "skip-hw",
+			name: "include-hw",
 			nodes: []nvd.Node{
 				{
 					CpeMatch: []nvd.CpeMatch{
@@ -61,10 +61,16 @@ func TestFindUniquePkgs(t *testing.T) {
 					},
 				},
 			},
-			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{}),
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "product",
+					Vendor:         "vendor",
+					TargetSoftware: "target",
+				},
+			}),
 		},
 		{
-			name: "skip-os",
+			name: "include-os",
 			nodes: []nvd.Node{
 				{
 					CpeMatch: []nvd.CpeMatch{
@@ -75,7 +81,13 @@ func TestFindUniquePkgs(t *testing.T) {
 					},
 				},
 			},
-			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{}),
+			expected: newUniquePkgTrackerFromSlice([]pkgCandidate{
+				{
+					Product:        "product",
+					Vendor:         "vendor",
+					TargetSoftware: "target",
+				},
+			}),
 		},
 		{
 			name: "duplicate-by-product",
