@@ -23,7 +23,7 @@ type Config struct {
 
 func defaultConfig() Config {
 	return Config{
-		CPEParts:            strset.New("a"),
+		CPEParts:            strset.New("a", "h", "o"),
 		InferNVDFixVersions: true,
 	}
 }
