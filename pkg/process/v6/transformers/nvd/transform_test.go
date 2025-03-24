@@ -46,12 +46,14 @@ func TestTransform(t *testing.T) {
 
 	tests := []struct {
 		name     string
+		fixture  string
 		config   Config
 		provider string
 		want     []transformers.RelatedEntries
 	}{
 		{
-			name:     "test-fixtures/version-range.json",
+			name:     "basic version range",
+			fixture:  "test-fixtures/version-range.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -123,9 +125,147 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/single-package-multi-distro.json",
+			name:     "single package, multiple distros",
+			fixture:  "test-fixtures/single-package-multi-distro.json",
 			provider: "nvd",
 			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2018-1000222",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2020, 3, 31, 2, 15, 12, 667000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2018, 8, 20, 20, 29, 1, 347000000, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2018-1000222",
+							Assigners:   []string{"cve@mitre.org"},
+							Description: "Libgd version 2.2.5 contains a Double Free Vulnerability vulnerability in gdImageBmpPtr Function that can result in Remote Code Execution . This attack appear to be exploitable via Specially Crafted Jpeg Image can trigger double free. This vulnerability appears to have been fixed in after commit ac16bdf2d41724b5a65255d4c28fb0ec46bc42f5.",
+							References: []grypeDB.Reference{
+								{
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-1000222",
+								},
+								{
+									URL:  "https://github.com/libgd/libgd/issues/447",
+									Tags: []string{"issue-tracking", "third-party-advisory"},
+								},
+								{
+									URL:  "https://lists.debian.org/debian-lts-announce/2019/01/msg00028.html",
+									Tags: []string{"mailing-list", "third-party-advisory"},
+								},
+								{
+									URL: "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/3CZ2QADQTKRHTGB2AHD7J4QQNDLBEMM6/",
+								},
+								{
+									URL:  "https://security.gentoo.org/glsa/201903-18",
+									Tags: []string{"third-party-advisory"},
+								},
+								{
+									URL:  "https://usn.ubuntu.com/3755-1/",
+									Tags: []string{"mitigation", "third-party-advisory"},
+								},
+							},
+							Severities: []grypeDB.Severity{
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+										Version: "3.0"},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+										Version: "2.0"},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+							},
+						},
+					},
+					Related: affectedPkgSlice(
+						// the application package...
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2018-1000222"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 2.2.5",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "libgd",
+								Product: "libgd",
+							},
+						},
+						// ubuntu OS ... (since the default config has all parts enabled, we should see this)
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2018-1000222"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 14.04",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 16.04",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 18.04",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:            "o",
+								Vendor:          "canonical",
+								Product:         "ubuntu_linux",
+								SoftwareEdition: "lts",
+							},
+						},
+						// debian OS ...  (since the default config has all parts enabled, we should see this)
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2018-1000222"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 8.0",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "o",
+								Vendor:  "debian",
+								Product: "debian_linux",
+							},
+						},
+					),
+				},
+			},
+		},
+		{
+			name:     "single package, multiple distros (application types only)",
+			fixture:  "test-fixtures/single-package-multi-distro.json",
+			provider: "nvd",
+			config: func() Config {
+				c := defaultConfig()
+				c.CPEParts.Remove("h", "o") // important!
+				return c
+			}(),
 			want: []transformers.RelatedEntries{
 				{
 					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
@@ -207,7 +347,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/compound-pkg.json",
+			name:     "multiple packages, multiple distros",
+			fixture:  "test-fixtures/compound-pkg.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -286,7 +427,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/invalid_cpe.json",
+			name:     "invalid CPE",
+			fixture:  "test-fixtures/invalid_cpe.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -341,7 +483,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/platform-cpe.json",
+			name:     "basic platform CPE",
+			fixture:  "test-fixtures/platform-cpe.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -429,17 +572,16 @@ func TestTransform(t *testing.T) {
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2022-26488"},
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									PlatformCPEs: []string{"cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*"},
+									PlatformCPEs: []string{"cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*"}, // important!
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{Version: grypeDB.AffectedVersion{Constraint: "<= 3.7.12"}},
+									{Version: grypeDB.AffectedVersion{Constraint: ">= 3.10.0, <= 3.10.2"}},
 									{Version: grypeDB.AffectedVersion{Constraint: ">= 3.8.0, <= 3.8.12"}},
 									{Version: grypeDB.AffectedVersion{Constraint: ">= 3.9.0, <= 3.9.10"}},
-									{Version: grypeDB.AffectedVersion{Constraint: ">= 3.10.0, <= 3.10.2"}},
 									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha1"}},
 									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha2"}},
 									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha3"}},
-									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha4"}},
 									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha4"}},
 									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha5"}},
 									{Version: grypeDB.AffectedVersion{Constraint: "= 3.11.0-alpha6"}},
@@ -456,7 +598,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/cve-2022-0543.json",
+			name:     "multiple platform CPEs for single package",
+			fixture:  "test-fixtures/cve-2022-0543.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -532,9 +675,9 @@ func TestTransform(t *testing.T) {
 									PlatformCPEs: []string{
 										"cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
 										"cpe:2.3:o:canonical:ubuntu_linux:21.10:*:*:*:-:*:*:*",
+										"cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
 										"cpe:2.3:o:debian:debian_linux:10.0:*:*:*:*:*:*:*",
 										"cpe:2.3:o:debian:debian_linux:11.0:*:*:*:*:*:*:*",
-										"cpe:2.3:o:debian:debian_linux:9.0:*:*:*:*:*:*:*",
 									},
 								},
 								Ranges: []grypeDB.AffectedRange{
@@ -555,7 +698,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/cve-2020-10729.json",
+			name:     "multiple platform CPEs for single package + fix and OS match",
+			fixture:  "test-fixtures/cve-2020-10729.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -637,12 +781,32 @@ func TestTransform(t *testing.T) {
 								Product: "ansible_engine",
 							},
 						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2020-10729"},
+								// note: no qualifiers !
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 10.0",
+										},
+										// note: no fix!
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "o",
+								Vendor:  "debian",
+								Product: "debian_linux",
+							},
+						},
 					),
 				},
 			},
 		},
 		{
-			name:     "test-fixtures/multiple-platforms-with-application-cpe.json",
+			name:     "application type as platform CPE",
+			fixture:  "test-fixtures/multiple-platforms-with-application-cpe.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -726,7 +890,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/CVE-2023-45283-platform-cpe-first.json",
+			name:     "can process entries when the platform CPE is first",
+			fixture:  "test-fixtures/CVE-2023-45283-platform-cpe-first.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -835,7 +1000,8 @@ func TestTransform(t *testing.T) {
 			},
 		},
 		{
-			name:     "test-fixtures/CVE-2023-45283-platform-cpe-last.json",
+			name:     "can process entries when the platform CPE is last",
+			fixture:  "test-fixtures/CVE-2023-45283-platform-cpe-last.json",
 			provider: "nvd",
 			config:   defaultConfig(),
 			want: []transformers.RelatedEntries{
@@ -943,11 +1109,181 @@ func TestTransform(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "a simple list of OS matches",
+			// note: this was modified relative to the upstream data to account for additional interesting cases
+			fixture:  "test-fixtures/cve-2024-26663-standalone-os.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2024-26663",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2025, 1, 7, 17, 20, 30, 367000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2024, 4, 2, 7, 15, 43, 287000000, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2024-26663",
+							Assigners:   []string{"416baaa9-dc9f-4396-8d5f-8c081fb06d67"},
+							Description: "the description...",
+							References: []grypeDB.Reference{
+								{URL: "https://nvd.nist.gov/vuln/detail/CVE-2024-26663"},
+								{
+									URL:  "https://git.kernel.org/stable/c/0cd331dfd6023640c9669d0592bc0fd491205f87",
+									Tags: []string{"patch"},
+								},
+							},
+							Severities: []grypeDB.Severity{
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+										Version: "3.1",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+							},
+						},
+					},
+					Related: affectedPkgSlice(
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2024-26663"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 10.0",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "o",
+								Vendor:  "debian",
+								Product: "debian_linux",
+							},
+						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2024-26663"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: ">= 4.9, < 4.19.307",
+										},
+										Fix: &grypeDB.Fix{
+											State:   grypeDB.FixedStatus,
+											Version: "4.19.307",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: ">= 6.7, < 6.7.5",
+										},
+										Fix: &grypeDB.Fix{
+											State:   grypeDB.FixedStatus,
+											Version: "6.7.5",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 6.8-rc1",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 6.8-rc2",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 6.8-rc3",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "o",
+								Vendor:  "linux",
+								Product: "linux_kernel",
+							},
+						},
+					),
+				},
+			},
+		},
+		{
+			name:     "drops nodes with unsupported topology",
+			fixture:  "test-fixtures/cve-2021-1566.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2021-1566",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2024, 11, 21, 5, 44, 38, 237000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2021, 6, 16, 18, 15, 8, 710000000, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2021-1566",
+							Assigners:   []string{"psirt@cisco.com"},
+							Description: "description.",
+							References: []grypeDB.Reference{
+								{URL: "https://nvd.nist.gov/vuln/detail/CVE-2021-1566"},
+								{
+									URL:  "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-esa-wsa-cert-vali-n8L97RW",
+									Tags: []string{"vendor-advisory"},
+								},
+								{
+									URL:  "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-esa-wsa-cert-vali-n8L97RW",
+									Tags: []string{"vendor-advisory"},
+								},
+							},
+							Severities: []grypeDB.Severity{
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+										Version: "3.1",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "AV:N/AC:M/Au:N/C:P/I:P/A:N",
+										Version: "2.0",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+										Version: "3.1",
+									},
+									Source: "psirt@cisco.com",
+									Rank:   2,
+								},
+							},
+						},
+					},
+					Related: nil, // important! we dropped all of the node criteria since the topology is unsupported
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			vulns := loadFixture(t, test.name)
+			vulns := loadFixture(t, test.fixture)
 
 			var actual []transformers.RelatedEntries
 			for _, vuln := range vulns {
