@@ -1279,6 +1279,92 @@ func TestTransform(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "considers non-standard CPE fields",
+			fixture:  "test-fixtures/CVE-2008-3442.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2008-3442",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2008, 9, 5, 21, 43, 5, 500000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2008, 8, 1, 14, 41, 0, 0, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2008-3442",
+							Assigners:   []string{"cve@mitre.org"},
+							Description: "desc.",
+							References:  []grypeDB.Reference{{URL: "https://nvd.nist.gov/vuln/detail/CVE-2008-3442"}},
+						},
+					},
+					Related: affectedPkgSlice(
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2008-3442"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 10.0",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 7.0",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 8.0",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 8.1",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 9.0",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "winzip",
+								Product: "winzip",
+							},
+						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2008-3442"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 8.1",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "= 9.0",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "winzip",
+								Product: "winzip",
+								Edition: "sr1",
+							},
+						},
+					),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
