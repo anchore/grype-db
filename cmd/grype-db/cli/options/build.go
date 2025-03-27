@@ -26,7 +26,7 @@ func DefaultBuild() Build {
 		DBLocation:          DefaultDBLocation(),
 		SkipValidation:      false,
 		SchemaVersion:       process.DefaultSchemaVersion,
-		IncludeCPEParts:     []string{"a"},
+		IncludeCPEParts:     []string{"a", "h", "o"},
 		InferNVDFixVersions: true,
 	}
 }

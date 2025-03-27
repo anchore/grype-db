@@ -289,7 +289,7 @@ func extractPlatformCPEs(node nvd.Node) ([]cpe.Attributes, error) {
 	return platformCPEs, nil
 }
 
-// cpeKey generates a unique key for a CPE (which is not necessarily the entire CPE)
+// cpeKey generates a unique key for a CPE (everything except for the version and update)
 func cpeKey(cpe cpe.Attributes) string {
-	return fmt.Sprintf("%s|%s|%s|%s|%s", cpe.Part, cpe.Vendor, cpe.Product, cpe.TargetSW, cpe.SWEdition)
+	return fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s|%s|%s", cpe.Part, cpe.Vendor, cpe.Product, cpe.Edition, cpe.SWEdition, cpe.TargetSW, cpe.TargetHW, cpe.Other, cpe.Language)
 }
