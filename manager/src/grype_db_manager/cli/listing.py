@@ -22,6 +22,10 @@ def group(_: config.Application) -> None:
 def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str:
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
+    db_s3_path = s3_path
+    if cfg.distribution.s3_always_suffix_schema_version:
+        # Listing file logic is only supported for v5
+        db_s3_path = f"{s3_path}/v5"
     download_url_prefix = cfg.distribution.download_url_prefix
 
     # get existing listing file...
@@ -35,7 +39,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
     # look for existing DBs in S3
     existing_paths_by_basename = distribution.existing_dbs_in_s3(
         s3_bucket=s3_bucket,
-        s3_path=s3_path,
+        s3_path=db_s3_path,
     )
 
     # determine what basenames are new relative to the listing file and the current S3 state
@@ -58,7 +62,7 @@ def create_listing(cfg: config.Application, ignore_missing_listing: bool) -> str
         basenames=new_basenames,
         paths_by_basename=existing_paths_by_basename,
         s3_bucket=s3_bucket,
-        s3_path=s3_path,
+        s3_path=db_s3_path,
         download_url_prefix=download_url_prefix,
     ):
         the_listing.add(entry)

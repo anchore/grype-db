@@ -51,6 +51,7 @@ distribution:
   downloadUrlPrefix: null
   listingFileName: listing.json
   listingReplicas: []
+  s3AlwaysSuffixSchemaVersion: false
   s3Bucket: null
   s3EndpointUrl: null
   s3Path: null
@@ -110,6 +111,7 @@ distribution:
       listingFileName: listing.json
       s3Bucket: testbucket
       s3Path: grype/databases
+  s3AlwaysSuffixSchemaVersion: false
   s3Bucket: testbucket
   s3EndpointUrl: http://localhost:4566
   s3Path: grype/databases
