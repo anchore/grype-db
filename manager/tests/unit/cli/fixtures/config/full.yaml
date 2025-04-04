@@ -21,6 +21,7 @@ distribution:
   aws-region: us-west-2
   s3-endpoint-url: http://localhost:4566
   download-url-prefix: http://localhost:4566/testbucket
+  s3-always-suffix-schema-version: false
   listing_replicas:
     - awsRegion: us-west-2
       listingFileName: listing.json

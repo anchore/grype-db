@@ -289,15 +289,18 @@ def upload_db(cfg: config.Application, db_uuid: str, ttl_seconds: int) -> None:
 
     s3_bucket = cfg.distribution.s3_bucket
     s3_path = cfg.distribution.s3_path
+    s3_always_suffix_schema_version = cfg.distribution.s3_always_suffix_schema_version
 
     db_manager = DBManager(root_dir=cfg.data.root)
     db_info = db_manager.get_db_info(db_uuid=db_uuid)
 
-    if db_info.schema_version >= 6:
-        if not os.path.exists(db_info.archive_path):
-            msg = f"latest.json file not found for DB {db_uuid!r}"
-            raise ValueError(msg)
+    if db_info.schema_version >= 6 and not os.path.exists(db_info.archive_path):
+        msg = f"latest.json file not found for DB {db_uuid!r}"
+        raise ValueError(msg)
 
+    if s3_always_suffix_schema_version:
+        s3_path = f"{s3_path}/v{db_info.schema_version}"
+    elif db_info.schema_version >= 6:
         # /databases -> /databases/v6 , and is dynamic based on the schema version
         s3_path = f"{s3_path}/v{db_info.schema_version}"
 
