@@ -84,7 +84,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-										Version: "3.0"},
+										Version: "3.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -92,9 +93,19 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:N/AC:L/Au:N/C:P/I:P/A:P",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
+								},
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+										Version: "4.0",
+									},
+									Source: "security@zabbix.com",
+									Rank:   2,
 								},
 							},
 						},

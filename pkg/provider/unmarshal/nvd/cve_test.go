@@ -19,8 +19,10 @@ func TestCvssSummariesSorted(t *testing.T) {
 				{Type: Primary, Version: "2.0", Source: "A"},
 				{Type: Primary, Version: "3.1", Source: "B"},
 				{Type: Primary, Version: "3.0", Source: "C"},
+				{Type: Primary, Version: "4.0", Source: "D"},
 			},
 			expected: CvssSummaries{
+				{Type: Primary, Version: "4.0", Source: "D"},
 				{Type: Primary, Version: "3.1", Source: "B"},
 				{Type: Primary, Version: "3.0", Source: "C"},
 				{Type: Primary, Version: "2.0", Source: "A"},
@@ -161,6 +163,7 @@ func TestCvssSummaryVersion(t *testing.T) {
 		input    string
 		expected string
 	}{
+		{"4.0", "4.0.0"},
 		{"3.1", "3.1.0"},
 		{"3.0", "3.0.0"},
 		{"2.0", "2.0.0"},
