@@ -1,6 +1,7 @@
 package github
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,6 +14,8 @@ import (
 	syftPkg "github.com/anchore/syft/syft/pkg"
 )
 
+var errSkip = fmt.Errorf("skipping advisory")
+
 func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 	feedGroupComponents := strings.Split(group, ":")
 
@@ -24,10 +27,13 @@ func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 	syftLanguage := syftPkg.LanguageByName(feedGroupLang)
 
 	if syftLanguage == syftPkg.UnknownLanguage {
-		// For now map nuget to dotnet as the language.
-		if feedGroupLang == "nuget" {
+		switch feedGroupLang {
+		case "nuget":
 			syftLanguage = syftPkg.Dotnet
-		} else {
+		case "github-action":
+			// we don't want to error out on this, but grype at this version does not support github-action matching
+			return nil, errSkip
+		default:
 			return nil, fmt.Errorf("unable to determine grype namespace for enterprise namespace=%s", group)
 		}
 	}
@@ -54,6 +60,9 @@ func Transform(vulnerability unmarshal.GitHubAdvisory) ([]data.Entry, error) {
 
 	grypeNamespace, err := buildGrypeNamespace(vulnerability.Advisory.Namespace)
 	if err != nil {
+		if errors.Is(err, errSkip) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
