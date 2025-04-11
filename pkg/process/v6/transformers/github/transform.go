@@ -164,6 +164,12 @@ func getPackageType(ecosystem string) pkg.Type {
 		return pkg.RpmPkg
 	case "deb":
 		return pkg.DebPkg
+	case "github-action":
+		return pkg.GithubActionPkg
+	}
+	ty := pkg.TypeByName(ecosystem)
+	if ty != pkg.UnknownPkg {
+		return ty
 	}
 
 	log.Warnf("using unknown ecosystem intead of syft pkg type (this will probably cause issues when matching): %q", ecosystem)
