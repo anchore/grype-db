@@ -65,8 +65,13 @@ func CreateArchive(dbDir, overrideArchiveExtension string) error {
 	)
 
 	tarPath := filepath.Join(dbDir, tarName)
+	files := []string{v6.VulnerabilityDBFileName}
 
-	if err := populateTar(dbDir, tarName, v6.VulnerabilityDBFileName); err != nil {
+	if _, err := os.Stat(path.Join(dbDir, v6.ImportMetadataFileName)); err == nil {
+		files = append(files, v6.ImportMetadataFileName)
+	}
+
+	if err := populateTar(dbDir, tarName, files...); err != nil {
 		return err
 	}
 
