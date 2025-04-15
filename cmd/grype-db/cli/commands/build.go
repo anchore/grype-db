@@ -119,6 +119,7 @@ func runBuild(cfg buildConfig) error {
 		Timestamp:           earliest,
 		IncludeCPEParts:     cfg.IncludeCPEParts,
 		InferNVDFixVersions: cfg.InferNVDFixVersions,
+		Hydrate:             cfg.Hydrate,
 	})
 }
 

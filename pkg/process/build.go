@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -26,6 +27,7 @@ type BuildConfig struct {
 	Timestamp           time.Time
 	IncludeCPEParts     []string
 	InferNVDFixVersions bool
+	Hydrate             bool
 }
 
 func Build(cfg BuildConfig) error {
@@ -62,7 +64,17 @@ func Build(cfg BuildConfig) error {
 		return err
 	}
 
-	return writer.Close()
+	if err := writer.Close(); err != nil {
+		return err
+	}
+
+	if cfg.Hydrate && cfg.SchemaVersion > 5 {
+		if err := hydrate(cfg); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type providerResults struct {
@@ -173,6 +185,24 @@ func build(results []providerResults, writer data.Writer, processors ...data.Pro
 	if recordsProcessed == 0 {
 		return fmt.Errorf("no records were processed")
 	}
+
+	return nil
+}
+
+func hydrate(cfg BuildConfig) error {
+	hydrator := grypeDBv6.Hydrater()
+	fs := afero.NewOsFs()
+
+	if err := hydrator(cfg.Directory); err != nil {
+		return fmt.Errorf("failed to hydrate db: %w", err)
+	}
+
+	doc, err := grypeDBv6.WriteImportMetadata(fs, cfg.Directory, "grype db build")
+	if err != nil {
+		return fmt.Errorf("failed to write checksums file: %w", err)
+	}
+
+	log.WithFields("digest", doc.Digest).Trace("captured DB digest")
 
 	return nil
 }

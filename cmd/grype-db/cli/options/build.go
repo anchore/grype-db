@@ -19,6 +19,7 @@ type Build struct {
 	// unbound options
 	IncludeCPEParts     []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
 	InferNVDFixVersions bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
+	Hydrate             bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`
 }
 
 func DefaultBuild() Build {
@@ -28,6 +29,7 @@ func DefaultBuild() Build {
 		SchemaVersion:       process.DefaultSchemaVersion,
 		IncludeCPEParts:     []string{"a", "h", "o"},
 		InferNVDFixVersions: true,
+		Hydrate:             false,
 	}
 }
 
@@ -59,6 +61,7 @@ func (o *Build) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	// set default values for non-bound struct items
 	v.SetDefault("build.include-cpe-parts", o.IncludeCPEParts)
 	v.SetDefault("build.infer-nvd-fix-versions", o.InferNVDFixVersions)
+	v.SetDefault("build.hydrate", o.Hydrate)
 
 	return o.DBLocation.BindFlags(flags, v)
 }
