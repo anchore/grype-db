@@ -46,7 +46,7 @@ runs:
 
     - name: Install uv
       if: inputs.python == 'true'
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@v6
       with:
         enable-cache: true
 
