@@ -89,6 +89,7 @@ class Validate:
             "debian",
             "github",
             "mariner",
+            "minimos",
             "nvd",
             "oracle",
             "rhel",

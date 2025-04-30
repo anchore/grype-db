@@ -19,6 +19,7 @@ provider:
     - name: github
     - name: kev
     - name: mariner
+    - name: minimos
     - name: oracle
     - name: rhel
     - name: sles
