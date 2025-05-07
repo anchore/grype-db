@@ -10,6 +10,7 @@ expected-providers:
   - amazon
   - chainguard
   - debian
+  - echo
   - epss
   - github
   - kev
