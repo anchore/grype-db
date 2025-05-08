@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -13,6 +14,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/version"
 	"github.com/anchore/syft/syft/pkg"
 )
 
@@ -586,6 +588,62 @@ func TestGetPackageType(t *testing.T) {
 				t.Errorf("getPackageType(%q) = %v, want %v", tc.ecosystem, gotType, tc.expectedType)
 			}
 		})
+	}
+}
+
+func TestGetRanges(t *testing.T) {
+	advisories := loadFixture(t, "test-fixtures/GHSA-92cp-5422-2mw7.json")
+	require.Len(t, advisories, 1)
+	advisory := advisories[0]
+	var ranges []grypeDB.AffectedRange
+	expectedRanges := []grypeDB.AffectedRange{
+		{
+			Version: grypeDB.AffectedVersion{
+				Type:       "go",
+				Constraint: ">=9.7.0-beta.1,<9.7.3",
+			},
+			Fix: &grypeDB.Fix{
+				Version: "9.7.3",
+				State:   grypeDB.FixedStatus,
+			},
+		},
+		{
+			Version: grypeDB.AffectedVersion{
+				// important: this emits an unknown constraint type,
+				// triggering fuzzy matching when the input is not
+				// valid semver
+				Type:       "Unknown",
+				Constraint: ">=9.6.0b1,<9.6.3",
+			},
+			Fix: &grypeDB.Fix{
+				Version: "9.6.3",
+				State:   grypeDB.FixedStatus,
+			},
+		},
+		{
+			Version: grypeDB.AffectedVersion{
+				Type:       "go",
+				Constraint: ">=9.5.1,<9.5.5",
+			},
+			Fix: &grypeDB.Fix{
+				Version: "9.5.5",
+				State:   grypeDB.FixedStatus,
+			},
+		},
+	}
+	var errors []error
+	for _, fixedIn := range advisory.Advisory.FixedIn {
+		rng, err := getRanges(fixedIn)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		ranges = append(ranges, rng...)
+	}
+
+	assert.Equal(t, 1, len(errors))
+	assert.ErrorIs(t, errors[0], version.ErrFallbackToFuzzy)
+	if diff := cmp.Diff(expectedRanges, ranges); diff != "" {
+		t.Errorf("getRanges() mismatch (-want +got):\n%s", diff)
 	}
 }
 
