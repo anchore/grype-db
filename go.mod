@@ -283,3 +283,5 @@ replace modernc.org/sqlite v1.33.0 => modernc.org/sqlite v1.32.0
 
 // the go.mod file did not have the correct minimum go version at the time of release tagging
 retract v0.30.0
+
+replace github.com/anchore/grype => github.com/orizerah/grype v0.0.0-20250507134644-76bf4ce5b45d
