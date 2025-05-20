@@ -87,6 +87,7 @@ class Validate:
             "amazon",
             "chainguard",
             "debian",
+            "echo",
             "github",
             "mariner",
             "nvd",
