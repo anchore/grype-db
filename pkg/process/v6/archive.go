@@ -47,7 +47,8 @@ func CreateArchive(dbDir, overrideArchiveExtension string) error {
 		return fmt.Errorf("no providers found in the vulnerability store")
 	}
 
-	eldest, err := toProviders(providerModels).EarliestTimestamp()
+	ignoreProviderDate := []string{}
+	eldest, err := toProviders(providerModels).EarliestTimestamp(ignoreProviderDate)
 	if err != nil {
 		return err
 	}
