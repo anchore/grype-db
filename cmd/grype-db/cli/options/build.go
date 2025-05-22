@@ -17,6 +17,7 @@ type Build struct {
 	SchemaVersion  int  `yaml:"schema-version" json:"schema-version" mapstructure:"schema-version"`
 
 	// unbound options
+	IgnoreProviderDate  []string `yaml:"ignore-provider-date" json:"ignore-provider-date" mapstructure:"ignore-provider-date"`
 	IncludeCPEParts     []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
 	InferNVDFixVersions bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
 	Hydrate             bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`

@@ -10,10 +10,11 @@ import (
 
 func Test_earliestTimestamp(t *testing.T) {
 	tests := []struct {
-		name    string
-		states  []State
-		want    time.Time
-		wantErr require.ErrorAssertionFunc
+		name               string
+		states             []State
+		want               time.Time
+		ignoreProviderDate []string
+		wantErr            require.ErrorAssertionFunc
 	}{
 		{
 			name: "happy path",
@@ -89,6 +90,25 @@ func Test_earliestTimestamp(t *testing.T) {
 			want: time.Date(2021, 1, 2, 0, 0, 0, 0, time.UTC),
 		},
 		{
+			name: "filter specific provider from config",
+			states: []State{
+				{
+					Provider:  "nvd",
+					Timestamp: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					Provider:  "filterMe",
+					Timestamp: time.Date(2020, 1, 3, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					Provider:  "other",
+					Timestamp: time.Date(2021, 1, 2, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			ignoreProviderDate: []string{"filterMe"},
+			want:               time.Date(2021, 1, 2, 0, 0, 0, 0, time.UTC),
+		},
+		{
 			name: "timestamps are the same",
 			states: []State{
 				{
@@ -110,7 +130,7 @@ func Test_earliestTimestamp(t *testing.T) {
 			if tt.wantErr == nil {
 				tt.wantErr = require.NoError
 			}
-			got, err := States(tt.states).EarliestTimestamp()
+			got, err := States(tt.states).EarliestTimestamp(tt.ignoreProviderDate)
 			tt.wantErr(t, err)
 			if err != nil {
 				return
