@@ -13,6 +13,8 @@ provider:
     executor: docker
     docker-tag: latest
     generate-configs: false
+build:
+  ignore-provider-date: ['sles']
 
 pull:
   parallelism: 4
