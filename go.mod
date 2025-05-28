@@ -9,7 +9,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20250318195838-07ae343dd722
 	github.com/anchore/grype v0.91.1
-	github.com/anchore/syft v1.23.0
+	github.com/anchore/syft v1.23.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1
 	github.com/dustin/go-humanize v1.0.1
@@ -42,7 +42,7 @@ require (
 	golang.org/x/sync v0.13.0
 	golang.org/x/text v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/gorm v1.25.12
+	gorm.io/gorm v1.26.0
 )
 
 require (
@@ -283,3 +283,6 @@ replace modernc.org/sqlite v1.33.0 => modernc.org/sqlite v1.32.0
 
 // the go.mod file did not have the correct minimum go version at the time of release tagging
 retract v0.30.0
+
+// TODO: do not merge like this; merge grype#2627 and update to grype@main and remove this
+replace github.com/anchore/grype => github.com/Daniel-Wachter/grype v0.0.0-20250430080842-59c66b7ebf09
