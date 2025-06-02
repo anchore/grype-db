@@ -13,6 +13,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/db/v6/name"
+	"github.com/anchore/grype/grype/version"
 	"github.com/anchore/syft/syft/pkg"
 )
 
@@ -62,13 +63,18 @@ func getVulnStatus(vuln unmarshal.GitHubAdvisory) grypeDB.VulnerabilityStatus {
 func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackageHandle {
 	var afs []grypeDB.AffectedPackageHandle
 	groups := groupFixedIns(vuln)
+	hasRangeErr := false
 	for group, fixedIns := range groups {
 		for _, fixedInEntry := range fixedIns {
+			ranges, rangeErr := getRanges(fixedInEntry)
+			if rangeErr != nil {
+				hasRangeErr = true
+			}
 			afs = append(afs, grypeDB.AffectedPackageHandle{
 				Package: getPackage(group),
 				BlobValue: &grypeDB.AffectedPackageBlob{
 					CVEs:   getAliases(vuln),
-					Ranges: getRanges(fixedInEntry),
+					Ranges: ranges,
 				},
 			})
 		}
@@ -77,19 +83,34 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 	// stable ordering
 	sort.Sort(internal.ByAffectedPackage(afs))
 
+	if hasRangeErr {
+		log.Warnf("for %s falling back to fuzzy matching on at least one constraint range", vuln.Advisory.GhsaID)
+	}
 	return afs
 }
 
-func getRanges(fixedInEntry unmarshal.GithubFixedIn) []grypeDB.AffectedRange {
+func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, error) {
+	fixedVersion := grypeDB.AffectedVersion{
+		Type:       getAffectedVersionFormat(fixedInEntry),
+		Constraint: common.EnforceSemVerConstraint(fixedInEntry.Range),
+	}
+	err := validateAffectedVersion(fixedVersion)
+	if err != nil {
+		log.Warnf("failed to validate affected version: %v", err)
+		fixedVersion.Type = "Unknown"
+	}
 	return []grypeDB.AffectedRange{
 		{
-			Version: grypeDB.AffectedVersion{
-				Type:       getAffectedVersionFormat(fixedInEntry),
-				Constraint: common.EnforceSemVerConstraint(fixedInEntry.Range),
-			},
-			Fix: getFix(fixedInEntry),
+			Version: fixedVersion,
+			Fix:     getFix(fixedInEntry),
 		},
-	}
+	}, err
+}
+
+func validateAffectedVersion(v grypeDB.AffectedVersion) error {
+	versionFormat := version.ParseFormat(v.Type)
+	_, err := version.GetConstraint(v.Constraint, versionFormat)
+	return err
 }
 
 func getAffectedVersionFormat(fixedInEntry unmarshal.GithubFixedIn) string {
