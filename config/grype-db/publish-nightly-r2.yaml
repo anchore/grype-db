@@ -13,7 +13,6 @@ provider:
     - name: nvd
     - name: alpine
     - name: amazon
-    - name: bitnami
     - name: chainguard
     - name: debian
     - name: epss
