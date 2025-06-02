@@ -7,7 +7,7 @@ TOOL_DIR = .tool
 RESULTS_DIR = $(TEMP_DIR)/results
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
-GRYPE_DB = go run ./cmd/$(BIN)/main.go -c config/grype-db/publish-nightly.yaml
+GRYPE_DB = go run ./cmd/$(BIN)/main.go -c config/grype-db/publish-nightly-r2.yaml
 GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date -u +"%y-%m-%d")
 
