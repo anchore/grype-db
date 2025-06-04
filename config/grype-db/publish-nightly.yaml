@@ -15,6 +15,7 @@ provider:
     - name: amazon
     - name: chainguard
     - name: debian
+    - name: echo
     - name: epss
     - name: github
     - name: kev
