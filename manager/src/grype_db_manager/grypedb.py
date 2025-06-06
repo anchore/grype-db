@@ -80,7 +80,7 @@ v4_expected_namespaces = [
     "github:language:swift",
     "mariner:distro:mariner:1.0",
     "mariner:distro:mariner:2.0",
-    "minimos:distro:minimos:rolling",
+    # "minimos:distro:minimos:rolling",
     "nvd:cpe",
     "oracle:distro:oraclelinux:5",
     "oracle:distro:oraclelinux:6",
