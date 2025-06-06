@@ -8,6 +8,7 @@ listing:
 expected-providers:
   - alpine
   - amazon
+  - bitnami
   - chainguard
   - debian
   - epss
