@@ -90,6 +90,7 @@ class Validate:
             "echo",
             "github",
             "mariner",
+            "minimos",
             "nvd",
             "oracle",
             "rhel",

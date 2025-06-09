@@ -215,7 +215,7 @@ func getPackageType(osName string) pkg.Type {
 		return pkg.RpmPkg
 	case "ubuntu", "debian", "echo":
 		return pkg.DebPkg
-	case "alpine", "chainguard", "wolfi":
+	case "alpine", "chainguard", "wolfi", "minimos":
 		return pkg.ApkPkg
 	case "windows":
 		return pkg.KbPkg
