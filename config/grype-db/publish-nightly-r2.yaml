@@ -13,12 +13,14 @@ provider:
     - name: nvd
     - name: alpine
     - name: amazon
+    - name: bitnami
     - name: chainguard
     - name: debian
     - name: epss
     - name: github
     - name: kev
     - name: mariner
+    - name: minimos
     - name: oracle
     - name: rhel
     - name: sles
