@@ -15,6 +15,7 @@ expected-providers:
   - github
   - kev
   - mariner
+  - minimos
   - nvd
   - oracle
   - rhel
