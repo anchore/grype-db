@@ -13,6 +13,7 @@ provider:
     - name: nvd
     - name: alpine
     - name: amazon
+    - name: bitnami
     - name: chainguard
     - name: debian
     - name: echo
@@ -20,6 +21,7 @@ provider:
     - name: github
     - name: kev
     - name: mariner
+    - name: minimos
     - name: oracle
     - name: rhel
     - name: sles
