@@ -35,7 +35,6 @@ DB_DIR = "dbs"
 # For the meantime this is a snapshot of the expected namespaces for vunnel 0.17.2 in Oct 2023 (boo! 👻).
 v5_additional_namespaces = [
     "mariner:distro:azurelinux:3.0",
-    "echo:distro:echo:1",
 ]
 
 v4_expected_namespaces = [
