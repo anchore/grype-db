@@ -213,7 +213,7 @@ func getPackageType(osName string) pkg.Type {
 	switch osName {
 	case "redhat", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
 		return pkg.RpmPkg
-	case "ubuntu", "debian":
+	case "ubuntu", "debian", "echo":
 		return pkg.DebPkg
 	case "alpine", "chainguard", "wolfi", "minimos":
 		return pkg.ApkPkg
