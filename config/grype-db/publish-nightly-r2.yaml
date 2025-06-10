@@ -16,7 +16,6 @@ provider:
     - name: bitnami
     - name: chainguard
     - name: debian
-    - name: echo
     - name: epss
     - name: github
     - name: kev
