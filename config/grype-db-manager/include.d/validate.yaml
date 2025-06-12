@@ -11,6 +11,7 @@ expected-providers:
   - bitnami
   - chainguard
   - debian
+  - echo
   - epss
   - github
   - kev
