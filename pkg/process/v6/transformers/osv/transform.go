@@ -256,7 +256,7 @@ func extractCVSSInfo(cvss string) (string, string, error) {
 		return "", "", fmt.Errorf("invalid CVSS format")
 	}
 
-	return matches[1], matches[2], nil
+	return matches[1], matches[0], nil
 }
 
 func normalizeSeverity(severity models.Severity) (grypeDB.Severity, error) {
