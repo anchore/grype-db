@@ -95,7 +95,7 @@ func TestTransform(t *testing.T) {
 						Severities: []grypeDB.Severity{{
 							Scheme: grypeDB.SeveritySchemeCVSS,
 							Value: grypeDB.CVSSSeverity{
-								Vector:  "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+								Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 								Version: "3.1",
 							},
 						}},
@@ -145,7 +145,7 @@ func TestTransform(t *testing.T) {
 						Severities: []grypeDB.Severity{{
 							Scheme: grypeDB.SeveritySchemeCVSS,
 							Value: grypeDB.CVSSSeverity{
-								Vector:  "AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+								Vector:  "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
 								Version: "3.1",
 							},
 						}},
@@ -402,7 +402,7 @@ func Test_extractCVSSInfo(t *testing.T) {
 			name:        "valid cvss",
 			cvss:        "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 			wantVersion: "3.1",
-			wantVector:  "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+			wantVector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 			wantErr:     false,
 		},
 		{
