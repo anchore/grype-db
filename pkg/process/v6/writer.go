@@ -127,8 +127,8 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 }
 
 // fillInMissingSeverity will add a severity entry to the vulnerability record if it is missing, empty, or "unknown".
-// The upstream NVD record is used to fill in these missing values. Note that the NVD provider is always guaranteed
-// to be processed first before other providers.
+// The upstream NVD record is used to fill in these missing values for CVEs, and GitHub records are used for GHSAs.
+// Note that the NVD provider is always processed first, then GitHub, then other providers.
 func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 	if handle == nil {
 		return
@@ -141,14 +141,26 @@ func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 
 	id := strings.ToLower(blob.ID)
 	isCVE := strings.HasPrefix(id, "cve-")
-	if strings.ToLower(handle.ProviderID) == "nvd" && isCVE {
+	isGHSA := strings.HasPrefix(id, "ghsa-")
+	
+	// Cache severity data from NVD (for CVEs) and GitHub (for GHSAs)
+	providerID := strings.ToLower(handle.ProviderID)
+	if providerID == "nvd" && isCVE {
+		if len(blob.Severities) > 0 {
+			w.severityCache[id] = blob.Severities[0]
+		}
+		return
+	}
+	
+	if providerID == "github" && isGHSA {
 		if len(blob.Severities) > 0 {
 			w.severityCache[id] = blob.Severities[0]
 		}
 		return
 	}
 
-	if !isCVE {
+	// Only process CVEs and GHSAs for backfilling
+	if !isCVE && !isGHSA {
 		return
 	}
 
@@ -171,15 +183,23 @@ func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 		return // already has a severity, don't normalize
 	}
 
-	// add the top NVD severity value
-	nvdSev, ok := w.severityCache[id]
+	// Look up cached severity data (NVD for CVEs, GitHub for GHSAs)
+	cachedSev, ok := w.severityCache[id]
 	if !ok {
-		log.WithFields("id", blob.ID).Trace("unable to find NVD severity")
+		sourceType := "NVD"
+		if isGHSA {
+			sourceType = "GitHub"
+		}
+		log.WithFields("id", blob.ID).Trace("unable to find " + sourceType + " severity")
 		return
 	}
 
-	log.WithFields("id", blob.ID, "provider", handle.Provider, "sev-from", topSevStr, "sev-to", nvdSev).Trace("overriding irrelevant severity with data from NVD record")
-	sevs = append([]grypeDB.Severity{nvdSev}, sevs...)
+	sourceType := "NVD"
+	if isGHSA {
+		sourceType = "GitHub"
+	}
+	log.WithFields("id", blob.ID, "provider", handle.Provider, "sev-from", topSevStr, "sev-to", cachedSev).Trace("overriding irrelevant severity with data from " + sourceType + " record")
+	sevs = append([]grypeDB.Severity{cachedSev}, sevs...)
 	handle.BlobValue.Severities = sevs
 }
 

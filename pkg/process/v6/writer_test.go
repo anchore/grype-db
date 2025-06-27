@@ -32,10 +32,10 @@ func TestFillInMissingSeverity(t *testing.T) {
 			expected:      nil,
 		},
 		{
-			name: "non-CVE ID",
+			name: "non-CVE/non-GHSA ID",
 			handle: &grypeDB.VulnerabilityHandle{
 				BlobValue: &grypeDB.VulnerabilityBlob{
-					ID: "GHSA-123",
+					ID: "OTHER-123",
 					Severities: []grypeDB.Severity{
 						{Value: "high"},
 					},
@@ -57,6 +57,21 @@ func TestFillInMissingSeverity(t *testing.T) {
 			},
 			severityCache:     map[string]grypeDB.Severity{},
 			expected:          []grypeDB.Severity{{Value: "critical"}},
+			expectCacheUpdate: true,
+		},
+		{
+			name: "GitHub provider with GHSA",
+			handle: &grypeDB.VulnerabilityHandle{
+				ProviderID: "github",
+				BlobValue: &grypeDB.VulnerabilityBlob{
+					ID: "GHSA-1234-5678-9abc",
+					Severities: []grypeDB.Severity{
+						{Value: "high"},
+					},
+				},
+			},
+			severityCache:     map[string]grypeDB.Severity{},
+			expected:          []grypeDB.Severity{{Value: "high"}},
 			expectCacheUpdate: true,
 		},
 		{
@@ -92,6 +107,20 @@ func TestFillInMissingSeverity(t *testing.T) {
 				"cve-2023-9012": {Value: "high"},
 			},
 			expected: []grypeDB.Severity{{Value: "high"}},
+		},
+		{
+			name: "GHSA with no severities, using cache",
+			handle: &grypeDB.VulnerabilityHandle{
+				ProviderID: "alpine",
+				BlobValue: &grypeDB.VulnerabilityBlob{
+					ID:         "GHSA-abcd-efgh-ijkl",
+					Severities: []grypeDB.Severity{},
+				},
+			},
+			severityCache: map[string]grypeDB.Severity{
+				"ghsa-abcd-efgh-ijkl": {Value: "medium"},
+			},
+			expected: []grypeDB.Severity{{Value: "medium"}},
 		},
 	}
 

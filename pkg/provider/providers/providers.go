@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/mitchellh/mapstructure"
 
@@ -32,13 +33,31 @@ func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Pro
 		if err != nil {
 			return nil, err
 		}
-		if p.ID().Name == "nvd" {
-			// it is important that NVD is processed first since other providers depend on the severity information from these records
-			providers = append([]provider.Provider{p}, providers...)
-		} else {
-			providers = append(providers, p)
-		}
+		providers = append(providers, p)
 	}
+
+	sort.SliceStable(providers, func(i, j int) bool {
+		nameI, nameJ := providers[i].ID().Name, providers[j].ID().Name
+
+		// NVD always comes first
+		if nameI == "nvd" {
+			return true
+		}
+		if nameJ == "nvd" {
+			return false
+		}
+
+		// GitHub comes second (after NVD)
+		if nameI == "github" {
+			return true
+		}
+		if nameJ == "github" {
+			return false
+		}
+
+		// All others maintain original order
+		return false
+	})
 
 	return providers, nil
 }
