@@ -97,7 +97,7 @@ func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, e
 	err := validateAffectedVersion(fixedVersion)
 	if err != nil {
 		log.Warnf("failed to validate affected version: %v", err)
-		fixedVersion.Type = "Unknown"
+		fixedVersion.Type = version.UnknownFormat.String()
 	}
 	return []grypeDB.AffectedRange{
 		{
@@ -109,7 +109,21 @@ func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, e
 
 func validateAffectedVersion(v grypeDB.AffectedVersion) error {
 	versionFormat := version.ParseFormat(v.Type)
-	_, err := version.GetConstraint(v.Constraint, versionFormat)
+	c, err := version.GetConstraint(v.Constraint, versionFormat)
+	if err != nil {
+		return err
+	}
+
+	// ensure we can use this version format in a comparison
+	ver := version.NewVersion("1.0.0", versionFormat)
+	if err := ver.Validate(); err != nil {
+		// don't have a good example to use here
+		// TODO: we should consider finding a better way to do this without having to create a valid version for comparison
+		return nil
+	}
+
+	_, err = c.Satisfied(ver)
+
 	return err
 }
 
