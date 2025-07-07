@@ -31,6 +31,7 @@ func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 
 	providerName := d.String()
 	distroName := d.String()
+	ver := feedGroupComponents[1]
 
 	switch d {
 	case distro.OracleLinux:
@@ -39,12 +40,17 @@ func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 		providerName = "amazon"
 	case distro.Mariner, distro.Azure:
 		providerName = "mariner"
-		if strings.HasPrefix(feedGroupComponents[1], "3") {
+		if strings.HasPrefix(ver, "3") {
 			distroName = distro.Azure.String() // Mariner Linux 3 is known as "Azure Linux 3"
 		}
 	}
 
-	ns, err := namespace.FromString(fmt.Sprintf("%s:distro:%s:%s", providerName, distroName, feedGroupComponents[1]))
+	// distro channels are not supported in the grype v5 schema, so the records should be dropped entirely
+	if strings.Contains(ver, "+") {
+		return nil, nil
+	}
+
+	ns, err := namespace.FromString(fmt.Sprintf("%s:distro:%s:%s", providerName, distroName, ver))
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +83,10 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	grypeNamespace, err := buildGrypeNamespace(vulnerability.Vulnerability.NamespaceName)
 	if err != nil {
 		return nil, err
+	}
+	if grypeNamespace == nil {
+		// this is an enterprise feed group that does not have a corresponding grype namespace, so skip it
+		return nil, nil
 	}
 
 	entryNamespace := grypeNamespace.String()

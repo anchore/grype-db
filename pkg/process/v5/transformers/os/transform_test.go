@@ -437,6 +437,12 @@ func TestParseVulnerabilitiesEntry(t *testing.T) {
 			},
 		},
 		{
+			name:       "RHEL EUS (ignore)",
+			numEntries: 1,
+			fixture:    "test-fixtures/rhel-8-eus.json",
+			// intentionally creates no vulnerabilities to write to the DB
+		},
+		{
 			name:       "Alpine",
 			numEntries: 1,
 			fixture:    "test-fixtures/alpine-3.9.json",

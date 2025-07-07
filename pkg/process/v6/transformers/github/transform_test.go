@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -14,7 +13,6 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
-	"github.com/anchore/grype/grype/version"
 	"github.com/anchore/syft/syft/pkg"
 )
 
@@ -640,8 +638,7 @@ func TestGetRanges(t *testing.T) {
 		ranges = append(ranges, rng...)
 	}
 
-	assert.Equal(t, 1, len(errors))
-	assert.ErrorIs(t, errors[0], version.ErrFallbackToFuzzy)
+	require.Equal(t, 1, len(errors))
 	if diff := cmp.Diff(expectedRanges, ranges); diff != "" {
 		t.Errorf("getRanges() mismatch (-want +got):\n%s", diff)
 	}

@@ -67,9 +67,8 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	var aphs []grypeDB.AffectedPackageHandle
 	for _, affected := range vuln.Affected {
 		aph := grypeDB.AffectedPackageHandle{
-			OperatingSystem: getOperatingSystem(affected),
-			Package:         getPackage(affected.Package),
-			BlobValue:       &grypeDB.AffectedPackageBlob{CVEs: vuln.Aliases},
+			Package:   getPackage(affected.Package),
+			BlobValue: &grypeDB.AffectedPackageBlob{CVEs: vuln.Aliases},
 		}
 
 		if withCPE {
@@ -90,30 +89,6 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	sort.Sort(internal.ByAffectedPackage(aphs))
 
 	return aphs
-}
-
-func getOperatingSystem(affected models.Affected) *grypeDB.OperatingSystem {
-	switch {
-	case strings.HasPrefix(string(affected.Package.Ecosystem), string(models.EcosystemAlmaLinux)):
-		parts := strings.SplitN(string(affected.Package.Ecosystem), ":", 2)
-		if len(parts) != 2 {
-			return nil
-		}
-		return &grypeDB.OperatingSystem{
-			Name:         "alma",
-			MajorVersion: parts[1],
-		}
-	case strings.HasPrefix(string(affected.Package.Ecosystem), string(models.EcosystemRockyLinux)):
-		parts := strings.SplitN(string(affected.Package.Ecosystem), ":", 2)
-		if len(parts) != 2 {
-			return nil
-		}
-		return &grypeDB.OperatingSystem{
-			Name:         "rocky",
-			MajorVersion: parts[1],
-		}
-	}
-	return nil
 }
 
 // OSV supports flattered ranges, so both formats below are valid:

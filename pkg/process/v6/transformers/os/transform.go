@@ -188,7 +188,7 @@ type groupIndex struct {
 
 func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OSFixedIn {
 	grouped := make(map[groupIndex][]unmarshal.OSFixedIn)
-	osName, osID, osVersion, osVariant := getOSInfo(vuln.Vulnerability.NamespaceName)
+	osName, osID, osVersion, osChannel := getOSInfo(vuln.Vulnerability.NamespaceName)
 
 	for _, fixedIn := range vuln.Vulnerability.FixedIn {
 		var mod string
@@ -200,7 +200,7 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 			id:        osID,
 			osName:    osName,
 			osVersion: osVersion,
-			osChannel: osVariant,
+			osChannel: osChannel,
 			hasModule: fixedIn.Module != nil,
 			module:    mod,
 			format:    fixedIn.VersionFormat,
@@ -240,10 +240,10 @@ func getOSInfo(group string) (string, string, string, string) {
 
 	id := feedGroupComponents[0]
 	version := feedGroupComponents[1]
-	variant := ""
-	if strings.Contains(feedGroupComponents[1], "-") {
-		versionParts := strings.Split(feedGroupComponents[1], "-")
-		variant = versionParts[1]
+	channel := ""
+	if strings.Contains(feedGroupComponents[1], "+") {
+		versionParts := strings.Split(feedGroupComponents[1], "+")
+		channel = versionParts[1]
 		version = versionParts[0]
 	}
 	if strings.ToLower(id) == "mariner" {
@@ -257,7 +257,7 @@ func getOSInfo(group string) (string, string, string, string) {
 		}
 	}
 
-	return normalizeOsName(id), id, version, variant
+	return normalizeOsName(id), id, version, channel
 }
 
 func normalizeOsName(id string) string {
