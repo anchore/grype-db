@@ -14,8 +14,7 @@ import (
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype-db/pkg/provider/entry"
+	"github.com/anchore/grype/grype/db/data/provider"
 )
 
 var _ options.Interface = &cacheStatusConfig{}
@@ -112,7 +111,7 @@ func cacheStatus(cfg cacheStatusConfig) error {
 		if sd != nil {
 			name = sd.Provider
 			counter := func() (int64, error) {
-				return entry.Count(sd.Store, sd.ResultPaths())
+				return sd.Count()
 			}
 			count, err = validateCount(cfg, counter)
 			if err != nil {

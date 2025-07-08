@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/anchore/grype-db/internal/log"
+	"github.com/anchore/grype-db/internal/redact"
 )
 
 var _ Interface = &Vunnel{}
@@ -28,7 +28,7 @@ func (o Vunnel) Redact() {
 		return
 	}
 	for _, v := range o.Env {
-		log.Redact(v)
+		redact.Add(v)
 	}
 }
 

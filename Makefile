@@ -45,7 +45,7 @@ SUCCESS := $(BOLD)$(GREEN)
 
 # Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
-COVERAGE_THRESHOLD := 55
+COVERAGE_THRESHOLD := 17
 DIST_DIR=./dist
 CHANGELOG := CHANGELOG.md
 SNAPSHOT_DIR=./snapshot

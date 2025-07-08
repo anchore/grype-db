@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/providers"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/providers/vunnel"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/provider/providers"
-	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
 )
 
 var _ options.Interface = &listProvidersConfig{}
@@ -86,12 +86,12 @@ func runListProviders(cfg listProvidersConfig) error {
 
 	if cfg.Format.Output == "text" {
 		for _, p := range ps {
-			fmt.Println(p.ID().Name)
+			fmt.Println(p.Name())
 		}
 	} else if cfg.Format.Output == "json" {
 		names := make([]string, 0, len(ps))
 		for _, p := range ps {
-			names = append(names, p.ID().Name)
+			names = append(names, p.Name())
 		}
 		by, err := json.Marshal(names)
 		if err != nil {

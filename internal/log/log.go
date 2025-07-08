@@ -4,26 +4,21 @@ import (
 	"github.com/anchore/go-logger"
 	"github.com/anchore/go-logger/adapter/discard"
 	"github.com/anchore/go-logger/adapter/redact"
+	red "github.com/anchore/grype-db/internal/redact"
 )
 
-var (
-	log   = discard.New()
-	store = redact.NewStore()
-)
-
-func init() {
-	// why redact the default discard logger? there may be sensitive information added to the redact store
-	// before the logger is set. This ensures that any future loggers will still redact the sensitive information.
-	// from previous Redact() calls.
-	log = redact.New(log, store)
-}
+var log = discard.New()
 
 func Set(l logger.Logger) {
-	log = redact.New(l, store)
-}
-
-func Redact(value ...string) {
-	store.Add(value...)
+	// though the application will automatically have a redaction logger, library consumers may not be doing this.
+	// for this reason we additionally ensure there is a redaction logger configured for any logger passed. The
+	// source of truth for redaction values is still in the internal redact package. If the passed logger is already
+	// redacted, then this is a no-op.
+	store := red.Get()
+	if store != nil {
+		l = redact.New(l, store)
+	}
+	log = l
 }
 
 // Errorf takes a formatted template string and template arguments for the error logging level.

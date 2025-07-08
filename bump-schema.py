@@ -4,7 +4,7 @@ import re
 import shutil
 from typing import List
 
-PROCESS_PATH = "./pkg/process"
+PROCESS_PATH = "../grype/grype/db/data/process"
 DEFAULT_SCHEMA_PATH = os.path.join(PROCESS_PATH, "default_schema_version.go")
 IMPORT_TEMPLATES = [
     "github.com/anchore/grype-db/pkg/process/{}",
