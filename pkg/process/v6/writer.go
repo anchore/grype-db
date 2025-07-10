@@ -142,7 +142,7 @@ func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 	id := strings.ToLower(blob.ID)
 	isCVE := strings.HasPrefix(id, "cve-")
 	isGHSA := strings.HasPrefix(id, "ghsa-")
-	
+
 	// Cache severity data from NVD (for CVEs) and GitHub (for GHSAs)
 	providerID := strings.ToLower(handle.ProviderID)
 	if providerID == "nvd" && isCVE {
@@ -151,7 +151,7 @@ func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 		}
 		return
 	}
-	
+
 	if providerID == "github" && isGHSA {
 		if len(blob.Severities) > 0 {
 			w.severityCache[id] = blob.Severities[0]
