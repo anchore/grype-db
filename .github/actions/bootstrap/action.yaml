@@ -46,7 +46,7 @@ runs:
 
     - name: Install uv
       if: inputs.python == 'true'
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba # v6.3.1
       with:
         enable-cache: true
 
@@ -81,5 +81,8 @@ runs:
     - name: Install apt packages
       if: inputs.bootstrap-apt-packages != ''
       shell: bash
+      env:
+        APT_PACKAGES: ${{ inputs.bootstrap-apt-packages }}
       run: |
-        DEBIAN_FRONTEND=noninteractive sudo apt update && sudo -E apt install -y ${{ inputs.bootstrap-apt-packages }}
+        IFS=' ' read -ra packages <<< "$APT_PACKAGES"
+        DEBIAN_FRONTEND=noninteractive sudo apt update && sudo -E apt install -y "${packages[@]}"

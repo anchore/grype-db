@@ -11,6 +11,8 @@ on:
 jobs:
 
   run:
+    permissions:
+      contents: read
     uses: "anchore/workflows/.github/workflows/oss-project-board-add.yaml@main"
     secrets:
       token: ${{ secrets.OSS_PROJECT_GH_TOKEN }}
