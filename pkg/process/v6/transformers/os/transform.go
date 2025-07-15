@@ -188,7 +188,7 @@ type groupIndex struct {
 
 func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OSFixedIn {
 	grouped := make(map[groupIndex][]unmarshal.OSFixedIn)
-	osName, osID, osVersion, osChannel := getOSInfo(vuln.Vulnerability.NamespaceName)
+	oi := getOSInfo(vuln.Vulnerability.NamespaceName)
 
 	for _, fixedIn := range vuln.Vulnerability.FixedIn {
 		var mod string
@@ -197,10 +197,10 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 		}
 		g := groupIndex{
 			name:      fixedIn.Name,
-			id:        osID,
-			osName:    osName,
-			osVersion: osVersion,
-			osChannel: osChannel,
+			id:        oi.id,
+			osName:    oi.name,
+			osVersion: oi.version,
+			osChannel: oi.channel,
 			hasModule: fixedIn.Module != nil,
 			module:    mod,
 			format:    fixedIn.VersionFormat,
@@ -234,7 +234,14 @@ func getPackage(group groupIndex) *grypeDB.Package {
 	}
 }
 
-func getOSInfo(group string) (string, string, string, string) {
+type osInfo struct {
+	name    string
+	id      string
+	version string
+	channel string
+}
+
+func getOSInfo(group string) osInfo {
 	// derived from enterprise feed groups, expected to be of the form {distro release ID}:{version}
 	feedGroupComponents := strings.Split(group, ":")
 
@@ -257,7 +264,12 @@ func getOSInfo(group string) (string, string, string, string) {
 		}
 	}
 
-	return normalizeOsName(id), id, version, channel
+	return osInfo{
+		name:    normalizeOsName(id),
+		id:      id,
+		version: version,
+		channel: channel,
+	}
 }
 
 func normalizeOsName(id string) string {
