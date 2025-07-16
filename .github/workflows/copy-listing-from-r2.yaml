@@ -5,6 +5,13 @@ on:
 
   # allow invoking from another workflow
   workflow_call:
+    secrets:
+      TOOLBOX_AWS_ACCESS_KEY_ID:
+        required: true
+      TOOLBOX_AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_TOOLBOX_WEBHOOK_URL:
+        required: true
 
 env:
   CGO_ENABLED: "0"
