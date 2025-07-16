@@ -6,6 +6,9 @@ on:
         description: tag the latest commit on main with the given version (prefixed with v)
         required: true
 
+permissions:
+  contents: read
+
 jobs:
 
   quality-gate:
@@ -13,12 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Check if tag already exists
         # note: this will fail if the tag already exists
+        env:
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          [[ "${{ github.event.inputs.version }}" == v* ]] || (echo "version '${{ github.event.inputs.version }}' does not have a 'v' prefix" && exit 1)
-          git tag ${{ github.event.inputs.version }}
+          [[ "$VERSION" == v* ]] || (echo "version '$VERSION' does not have a 'v' prefix" && exit 1)
+          git tag $VERSION
 
       - name: Check static analysis results
         uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
@@ -67,12 +74,18 @@ jobs:
 
       - name: Quality gate
         if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit-go.outputs.conclusion != 'success' || steps.cli-go-linux.outputs.conclusion != 'success' || steps.unit-python.outputs.conclusion != 'success' || steps.cli-python.outputs.conclusion != 'success'
+        env:
+          STATIC_ANALYSIS_STATUS: ${{ steps.static-analysis.outputs.conclusion }}
+          GO_UNIT_STATUS: ${{ steps.unit-go.outputs.conclusion }}
+          PYTHON_UNIT_STATUS: ${{ steps.unit-python.outputs.conclusion }}
+          GO_CLI_LINUX_STATUS: ${{ steps.cli-go-linux.outputs.conclusion }}
+          PYTHON_CLI_STATUS: ${{ steps.cli-python.outputs.conclusion }}
         run: |
-          echo "Static Analysis Status: ${{ steps.static-analysis.conclusion }}"
-          echo "Go Unit Test Status: ${{ steps.unit-go.outputs.conclusion }}"
-          echo "Python Unit Test Status: ${{ steps.unit-python.outputs.conclusion }}"
-          echo "Go CLI Test (Linux) Status: ${{ steps.cli-go-linux.outputs.conclusion }}"
-          echo "Python CLI Test Status: ${{ steps.cli-python.outputs.conclusion }}"
+          echo "Static Analysis Status: $STATIC_ANALYSIS_STATUS"
+          echo "Go Unit Test Status: $GO_UNIT_STATUS"
+          echo "Python Unit Test Status: $PYTHON_UNIT_STATUS"
+          echo "Go CLI Test (Linux) Status: $GO_CLI_LINUX_STATUS"
+          echo "Python CLI Test Status: $PYTHON_CLI_STATUS"
           false
 
   read-schema-versions:
@@ -82,6 +95,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -108,8 +123,10 @@ jobs:
 
       - name: Quality gate
         if: steps.acceptance.outputs.conclusion != 'success'
+        env:
+          ACCEPTANCE_STATUS: ${{ steps.acceptance.outputs.conclusion }}
         run: |
-          echo "Acceptance Test Status: ${{ steps.acceptance.outputs.conclusion }}"
+          echo "Acceptance Test Status: $ACCEPTANCE_STATUS"
           false
 
   release:
@@ -124,6 +141,7 @@ jobs:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Bootstrap environment
@@ -134,11 +152,12 @@ jobs:
           python: false
 
       - name: Tag release
-        run: |
-          git tag ${{ github.event.inputs.version }}
-          git push origin --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          git tag $VERSION
+          git push origin --tags
 
       - name: Build release artifacts
         run: make ci-release

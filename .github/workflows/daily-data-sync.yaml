@@ -14,10 +14,15 @@ jobs:
   discover-providers:
     name: "Discover vulnerability providers"
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
     outputs:
       providers: ${{ steps.read-providers.outputs.providers }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -52,6 +57,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -65,12 +72,15 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
 
       - name: Download the existing provider state
-        run: bash -c "make download-provider-cache provider=${{ matrix.provider }} date=latest || true"
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: bash -c "make download-provider-cache provider=\"$PROVIDER\" date=latest || true"
 
       - name: Update the provider
-        run: make refresh-provider-cache provider=${{ matrix.provider }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROVIDER: ${{ matrix.provider }}
+        run: make refresh-provider-cache provider="$PROVIDER"
 
       - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
         with:
@@ -84,7 +94,9 @@ jobs:
       - name: Upload the provider workspace state
         # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
         if: ${{ always() }}
-        run: make upload-provider-cache provider=${{ matrix.provider }}
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: make upload-provider-cache provider="$PROVIDER"
 
   aggregate-cache:
     name: "Aggregate provider cache"
@@ -100,6 +112,8 @@ jobs:
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap

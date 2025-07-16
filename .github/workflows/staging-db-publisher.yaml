@@ -55,6 +55,7 @@ jobs:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
         with:
+          persist-credentials: false
           submodules: true
 
       - name: Bootstrap environment
@@ -88,16 +89,17 @@ jobs:
         # a) booleans come across as string types :(
         # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
         if: github.event.inputs.publish-databases != 'false'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
+          SCHEMA_VERSION: ${{ github.event.inputs.schema-version }}
         run: |
           uv run \
             grype-db-manager \
               -vv \
               -c ./config/grype-db-manager/publish-staging.yaml \
                 db build-and-upload \
-                  --schema-version ${{ github.event.inputs.schema-version }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
+                  --schema-version $SCHEMA_VERSION
 
       - name: Publish listing file
         # note about workflow dispatch inputs and booleans:
