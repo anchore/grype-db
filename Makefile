@@ -15,8 +15,8 @@ date = $(shell date -u +"%y-%m-%d")
 BINNY = $(TOOL_DIR)/binny
 LINT_CMD = $(TOOL_DIR)/golangci-lint run --config .golangci.yaml
 GOIMPORTS_CMD := $(TOOL_DIR)/gosimports -local github.com/anchore
-RELEASE_CMD = $(TOOL_DIR)/goreleaser release --rm-dist
-SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot
+RELEASE_CMD = $(TOOL_DIR)/goreleaser release --clean
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --snapshot
 CHRONICLE_CMD = $(TOOL_DIR)/chronicle
 GLOW_CMD = $(TOOL_DIR)/glow
 ORAS = $(TOOL_DIR)/oras
