@@ -1394,7 +1394,7 @@ func TestTransform(t *testing.T) {
 							ID:          "CVE-2004-0377",
 							Assigners:   []string{"cve@mitre.org"},
 							Description: "Buffer overflow in the win32_stat function for (1) ActiveState's ActivePerl and (2) Larry Wall's Perl before 5.8.3 allows local or remote attackers to execute arbitrary commands via filenames that end in a backslash character.",
-							References:  []grypeDB.Reference{
+							References: []grypeDB.Reference{
 								{
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2004-0377",
 								},
@@ -1404,9 +1404,9 @@ func TestTransform(t *testing.T) {
 					Related: affectedPkgSlice(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2004-0377"},
+								CVEs:   []string{"CVE-2004-0377"},
 								Ranges: nil,
-								},
+							},
 							CPE: &grypeDB.Cpe{
 								Part:    "a",
 								Vendor:  "activestate",
