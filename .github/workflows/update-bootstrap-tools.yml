@@ -31,15 +31,15 @@ jobs:
           GOSIMPORTS_LATEST_VERSION=$(go list -m -json github.com/rinchsan/gosimports@latest 2>/dev/null | jq -r '.Version')
           BOUNCER_LATEST_VERSION=$(go list -m -json github.com/wagoodman/go-bouncer@latest 2>/dev/null | jq -r '.Version')
           CHRONICLE_LATEST_VERSION=$(go list -m -json github.com/anchore/chronicle@latest 2>/dev/null | jq -r '.Version')
-          GORELEASER_LATEST_VERSION=$(go list -m -json github.com/goreleaser/goreleaser@latest 2>/dev/null | jq -r '.Version')
-          
+          GORELEASER_LATEST_VERSION=$(go list -m -json github.com/goreleaser/goreleaser/v2@latest 2>/dev/null | jq -r '.Version')
+
           # update version variables in the Makefile
           sed -r -i -e 's/^(GOLANGCILINT_VERSION = ).*/\1'${GOLANGCILINT_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(GOSIMPORTS_VERSION := ).*/\1'${GOSIMPORTS_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(BOUNCER_VERSION = ).*/\1'${BOUNCER_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(CHRONICLE_VERSION = ).*/\1'${CHRONICLE_LATEST_VERSION}'/' Makefile
           sed -r -i -e 's/^(GORELEASER_VERSION = ).*/\1'${GORELEASER_LATEST_VERSION}'/' Makefile
-          
+
           # export the versions for use with create-pull-request
           echo "GOLANGCILINT=$GOLANGCILINT_LATEST_VERSION" >> $GITHUB_OUTPUT
           echo "GOSIMPORTS=$GOSIMPORTS_LATEST_VERSION" >> $GITHUB_OUTPUT
