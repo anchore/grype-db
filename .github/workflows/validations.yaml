@@ -11,15 +11,22 @@ on:
 env:
   CGO_ENABLED: "0"
 
+permissions:
+  contents: read
+
 jobs:
 
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Static-Analysis:
     name: "Static analysis"
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -30,10 +37,14 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Unit-Test-Go:
     name: "Unit tests (Go)"
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -46,10 +57,14 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Unit-Test-Python:
     name: "Unit tests (Python)"
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -62,9 +77,13 @@ jobs:
   # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
   Build-Snapshot-Artifacts:
     name: "Build snapshot artifacts"
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -84,19 +103,23 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 #v4.2.3
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
 
   Discover-Schema-Versions:
     name: "Discover supported schema versions"
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Read supported schema versions
         id: read-schema-versions
@@ -121,6 +144,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -135,18 +159,23 @@ jobs:
         run: make download-all-provider-cache
 
       - name: Build and validate the DB
-        run: make db-acceptance schema=${{ matrix.schema-version }}
         env:
           FORCE_COLOR: true
+          SCHEMA_VERSION: ${{ matrix.schema-version }}
+        run: make db-acceptance schema="$SCHEMA_VERSION"
 
 
   Cli-Go-Linux:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
     name: "CLI tests (Go-Linux)"
+    permissions:
+      contents: read
     needs: [Build-Snapshot-Artifacts]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -154,13 +183,13 @@ jobs:
           python: false
 
       - name: Restore CLI test-fixture cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 #v4.2.3
         with:
           path: ${{ github.workspace }}/test/cli/test-fixtures/cache
           key: ${{ runner.os }}-cli-test-cache-${{ hashFiles('test/cli/test-fixtures/cache.fingerprint') }}
 
       - name: Download snapshot build
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 #v4.2.3
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -171,11 +200,14 @@ jobs:
   Cli-Python:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
     name: "CLI tests (Python)"
+    permissions:
+      contents: read
     runs-on: ubuntu-22.04-4core-16gb
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap

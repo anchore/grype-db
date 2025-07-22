@@ -59,7 +59,7 @@ class Latest:
 
 @contextlib.contextmanager
 def _http_server(directory: str, schema_version: str) -> Iterator[str]:
-    major_version = schema_version.split(".")[0]
+    major_version = schema_version.split(".")[0].removeprefix("v")
     server_address = ("127.0.0.1", 5555)
     url = f"http://{server_address[0]}:{server_address[1]}"
     latest_url = f"{url}/v{major_version}/{LATEST_FILENAME}"
@@ -142,7 +142,7 @@ def smoke_test(
 
         installation_path = os.path.join(tempdir, "grype-install")
 
-        major_version = test_latest.schema_version.split(".")[0]
+        major_version = test_latest.schema_version.split(".")[0].removeprefix("v")
 
         sub_path = os.path.join(tempdir, "v" + major_version)
         os.makedirs(sub_path, exist_ok=True)

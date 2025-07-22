@@ -24,7 +24,7 @@ class Grype:
 
     def __init__(self, schema_version: int | str, store_root: str, update_url: str = "", release: str | None = None):
         if isinstance(schema_version, str):
-            schema_version = int(schema_version.split(".")[0])
+            schema_version = int(schema_version.split(".")[0].removeprefix("v"))
         self.schema_version = schema_version
         if release:
             logging.warning(f"overriding grype release for schema={schema_version!r} with release={release!r}")
@@ -48,12 +48,6 @@ class Grype:
     def _env(self, env: dict[str, str] | None = None) -> dict[str, str]:
         if not env:
             env = os.environ.copy()
-        if self.schema_version >= 6:
-            env.update(
-                {
-                    "GRYPE_EXP_DBV6": "true",
-                },
-            )
         return env
 
     def update_db(self) -> None:

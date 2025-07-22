@@ -75,24 +75,48 @@ func (w writer) Write(entries ...data.Entry) error {
 func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 	log.WithFields("entry", entry.String()).Trace("writing entry")
 
-	w.fillInMissingSeverity(&entry.VulnerabilityHandle)
+	if entry.VulnerabilityHandle != nil {
+		w.fillInMissingSeverity(entry.VulnerabilityHandle)
 
-	if err := w.store.AddVulnerabilities(&entry.VulnerabilityHandle); err != nil {
-		return fmt.Errorf("unable to write vulnerability to store: %w", err)
+		if err := w.store.AddVulnerabilities(entry.VulnerabilityHandle); err != nil {
+			return fmt.Errorf("unable to write vulnerability to store: %w", err)
+		}
+	}
+
+	if entry.Provider != nil {
+		if err := w.store.AddProvider(*entry.Provider); err != nil {
+			return fmt.Errorf("unable to write provider to store: %w", err)
+		}
 	}
 
 	for i := range entry.Related {
 		related := entry.Related[i]
 		switch row := related.(type) {
 		case grypeDB.AffectedPackageHandle:
-			row.VulnerabilityID = entry.VulnerabilityHandle.ID
+			if entry.VulnerabilityHandle != nil {
+				row.VulnerabilityID = entry.VulnerabilityHandle.ID
+			} else {
+				log.WithFields("package", row.Package).Warn("affected package entry does not have a vulnerability ID")
+			}
 			if err := w.store.AddAffectedPackages(&row); err != nil {
 				return fmt.Errorf("unable to write affected-package to store: %w", err)
 			}
 		case grypeDB.AffectedCPEHandle:
-			row.VulnerabilityID = entry.VulnerabilityHandle.ID
+			if entry.VulnerabilityHandle != nil {
+				row.VulnerabilityID = entry.VulnerabilityHandle.ID
+			} else {
+				log.WithFields("cpe", row.CPE).Warn("affected CPE entry does not have a vulnerability ID")
+			}
 			if err := w.store.AddAffectedCPEs(&row); err != nil {
 				return fmt.Errorf("unable to write affected-cpe to store: %w", err)
+			}
+		case grypeDB.KnownExploitedVulnerabilityHandle:
+			if err := w.store.AddKnownExploitedVulnerabilities(&row); err != nil {
+				return fmt.Errorf("unable to write known exploited vulnerability to store: %w", err)
+			}
+		case grypeDB.EpssHandle:
+			if err := w.store.AddEpss(&row); err != nil {
+				return fmt.Errorf("unable to write EPSS to store: %w", err)
 			}
 		default:
 			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)

@@ -87,8 +87,10 @@ class Validate:
             "amazon",
             "chainguard",
             "debian",
+            "echo",
             "github",
             "mariner",
+            "minimos",
             "nvd",
             "oracle",
             "rhel",
@@ -113,6 +115,7 @@ class Distribution:
     s3_path: str | None = None
     s3_bucket: str | None = None
     s3_endpoint_url: str | None = None
+    s3_always_suffix_schema_version: bool = False
     download_url_prefix: str | None = None
     aws_region: str | None = None
     listing_replicas: list[ListingReplica] = field(default_factory=list)

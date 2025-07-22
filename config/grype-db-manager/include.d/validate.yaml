@@ -8,10 +8,15 @@ listing:
 expected-providers:
   - alpine
   - amazon
+  - bitnami
   - chainguard
   - debian
+  - echo
+  - epss
   - github
+  - kev
   - mariner
+  - minimos
   - nvd
   - oracle
   - rhel

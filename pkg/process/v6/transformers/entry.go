@@ -9,20 +9,28 @@ import (
 )
 
 type RelatedEntries struct {
-	VulnerabilityHandle grypeDB.VulnerabilityHandle
+	VulnerabilityHandle *grypeDB.VulnerabilityHandle
+	Provider            *grypeDB.Provider
 	Related             []any
 }
 
 func NewEntries(models ...any) []data.Entry {
 	var entry RelatedEntries
 
-	for _, model := range models {
+	for i := range models {
+		model := models[i]
 		switch m := model.(type) {
 		case grypeDB.VulnerabilityHandle:
-			entry.VulnerabilityHandle = m
+			entry.VulnerabilityHandle = &m
 		case grypeDB.AffectedPackageHandle:
 			entry.Related = append(entry.Related, m)
 		case grypeDB.AffectedCPEHandle:
+			entry.Related = append(entry.Related, m)
+		case grypeDB.KnownExploitedVulnerabilityHandle:
+			entry.Related = append(entry.Related, m)
+		case grypeDB.Provider:
+			entry.Provider = &m
+		case grypeDB.EpssHandle:
 			entry.Related = append(entry.Related, m)
 		default:
 			panic(fmt.Sprintf("unsupported model type: %T", m))
@@ -45,7 +53,19 @@ func (re RelatedEntries) String() string {
 			pkgs = append(pkgs, v.Package.String())
 		case grypeDB.AffectedCPEHandle:
 			pkgs = append(pkgs, fmt.Sprintf("%s/%s", v.CPE.Vendor, v.CPE.Product))
+		case grypeDB.KnownExploitedVulnerabilityHandle:
+			pkgs = append(pkgs, "kev="+v.Cve)
 		}
 	}
-	return fmt.Sprintf("vuln=%q provider=%q entries=%d: %s", re.VulnerabilityHandle.Name, re.VulnerabilityHandle.ProviderID, len(re.Related), strings.Join(pkgs, ", "))
+	var fields []string
+	if re.VulnerabilityHandle != nil {
+		fields = append(fields, fmt.Sprintf("vuln=%q", re.VulnerabilityHandle.Name))
+		fields = append(fields, fmt.Sprintf("provider=%q", re.VulnerabilityHandle.ProviderID))
+	} else if re.Provider != nil {
+		fields = append(fields, fmt.Sprintf("provider=%q", re.Provider.ID))
+	}
+
+	fields = append(fields, fmt.Sprintf("entries=%d", len(re.Related)))
+
+	return fmt.Sprintf("%s: %s", strings.Join(fields, " "), strings.Join(pkgs, ", "))
 }

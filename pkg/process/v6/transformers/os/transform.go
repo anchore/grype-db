@@ -17,6 +17,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/db/v6/name"
 	"github.com/anchore/grype/grype/distro"
 	"github.com/anchore/syft/syft/pkg"
 )
@@ -52,10 +53,16 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 	var afs []grypeDB.AffectedPackageHandle
 	groups := groupFixedIns(vuln)
 	for group, fixedIns := range groups {
+		// we only care about a single qualifier: rpm modules. The important thing to note about this is that
+		// a package with no module vs a package with a module should be detectable in the DB.
 		var qualifiers *grypeDB.AffectedPackageQualifiers
-		if group.module != "" {
+		if group.format == "rpm" {
+			module := "" // means the target package must have no module (where as nil means the module has no sway on matching)
+			if group.hasModule {
+				module = group.module
+			}
 			qualifiers = &grypeDB.AffectedPackageQualifiers{
-				RpmModularity: group.module,
+				RpmModularity: &module,
 			}
 		}
 
@@ -173,7 +180,9 @@ type groupIndex struct {
 	id        string
 	osName    string
 	osVersion string
+	hasModule bool
 	module    string
+	format    string
 }
 
 func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OSFixedIn {
@@ -190,7 +199,9 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 			id:        osID,
 			osName:    osName,
 			osVersion: osVersion,
+			hasModule: fixedIn.Module != nil,
 			module:    mod,
+			format:    fixedIn.VersionFormat,
 		}
 
 		grouped[g] = append(grouped[g], fixedIn)
@@ -198,25 +209,26 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 	return grouped
 }
 
-func getPackageType(osName string) string {
+func getPackageType(osName string) pkg.Type {
 	switch osName {
 	case "redhat", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
-		return string(pkg.RpmPkg)
-	case "ubuntu", "debian":
-		return string(pkg.DebPkg)
-	case "alpine", "chainguard", "wolfi":
-		return string(pkg.ApkPkg)
+		return pkg.RpmPkg
+	case "ubuntu", "debian", "echo":
+		return pkg.DebPkg
+	case "alpine", "chainguard", "wolfi", "minimos":
+		return pkg.ApkPkg
 	case "windows":
-		return "msrc-kb"
+		return pkg.KbPkg
 	}
 
 	return ""
 }
 
 func getPackage(group groupIndex) *grypeDB.Package {
+	t := getPackageType(group.osName)
 	return &grypeDB.Package{
-		Ecosystem: getPackageType(group.osName),
-		Name:      group.name,
+		Ecosystem: string(t),
+		Name:      name.Normalize(group.name, t),
 	}
 }
 

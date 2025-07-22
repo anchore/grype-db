@@ -22,6 +22,7 @@ func TestBuildGrypeNamespace(t *testing.T) {
 	tests := []struct {
 		group     string
 		namespace namespace.Namespace
+		wantErr   require.ErrorAssertionFunc
 	}{
 		{
 			group:     "github:python",
@@ -51,12 +52,24 @@ func TestBuildGrypeNamespace(t *testing.T) {
 			group:     "github:rust",
 			namespace: language.NewNamespace("github", syftPkg.Rust, ""),
 		},
+		{
+			group: "github:github-action",
+			wantErr: func(t require.TestingT, err error, i ...interface{}) {
+				assert.Error(t, err)
+				assert.ErrorIs(t, errSkip, err)
+			},
+		},
 	}
 
 	for _, test := range tests {
+		if test.wantErr == nil {
+			test.wantErr = require.NoError
+		}
 		ns, err := buildGrypeNamespace(test.group)
-
-		assert.NoError(t, err)
+		test.wantErr(t, err)
+		if err != nil {
+			return
+		}
 		assert.Equal(t, test.namespace, ns)
 	}
 }

@@ -23,7 +23,7 @@ type Config struct {
 
 func defaultConfig() Config {
 	return Config{
-		CPEParts:            strset.New("a"),
+		CPEParts:            strset.New("a", "h", "o"),
 		InferNVDFixVersions: true,
 	}
 }
@@ -135,38 +135,54 @@ func getVulnStatus(vuln unmarshal.NVDVulnerability) grypeDB.VulnerabilityStatus 
 }
 
 func getAffected(cfg Config, vulnerability unmarshal.NVDVulnerability) []grypeDB.AffectedCPEHandle {
-	uniquePkgs := findUniquePkgs(cfg, vulnerability.Configurations...)
+	candidates, err := allCandidates(vulnerability.ID, vulnerability.Configurations, cfg)
+	if err != nil {
+		log.WithFields("error", err).Warn("failed to process affected NVD CPEs")
+		return nil
+	}
 
 	var affs []grypeDB.AffectedCPEHandle
-	for _, p := range uniquePkgs.AllCandidates() {
-		appMatches := uniquePkgs.ApplicationMatches(p)
-		platformCPEs := uniquePkgs.PlatformMatches(p).CPEs()
-
-		var qualifiers *grypeDB.AffectedPackageQualifiers
-		if len(platformCPEs) > 0 {
-			qualifiers = &grypeDB.AffectedPackageQualifiers{
-				PlatformCPEs: platformCPEs,
-			}
-		}
-
-		for _, c := range appMatches.CPEs() {
-			affs = append(affs, grypeDB.AffectedCPEHandle{
-				CPE: getCPEs(c),
-				BlobValue: &grypeDB.AffectedPackageBlob{
-					CVEs:       []string{vulnerability.ID},
-					Qualifiers: qualifiers,
-					Ranges:     getRanges(cfg, appMatches),
-				},
-			})
-		}
+	for _, candidate := range candidates {
+		affs = append(affs, affectedApplicationPackage(cfg, vulnerability, candidate)...)
 	}
+
 	return affs
 }
 
-func getRanges(cfg Config, matches applicationMatches) []grypeDB.AffectedRange {
+func encodeCPEs(cpes []cpe.Attributes) []string {
+	var results []string
+	for _, c := range cpes {
+		results = append(results, c.String())
+	}
+	return results
+}
+
+func affectedApplicationPackage(cfg Config, vulnerability unmarshal.NVDVulnerability, p affectedPackageCandidate) []grypeDB.AffectedCPEHandle {
+	var affs []grypeDB.AffectedCPEHandle
+
+	var qualifiers *grypeDB.AffectedPackageQualifiers
+	if len(p.PlatformCPEs) > 0 {
+		qualifiers = &grypeDB.AffectedPackageQualifiers{
+			PlatformCPEs: encodeCPEs(p.PlatformCPEs),
+		}
+	}
+
+	affs = append(affs, grypeDB.AffectedCPEHandle{
+		CPE: getCPEFromAttributes(p.VulnerableCPE),
+		BlobValue: &grypeDB.AffectedPackageBlob{
+			CVEs:       []string{vulnerability.ID},
+			Qualifiers: qualifiers,
+			Ranges:     getRanges(cfg, p.VulnerableCPE, p.Ranges.toSlice()),
+		},
+	})
+
+	return affs
+}
+
+func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange) []grypeDB.AffectedRange {
 	var ranges []grypeDB.AffectedRange
-	for _, m := range matches {
-		r := getRange(cfg, m)
+	for _, ra := range ras {
+		r := getRange(cfg, c, ra)
 		if r != nil {
 			ranges = append(ranges, *r)
 		}
@@ -175,24 +191,17 @@ func getRanges(cfg Config, matches applicationMatches) []grypeDB.AffectedRange {
 	return ranges
 }
 
-func getRange(cfg Config, match nvd.CpeMatch) *grypeDB.AffectedRange {
-	constraint := buildConstraints(match)
-	fix := getFix(cfg, match)
-
-	if constraint == "" && fix == nil {
-		return nil
-	}
-
+func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange) *grypeDB.AffectedRange {
 	return &grypeDB.AffectedRange{
 		Version: grypeDB.AffectedVersion{
-			Type:       "",
-			Constraint: constraint,
+			Type:       "", // we explicitly do not know what the versioning scheme is
+			Constraint: ra.String(),
 		},
-		Fix: fix,
+		Fix: getFix(cfg, c, ra),
 	}
 }
 
-func getFix(cfg Config, match nvd.CpeMatch) *grypeDB.Fix {
+func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange) *grypeDB.Fix {
 	if !cfg.InferNVDFixVersions {
 		return nil
 	}
@@ -201,30 +210,20 @@ func getFix(cfg Config, match nvd.CpeMatch) *grypeDB.Fix {
 	knownAffected := strset.New()
 	unspecifiedSet := strset.New("*", "-", "*")
 
-	if !match.Vulnerable {
-		return nil
+	if ra.VersionEndExcluding != "" && !unspecifiedSet.Has(ra.VersionEndExcluding) {
+		possiblyFixed.Add(ra.VersionEndExcluding)
 	}
 
-	if match.VersionEndExcluding != nil && !unspecifiedSet.Has(*match.VersionEndExcluding) {
-		possiblyFixed.Add(*match.VersionEndExcluding)
+	if ra.VersionStartIncluding != "" && !unspecifiedSet.Has(ra.VersionStartIncluding) {
+		knownAffected.Add(ra.VersionStartIncluding)
 	}
 
-	if match.VersionStartIncluding != nil && !unspecifiedSet.Has(*match.VersionStartIncluding) {
-		knownAffected.Add(*match.VersionStartIncluding)
+	if ra.VersionEndIncluding != "" && !unspecifiedSet.Has(ra.VersionEndIncluding) {
+		knownAffected.Add(ra.VersionEndIncluding)
 	}
 
-	if match.VersionEndIncluding != nil && !unspecifiedSet.Has(*match.VersionEndIncluding) {
-		knownAffected.Add(*match.VersionEndIncluding)
-	}
-
-	matchCPE, err := cpe.New(match.Criteria, cpe.DeclaredSource)
-	if err != nil {
-		log.WithFields("error", err, "cpe", match.Criteria).Warn("could not parse CPE as fix, dropping...")
-		return nil
-	}
-
-	if !unspecifiedSet.Has(matchCPE.Attributes.Version) {
-		knownAffected.Add(matchCPE.Attributes.Version)
+	if !unspecifiedSet.Has(vulnCPE.Version) {
+		knownAffected.Add(vulnCPE.Version)
 	}
 
 	possiblyFixed.Remove(knownAffected.List()...)
@@ -239,13 +238,7 @@ func getFix(cfg Config, match nvd.CpeMatch) *grypeDB.Fix {
 	}
 }
 
-func getCPEs(in string) *grypeDB.Cpe {
-	atts, err := cpe.NewAttributes(in)
-	if err != nil {
-		log.WithFields("cpe", in).Warn("could not parse CPE, dropping...")
-		return nil
-	}
-
+func getCPEFromAttributes(atts cpe.Attributes) *grypeDB.Cpe {
 	return &grypeDB.Cpe{
 		Part:            atts.Part,
 		Vendor:          atts.Vendor,
@@ -258,12 +251,13 @@ func getCPEs(in string) *grypeDB.Cpe {
 		Other:           atts.Other,
 	}
 }
+
 func getSeverities(vuln unmarshal.NVDVulnerability) []grypeDB.Severity {
 	sevs := nvd.CvssSummaries(vuln.CVSS()).Sorted()
 	var results []grypeDB.Severity
-	for i, sev := range sevs {
+	for _, sev := range sevs {
 		priority := 2
-		if i == 0 {
+		if sev.Type == nvd.Primary {
 			priority = 1
 		}
 		results = append(results, grypeDB.Severity{

@@ -13,10 +13,15 @@ provider:
     - name: nvd
     - name: alpine
     - name: amazon
+    - name: bitnami
     - name: chainguard
     - name: debian
+    - name: echo
+    - name: epss
     - name: github
+    - name: kev
     - name: mariner
+    - name: minimos
     - name: oracle
     - name: rhel
     - name: sles
@@ -35,4 +40,5 @@ pull:
   parallelism: 4
 
 package:
+  # required for v5
   publish-base-url: https://toolbox-data.anchore.io/grype/databases

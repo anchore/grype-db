@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -11,6 +12,8 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/db/v6/name"
+	"github.com/anchore/grype/grype/version"
 	"github.com/anchore/syft/syft/pkg"
 )
 
@@ -60,13 +63,18 @@ func getVulnStatus(vuln unmarshal.GitHubAdvisory) grypeDB.VulnerabilityStatus {
 func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackageHandle {
 	var afs []grypeDB.AffectedPackageHandle
 	groups := groupFixedIns(vuln)
+	hasRangeErr := false
 	for group, fixedIns := range groups {
 		for _, fixedInEntry := range fixedIns {
+			ranges, rangeErr := getRanges(fixedInEntry)
+			if rangeErr != nil {
+				hasRangeErr = true
+			}
 			afs = append(afs, grypeDB.AffectedPackageHandle{
 				Package: getPackage(group),
 				BlobValue: &grypeDB.AffectedPackageBlob{
 					CVEs:   getAliases(vuln),
-					Ranges: getRanges(fixedInEntry),
+					Ranges: ranges,
 				},
 			})
 		}
@@ -75,25 +83,48 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 	// stable ordering
 	sort.Sort(internal.ByAffectedPackage(afs))
 
+	if hasRangeErr {
+		log.Warnf("for %s falling back to fuzzy matching on at least one constraint range", vuln.Advisory.GhsaID)
+	}
 	return afs
 }
 
-func getRanges(fixedInEntry unmarshal.GithubFixedIn) []grypeDB.AffectedRange {
-	constraint := common.EnforceSemVerConstraint(fixedInEntry.Range)
+func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, error) {
+	fixedVersion := grypeDB.AffectedVersion{
+		Type:       getAffectedVersionFormat(fixedInEntry),
+		Constraint: common.EnforceSemVerConstraint(fixedInEntry.Range),
+	}
+	err := validateAffectedVersion(fixedVersion)
+	if err != nil {
+		log.Warnf("failed to validate affected version: %v", err)
+		fixedVersion.Type = version.UnknownFormat.String()
+	}
+	return []grypeDB.AffectedRange{
+		{
+			Version: fixedVersion,
+			Fix:     getFix(fixedInEntry),
+		},
+	}, err
+}
 
-	if constraint == "" {
+func validateAffectedVersion(v grypeDB.AffectedVersion) error {
+	versionFormat := version.ParseFormat(v.Type)
+	c, err := version.GetConstraint(v.Constraint, versionFormat)
+	if err != nil {
+		return err
+	}
+
+	// ensure we can use this version format in a comparison
+	ver := version.NewVersion("1.0.0", versionFormat)
+	if err := ver.Validate(); err != nil {
+		// don't have a good example to use here
+		// TODO: we should consider finding a better way to do this without having to create a valid version for comparison
 		return nil
 	}
 
-	return []grypeDB.AffectedRange{
-		{
-			Version: grypeDB.AffectedVersion{
-				Type:       getAffectedVersionFormat(fixedInEntry),
-				Constraint: constraint,
-			},
-			Fix: getFix(fixedInEntry),
-		},
-	}
+	_, err = c.Satisfied(ver)
+
+	return err
 }
 
 func getAffectedVersionFormat(fixedInEntry unmarshal.GithubFixedIn) string {
@@ -139,44 +170,53 @@ func groupFixedIns(vuln unmarshal.GitHubAdvisory) map[groupIndex][]unmarshal.Git
 	return grouped
 }
 
-func getPackageType(ecosystem string) string {
+func getPackageType(ecosystem string) pkg.Type {
 	ecosystem = strings.ToLower(ecosystem)
 	switch ecosystem {
 	case "composer":
-		return string(pkg.PhpComposerPkg)
+		return pkg.PhpComposerPkg
 	case "rust", "cargo":
-		return string(pkg.RustPkg)
+		return pkg.RustPkg
 	case "dart":
-		return string(pkg.DartPubPkg)
+		return pkg.DartPubPkg
 	case "nuget", ".net":
-		return string(pkg.DotnetPkg)
+		return pkg.DotnetPkg
 	case "go", "golang":
-		return string(pkg.GoModulePkg)
+		return pkg.GoModulePkg
 	case "maven", "java":
-		return string(pkg.JavaPkg)
+		return pkg.JavaPkg
 	case "npm":
-		return string(pkg.NpmPkg)
+		return pkg.NpmPkg
 	case "pypi", "python", "pip":
-		return string(pkg.PythonPkg)
+		return pkg.PythonPkg
 	case "swift":
-		return string(pkg.SwiftPkg)
+		return pkg.SwiftPkg
 	case "rubygems", "ruby", "gem":
-		return string(pkg.GemPkg)
+		return pkg.GemPkg
 	case "apk":
-		return string(pkg.ApkPkg)
+		return pkg.ApkPkg
 	case "rpm":
-		return string(pkg.RpmPkg)
+		return pkg.RpmPkg
 	case "deb":
-		return string(pkg.DebPkg)
+		return pkg.DebPkg
+	case "github-action":
+		return pkg.GithubActionPkg
+	}
+	ty := pkg.TypeByName(ecosystem)
+	if ty != pkg.UnknownPkg {
+		return ty
 	}
 
-	return ecosystem
+	log.Warnf("using unknown ecosystem intead of syft pkg type (this will probably cause issues when matching): %q", ecosystem)
+
+	return pkg.Type(ecosystem)
 }
 
 func getPackage(group groupIndex) *grypeDB.Package {
+	t := getPackageType(group.ecosystem)
 	return &grypeDB.Package{
-		Name:      group.name,
-		Ecosystem: getPackageType(group.ecosystem),
+		Name:      name.Normalize(group.name, t),
+		Ecosystem: string(t),
 	}
 }
 

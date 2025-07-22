@@ -3,9 +3,11 @@ package process
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/spf13/afero"
 
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
@@ -25,6 +27,7 @@ type BuildConfig struct {
 	Timestamp           time.Time
 	IncludeCPEParts     []string
 	InferNVDFixVersions bool
+	Hydrate             bool
 }
 
 func Build(cfg BuildConfig) error {
@@ -61,7 +64,17 @@ func Build(cfg BuildConfig) error {
 		return err
 	}
 
-	return writer.Close()
+	if err := writer.Close(); err != nil {
+		return err
+	}
+
+	if cfg.Hydrate && cfg.SchemaVersion > 5 {
+		if err := hydrate(cfg); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type providerResults struct {
@@ -100,33 +113,35 @@ func build(results []providerResults, writer data.Writer, processors ...data.Pro
 	}
 	log.WithFields("total", humanize.Comma(int64(totalRecords))).Info("processing all records")
 
-	var recordsProcessed int
-
 	// for exponential moving average, choose an alpha between 0 and 1, where 1 biases towards the most recent sample
 	// and 0 biases towards the average of all samples.
 	rateWindow := newEMA(0.4)
 
+	var recordsProcessed, recordsObserved, dropped int
+	droppedElementsByProvider := make(map[string]int)
+	droppedSchemaElements := make(map[string]int)
+
 	for _, result := range results {
 		log.WithFields("provider", result.provider.Provider, "total", humanize.Comma(result.count)).Info("processing provider records")
-		providerRecordsProcessed := 0
-		recordsProcessedInStatusCycle := 0
+		providerRecordsObserved := 0
+		recordsObservedInStatusCycle := 0
 		for opener := range result.openers {
-			providerRecordsProcessed++
-			recordsProcessed++
-			recordsProcessedInStatusCycle++
+			providerRecordsObserved++
+			recordsObserved++
+			recordsObservedInStatusCycle++
 			var processor data.Processor
 
 			if time.Since(lastUpdate) > 3*time.Second {
-				r := recordsPerSecond(recordsProcessedInStatusCycle, lastUpdate)
+				r := recordsPerSecond(recordsObservedInStatusCycle, lastUpdate)
 				rateWindow.Add(r)
 
 				log.WithFields(
-					"provider", fmt.Sprintf("%q %1.0f/s (%1.2f%%)", result.provider.Provider, r, percent(providerRecordsProcessed, int(result.count))),
-					"overall", fmt.Sprintf("%1.2f%%", percent(recordsProcessed, totalRecords)),
-					"eta", eta(recordsProcessed, totalRecords, rateWindow.Average()).String(),
+					"provider", fmt.Sprintf("%q %1.0f/s (%1.2f%%)", result.provider.Provider, r, percent(providerRecordsObserved, int(result.count))),
+					"overall", fmt.Sprintf("%1.2f%%", percent(recordsObserved, totalRecords)),
+					"eta", eta(recordsObserved, totalRecords, rateWindow.Average()).String(),
 				).Debug("status")
 				lastUpdate = time.Now()
-				recordsProcessedInStatusCycle = 0
+				recordsObservedInStatusCycle = 0
 			}
 
 			f, err := opener.Open()
@@ -145,9 +160,12 @@ func build(results []providerResults, writer data.Writer, processors ...data.Pro
 				}
 			}
 			if processor == nil {
-				log.WithFields("schema", envelope.Schema).Warnf("schema is not implemented for any processor. Dropping item")
+				droppedElementsByProvider[result.provider.Provider]++
+				droppedSchemaElements[envelope.Schema]++
+				dropped++
 				continue
 			}
+			recordsProcessed++
 
 			entries, err := processor.Process(bytes.NewReader(envelope.Item), result.provider)
 			if err != nil {
@@ -160,9 +178,53 @@ func build(results []providerResults, writer data.Writer, processors ...data.Pro
 		}
 	}
 
-	log.Debugf("wrote all provider state")
+	logDropped(droppedElementsByProvider, droppedSchemaElements)
+
+	log.WithFields("processed", recordsProcessed, "dropped", dropped, "observed", recordsObserved).Debugf("wrote all provider state")
+
+	if recordsProcessed == 0 {
+		return fmt.Errorf("no records were processed")
+	}
 
 	return nil
+}
+
+func hydrate(cfg BuildConfig) error {
+	hydrator := grypeDBv6.Hydrater()
+	fs := afero.NewOsFs()
+
+	if err := hydrator(cfg.Directory); err != nil {
+		return fmt.Errorf("failed to hydrate db: %w", err)
+	}
+
+	doc, err := grypeDBv6.WriteImportMetadata(fs, cfg.Directory, "grype db build")
+	if err != nil {
+		return fmt.Errorf("failed to write checksums file: %w", err)
+	}
+
+	log.WithFields("digest", doc.Digest).Trace("captured DB digest")
+
+	return nil
+}
+
+func logDropped(droppedElementsByProvider, droppedSchemaElements map[string]int) {
+	sortedKeys := func(m map[string]int) []string {
+		var keys []string
+		for k := range m {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		return keys
+	}
+	sortedProviders := sortedKeys(droppedElementsByProvider)
+	for _, p := range sortedProviders {
+		log.WithFields("provider", p, "count", droppedElementsByProvider[p]).Warn("dropped records for provider")
+	}
+
+	sortedSchemas := sortedKeys(droppedSchemaElements)
+	for _, s := range sortedSchemas {
+		log.WithFields("schema", s, "count", droppedSchemaElements[s]).Warn("dropped records by schema")
+	}
 }
 
 type expMovingAverage struct {

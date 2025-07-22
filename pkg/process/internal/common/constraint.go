@@ -17,10 +17,14 @@ var forceSemVerPattern = regexp.MustCompile(`[><=]+\s*[^<>=]+`)
 
 func EnforceSemVerConstraint(constraint string) string {
 	constraint = CleanConstraint(constraint)
-	if len(constraint) == 0 {
+	if constraint == "" {
 		return ""
 	}
 	return strings.ReplaceAll(strings.Join(forceSemVerPattern.FindAllString(constraint, -1), ", "), " ", "")
+}
+
+func AndConstraints(c ...string) string {
+	return strings.Join(c, " ")
 }
 
 func OrConstraints(c ...string) string {

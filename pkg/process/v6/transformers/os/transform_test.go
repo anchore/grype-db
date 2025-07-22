@@ -95,7 +95,7 @@ func TestTransform(t *testing.T) {
 			provider: "alpine",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2018-19967",
 						Status:     "active",
 						ProviderID: "alpine",
@@ -138,7 +138,7 @@ func TestTransform(t *testing.T) {
 			provider: "amazon",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALAS-2018-1106",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -168,7 +168,8 @@ func TestTransform(t *testing.T) {
 								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2018-14648"},
+								CVEs:       []string{"CVE-2018-14648"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 1.3.8.4-15.amzn2.0.1"},
@@ -184,7 +185,8 @@ func TestTransform(t *testing.T) {
 								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2018-14648"},
+								CVEs:       []string{"CVE-2018-14648"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 1.3.8.4-15.amzn2.0.1"},
@@ -200,7 +202,8 @@ func TestTransform(t *testing.T) {
 								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2018-14648"},
+								CVEs:       []string{"CVE-2018-14648"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 1.3.8.4-15.amzn2.0.1"},
@@ -216,7 +219,8 @@ func TestTransform(t *testing.T) {
 								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2018-14648"},
+								CVEs:       []string{"CVE-2018-14648"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 1.3.8.4-15.amzn2.0.1"},
@@ -232,7 +236,8 @@ func TestTransform(t *testing.T) {
 								Ecosystem: "rpm",
 							},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2018-14648"},
+								CVEs:       []string{"CVE-2018-14648"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 1.3.8.4-15.amzn2.0.1"},
@@ -250,7 +255,7 @@ func TestTransform(t *testing.T) {
 			provider: "amazon",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALAS-2021-1704",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -278,7 +283,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: amazonOS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
+								CVEs:       []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 4.14.246-187.474.amzn2"},
@@ -291,7 +297,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: amazonOS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel-headers"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
+								CVEs:       []string{"CVE-2021-3653", "CVE-2021-3656", "CVE-2021-3732"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 4.14.246-187.474.amzn2"},
@@ -303,7 +310,7 @@ func TestTransform(t *testing.T) {
 					),
 				},
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALASKERNEL-5.4-2022-007",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -330,7 +337,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: amazonOS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
+								CVEs:       []string{"CVE-2021-3753", "CVE-2021-40490"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: ">= 5.4, < 5.4.144-69.257.amzn2"},
@@ -343,7 +351,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: amazonOS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel-headers"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
+								CVEs:       []string{"CVE-2021-3753", "CVE-2021-40490"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: ">= 5.4, < 5.4.144-69.257.amzn2"},
@@ -355,7 +364,7 @@ func TestTransform(t *testing.T) {
 					),
 				},
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "ALASKERNEL-5.10-2022-005",
 						ProviderID: "amazon",
 						Provider:   expectedProvider("amazon"),
@@ -382,7 +391,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: amazonOS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
+								CVEs:       []string{"CVE-2021-3753", "CVE-2021-40490"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: ">= 5.10, < 5.10.62-55.141.amzn2"},
@@ -395,7 +405,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: amazonOS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "kernel-headers"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2021-3753", "CVE-2021-40490"},
+								CVEs:       []string{"CVE-2021-3753", "CVE-2021-40490"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: ">= 5.10, < 5.10.62-55.141.amzn2"},
@@ -413,7 +424,7 @@ func TestTransform(t *testing.T) {
 			provider: "mariner",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2023-29403",
 						ProviderID: "mariner",
 						Provider:   expectedProvider("mariner"),
@@ -440,6 +451,7 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: azure3OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "golang"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 0:1.20.7-1.azl3"},
@@ -457,7 +469,7 @@ func TestTransform(t *testing.T) {
 			provider: "debian",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2008-7220",
 						ProviderID: "debian",
 						Provider:   expectedProvider("debian"),
@@ -536,7 +548,7 @@ func TestTransform(t *testing.T) {
 			provider: "debian",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2011-4623",
 						ProviderID: "debian",
 						Provider:   expectedProvider("debian"),
@@ -573,7 +585,7 @@ func TestTransform(t *testing.T) {
 					),
 				},
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2008-5618",
 						ProviderID: "debian",
 						Provider:   expectedProvider("debian"),
@@ -616,7 +628,7 @@ func TestTransform(t *testing.T) {
 			provider: "mariner",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2021-37621",
 						ProviderID: "mariner",
 						Provider:   expectedProvider("mariner"),
@@ -644,6 +656,7 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: mariner2OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "exiv2"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 0:0.27.5-1.cm2"},
@@ -662,7 +675,7 @@ func TestTransform(t *testing.T) {
 			provider: "mariner",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2023-29404",
 						ProviderID: "mariner",
 						Provider:   expectedProvider("mariner"),
@@ -689,6 +702,7 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: mariner2OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "golang"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "> 0:1.19.0.cm2, < 0:1.20.7-1.cm2"},
@@ -706,7 +720,7 @@ func TestTransform(t *testing.T) {
 			provider: "oracle",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:          "ELSA-2020-2550",
 						ProviderID:    "oracle",
 						Provider:      expectedProvider("oracle"),
@@ -737,7 +751,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: ol8OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "libexif"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2020-13112"},
+								CVEs:       []string{"CVE-2020-13112"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 0:0.6.21-17.el8_2"},
@@ -750,7 +765,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: ol8OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "libexif-devel"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2020-13112"},
+								CVEs:       []string{"CVE-2020-13112"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: "< 0:0.6.21-17.el8_2"},
@@ -763,7 +779,8 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: ol8OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "libexif-dummy"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
-								CVEs: []string{"CVE-2020-13112"},
+								CVEs:       []string{"CVE-2020-13112"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "rpm", Constraint: ""},
@@ -781,7 +798,7 @@ func TestTransform(t *testing.T) {
 			provider: "oracle",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2020-14350",
 						ProviderID: "oracle",
 						Provider:   expectedProvider("oracle"),
@@ -810,7 +827,7 @@ func TestTransform(t *testing.T) {
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									RpmModularity: "postgresql:10",
+									RpmModularity: strRef("postgresql:10"),
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -831,7 +848,7 @@ func TestTransform(t *testing.T) {
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									RpmModularity: "postgresql:12",
+									RpmModularity: strRef("postgresql:12"),
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -852,7 +869,7 @@ func TestTransform(t *testing.T) {
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									RpmModularity: "postgresql:9.6",
+									RpmModularity: strRef("postgresql:9.6"),
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -877,7 +894,7 @@ func TestTransform(t *testing.T) {
 			provider: "redhat",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2020-6819",
 						ProviderID: "redhat",
 						Provider:   expectedProvider("redhat"),
@@ -912,6 +929,7 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: rhel8OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "firefox"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{
@@ -938,6 +956,7 @@ func TestTransform(t *testing.T) {
 							OperatingSystem: rhel8OS,
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "thunderbird"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{RpmModularity: strRef("")},
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{
@@ -969,7 +988,7 @@ func TestTransform(t *testing.T) {
 			provider: "redhat",
 			want: []transformers.RelatedEntries{
 				{
-					VulnerabilityHandle: grypeDB.VulnerabilityHandle{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
 						Name:       "CVE-2020-14350",
 						ProviderID: "redhat",
 						Provider:   expectedProvider("redhat"),
@@ -1005,7 +1024,7 @@ func TestTransform(t *testing.T) {
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									RpmModularity: "postgresql:10",
+									RpmModularity: strRef("postgresql:10"),
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -1034,7 +1053,7 @@ func TestTransform(t *testing.T) {
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									RpmModularity: "postgresql:12",
+									RpmModularity: strRef("postgresql:12"),
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -1063,7 +1082,7 @@ func TestTransform(t *testing.T) {
 							Package:         &grypeDB.Package{Ecosystem: "rpm", Name: "postgresql"},
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								Qualifiers: &grypeDB.AffectedPackageQualifiers{
-									RpmModularity: "postgresql:9.6",
+									RpmModularity: strRef("postgresql:9.6"),
 								},
 								Ranges: []grypeDB.AffectedRange{
 									{
@@ -1259,4 +1278,8 @@ func loadFixture(t *testing.T, fixturePath string) []unmarshal.OSVulnerability {
 
 func timeRef(ti time.Time) *time.Time {
 	return &ti
+}
+
+func strRef(s string) *string {
+	return &s
 }

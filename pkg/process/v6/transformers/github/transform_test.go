@@ -13,6 +13,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/syft/syft/pkg"
 )
 
 func TestTransform(t *testing.T) {
@@ -540,6 +541,106 @@ func TestGetAffectedPackage(t *testing.T) {
 				t.Fatalf("unexpected result: %s", d)
 			}
 		})
+	}
+}
+
+func TestGetPackageType(t *testing.T) {
+	tests := []struct {
+		ecosystem    string
+		expectedType pkg.Type
+	}{
+		{"composer", pkg.PhpComposerPkg},
+		{"Composer", pkg.PhpComposerPkg}, // testing case insensitivity
+		{"COMPOSER", pkg.PhpComposerPkg}, // testing case insensitivity
+		{"rust", pkg.RustPkg},
+		{"cargo", pkg.RustPkg},
+		{"dart", pkg.DartPubPkg},
+		{"nuget", pkg.DotnetPkg},
+		{".net", pkg.DotnetPkg},
+		{"go", pkg.GoModulePkg},
+		{"golang", pkg.GoModulePkg},
+		{"maven", pkg.JavaPkg},
+		{"java", pkg.JavaPkg},
+		{"npm", pkg.NpmPkg},
+		{"pypi", pkg.PythonPkg},
+		{"python", pkg.PythonPkg},
+		{"pip", pkg.PythonPkg},
+		{"swift", pkg.SwiftPkg},
+		{"rubygems", pkg.GemPkg},
+		{"ruby", pkg.GemPkg},
+		{"gem", pkg.GemPkg},
+		{"apk", pkg.ApkPkg},
+		{"rpm", pkg.RpmPkg},
+		{"deb", pkg.DebPkg},
+		{"github-action", pkg.GithubActionPkg},
+
+		// test for unknown type fallback
+		{"unknown-ecosystem", pkg.Type("unknown-ecosystem")},
+		{"", pkg.Type("")},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.ecosystem, func(t *testing.T) {
+			gotType := getPackageType(tc.ecosystem)
+			if gotType != tc.expectedType {
+				t.Errorf("getPackageType(%q) = %v, want %v", tc.ecosystem, gotType, tc.expectedType)
+			}
+		})
+	}
+}
+
+func TestGetRanges(t *testing.T) {
+	advisories := loadFixture(t, "test-fixtures/GHSA-92cp-5422-2mw7.json")
+	require.Len(t, advisories, 1)
+	advisory := advisories[0]
+	var ranges []grypeDB.AffectedRange
+	expectedRanges := []grypeDB.AffectedRange{
+		{
+			Version: grypeDB.AffectedVersion{
+				Type:       "go",
+				Constraint: ">=9.7.0-beta.1,<9.7.3",
+			},
+			Fix: &grypeDB.Fix{
+				Version: "9.7.3",
+				State:   grypeDB.FixedStatus,
+			},
+		},
+		{
+			Version: grypeDB.AffectedVersion{
+				// important: this emits an unknown constraint type,
+				// triggering fuzzy matching when the input is not
+				// valid semver
+				Type:       "Unknown",
+				Constraint: ">=9.6.0b1,<9.6.3",
+			},
+			Fix: &grypeDB.Fix{
+				Version: "9.6.3",
+				State:   grypeDB.FixedStatus,
+			},
+		},
+		{
+			Version: grypeDB.AffectedVersion{
+				Type:       "go",
+				Constraint: ">=9.5.1,<9.5.5",
+			},
+			Fix: &grypeDB.Fix{
+				Version: "9.5.5",
+				State:   grypeDB.FixedStatus,
+			},
+		},
+	}
+	var errors []error
+	for _, fixedIn := range advisory.Advisory.FixedIn {
+		rng, err := getRanges(fixedIn)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		ranges = append(ranges, rng...)
+	}
+
+	require.Equal(t, 1, len(errors))
+	if diff := cmp.Diff(expectedRanges, ranges); diff != "" {
+		t.Errorf("getRanges() mismatch (-want +got):\n%s", diff)
 	}
 }
 
