@@ -23,16 +23,6 @@ ORAS = $(TOOL_DIR)/oras
 BOUNCER = $(TOOL_DIR)/bouncer
 CRANE = $(TOOL_DIR)/crane
 
-# Tool versions #################################
-GOLANGCILINT_VERSION = v1.64.8
-GOSIMPORTS_VERSION := v0.3.8
-BOUNCER_VERSION = v0.4.0
-CHRONICLE_VERSION = v0.8.0
-GORELEASER_VERSION = v2.11.0
-CRANE_VERSION=v0.16.1
-GLOW_VERSION := v1.5.0
-ORAS_VERSION := v1.2.2
-
 # Formatting variables #################################
 BOLD := $(shell tput -T linux bold)
 PURPLE := $(shell tput -T linux setaf 5)
