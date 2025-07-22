@@ -135,13 +135,15 @@ func (s States) Names() []string {
 	return names
 }
 
-func (s States) EarliestTimestamp() (time.Time, error) {
+func (s States) EarliestTimestamp(buildDateFilter []string) (time.Time, error) {
+	ignoreMap := mapFilter(buildDateFilter)
 	if len(s) == 0 {
 		return time.Time{}, fmt.Errorf("cannot find earliest timestamp: no states provided")
 	}
 
 	// special case when there is exactly 1 state, return its timestamp even
 	// if it is nvd, because otherwise quality gates that pull only nvd deterministically fail.
+	// ignore the build date filter in this case since we need a date
 	if len(s) == 1 {
 		return s[0].Timestamp, nil
 	}
@@ -150,6 +152,12 @@ func (s States) EarliestTimestamp() (time.Time, error) {
 	for _, curState := range s {
 		// the NVD api is constantly down, so we don't want to consider it for the earliest timestamp
 		if curState.Provider == "nvd" {
+			log.WithFields("provider", curState.Provider).Debug("not considering data age for provider")
+			continue
+		}
+		// user has asked us to ignore this state because of some outage
+		// that would affect earliest timestamp to be very old
+		if _, ok := ignoreMap[curState.Provider]; ok {
 			log.WithFields("provider", curState.Provider).Debug("not considering data age for provider")
 			continue
 		}
@@ -168,4 +176,12 @@ func (s States) EarliestTimestamp() (time.Time, error) {
 
 	log.WithFields("timestamp", earliest).Debug("earliest data timestamp")
 	return earliest, nil
+}
+
+func mapFilter(keys []string) map[string]struct{} {
+	filter := make(map[string]struct{})
+	for _, k := range keys {
+		filter[k] = struct{}{}
+	}
+	return filter
 }
