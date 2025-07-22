@@ -15,23 +15,13 @@ date = $(shell date -u +"%y-%m-%d")
 BINNY = $(TOOL_DIR)/binny
 LINT_CMD = $(TOOL_DIR)/golangci-lint run --config .golangci.yaml
 GOIMPORTS_CMD := $(TOOL_DIR)/gosimports -local github.com/anchore
-RELEASE_CMD = $(TOOL_DIR)/goreleaser release --rm-dist
-SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot
+RELEASE_CMD = $(TOOL_DIR)/goreleaser release --clean
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --snapshot
 CHRONICLE_CMD = $(TOOL_DIR)/chronicle
 GLOW_CMD = $(TOOL_DIR)/glow
 ORAS = $(TOOL_DIR)/oras
 BOUNCER = $(TOOL_DIR)/bouncer
 CRANE = $(TOOL_DIR)/crane
-
-# Tool versions #################################
-GOLANGCILINT_VERSION = v1.64.8
-GOSIMPORTS_VERSION := v0.3.8
-BOUNCER_VERSION = v0.4.0
-CHRONICLE_VERSION = v0.8.0
-GORELEASER_VERSION = v1.26.2
-CRANE_VERSION=v0.16.1
-GLOW_VERSION := v1.5.0
-ORAS_VERSION := v1.2.2
 
 # Formatting variables #################################
 BOLD := $(shell tput -T linux bold)
@@ -127,6 +117,17 @@ bootstrap-go:
 $(TEMP_DIR):
 	mkdir -p $(TEMP_DIR)
 
+.PHONY: update-tools
+update-tools: $(BINNY)  ## Update all tools
+	$(BINNY) update -v
+
+.PHONY: list-tools
+list-tools: $(BINNY)  ## List all tools used
+	$(BINNY) list
+
+.PHONY: list-tool-updates
+list-tool-updates: $(BINNY)  ## List all tools with available updates
+	$(BINNY) list --updates
 
 ## Static analysis targets #################################
 

@@ -1,19 +1,15 @@
-name: PR for latest versions of bootstrap tools
+name: PR for latest versions of tools
 on:
   schedule:
     - cron: "0 8 * * *" # 3 AM EST
 
   workflow_dispatch:
 
-env:
-  GO_VERSION: "1.24.x"
-  GO_STABLE_VERSION: true
+permissions:
+  contents: read
 
 jobs:
   update-bootstrap-tools:
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     if: github.repository == 'anchore/grype-db' # only run for main repo
     steps:
@@ -21,32 +17,33 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 #v5.5.0
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
         with:
-          go-version: ${{ env.GO_VERSION }}
-          stable: ${{ env.GO_STABLE_VERSION }}
+          bootstrap-apt-packages: ""
+          go-dependencies: false
 
-      - run: |
-          GOLANGCILINT_LATEST_VERSION=$(go list -m -json github.com/golangci/golangci-lint@latest 2>/dev/null | jq -r '.Version')
-          GOSIMPORTS_LATEST_VERSION=$(go list -m -json github.com/rinchsan/gosimports@latest 2>/dev/null | jq -r '.Version')
-          BOUNCER_LATEST_VERSION=$(go list -m -json github.com/wagoodman/go-bouncer@latest 2>/dev/null | jq -r '.Version')
-          CHRONICLE_LATEST_VERSION=$(go list -m -json github.com/anchore/chronicle@latest 2>/dev/null | jq -r '.Version')
-          GORELEASER_LATEST_VERSION=$(go list -m -json github.com/goreleaser/goreleaser@latest 2>/dev/null | jq -r '.Version')
-          
-          # update version variables in the Makefile
-          sed -r -i -e 's/^(GOLANGCILINT_VERSION = ).*/\1'${GOLANGCILINT_LATEST_VERSION}'/' Makefile
-          sed -r -i -e 's/^(GOSIMPORTS_VERSION := ).*/\1'${GOSIMPORTS_LATEST_VERSION}'/' Makefile
-          sed -r -i -e 's/^(BOUNCER_VERSION = ).*/\1'${BOUNCER_LATEST_VERSION}'/' Makefile
-          sed -r -i -e 's/^(CHRONICLE_VERSION = ).*/\1'${CHRONICLE_LATEST_VERSION}'/' Makefile
-          sed -r -i -e 's/^(GORELEASER_VERSION = ).*/\1'${GORELEASER_LATEST_VERSION}'/' Makefile
-          
-          # export the versions for use with create-pull-request
-          echo "GOLANGCILINT=$GOLANGCILINT_LATEST_VERSION" >> $GITHUB_OUTPUT
-          echo "GOSIMPORTS=$GOSIMPORTS_LATEST_VERSION" >> $GITHUB_OUTPUT
-          echo "BOUNCER=$BOUNCER_LATEST_VERSION" >> $GITHUB_OUTPUT
-          echo "CHRONICLE=$CHRONICLE_LATEST_VERSION" >> $GITHUB_OUTPUT
-          echo "GORELEASER=$GORELEASER_LATEST_VERSION" >> $GITHUB_OUTPUT
+      - name: "Update tool versions"
         id: latest-versions
+        run: |
+          make update-tools
+          make list-tools
+          
+          export NO_COLOR=1
+          delimiter="$(openssl rand -hex 8)"
+          
+          {
+            echo "status<<${delimiter}"
+            make list-tool-updates
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+          
+          {
+            echo "### Tool version status"
+            echo "\`\`\`"
+            make list-tool-updates
+            echo "\`\`\`"
+          } >> $GITHUB_STEP_SUMMARY
 
       - uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a #v2.1.0
         id: generate-token
@@ -58,15 +55,13 @@ jobs:
         with:
           signoff: true
           delete-branch: true
-          branch: auto/latest-bootstrap-tools
+          branch: auto/latest-tools
           labels: dependencies
-          commit-message: 'Update grype-db bootstrap tools to latest versions.'
-          title: 'Update grype-db bootstrap tools to latest versions.'
+          commit-message: 'chore(deps): update tools to latest versions'
+          title: 'chore(deps): update tools to latest versions'
           body: |
-            - [golangci-lint ${{ steps.latest-versions.outputs.GOLANGCILINT }}](https://github.com/golangci/golangci-lint/releases/tag/${{ steps.latest-versions.outputs.GOLANGCILINT }})
-            - [gosimports ${{ steps.latest-versions.outputs.GOSIMPORTS }}](https://github.com/rinchsan/gosimports/releases/tag/${{ steps.latest-versions.outputs.GOSIMPORTS }})
-            - [bouncer ${{ steps.latest-versions.outputs.BOUNCER }}](https://github.com/wagoodman/go-bouncer/releases/tag/${{ steps.latest-versions.outputs.BOUNCER }})
-            - [chronicle ${{ steps.latest-versions.outputs.CHRONICLE }}](https://github.com/anchore/chronicle/releases/tag/${{ steps.latest-versions.outputs.CHRONICLE }})
-            - [goreleaser ${{ steps.latest-versions.outputs.GORELEASER }}](https://github.com/goreleaser/goreleaser/releases/tag/${{ steps.latest-versions.outputs.GORELEASER }})
-            This is an auto-generated pull request to update all of the bootstrap tools to the latest versions.
+            ```
+            ${{ steps.latest-versions.outputs.status }}
+            ```
+            This is an auto-generated pull request to update all of the tools to the latest versions.
           token: ${{ steps.generate-token.outputs.token }}
