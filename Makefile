@@ -117,6 +117,17 @@ bootstrap-go:
 $(TEMP_DIR):
 	mkdir -p $(TEMP_DIR)
 
+.PHONY: update-tools
+update-tools: $(BINNY)  ## Update all tools
+	$(BINNY) update -v
+
+.PHONY: list-tools
+list-tools: $(BINNY)  ## List all tools used
+	$(BINNY) list
+
+.PHONY: list-tool-updates
+list-tool-updates: $(BINNY)  ## List all tools with available updates
+	$(BINNY) list --updates
 
 ## Static analysis targets #################################
 
