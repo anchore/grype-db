@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/process/v6/internal/tests"
@@ -1140,6 +1141,7 @@ func TestGetOperatingSystem(t *testing.T) {
 		osName    string
 		osID      string
 		osVersion string
+		channel   string
 		expected  *grypeDB.OperatingSystem
 	}{
 		{
@@ -1184,11 +1186,25 @@ func TestGetOperatingSystem(t *testing.T) {
 				Codename:     "jammy",
 			},
 		},
+		{
+			name:      "includes channel (rhel)",
+			osName:    "redhat",
+			osID:      "rhel",
+			osVersion: "8.4",
+			channel:   "eus",
+			expected: &grypeDB.OperatingSystem{
+				Name:         "redhat",
+				ReleaseID:    "rhel",
+				MajorVersion: "8",
+				MinorVersion: "4",
+				Channel:      "eus",
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getOperatingSystem(tt.osName, tt.osID, tt.osVersion)
+			result := getOperatingSystem(tt.osName, tt.osID, tt.osVersion, tt.channel)
 			require.Equal(t, tt.expected, result)
 		})
 	}
@@ -1196,62 +1212,89 @@ func TestGetOperatingSystem(t *testing.T) {
 
 func TestGetOSInfo(t *testing.T) {
 	tests := []struct {
-		name       string
-		group      string
-		expectedOS string
-		expectedID string
-		expectedV  string
+		name     string
+		group    string
+		expected osInfo
 	}{
 		{
-			name:       "alpine 3.10",
-			group:      "alpine:3.10",
-			expectedOS: "alpine",
-			expectedID: "alpine",
-			expectedV:  "3.10",
+			name:  "alpine 3.10",
+			group: "alpine:3.10",
+			expected: osInfo{
+				name:    "alpine",
+				id:      "alpine",
+				version: "3.10",
+			},
 		},
 		{
-			name:       "debian bullseye",
-			group:      "debian:11",
-			expectedOS: "debian",
-			expectedID: "debian",
-			expectedV:  "11",
+			name:  "debian bullseye",
+			group: "debian:11",
+			expected: osInfo{
+				name:    "debian",
+				id:      "debian",
+				version: "11",
+			},
 		},
 		{
-			name:       "mariner version 1",
-			group:      "mariner:1.0",
-			expectedOS: "mariner",
-			expectedID: "mariner",
-			expectedV:  "1.0",
+			name:  "mariner version 1",
+			group: "mariner:1.0",
+			expected: osInfo{
+				name:    "mariner",
+				id:      "mariner",
+				version: "1.0",
+			},
 		},
 		{
-			name:       "mariner version 3 (azurelinux conversion)",
-			group:      "mariner:3.0",
-			expectedOS: "azurelinux",
-			expectedID: "azurelinux",
-			expectedV:  "3.0",
+			name:  "mariner version 3 (azurelinux conversion)",
+			group: "mariner:3.0",
+			expected: osInfo{
+				name:    "azurelinux",
+				id:      "azurelinux",
+				version: "3.0",
+			},
 		},
 		{
-			name:       "ubuntu focal",
-			group:      "ubuntu:20.04",
-			expectedOS: "ubuntu",
-			expectedID: "ubuntu",
-			expectedV:  "20.04",
+			name:  "ubuntu focal",
+			group: "ubuntu:20.04",
+			expected: osInfo{
+				name:    "ubuntu",
+				id:      "ubuntu",
+				version: "20.04",
+			},
 		},
 		{
-			name:       "oracle linux",
-			group:      "ol:8",
-			expectedOS: "oraclelinux", // normalize name
-			expectedID: "ol",          // keep original ID
-			expectedV:  "8",
+			name:  "oracle linux",
+			group: "ol:8",
+			expected: osInfo{
+				name:    "oraclelinux", // normalize name
+				id:      "ol",          // keep original ID
+				version: "8",
+			},
+		},
+		{
+			name:  "redhat 8",
+			group: "rhel:8",
+			expected: osInfo{
+				name:    "redhat",
+				id:      "rhel",
+				version: "8",
+			},
+		},
+		{
+			name:  "rhel + eus",
+			group: "rhel:8+eus",
+			expected: osInfo{
+				name:    "redhat",
+				id:      "rhel",
+				version: "8",
+				channel: "eus",
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			osName, id, version := getOSInfo(tt.group)
-			require.Equal(t, tt.expectedOS, osName)
-			require.Equal(t, tt.expectedID, id)
-			require.Equal(t, tt.expectedV, version)
+			oi := getOSInfo(tt.group)
+			assert.Equal(t, tt.expected, oi, "expected osInfo to match for group %s", tt.group)
 		})
 	}
 }
