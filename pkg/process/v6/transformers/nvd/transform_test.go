@@ -1376,6 +1376,64 @@ func TestTransform(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "https://github.com/anchore/grype/issues/2807#issuecomment-3101447594",
+			fixture:  "test-fixtures/CVE-2004-0377.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2004-0377",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2025, 4, 3, 1, 3, 51, 193000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2004, 5, 4, 4, 0, 0, 0, time.UTC)),
+						Status:        grypeDB.UnknownVulnerabilityStatus,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2004-0377",
+							Assigners:   []string{"cve@mitre.org"},
+							Description: "Buffer overflow in the win32_stat function for (1) ActiveState's ActivePerl and (2) Larry Wall's Perl before 5.8.3 allows local or remote attackers to execute arbitrary commands via filenames that end in a backslash character.",
+							References: []grypeDB.Reference{
+								{
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2004-0377",
+								},
+							},
+						},
+					},
+					Related: affectedPkgSlice(
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs:   []string{"CVE-2004-0377"},
+								Ranges: nil,
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "activestate",
+								Product: "activeperl",
+							},
+						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2004-0377"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: "<= 5.8.3",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "larry_wall",
+								Product: "perl",
+							},
+						},
+					),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {

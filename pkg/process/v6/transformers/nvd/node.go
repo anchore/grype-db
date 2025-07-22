@@ -55,20 +55,17 @@ func processANDNodes(cve string, nodes []nvd.Node, cfg Config, depth int) ([]aff
 	var candidates []affectedPackageCandidate
 
 	// find all vulnerable CPEs and all platform CPEs across all nodes
-	var allVulnerableCPEs []cpe.Attributes
-	var allRanges []affectedCPERange
+	var allVulnerableCPEs []affectedPackageCandidate
 	var allPlatformCPEs []cpe.Attributes
 
 	for _, node := range nodes {
 		switch node.Operator {
 		case nvd.Or:
-			vulnCPEs, ranges, err := extractVulnerableCPEs(node, cfg)
+			vulnCPEs, err := extractVulnerableCPEs(node, cfg)
 			if err != nil {
 				return nil, err
 			}
 			allVulnerableCPEs = append(allVulnerableCPEs, vulnCPEs...)
-			allRanges = append(allRanges, ranges...)
-
 			platformCPEs, err := extractPlatformCPEs(node)
 			if err != nil {
 				return nil, err
@@ -92,36 +89,26 @@ func processANDNodes(cve string, nodes []nvd.Node, cfg Config, depth int) ([]aff
 		}
 	}
 
-	// group ranges by CPE
-	rangesByCPE := make(map[string][]affectedCPERange)
-	for i, c := range allVulnerableCPEs {
-		key := cpeKey(c)
-		if i < len(allRanges) {
-			rangesByCPE[key] = append(rangesByCPE[key], allRanges[i])
+	// deduplicate CPEs
+	uniqueVulnCPEs := make(map[string]affectedPackageCandidate)
+	for _, c := range allVulnerableCPEs {
+		cKey := cpeKey(c.VulnerableCPE)
+		if _, exists := uniqueVulnCPEs[cKey]; !exists {
+			uniqueVulnCPEs[cKey] = c
+		} else {
+			uniqueVulnCPEs[cKey].Ranges.addRanges(c.Ranges.toSlice()...)
 		}
 	}
 
-	// deduplicate CPEs
-	uniqueVulnCPEs := make(map[string]cpe.Attributes)
-	for _, c := range allVulnerableCPEs {
-		uniqueVulnCPEs[cpeKey(c)] = c
-	}
-
 	// combine all unique vulnerable CPEs with their associated ranges
-	for key, vulnCPE := range uniqueVulnCPEs {
+	for _, vulnCPE := range uniqueVulnCPEs {
 		if len(allPlatformCPEs) == 0 {
 			// no platform constraints, app is vulnerable on all platforms
-			candidates = append(candidates, affectedPackageCandidate{
-				VulnerableCPE: vulnCPE,
-				Ranges:        newAffectedRanges(rangesByCPE[key]...),
-			})
+			candidates = append(candidates, vulnCPE)
 		} else {
 			// associate this vulnerable CPE with all platform CPEs
-			candidates = append(candidates, affectedPackageCandidate{
-				VulnerableCPE: vulnCPE,
-				PlatformCPEs:  allPlatformCPEs,
-				Ranges:        newAffectedRanges(rangesByCPE[key]...),
-			})
+			vulnCPE.PlatformCPEs = allPlatformCPEs
+			candidates = append(candidates, vulnCPE)
 		}
 	}
 
@@ -145,23 +132,12 @@ func processORNodes(cve string, nodes []nvd.Node, cfg Config, depth int) ([]affe
 			}
 			candidates = append(candidates, andCandidates...)
 		case nvd.Or:
-			vulnCPEs, ranges, err := extractVulnerableCPEs(node, cfg)
+			vulnCPEs, err := extractVulnerableCPEs(node, cfg)
 			if err != nil {
 				return nil, err
 			}
 
-			// associate each vulnerable CPE with its ranges
-			for i, vulnCPE := range vulnCPEs {
-				var cpeRanges []affectedCPERange
-				if i < len(ranges) {
-					cpeRanges = append(cpeRanges, ranges[i])
-				}
-
-				candidates = append(candidates, affectedPackageCandidate{
-					VulnerableCPE: vulnCPE,
-					Ranges:        newAffectedRanges(cpeRanges...),
-				})
-			}
+			candidates = append(candidates, vulnCPEs...)
 		}
 	}
 
@@ -235,9 +211,8 @@ func deriveRangesFromCPE(attr cpe.Attributes) []affectedCPERange {
 }
 
 // extractVulnerableCPEs extracts CPES that are both within the CPE part configuration and are explicitly marked as vulnerable
-func extractVulnerableCPEs(node nvd.Node, cfg Config) ([]cpe.Attributes, []affectedCPERange, error) {
-	var vulnCPEs []cpe.Attributes
-	var ranges []affectedCPERange
+func extractVulnerableCPEs(node nvd.Node, cfg Config) ([]affectedPackageCandidate, error) {
+	var candidates []affectedPackageCandidate
 
 	for _, match := range node.CpeMatch {
 		if !match.Vulnerable {
@@ -246,7 +221,7 @@ func extractVulnerableCPEs(node nvd.Node, cfg Config) ([]cpe.Attributes, []affec
 
 		cpeAttr, err := cpe.NewAttributes(match.Criteria)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unable to parse CPE '%s': %w", match.Criteria, err)
+			return nil, fmt.Errorf("unable to parse CPE '%s': %w", match.Criteria, err)
 		}
 
 		// check if this CPE part is in our configured set of parts to process, if not then it should not be considered
@@ -255,18 +230,22 @@ func extractVulnerableCPEs(node nvd.Node, cfg Config) ([]cpe.Attributes, []affec
 			continue
 		}
 
-		vulnCPEs = append(vulnCPEs, cpeAttr)
+		candidate := affectedPackageCandidate{
+			VulnerableCPE: cpeAttr,
+		}
 
 		if match.VersionStartIncluding != nil || match.VersionStartExcluding != nil ||
 			match.VersionEndIncluding != nil || match.VersionEndExcluding != nil {
-			ranges = append(ranges, newAffectedRange(match))
+			candidate.Ranges = newAffectedRanges(newAffectedRange(match))
 		} else {
 			// no explicit version ranges in the match, check the CPE attributes for an exact version
-			ranges = append(ranges, deriveRangesFromCPE(cpeAttr)...)
+			candidate.Ranges = newAffectedRanges(deriveRangesFromCPE(cpeAttr)...)
 		}
+
+		candidates = append(candidates, candidate)
 	}
 
-	return vulnCPEs, ranges, nil
+	return candidates, nil
 }
 
 // extractPlatformCPEs extracts all platform CPEs from a node (explicitly non-vulnerable CPEs). Why not just
