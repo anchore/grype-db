@@ -61,6 +61,13 @@ linters:
       statements: 65
     gocognit:
       min-complexity: 32
+    revive:
+      rules:
+        - name: var-naming
+          severity: warning
+          disabled: false
+          exclude: [""]
+          arguments: [[], [], [{ skip-package-name-checks: true }]]
   exclusions:
     generated: lax
     presets:

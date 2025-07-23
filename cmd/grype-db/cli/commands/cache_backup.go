@@ -69,12 +69,12 @@ func CacheBackup(app *application.Application) *cobra.Command {
 
 func cacheBackup(cfg cacheBackupConfig) error {
 	providers := "all"
-	if len(cfg.Provider.Selection.IncludeFilter) > 0 {
-		providers = fmt.Sprintf("%s", cfg.Provider.Selection.IncludeFilter)
+	if len(cfg.Provider.IncludeFilter) > 0 {
+		providers = fmt.Sprintf("%s", cfg.Provider.IncludeFilter)
 	}
 	log.WithFields("providers", providers).Info("backing up provider state")
 
-	writer, err := tarutil.NewWriter(cfg.CacheArchive.Path)
+	writer, err := tarutil.NewWriter(cfg.Path)
 	if err != nil {
 		return fmt.Errorf("unable to create archive writer: %w", err)
 	}
@@ -133,7 +133,7 @@ func archiveProvider(cfg cacheBackupConfig, name string, writer tarutil.Writer) 
 	}(wd)
 
 	var visitor pathVisitor
-	if cfg.Results.ResultsOnly {
+	if cfg.ResultsOnly {
 		log.WithFields("provider", name).Debug("archiving results only")
 
 		visitor = newCacheResultsOnlyWorkspaceVisitStrategy(writer, name)
