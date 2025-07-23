@@ -44,10 +44,7 @@ func run(ctx context.Context, workerErrs <-chan error, subscription *partybus.Su
 	var retErr error
 	var forceTeardown bool
 
-	for {
-		if workerErrs == nil && events == nil {
-			break
-		}
+	for workerErrs != nil || events != nil {
 		select {
 		case err, isOpen := <-workerErrs:
 			if !isOpen {

@@ -48,9 +48,9 @@ func ListProviders(app *application.Application) *cobra.Command {
 		Args: chainArgs(
 			cobra.NoArgs,
 			func(_ *cobra.Command, _ []string) error {
-				allowableOutputs := strset.New(cfg.Format.AllowableFormats...)
-				if !allowableOutputs.Has(cfg.Format.Output) {
-					return fmt.Errorf("invalid output format: %s (allowable: %s)", cfg.Format.Output, strings.Join(cfg.Format.AllowableFormats, ", "))
+				allowableOutputs := strset.New(cfg.AllowableFormats...)
+				if !allowableOutputs.Has(cfg.Output) {
+					return fmt.Errorf("invalid output format: %s (allowable: %s)", cfg.Output, strings.Join(cfg.AllowableFormats, ", "))
 				}
 				return nil
 			},
@@ -76,7 +76,7 @@ func runListProviders(cfg listProvidersConfig) error {
 		GenerateConfigs:  cfg.Vunnel.GenerateConfigs,
 		ExcludeProviders: cfg.Vunnel.ExcludeProviders,
 		Env:              cfg.Vunnel.Env,
-	}, cfg.Provider.Configs...)
+	}, cfg.Configs...)
 	if err != nil {
 		if errors.Is(err, providers.ErrNoProviders) {
 			log.Error("configure a provider via the application config or use -g to generate a list of configs from vunnel")
@@ -84,11 +84,12 @@ func runListProviders(cfg listProvidersConfig) error {
 		return err
 	}
 
-	if cfg.Format.Output == "text" {
+	switch cfg.Output {
+	case "text":
 		for _, p := range ps {
 			fmt.Println(p.ID().Name)
 		}
-	} else if cfg.Format.Output == "json" {
+	case "json":
 		names := make([]string, 0, len(ps))
 		for _, p := range ps {
 			names = append(names, p.ID().Name)

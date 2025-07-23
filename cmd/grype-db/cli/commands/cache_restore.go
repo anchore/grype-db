@@ -77,7 +77,7 @@ func CacheRestore(app *application.Application) *cobra.Command {
 
 func cacheRestore(cfg cacheRestoreConfig) error {
 	providers := "all"
-	if len(cfg.Provider.Selection.IncludeFilter) > 0 {
+	if len(cfg.Provider.IncludeFilter) > 0 {
 		providers = fmt.Sprintf("%s", cfg.Provider.IncludeFilter)
 	}
 	log.WithFields("providers", providers).Info("restoring provider state")
@@ -87,7 +87,7 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 	}
 
 	allowableProviders := strset.New(cfg.Provider.IncludeFilter...)
-	restorableProviders, err := readProviderNamesFromTarGz(cfg.Cache.CacheArchive.Path)
+	restorableProviders, err := readProviderNamesFromTarGz(cfg.Cache.Path)
 	if err != nil {
 		return err
 	}
@@ -104,11 +104,11 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 
 		if cfg.Cache.DeleteExisting {
 			log.WithFields("provider", name).Info("deleting existing provider data")
-			if err := deleteProviderCache(cfg.Provider.Store.Root, name); err != nil {
+			if err := deleteProviderCache(cfg.Provider.Root, name); err != nil {
 				return fmt.Errorf("failed to delete provider cache: %w", err)
 			}
 		} else {
-			dir := filepath.Join(cfg.Provider.Store.Root, name)
+			dir := filepath.Join(cfg.Provider.Root, name)
 			if _, err := os.Stat(dir); !errors.Is(err, os.ErrNotExist) {
 				log.WithFields("provider", name, "dir", dir).Debug("note: there is pre-existing provider data which could be overwritten by the restore operation")
 			}
@@ -117,7 +117,7 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 
 	log.WithFields("archive", cfg.Cache.CacheArchive.Path).Info("restoring provider data from backup")
 
-	f, err := os.Open(cfg.Cache.CacheArchive.Path)
+	f, err := os.Open(cfg.Cache.Path)
 	if err != nil {
 		return fmt.Errorf("failed to open cache archive: %w", err)
 	}
@@ -126,7 +126,7 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chdir(cfg.Provider.Store.Root)
+	err = os.Chdir(cfg.Provider.Root)
 	if err != nil {
 		return err
 	}
