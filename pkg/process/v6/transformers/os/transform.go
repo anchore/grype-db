@@ -23,11 +23,18 @@ import (
 )
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
+	providerID := state.Provider
+	providerModel := internal.ProviderModel(state)
+	if state.Provider == "rhel" && vulnerability.Vulnerability.NamespaceName != "" && strings.Contains(vulnerability.Vulnerability.NamespaceName, ":") {
+		// the RHEL provider can emit AlmaLinux vulnerabilities
+		providerID = strings.Split(vulnerability.Vulnerability.NamespaceName, ":")[0]
+		providerModel.ID = providerID
+	}
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.Vulnerability.Name,
-			ProviderID:    state.Provider,
-			Provider:      internal.ProviderModel(state),
+			ProviderID:    providerID,
+			Provider:      providerModel,
 			Status:        grypeDB.VulnerabilityActive,
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
 			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
@@ -213,7 +220,7 @@ func groupFixedIns(vuln unmarshal.OSVulnerability) map[groupIndex][]unmarshal.OS
 
 func getPackageType(osName string) pkg.Type {
 	switch osName {
-	case "redhat", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
+	case "redhat", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux", "almalinux":
 		return pkg.RpmPkg
 	case "ubuntu", "debian", "echo":
 		return pkg.DebPkg
