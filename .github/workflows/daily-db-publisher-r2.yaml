@@ -28,7 +28,7 @@ jobs:
     # note about workflow dispatch inputs and booleans:
     # a) booleans come across as string types :(
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
-    if: ${{ github.event.inputs.publish-databases != 'false' }}
+    if: ${{ github.event.inputs.publish-databases != 'false' && github.repository == 'anchore/grype-db'}} # only run for main repo
     name: "Pull vulnerability data"
     runs-on: ubuntu-24.04
     outputs:
