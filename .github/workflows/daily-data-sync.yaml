@@ -6,6 +6,7 @@ on:
   # run 1 AM (UTC) daily
   schedule:
     - cron:  '0 1 * * *'
+
 env:
   CGO_ENABLED: "0"
   SLACK_NOTIFICATIONS: true
@@ -14,6 +15,7 @@ jobs:
   discover-providers:
     name: "Discover vulnerability providers"
     runs-on: ubuntu-24.04
+    if: github.repository == 'anchore/grype-db' # only run for main repo
     permissions:
       contents: read
       packages: read
