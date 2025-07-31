@@ -63,7 +63,7 @@ func runPull(cfg pullConfig) error {
 		GenerateConfigs:  cfg.Vunnel.GenerateConfigs,
 		ExcludeProviders: cfg.Vunnel.ExcludeProviders,
 		Env:              cfg.Vunnel.Env,
-	}, cfg.Provider.Configs...)
+	}, cfg.Configs...)
 	if err != nil {
 		if errors.Is(err, providers.ErrNoProviders) {
 			log.Error("configure a provider via the application config or use -g to generate a list of configs from vunnel")
@@ -71,9 +71,9 @@ func runPull(cfg pullConfig) error {
 		return err
 	}
 
-	if len(cfg.Provider.IncludeFilter) > 0 {
+	if len(cfg.IncludeFilter) > 0 {
 		log.WithFields("keep-only", cfg.Provider.IncludeFilter).Debug("filtering providers by name")
-		ps = ps.Filter(cfg.Provider.IncludeFilter...)
+		ps = ps.Filter(cfg.IncludeFilter...)
 	}
 
 	c := process.PullConfig{

@@ -62,7 +62,7 @@ func Root(app *application.Application) *cobra.Command {
 				}
 
 				return runPackage(packageConfig{
-					DBLocation: cfg.Build.DBLocation,
+					DBLocation: cfg.DBLocation,
 					Package:    cfg.Package,
 				})
 			}))
