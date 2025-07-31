@@ -33,9 +33,10 @@ func ReadBuildInfo() BuildInfo {
 	var foundVcsModified bool
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, s := range info.Settings {
-			if s.Key == "vcs.revision" {
+			switch s.Key {
+			case "vcs.revision":
 				buildRevision = s.Value
-			} else if s.Key == "vcs.modified" {
+			case "vcs.modified":
 				vcsModified = s.Value == "true"
 				foundVcsModified = true
 			}
