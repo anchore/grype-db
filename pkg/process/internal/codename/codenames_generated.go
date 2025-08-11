@@ -12,6 +12,7 @@ var normalizedOSCodenames = map[string]map[string]map[string]string{
 		"10": {"*": "buster"},
 		"11": {"*": "bullseye"},
 		"12": {"*": "bookworm"},
+		"13": {"*": "trixie"},
 		"2": {
 			"0": "hamm",
 			"1": "slink",
