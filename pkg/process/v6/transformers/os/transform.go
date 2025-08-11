@@ -124,8 +124,10 @@ func getFix(fixedInEntry unmarshal.OSFixedIn) *grypeDB.Fix {
 	}
 
 	var detail *grypeDB.FixDetail
-	if len(refs) > 0 {
+	availability := getFixAvailability(fixedInEntry)
+	if len(refs) > 0 || availability != nil {
 		detail = &grypeDB.FixDetail{
+			Available:  availability,
 			References: refs,
 		}
 	}
@@ -134,6 +136,23 @@ func getFix(fixedInEntry unmarshal.OSFixedIn) *grypeDB.Fix {
 		Version: fixedInVersion,
 		State:   fixState,
 		Detail:  detail,
+	}
+}
+
+func getFixAvailability(fixedInEntry unmarshal.OSFixedIn) *grypeDB.FixAvailability {
+	if fixedInEntry.Available.Date == "" {
+		return nil
+	}
+
+	t := internal.ParseTime(fixedInEntry.Available.Date)
+	if t == nil {
+		log.WithFields("date", fixedInEntry.Available.Date).Warn("unable to parse fix availability date")
+		return nil
+	}
+
+	return &grypeDB.FixAvailability{
+		Date: t,
+		Kind: fixedInEntry.Available.Kind,
 	}
 }
 
