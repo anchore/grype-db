@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/google/shlex"
+	"github.com/klauspost/compress/flate"
 
 	"github.com/anchore/grype-db/internal/log"
 )
@@ -47,7 +48,7 @@ func newCompressor(archivePath string) (io.WriteCloser, error) {
 
 	switch {
 	case strings.HasSuffix(archivePath, ".tar.gz"):
-		return gzip.NewWriter(archive), nil
+		return gzip.NewWriterLevel(archive, flate.BestCompression)
 	case strings.HasSuffix(archivePath, ".tar.zst"):
 		// note: since we're using --ultra this tends to have a high memory usage at decompression time
 		// For ~700 MB payload that is compressing down to ~60 MB, that would need ~130 MB of memory (--ultra -22)
