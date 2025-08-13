@@ -27,3 +27,4 @@ type MatchExclusionTransformerV2 func(entry unmarshal.MatchExclusion, state prov
 type KnownExploitedVulnerabilityTransformerV2 func(entry unmarshal.KnownExploitedVulnerability, state provider.State) ([]Entry, error)
 type EPSSTransformerV2 func(entry unmarshal.EPSS, state provider.State) ([]Entry, error)
 type OSVTransformerV2 func(entry unmarshal.OSVVulnerability, state provider.State) ([]Entry, error)
+type OpenVEXTransformerV2 func(entry unmarshal.OpenVEXVulnerability, state provider.State) ([]Entry, error)

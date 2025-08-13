@@ -1,0 +1,206 @@
+package openvex
+
+import (
+	"fmt"
+	"sort"
+
+	"github.com/anchore/packageurl-go"
+	govex "github.com/openvex/go-vex/pkg/vex"
+
+	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers/internal"
+	"github.com/anchore/grype-db/pkg/provider"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal"
+	grypeDB "github.com/anchore/grype/grype/db/v6"
+	syft "github.com/anchore/syft/syft/pkg"
+)
+
+// Transform an openvex vulnerability into data entries.
+//
+//	satisifies pkg/data/OpenVexTransformerV2
+func Transform(vulnerability unmarshal.OpenVEXVulnerability, state provider.State) ([]data.Entry, error) {
+	name := getName(&vulnerability)
+	vulnHandle := grypeDB.VulnerabilityHandle{
+		Name:          name,
+		Status:        grypeDB.VulnerabilityActive,
+		PublishedDate: vulnerability.Timestamp,
+		ModifiedDate:  vulnerability.LastUpdated,
+		ProviderID:    state.Provider,
+		Provider:      internal.ProviderModel(state),
+		BlobValue: &grypeDB.VulnerabilityBlob{
+			ID:          name,
+			Assigners:   nil,
+			Description: vulnerability.Vulnerability.Description,
+			References:  getReferences(&vulnerability),
+			Aliases:     getAliases(&vulnerability),
+		},
+	}
+	pkgs, err := getPackageHandles(&vulnerability, state)
+	if err != nil {
+		return nil, err
+	}
+	in := []any{vulnHandle}
+	for _, a := range pkgs {
+		in = append(in, a)
+	}
+	return transformers.NewEntries(in...), nil
+}
+
+// getPackageHandles for all products in this advisory
+func getPackageHandles(vuln *unmarshal.OpenVEXVulnerability, state provider.State) ([]any, error) {
+	if len(vuln.Products) == 0 {
+		return nil, nil
+	}
+
+	var aphs []any
+	for _, product := range vuln.Products {
+		aph, err := getPackageHandle(&product, vuln, state)
+		if err != nil {
+			return nil, err
+		}
+		aphs = append(aphs, aph)
+	}
+
+	sort.Sort(internal.ByAny(aphs))
+
+	return aphs, nil
+}
+
+// getPackageHandle for a single product
+//
+// OpenVEX defines product via:
+//
+//	Component {
+//	  Identifiers: {
+//	    PURLIdentifierType: pkg:type/name@version
+//	  }
+//	}
+func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerability, state provider.State) (ret any, err error) {
+	if product == nil || vuln == nil {
+		return ret, fmt.Errorf("getAffectedPackage params cannot be nil")
+	}
+	purl, err := getPURL(product)
+	if err != nil {
+		return ret, fmt.Errorf("failed to parse purl %s: %w", purl, err)
+	}
+
+	aliases := []string{getName(vuln)}
+	aliases = append(aliases, getAliases(vuln)...)
+
+	pkg := &grypeDB.Package{
+		Ecosystem: string(syft.TypeFromPURL(purl.String())),
+		Name:      purl.Name,
+	}
+
+	switch vuln.Status {
+	case govex.StatusAffected:
+		ret = grypeDB.AffectedPackageHandle{
+			Package: pkg,
+			BlobValue: &grypeDB.PackageBlob{
+				CVEs: aliases,
+				// semantic versioning
+				Ranges: []grypeDB.Range{
+					{
+						Version: grypeDB.Version{
+							Type:       "semver",
+							Constraint: fmt.Sprintf("== %s", purl.Version),
+						},
+					},
+				},
+			},
+		}
+	case govex.StatusNotAffected:
+		ret = grypeDB.UnaffectedPackageHandle{
+			Package: pkg,
+			BlobValue: &grypeDB.PackageBlob{
+				CVEs: aliases,
+				Ranges: []grypeDB.Range{
+					{
+						Fix: &grypeDB.Fix{
+							Version: purl.Version,
+							State:   grypeDB.NotAffectedFixStatus,
+						},
+					},
+				},
+			},
+		}
+		// return unaffected object
+	case govex.StatusFixed:
+		// TODO this is very cludgy. Ideally, replace this with a piece of info in open vex or some other indicator.
+		if state.Provider == "chainguard" {
+			ret = grypeDB.UnaffectedPackageHandle{
+				Package: pkg,
+				BlobValue: &grypeDB.PackageBlob{
+					CVEs: aliases,
+					Ranges: []grypeDB.Range{
+						{
+							Fix: &grypeDB.Fix{
+								Version: purl.Version,
+								State:   grypeDB.FixedStatus,
+							},
+						},
+					},
+				},
+			}
+		} else {
+			ret = grypeDB.AffectedPackageHandle{
+				Package: pkg,
+				BlobValue: &grypeDB.PackageBlob{
+					CVEs: aliases,
+					Ranges: []grypeDB.Range{
+						{
+							Version: grypeDB.Version{
+								Type:       "semver",
+								Constraint: fmt.Sprintf("< %s", purl.Version),
+							},
+						},
+					},
+				},
+			}
+		}
+	default:
+		err = fmt.Errorf("invalid vuln states %s", vuln.Status)
+	}
+	return ret, err
+}
+
+// getPURL from either ID field or identifiers
+func getPURL(product *govex.Product) (purl *packageurl.PackageURL, err error) {
+	if p, ok := product.Identifiers[govex.PURL]; ok {
+		purl, err := packageurl.FromString(p)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse purl %s: %w", p, err)
+		}
+		return &purl, nil
+	}
+	if product.ID != "" {
+		purl, err := packageurl.FromString(product.ID)
+		if err != nil {
+			return nil, err
+		}
+		return &purl, nil
+	}
+	return nil, fmt.Errorf("invalid product: %v", product)
+}
+
+func getAliases(vuln *unmarshal.OpenVEXVulnerability) []string {
+	ret := make([]string, 0, len(vuln.Vulnerability.Aliases))
+	for _, alias := range vuln.Vulnerability.Aliases {
+		ret = append(ret, string(alias))
+	}
+	return ret
+}
+
+func getName(vuln *unmarshal.OpenVEXVulnerability) string {
+	return string(vuln.Vulnerability.Name)
+}
+
+func getReferences(vuln *unmarshal.OpenVEXVulnerability) []grypeDB.Reference {
+	refs := []grypeDB.Reference{
+		{
+			URL: getName(vuln),
+		},
+	}
+	return refs
+}

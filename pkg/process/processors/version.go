@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var schemaFilePattern = regexp.MustCompile(`schema-(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\.json`)
+var schemaFilePattern = regexp.MustCompile(`schema(-|_)(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\.json`)
 
 type version struct {
 	Major int
