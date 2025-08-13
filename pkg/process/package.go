@@ -8,11 +8,11 @@ import (
 	grypeDBLegacyDistribution "github.com/anchore/grype/grype/db/v5/distribution"
 )
 
-func Package(dbDir, publishBaseURL, overrideArchiveExtension string) error {
+func Package(dbDir, publishBaseURL, overrideArchiveExtension string, compressorCommands map[string]string) error {
 	// check if metadata file exists, if so, then this
 	if _, err := os.Stat(filepath.Join(dbDir, grypeDBLegacyDistribution.MetadataFileName)); os.IsNotExist(err) {
 		// TODO: detect from disk which version of the DB is present
-		return v6process.CreateArchive(dbDir, overrideArchiveExtension)
+		return v6process.CreateArchive(dbDir, overrideArchiveExtension, compressorCommands)
 	}
-	return packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension)
+	return packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension, compressorCommands)
 }

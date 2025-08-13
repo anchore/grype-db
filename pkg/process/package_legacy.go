@@ -22,7 +22,7 @@ import (
 // listingFiles is a set of files that should not be included in the archive
 var listingFiles = strset.New("listing.json", "latest.json", "history.json")
 
-func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) error { //nolint:funlen
+func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string, compressorCommands map[string]string) error { //nolint:funlen
 	log.WithFields("from", dbDir, "url", publishBaseURL, "extension-override", overrideArchiveExtension).Info("packaging database")
 
 	fs := afero.NewOsFs()
@@ -88,7 +88,7 @@ func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) err
 	)
 	tarPath := path.Join(dbDir, tarName)
 
-	if err := populateLegacyTar(tarPath); err != nil {
+	if err := populateLegacyTar(tarPath, compressorCommands); err != nil {
 		return err
 	}
 
@@ -110,7 +110,7 @@ func packageLegacyDB(dbDir, publishBaseURL, overrideArchiveExtension string) err
 	return nil
 }
 
-func populateLegacyTar(tarPath string) error {
+func populateLegacyTar(tarPath string, compressorCommands map[string]string) error {
 	originalDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("unable to get CWD: %w", err)
@@ -142,7 +142,7 @@ func populateLegacyTar(tarPath string) error {
 		}
 	}
 
-	if err = tarutil.PopulateWithPaths(tarName, files...); err != nil {
+	if err = tarutil.PopulateWithPathsAndCompressors(tarName, compressorCommands, files...); err != nil {
 		return fmt.Errorf("unable to create db archive: %w", err)
 	}
 

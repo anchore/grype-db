@@ -27,7 +27,12 @@ type writer struct {
 
 // NewWriter creates a new tar writer that writes to the specified archive path. Supports .tar.gz, .tar.zst, .tar.xz, and .tar file extensions.
 func NewWriter(archivePath string) (Writer, error) {
-	w, err := newCompressor(archivePath)
+	return NewWriterWithCompressors(archivePath, nil)
+}
+
+// NewWriterWithCompressors creates a new tar writer with custom compressor commands. If compressorCommands is nil or empty, it uses default commands.
+func NewWriterWithCompressors(archivePath string, compressorCommands map[string]string) (Writer, error) {
+	w, err := newCompressorWithCommands(archivePath, compressorCommands)
 	if err != nil {
 		return nil, err
 	}
@@ -40,12 +45,22 @@ func NewWriter(archivePath string) (Writer, error) {
 	}, nil
 }
 
-func newCompressor(archivePath string) (io.WriteCloser, error) {
+func newCompressorWithCommands(archivePath string, compressorCommands map[string]string) (io.WriteCloser, error) {
 	archive, err := os.Create(archivePath)
 	if err != nil {
 		return nil, err
 	}
 
+	// check for custom compressor command first
+	for ext, cmd := range compressorCommands {
+		if strings.HasSuffix(archivePath, "."+ext) {
+			log.Debugf("using custom compressor command for %s: %s", ext, cmd)
+			return newShellCompressor(cmd, archive)
+		}
+	}
+	log.Debugf("no custom compressor command found for %s, using default", archivePath)
+
+	// fall back to default compressor commands
 	switch {
 	case strings.HasSuffix(archivePath, ".tar.gz"):
 		return gzip.NewWriterLevel(archive, flate.BestCompression)

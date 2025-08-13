@@ -58,5 +58,5 @@ func Package(app *application.Application) *cobra.Command {
 }
 
 func runPackage(cfg packageConfig) error {
-	return process.Package(cfg.Directory, cfg.PublishBaseURL, cfg.OverrideArchiveExtension)
+	return process.Package(cfg.Directory, cfg.PublishBaseURL, cfg.OverrideArchiveExtension, cfg.CompressorCommands)
 }
