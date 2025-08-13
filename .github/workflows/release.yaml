@@ -9,7 +9,7 @@ on:
         description: bypass the quality gate check
         required: false
         default: false
-
+        type: boolean
 
 permissions:
   contents: read
