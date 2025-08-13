@@ -16,7 +16,7 @@ import (
 	v6Distribution "github.com/anchore/grype/grype/db/v6/distribution"
 )
 
-func CreateArchive(dbDir, overrideArchiveExtension string) error {
+func CreateArchive(dbDir, overrideArchiveExtension string, compressorCommands map[string]string) error {
 	extension, err := resolveExtension(overrideArchiveExtension)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func CreateArchive(dbDir, overrideArchiveExtension string) error {
 		files = append(files, v6.ImportMetadataFileName)
 	}
 
-	if err := populateTar(dbDir, tarName, files...); err != nil {
+	if err := populateTar(dbDir, tarName, compressorCommands, files...); err != nil {
 		return err
 	}
 
@@ -112,7 +112,7 @@ func resolveExtension(overrideArchiveExtension string) (string, error) {
 	return extension, nil
 }
 
-func populateTar(dbDir, tarName string, files ...string) error {
+func populateTar(dbDir, tarName string, compressorCommands map[string]string, files ...string) error {
 	originalDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("unable to get CWD: %w", err)
@@ -137,7 +137,7 @@ func populateTar(dbDir, tarName string, files ...string) error {
 		}
 	}
 
-	if err = tarutil.PopulateWithPaths(tarName, files...); err != nil {
+	if err = tarutil.PopulateWithPathsAndCompressors(tarName, compressorCommands, files...); err != nil {
 		return fmt.Errorf("unable to create db archive: %w", err)
 	}
 

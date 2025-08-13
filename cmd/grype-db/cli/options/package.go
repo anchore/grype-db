@@ -9,11 +9,12 @@ var _ Interface = &Package{}
 
 type Package struct {
 	// bound options
-	PublishBaseURL           string `yaml:"publish-base-url" json:"publish-base-url" mapstructure:"publish-base-url"`
-	OverrideArchiveExtension string `yaml:"override-archive-extension" json:"override-archive-extension" mapstructure:"override-archive-extension"`
+	PublishBaseURL           string            `yaml:"publish-base-url" json:"publish-base-url" mapstructure:"publish-base-url"`
+	OverrideArchiveExtension string            `yaml:"override-archive-extension" json:"override-archive-extension" mapstructure:"override-archive-extension"`
+	CompressorCommands       map[string]string `yaml:"compressor-commands" json:"compressor-commands" mapstructure:"compressor-commands"`
 
 	// unbound options
-	// (none)
+	compressorCommandsJSON string
 }
 
 func DefaultPackage() Package {
@@ -45,9 +46,6 @@ func (o *Package) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	if err := viper.BindPFlag("package.override-archive-extension", flags.Lookup("archive-extension")); err != nil {
 		return err
 	}
-
-	// set default values for non-bound struct items
-	// (none)
 
 	return nil
 }

@@ -2,7 +2,12 @@ package tarutil
 
 // PopulateWithPaths creates a compressed tar from the given paths.
 func PopulateWithPaths(tarPath string, filePaths ...string) error {
-	w, err := NewWriter(tarPath)
+	return PopulateWithPathsAndCompressors(tarPath, nil, filePaths...)
+}
+
+// PopulateWithPathsAndCompressors creates a compressed tar from the given paths using custom compressor commands.
+func PopulateWithPathsAndCompressors(tarPath string, compressorCommands map[string]string, filePaths ...string) error {
+	w, err := NewWriterWithCompressors(tarPath, compressorCommands)
 	if err != nil {
 		return err
 	}
