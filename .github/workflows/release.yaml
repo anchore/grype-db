@@ -5,6 +5,11 @@ on:
       version:
         description: tag the latest commit on main with the given version (prefixed with v)
         required: true
+      bypassQualityGate:
+        description: bypass the quality gate check
+        required: false
+        default: false
+
 
 permissions:
   contents: read
@@ -30,6 +35,7 @@ jobs:
       - name: Check static analysis results
         uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
         id: static-analysis
+        if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
@@ -39,6 +45,7 @@ jobs:
       - name: Check unit test results (go)
         uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
         id: unit-go
+        if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
@@ -48,6 +55,7 @@ jobs:
       - name: Check unit test results (python)
         uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
         id: unit-python
+        if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
@@ -57,6 +65,7 @@ jobs:
       - name: Check cli test results (go-linux)
         uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
         id: cli-go-linux
+        if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
@@ -66,6 +75,7 @@ jobs:
       - name: Check cli test results (python)
         uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
         id: cli-python
+        if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
@@ -73,7 +83,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Quality gate
-        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit-go.outputs.conclusion != 'success' || steps.cli-go-linux.outputs.conclusion != 'success' || steps.unit-python.outputs.conclusion != 'success' || steps.cli-python.outputs.conclusion != 'success'
+        if: (steps.static-analysis.outputs.conclusion != 'success' || steps.unit-go.outputs.conclusion != 'success' || steps.cli-go-linux.outputs.conclusion != 'success' || steps.unit-python.outputs.conclusion != 'success' || steps.cli-python.outputs.conclusion != 'success') && github.event.inputs.bypassQualityGate != 'true'
         env:
           STATIC_ANALYSIS_STATUS: ${{ steps.static-analysis.outputs.conclusion }}
           GO_UNIT_STATUS: ${{ steps.unit-go.outputs.conclusion }}
@@ -90,6 +100,7 @@ jobs:
 
   read-schema-versions:
     runs-on: ubuntu-24.04
+    if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
@@ -107,6 +118,7 @@ jobs:
   quality-gate-acceptance-test:
     needs: read-schema-versions
     runs-on: ubuntu-24.04
+    if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.read-schema-versions.outputs.schema-versions)}}
@@ -133,6 +145,7 @@ jobs:
     needs:
       - quality-gate
       - quality-gate-acceptance-test
+    if: always() && (needs.quality-gate.result == 'success' || needs.quality-gate.result == 'skipped') && (needs.quality-gate-acceptance-test.result == 'success' || needs.quality-gate-acceptance-test.result == 'skipped')
     permissions:
       contents: write
       packages: write
