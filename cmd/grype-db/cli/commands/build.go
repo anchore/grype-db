@@ -113,13 +113,15 @@ func runBuild(cfg buildConfig) error {
 	}
 
 	return process.Build(process.BuildConfig{
-		SchemaVersion:       cfg.SchemaVersion,
-		Directory:           cfg.Directory,
-		States:              states,
-		Timestamp:           earliest,
-		IncludeCPEParts:     cfg.IncludeCPEParts,
-		InferNVDFixVersions: cfg.InferNVDFixVersions,
-		Hydrate:             cfg.Hydrate,
+		SchemaVersion:           cfg.SchemaVersion,
+		Directory:               cfg.Directory,
+		States:                  states,
+		Timestamp:               earliest,
+		IncludeCPEParts:         cfg.IncludeCPEParts,
+		InferNVDFixVersions:     cfg.InferNVDFixVersions,
+		Hydrate:                 cfg.Hydrate,
+		MaxNVDDescriptionLength: cfg.MaxNVDDescriptionLength,
+		MaxOSDescriptionLength:  cfg.MaxOSDescriptionLength,
 	})
 }
 

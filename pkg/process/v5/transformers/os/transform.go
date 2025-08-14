@@ -15,6 +15,25 @@ import (
 	"github.com/anchore/grype/grype/distro"
 )
 
+type Config struct {
+	MaxDescriptionLength int
+}
+
+func defaultConfig() Config {
+	return Config{
+		MaxDescriptionLength: -1,
+	}
+}
+
+func Transformer(cfg Config) data.OSTransformer {
+	if cfg == (Config{}) {
+		cfg = defaultConfig()
+	}
+	return func(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
+		return transform(cfg, vulnerability)
+	}
+}
+
 func buildGrypeNamespace(group string) (namespace.Namespace, error) {
 	feedGroupComponents := strings.Split(group, ":")
 
@@ -75,6 +94,10 @@ func buildPackageQualifiers(fixedInEntry unmarshal.OSFixedIn) (qualifiers []qual
 }
 
 func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
+	return transform(defaultConfig(), vulnerability)
+}
+
+func transform(cfg Config, vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	var allVulns []grypeDB.Vulnerability
 
 	// TODO: stop capturing record source in the vulnerability metadata record (now that feed groups are not real)
@@ -110,6 +133,12 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 	}
 
 	// create vulnerability metadata entry (a single entry keyed off of the vulnerability ID)
+
+	description := vulnerability.Vulnerability.Description
+	if cfg.MaxDescriptionLength != -1 && len(description) > cfg.MaxDescriptionLength {
+		description = description[:cfg.MaxDescriptionLength]
+	}
+
 	metadata := grypeDB.VulnerabilityMetadata{
 		ID:           vulnerability.Vulnerability.Name,
 		Namespace:    entryNamespace,
@@ -117,7 +146,7 @@ func Transform(vulnerability unmarshal.OSVulnerability) ([]data.Entry, error) {
 		RecordSource: recordSource,
 		Severity:     vulnerability.Vulnerability.Severity,
 		URLs:         getLinks(vulnerability),
-		Description:  vulnerability.Vulnerability.Description,
+		Description:  description,
 		Cvss:         getCvss(vulnerability),
 	}
 

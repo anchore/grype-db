@@ -21,13 +21,15 @@ import (
 )
 
 type BuildConfig struct {
-	SchemaVersion       int
-	Directory           string
-	States              provider.States
-	Timestamp           time.Time
-	IncludeCPEParts     []string
-	InferNVDFixVersions bool
-	Hydrate             bool
+	SchemaVersion           int
+	Directory               string
+	States                  provider.States
+	Timestamp               time.Time
+	IncludeCPEParts         []string
+	InferNVDFixVersions     bool
+	Hydrate                 bool
+	MaxNVDDescriptionLength int
+	MaxOSDescriptionLength  int
 }
 
 func Build(cfg BuildConfig) error {
@@ -86,7 +88,12 @@ type providerResults struct {
 func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 	switch cfg.SchemaVersion {
 	case grypeDBv5.SchemaVersion:
-		return v5.Processors(v5.NewConfig(v5.WithCPEParts(cfg.IncludeCPEParts), v5.WithInferNVDFixVersions(cfg.InferNVDFixVersions))), nil
+		return v5.Processors(v5.NewConfig(
+			v5.WithCPEParts(cfg.IncludeCPEParts),
+			v5.WithInferNVDFixVersions(cfg.InferNVDFixVersions),
+			v5.WithNVDDescriptionLength(cfg.MaxNVDDescriptionLength),
+			v5.WithOSDescriptionLength(cfg.MaxOSDescriptionLength),
+		)), nil
 	case grypeDBv6.ModelVersion:
 		return v6.Processors(v6.NewConfig(v6.WithCPEParts(cfg.IncludeCPEParts), v6.WithInferNVDFixVersions(cfg.InferNVDFixVersions))), nil
 	default:

@@ -22,14 +22,16 @@ import (
 )
 
 type Config struct {
-	CPEParts            *strset.Set
-	InferNVDFixVersions bool
+	CPEParts             *strset.Set
+	InferNVDFixVersions  bool
+	MaxDescriptionLength int
 }
 
 func defaultConfig() Config {
 	return Config{
-		CPEParts:            strset.New("a"),
-		InferNVDFixVersions: true,
+		CPEParts:             strset.New("a"),
+		InferNVDFixVersions:  true,
+		MaxDescriptionLength: -1,
 	}
 }
 
@@ -99,6 +101,12 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability) ([]data.Ent
 
 	// create vulnerability metadata entry (a single entry keyed off of the vulnerability ID)
 	allCVSS := vulnerability.CVSS()
+
+	description := vulnerability.Description()
+	if cfg.MaxDescriptionLength != -1 && len(description) > cfg.MaxDescriptionLength {
+		description = description[:cfg.MaxDescriptionLength]
+	}
+
 	metadata := grypeDB.VulnerabilityMetadata{
 		ID:           vulnerability.ID,
 		DataSource:   "https://nvd.nist.gov/vuln/detail/" + vulnerability.ID,
@@ -106,7 +114,7 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability) ([]data.Ent
 		RecordSource: recordSource,
 		Severity:     nvd.CvssSummaries(allCVSS).Sorted().Severity(),
 		URLs:         links,
-		Description:  vulnerability.Description(),
+		Description:  description,
 		Cvss:         getCvss(allCVSS...),
 	}
 

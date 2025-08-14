@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	NVD nvd.Config
+	OS  os.Config
 }
 
 type Option func(cfg *Config)
@@ -27,6 +28,18 @@ func WithCPEParts(included []string) Option {
 func WithInferNVDFixVersions(infer bool) Option {
 	return func(cfg *Config) {
 		cfg.NVD.InferNVDFixVersions = infer
+	}
+}
+
+func WithNVDDescriptionLength(length int) Option {
+	return func(cfg *Config) {
+		cfg.NVD.MaxDescriptionLength = length
+	}
+}
+
+func WithOSDescriptionLength(length int) Option {
+	return func(cfg *Config) {
+		cfg.OS.MaxDescriptionLength = length
 	}
 }
 
@@ -44,7 +57,7 @@ func Processors(cfg Config) []data.Processor {
 		processors.NewGitHubProcessor(github.Transform),
 		processors.NewMSRCProcessor(msrc.Transform),
 		processors.NewNVDProcessor(nvd.Transformer(cfg.NVD)),
-		processors.NewOSProcessor(os.Transform),
+		processors.NewOSProcessor(os.Transformer(cfg.OS)),
 		processors.NewMatchExclusionProcessor(matchexclusions.Transform),
 	}
 }
