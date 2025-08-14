@@ -107,7 +107,7 @@ func runBuild(cfg buildConfig) error {
 		return fmt.Errorf("unable to get provider states: %w", err)
 	}
 
-	earliest, err := provider.States(states).EarliestTimestamp()
+	earliest, err := provider.States(states).EarliestTimestamp(cfg.IgnoreProviderDate)
 	if err != nil {
 		return fmt.Errorf("unable to get earliest timestamp: %w", err)
 	}
