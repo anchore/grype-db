@@ -13,7 +13,7 @@ well as acceptance testing. You will require the following:
 - [Poetry](https://python-poetry.org/) installed for dependency and virtualenv management for python dependencies, to install:
 
    ```bash
-   curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
+   curl -sSL https://install.python-poetry.org/ | python -
    ```
 
 To download go tooling used for static analysis and dependent go modules run the following:
