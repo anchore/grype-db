@@ -17,19 +17,23 @@ type Build struct {
 	SchemaVersion  int  `yaml:"schema-version" json:"schema-version" mapstructure:"schema-version"`
 
 	// unbound options
-	IncludeCPEParts     []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
-	InferNVDFixVersions bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
-	Hydrate             bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`
+	IncludeCPEParts         []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
+	InferNVDFixVersions     bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
+	Hydrate                 bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`
+	MaxNVDDescriptionLength int      `yaml:"max-nvd-description-length" json:"max-nvd-description-length" mapstructure:"max-nvd-description-length"`
+	MaxOSDescriptionLength  int      `yaml:"max-os-description-length" json:"max-os-description-length" mapstructure:"max-os-description-length"`
 }
 
 func DefaultBuild() Build {
 	return Build{
-		DBLocation:          DefaultDBLocation(),
-		SkipValidation:      false,
-		SchemaVersion:       process.DefaultSchemaVersion,
-		IncludeCPEParts:     []string{"a", "h", "o"},
-		InferNVDFixVersions: true,
-		Hydrate:             false,
+		DBLocation:              DefaultDBLocation(),
+		SkipValidation:          false,
+		SchemaVersion:           process.DefaultSchemaVersion,
+		IncludeCPEParts:         []string{"a", "h", "o"},
+		InferNVDFixVersions:     true,
+		Hydrate:                 false,
+		MaxNVDDescriptionLength: -1,
+		MaxOSDescriptionLength:  -1,
 	}
 }
 
