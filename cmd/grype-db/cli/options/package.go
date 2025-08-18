@@ -12,9 +12,6 @@ type Package struct {
 	PublishBaseURL           string            `yaml:"publish-base-url" json:"publish-base-url" mapstructure:"publish-base-url"`
 	OverrideArchiveExtension string            `yaml:"override-archive-extension" json:"override-archive-extension" mapstructure:"override-archive-extension"`
 	CompressorCommands       map[string]string `yaml:"compressor-commands" json:"compressor-commands" mapstructure:"compressor-commands"`
-
-	// unbound options
-	compressorCommandsJSON string
 }
 
 func DefaultPackage() Package {
