@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Any
 
 import mergedeep
 import yaml
+import yaml_include  # pyyaml-include >= 2.x
 from dataclass_wizard import asdict, fromdict
-from yamlinclude import YamlIncludeConstructor
 from yardstick.cli.config import Validation
 
 from grype_db_manager import db, s3utils
@@ -17,8 +17,10 @@ from grype_db_manager import db, s3utils
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-# enable !include statements in the application configuration file
-YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.SafeLoader)
+# enable !include statements (legacy semantics: resolve relative to current CWD)
+yaml.add_constructor(
+    "!include", yaml_include.Constructor(base_dir=os.getcwd()), Loader=yaml.SafeLoader
+)
 
 
 DEFAULT_CONFIGS = (

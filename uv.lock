@@ -310,6 +310,15 @@ wheels = [
 ]
 
 [[package]]
+name = "fsspec"
+version = "2025.7.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/02/0835e6ab9cfc03916fe3f78c0956cfcdb6ff2669ffa6651065d5ebf7fc98/fsspec-2025.7.0.tar.gz", hash = "sha256:786120687ffa54b8283d942929540d8bc5ccfa820deb555a2b5d0ed2b737bf58", size = 304432 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/e0/014d5d9d7a4564cf1c40b5039bc882db69fd881111e03ab3657ac0b218e2/fsspec-2025.7.0-py3-none-any.whl", hash = "sha256:8b012e39f63c7d5f10474de957f3ab793b47b45ae7d39f2fb735f8bbe25c0e21", size = 199597 },
+]
+
+[[package]]
 name = "gitdb"
 version = "4.0.12"
 source = { registry = "https://pypi.org/simple" }
@@ -341,6 +350,7 @@ dependencies = [
     { name = "click" },
     { name = "colorlog" },
     { name = "dataclass-wizard" },
+    { name = "fsspec" },
     { name = "iso8601" },
     { name = "mergedeep" },
     { name = "python-magic" },
@@ -376,11 +386,12 @@ requires-dist = [
     { name = "click", specifier = ">=8.1.6,<9" },
     { name = "colorlog", specifier = ">=6.7.0,<7" },
     { name = "dataclass-wizard", specifier = ">=0.22.2,<1" },
+    { name = "fsspec", specifier = ">=2022.7.1" },
     { name = "iso8601", specifier = ">=2.0.0,<3" },
     { name = "mergedeep", specifier = ">=1.3.4,<2" },
     { name = "python-magic", specifier = ">=0.4.27,<1" },
-    { name = "pyyaml", specifier = ">=5.0.1,<7" },
-    { name = "pyyaml-include", specifier = ">=1.3.1,<2" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "pyyaml-include", specifier = ">=2,<3" },
     { name = "requests", specifier = ">=2.32.3,<3" },
     { name = "semver", specifier = ">=3.0.1,<4" },
     { name = "tabulate", specifier = ">=0.9.0,<1" },
@@ -888,14 +899,15 @@ wheels = [
 
 [[package]]
 name = "pyyaml-include"
-version = "1.4.1"
+version = "2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "fsspec" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/be/2d07ad85e3d593d69640876a8686eae2c533db8cb7bf298d25c421b4d2d5/pyyaml-include-1.4.1.tar.gz", hash = "sha256:1a96e33a99a3e56235f5221273832464025f02ff3d8539309a3bf00dec624471", size = 20592 }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/8c/4bdc1bd9676e9eb49237b3750562e9794b7585281448909fa1837c92ca27/pyyaml_include-2.2.tar.gz", hash = "sha256:6f0c7e2ac56cdd9cc305b04122817b55514e6ce8584869fae2bc2a4ef2e0d40f", size = 29854 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/ca/6a2cc3a73170d10b5af1f1613baa2ed1f8f46f62dd0bfab2bffd2c2fe260/pyyaml_include-1.4.1-py3-none-any.whl", hash = "sha256:323c7f3a19c82fbc4d73abbaab7ef4f793e146a13383866831631b26ccc7fb00", size = 19079 },
+    { url = "https://files.pythonhosted.org/packages/56/1f/ae83ff547e70cd3aeefe2ebaeeef41c4e1fd5ed2453396d249d17c3a7ead/pyyaml_include-2.2-py3-none-any.whl", hash = "sha256:489fff69f78bad8b9509d006297a0140fd91382a66775b8b1da0ce7e126c1815", size = 29565 },
 ]
 
 [[package]]
