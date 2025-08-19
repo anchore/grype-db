@@ -92,6 +92,7 @@ class Validate:
             "mariner",
             "minimos",
             "nvd",
+            "openeuler",
             "oracle",
             "rhel",
             "sles",
