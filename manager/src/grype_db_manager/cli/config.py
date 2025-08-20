@@ -18,9 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
 # enable !include statements (legacy semantics: resolve relative to current CWD)
-yaml.add_constructor(
-    "!include", yaml_include.Constructor(base_dir=os.getcwd()), Loader=yaml.SafeLoader
-)
+yaml.add_constructor("!include", yaml_include.Constructor(base_dir=os.getcwd()), Loader=yaml.SafeLoader)
 
 
 DEFAULT_CONFIGS = (
