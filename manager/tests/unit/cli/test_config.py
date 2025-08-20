@@ -1,6 +1,13 @@
 import os
 
+import yaml
+
 from grype_db_manager.cli import config
+
+
+def test_include_tag_is_registered():
+    """Test that the !include constructor is properly registered with yaml.SafeLoader."""
+    assert "!include" in yaml.SafeLoader.yaml_constructors
 
 
 def test_override_from_environment():
