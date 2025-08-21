@@ -50,3 +50,9 @@ ignore-packages:
   # from: https://pkg.go.dev/crypto/internal/boring?tab=licenses
   # This is a BSD-3-Clause, ISC, and OpenSSL style license
   - crypto/internal/boring
+
+  # this is (MIT or APACHE-2.0) licensed
+  - github.com/sorairolake/lzip-go
+
+  # This is Apache-2.0 licensed
+  - github.com/gocsaf/csaf
