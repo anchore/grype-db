@@ -48,4 +48,8 @@ type GithubFixedIn struct {
 	Name       string `json:"name"`
 	Namespace  string `json:"namespace"`
 	Range      string `json:"range"`
+	Available  struct {
+		Date string `json:"date,omitempty"`
+		Kind string `json:"kind,omitempty"`
+	} `json:"available,omitempty"`
 }

@@ -10,14 +10,22 @@
         "identifier": "4.3.12",
         "name": "Plone",
         "namespace": "github:python",
-        "range": ">= 4.0 < 4.3.12"
+        "range": ">= 4.0 < 4.3.12",
+        "available": {
+          "date": "2017-05-20T10:30:45Z",
+          "kind": "release"
+        }
       },
       {
         "ecosystem": "python",
         "identifier": "5.1b1",
         "name": "Plone",
         "namespace": "github:python",
-        "range": ">= 5.1a1 < 5.1b1"
+        "range": ">= 5.1a1 < 5.1b1",
+        "available": {
+          "date": "2017-06-15T14:22:33Z",
+          "kind": "commit"
+        }
       },
       {
         "ecosystem": "python",

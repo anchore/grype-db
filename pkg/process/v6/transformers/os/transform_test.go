@@ -125,7 +125,16 @@ func TestTransform(t *testing.T) {
 								Ranges: []grypeDB.AffectedRange{
 									{
 										Version: grypeDB.AffectedVersion{Type: "apk", Constraint: "< 4.11.1-r0"},
-										Fix:     &grypeDB.Fix{Version: "4.11.1-r0", State: grypeDB.FixedStatus},
+										Fix: &grypeDB.Fix{
+											Version: "4.11.1-r0",
+											State:   grypeDB.FixedStatus,
+											Detail: &grypeDB.FixDetail{
+												Available: &grypeDB.FixAvailability{
+													Date: timeRef(time.Date(2018, 12, 1, 9, 15, 30, 0, time.UTC)),
+													Kind: "package",
+												},
+											},
+										},
 									},
 								},
 							},
@@ -941,6 +950,10 @@ func TestTransform(t *testing.T) {
 											Version: "0:68.6.1-1.el8_1",
 											State:   grypeDB.FixedStatus,
 											Detail: &grypeDB.FixDetail{
+												Available: &grypeDB.FixAvailability{
+													Date: timeRef(time.Date(2020, 4, 8, 14, 30, 15, 0, time.UTC)),
+													Kind: "advisory",
+												},
 												References: []grypeDB.Reference{
 													{
 														URL:  "https://access.redhat.com/errata/RHSA-2020:1341",
@@ -1295,6 +1308,275 @@ func TestGetOSInfo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			oi := getOSInfo(tt.group)
 			assert.Equal(t, tt.expected, oi, "expected osInfo to match for group %s", tt.group)
+		})
+	}
+}
+
+func TestGetFixAvailability(t *testing.T) {
+	tests := []struct {
+		name     string
+		fixture  string
+		expected map[string]*grypeDB.FixAvailability // keyed by package name for fixture-based testing
+	}{
+		{
+			name:    "alpine-3.9 with package availability",
+			fixture: "test-fixtures/alpine-3.9.json",
+			expected: map[string]*grypeDB.FixAvailability{
+				"xen": {
+					Date: timeRef(time.Date(2018, 12, 1, 9, 15, 30, 0, time.UTC)),
+					Kind: "package",
+				},
+			},
+		},
+		{
+			name:    "rhel-8 with advisory availability",
+			fixture: "test-fixtures/rhel-8.json",
+			expected: map[string]*grypeDB.FixAvailability{
+				"firefox": {
+					Date: timeRef(time.Date(2020, 4, 8, 14, 30, 15, 0, time.UTC)),
+					Kind: "advisory",
+				},
+				"thunderbird": nil, // no availability data in fixture
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vulnerabilities := loadFixture(t, tt.fixture)
+			require.Len(t, vulnerabilities, 1, "expected exactly one vulnerability")
+
+			for _, fixedIn := range vulnerabilities[0].Vulnerability.FixedIn {
+				result := getFixAvailability(fixedIn)
+				expected := tt.expected[fixedIn.Name]
+
+				if expected == nil {
+					require.Nil(t, result, "expected nil availability for %s", fixedIn.Name)
+				} else {
+					require.NotNil(t, result, "expected non-nil availability for %s", fixedIn.Name)
+					require.Equal(t, expected.Kind, result.Kind)
+					require.Equal(t, expected.Date, result.Date)
+				}
+			}
+		})
+	}
+
+	// keep edge case test for scenarios not covered by fixtures
+	t.Run("invalid date returns nil", func(t *testing.T) {
+		fixedIn := unmarshal.OSFixedIn{
+			Available: struct {
+				Date string `json:"Date,omitempty"`
+				Kind string `json:"Kind,omitempty"`
+			}{
+				Date: "invalid-date",
+				Kind: "commit",
+			},
+		}
+		result := getFixAvailability(fixedIn)
+		require.Nil(t, result)
+	})
+}
+
+func TestGetFixWithDetail(t *testing.T) {
+	tests := []struct {
+		name     string
+		fixedIn  unmarshal.OSFixedIn
+		expected *grypeDB.Fix
+	}{
+		{
+			name: "fix with version and availability",
+			fixedIn: unmarshal.OSFixedIn{
+				Version: "1.2.3",
+				Available: struct {
+					Date string `json:"Date,omitempty"`
+					Kind string `json:"Kind,omitempty"`
+				}{
+					Date: "2023-01-15T10:30:45Z",
+					Kind: "advisory",
+				},
+				VendorAdvisory: struct {
+					AdvisorySummary []struct {
+						ID   string `json:"ID"`
+						Link string `json:"Link"`
+					} `json:"AdvisorySummary"`
+					NoAdvisory bool `json:"NoAdvisory"`
+				}{
+					AdvisorySummary: []struct {
+						ID   string `json:"ID"`
+						Link string `json:"Link"`
+					}{
+						{
+							ID:   "RHSA-2023-001",
+							Link: "https://access.redhat.com/errata/RHSA-2023-001",
+						},
+					},
+				},
+			},
+			expected: &grypeDB.Fix{
+				Version: "1.2.3",
+				State:   grypeDB.FixedStatus,
+				Detail: &grypeDB.FixDetail{
+					Available: &grypeDB.FixAvailability{
+						Date: timeRef(time.Date(2023, 1, 15, 10, 30, 45, 0, time.UTC)),
+						Kind: "advisory",
+					},
+					References: []grypeDB.Reference{
+						{
+							URL:  "https://access.redhat.com/errata/RHSA-2023-001",
+							Tags: []string{grypeDB.AdvisoryReferenceTag},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "fix with version but no availability or references",
+			fixedIn: unmarshal.OSFixedIn{
+				Version: "2.0.0",
+				Available: struct {
+					Date string `json:"Date,omitempty"`
+					Kind string `json:"Kind,omitempty"`
+				}{},
+			},
+			expected: &grypeDB.Fix{
+				Version: "2.0.0",
+				State:   grypeDB.FixedStatus,
+				Detail:  nil,
+			},
+		},
+		{
+			name: "no fix version with availability",
+			fixedIn: unmarshal.OSFixedIn{
+				Version: "",
+				Available: struct {
+					Date string `json:"Date,omitempty"`
+					Kind string `json:"Kind,omitempty"`
+				}{
+					Date: "2023-01-15T10:30:45Z",
+					Kind: "release",
+				},
+			},
+			expected: &grypeDB.Fix{
+				Version: "",
+				State:   grypeDB.NotFixedStatus,
+				Detail: &grypeDB.FixDetail{
+					Available: &grypeDB.FixAvailability{
+						Date: timeRef(time.Date(2023, 1, 15, 10, 30, 45, 0, time.UTC)),
+						Kind: "release",
+					},
+				},
+			},
+		},
+		{
+			name: "vendor advisory with no advisory flag set",
+			fixedIn: unmarshal.OSFixedIn{
+				Version: "",
+				Available: struct {
+					Date string `json:"Date,omitempty"`
+					Kind string `json:"Kind,omitempty"`
+				}{},
+				VendorAdvisory: struct {
+					AdvisorySummary []struct {
+						ID   string `json:"ID"`
+						Link string `json:"Link"`
+					} `json:"AdvisorySummary"`
+					NoAdvisory bool `json:"NoAdvisory"`
+				}{
+					NoAdvisory: true,
+				},
+			},
+			expected: &grypeDB.Fix{
+				Version: "",
+				State:   grypeDB.WontFixStatus,
+				Detail:  nil,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getFix(tt.fixedIn)
+
+			if d := cmp.Diff(tt.expected, result); d != "" {
+				t.Fatalf("unexpected result: %s", d)
+			}
+		})
+	}
+}
+
+func TestGetFixWithDetailFixtures(t *testing.T) {
+	// additional fixture-based tests to complement the existing ad-hoc tests
+	tests := []struct {
+		name     string
+		fixture  string
+		expected map[string]*grypeDB.Fix // keyed by package name
+	}{
+		{
+			name:    "alpine-3.9 with availability",
+			fixture: "test-fixtures/alpine-3.9.json",
+			expected: map[string]*grypeDB.Fix{
+				"xen": {
+					Version: "4.11.1-r0",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: timeRef(time.Date(2018, 12, 1, 9, 15, 30, 0, time.UTC)),
+							Kind: "package",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:    "rhel-8 with availability and advisory references",
+			fixture: "test-fixtures/rhel-8.json",
+			expected: map[string]*grypeDB.Fix{
+				"firefox": {
+					Version: "0:68.6.1-1.el8_1",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: timeRef(time.Date(2020, 4, 8, 14, 30, 15, 0, time.UTC)),
+							Kind: "advisory",
+						},
+						References: []grypeDB.Reference{
+							{
+								URL:  "https://access.redhat.com/errata/RHSA-2020:1341",
+								Tags: []string{grypeDB.AdvisoryReferenceTag},
+							},
+						},
+					},
+				},
+				"thunderbird": {
+					Version: "0:68.7.0-1.el8_1",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						References: []grypeDB.Reference{
+							{
+								URL:  "https://access.redhat.com/errata/RHSA-2020:1495",
+								Tags: []string{grypeDB.AdvisoryReferenceTag},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vulnerabilities := loadFixture(t, tt.fixture)
+			require.Len(t, vulnerabilities, 1, "expected exactly one vulnerability")
+
+			for _, fixedIn := range vulnerabilities[0].Vulnerability.FixedIn {
+				result := getFix(fixedIn)
+				expected := tt.expected[fixedIn.Name]
+
+				require.NotNil(t, expected, "no expected result for package %s", fixedIn.Name)
+				if d := cmp.Diff(expected, result); d != "" {
+					t.Fatalf("unexpected result for %s: %s", fixedIn.Name, d)
+				}
+			}
 		})
 	}
 }

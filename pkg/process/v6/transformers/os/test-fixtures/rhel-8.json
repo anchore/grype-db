@@ -29,7 +29,11 @@
             "NoAdvisory": false
           },
           "Version": "0:68.6.1-1.el8_1",
-          "VersionFormat": "rpm"
+          "VersionFormat": "rpm",
+          "Available": {
+            "Date": "2020-04-08T14:30:15Z",
+            "Kind": "advisory"
+          }
         },
         {
           "Name": "thunderbird",

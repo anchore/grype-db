@@ -145,9 +145,35 @@ func getFix(fixedInEntry unmarshal.GithubFixedIn) *grypeDB.Fix {
 		fixState = grypeDB.FixedStatus
 	}
 
+	var detail *grypeDB.FixDetail
+	availability := getFixAvailability(fixedInEntry)
+	if availability != nil {
+		detail = &grypeDB.FixDetail{
+			Available: availability,
+		}
+	}
+
 	return &grypeDB.Fix{
 		Version: fixedInVersion,
 		State:   fixState,
+		Detail:  detail,
+	}
+}
+
+func getFixAvailability(fixedInEntry unmarshal.GithubFixedIn) *grypeDB.FixAvailability {
+	if fixedInEntry.Available.Date == "" {
+		return nil
+	}
+
+	t := internal.ParseTime(fixedInEntry.Available.Date)
+	if t == nil {
+		log.WithFields("date", fixedInEntry.Available.Date).Warn("unable to parse fix availability date")
+		return nil
+	}
+
+	return &grypeDB.FixAvailability{
+		Date: t,
+		Kind: fixedInEntry.Available.Kind,
 	}
 }
 

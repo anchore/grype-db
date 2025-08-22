@@ -20,7 +20,11 @@
         "identifier": "4.2.0",
         "ecosystem": "python",
         "namespace": "github:python",
-        "range": "< 4.2.0"
+        "range": "< 4.2.0",
+        "available": {
+          "date": "2024-01-30T15:00:00Z",
+          "kind": "advisory"
+        }
       }
     ],
     "Summary": "vantage6 has insecure SSH configuration for node and server containers",
