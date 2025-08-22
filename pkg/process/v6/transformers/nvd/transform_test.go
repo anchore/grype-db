@@ -1434,6 +1434,132 @@ func TestTransform(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "JVM packages version format detection",
+			fixture:  "test-fixtures/jvm-packages.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2023-JVM-TEST",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2024, 1, 23, 16, 32, 52, 103000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2024, 1, 17, 0, 15, 51, 677000000, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2023-JVM-TEST",
+							Assigners:   []string{"cve@mitre.org"},
+							Description: "Test vulnerability affecting JVM packages to demonstrate version format detection.",
+							References: []grypeDB.Reference{
+								{
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-JVM-TEST",
+								},
+								{
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-JVM-TEST",
+								},
+								{
+									URL:  "https://www.oracle.com/security-alerts/cpujan2024.html",
+									Tags: []string{"patch", "vendor-advisory"},
+								},
+							},
+							Severities: []grypeDB.Severity{
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+										Version: "3.1",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+							},
+						},
+					},
+					Related: affectedPkgSlice(
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2023-JVM-TEST"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Type:       "jvm",
+											Constraint: "= 17.0.10",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "adoptium",
+								Product: "java",
+							},
+						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2023-JVM-TEST"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Type:       "jvm",
+											Constraint: "= 21.0.2",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "azul",
+								Product: "zulu",
+							},
+						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2023-JVM-TEST"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Type:       "jvm",
+											Constraint: "= 17.0.10",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "eclipse",
+								Product: "openjdk",
+							},
+						},
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2023-JVM-TEST"},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Type:       "jvm",
+											Constraint: "= 11.0.22",
+										},
+									},
+									{
+										Version: grypeDB.AffectedVersion{
+											Type:       "jvm",
+											Constraint: "= 8u401",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "oracle",
+								Product: "jdk",
+							},
+						},
+					),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
