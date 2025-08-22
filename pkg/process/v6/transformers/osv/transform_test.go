@@ -107,10 +107,10 @@ func TestTransform(t *testing.T) {
 							Name:      "apache",
 							Ecosystem: "Bitnami",
 						},
-						BlobValue: &grypeDB.AffectedPackageBlob{
+						BlobValue: &grypeDB.PackageBlob{
 							CVEs: []string{"CVE-2020-11984"},
-							Ranges: []grypeDB.AffectedRange{{
-								Version: grypeDB.AffectedVersion{
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
 									Type:       "semver",
 									Constraint: ">=2.4.32,<=2.4.43",
 								},
@@ -157,10 +157,10 @@ func TestTransform(t *testing.T) {
 							Name:      "node",
 							Ecosystem: "Bitnami",
 						},
-						BlobValue: &grypeDB.AffectedPackageBlob{
+						BlobValue: &grypeDB.PackageBlob{
 							CVEs: []string{"CVE-2020-8201"},
-							Ranges: []grypeDB.AffectedRange{{
-								Version: grypeDB.AffectedVersion{
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
 									Type:       "semver",
 									Constraint: ">=12.0.0,<12.18.4",
 								},
@@ -169,7 +169,7 @@ func TestTransform(t *testing.T) {
 									State:   grypeDB.FixedStatus,
 								},
 							}, {
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "semver",
 									Constraint: ">=14.0.0,<14.11.0",
 								},
@@ -211,7 +211,7 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 	tests := []struct {
 		name string
 		rnge models.Range
-		want []grypeDB.AffectedRange
+		want []grypeDB.Range
 	}{
 		{
 			name: "single range with 'fixed' status",
@@ -223,8 +223,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					Fixed: "0.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1,<0.0.5",
 				},
@@ -244,8 +244,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					LastAffected: "0.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1,<=0.0.5",
 				},
@@ -259,8 +259,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					Introduced: "0.0.1",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1",
 				},
@@ -276,8 +276,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					LastAffected: "0.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: "<=0.0.5",
 				},
@@ -297,8 +297,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					Fixed: "1.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1,<0.0.5",
 				},
@@ -307,7 +307,7 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					State:   grypeDB.FixedStatus,
 				},
 			}, {
-				Version: grypeDB.AffectedVersion{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=1.0.1,<1.0.5",
 				},

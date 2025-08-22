@@ -55,13 +55,13 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 	for group, fixedIns := range groups {
 		// we only care about a single qualifier: rpm modules. The important thing to note about this is that
 		// a package with no module vs a package with a module should be detectable in the DB.
-		var qualifiers *grypeDB.AffectedPackageQualifiers
+		var qualifiers *grypeDB.PackageQualifiers
 		if group.format == "rpm" {
 			module := "" // means the target package must have no module (where as nil means the module has no sway on matching)
 			if group.hasModule {
 				module = group.module
 			}
-			qualifiers = &grypeDB.AffectedPackageQualifiers{
+			qualifiers = &grypeDB.PackageQualifiers{
 				RpmModularity: &module,
 			}
 		}
@@ -69,17 +69,17 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 		aph := grypeDB.AffectedPackageHandle{
 			OperatingSystem: getOperatingSystem(group.osName, group.id, group.osVersion, group.osChannel),
 			Package:         getPackage(group),
-			BlobValue: &grypeDB.AffectedPackageBlob{
+			BlobValue: &grypeDB.PackageBlob{
 				CVEs:       getAliases(vuln),
 				Qualifiers: qualifiers,
 				Ranges:     nil,
 			},
 		}
 
-		var ranges []grypeDB.AffectedRange
+		var ranges []grypeDB.Range
 		for _, fixedInEntry := range fixedIns {
-			ranges = append(ranges, grypeDB.AffectedRange{
-				Version: grypeDB.AffectedVersion{
+			ranges = append(ranges, grypeDB.Range{
+				Version: grypeDB.Version{
 					Type:       fixedInEntry.VersionFormat,
 					Constraint: enforceConstraint(fixedInEntry.Version, fixedInEntry.VulnerableRange, fixedInEntry.VersionFormat, vuln.Vulnerability.Name),
 				},

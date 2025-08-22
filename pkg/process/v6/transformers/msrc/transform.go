@@ -42,7 +42,7 @@ func getVulnerability(vuln unmarshal.MSRCVulnerability, state provider.State) gr
 func getAffectedPackage(vuln unmarshal.MSRCVulnerability) grypeDB.AffectedPackageHandle {
 	return grypeDB.AffectedPackageHandle{
 		Package: getPackage(vuln),
-		BlobValue: &grypeDB.AffectedPackageBlob{
+		BlobValue: &grypeDB.PackageBlob{
 			Ranges: getRanges(vuln),
 		},
 	}
@@ -55,15 +55,15 @@ func getPackage(vuln unmarshal.MSRCVulnerability) *grypeDB.Package {
 	}
 }
 
-func getRanges(vuln unmarshal.MSRCVulnerability) []grypeDB.AffectedRange {
+func getRanges(vuln unmarshal.MSRCVulnerability) []grypeDB.Range {
 	// In anchore-enterprise windows analyzer, "base" represents unpatched windows images (images with no KBs)
 	// If a vulnerability exists for a Microsoft Product ID and the image has no KBs (which are patches),
 	// then the image must be vulnerable to the image.
 	vuln.Vulnerable = append(vuln.Vulnerable, "base")
 
-	return []grypeDB.AffectedRange{
+	return []grypeDB.Range{
 		{
-			Version: grypeDB.AffectedVersion{
+			Version: grypeDB.Version{
 				Type:       "kb",
 				Constraint: common.OrConstraints(vuln.Vulnerable...),
 			},
