@@ -13,6 +13,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/pkg"
 	"github.com/anchore/syft/syft/cpe"
 )
 
@@ -26,6 +27,13 @@ func defaultConfig() Config {
 		CPEParts:            strset.New("a", "h", "o"),
 		InferNVDFixVersions: true,
 	}
+}
+
+func getVersionFormat(cpeProduct string) string {
+	if pkg.HasJvmPackageName(cpeProduct) {
+		return "jvm"
+	}
+	return ""
 }
 
 func Transformer(cfg Config) data.NVDTransformerV2 {
@@ -194,7 +202,7 @@ func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange) []grypeDB.A
 func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange) *grypeDB.AffectedRange {
 	return &grypeDB.AffectedRange{
 		Version: grypeDB.AffectedVersion{
-			Type:       "", // we explicitly do not know what the versioning scheme is
+			Type:       getVersionFormat(c.Product),
 			Constraint: ra.String(),
 		},
 		Fix: getFix(cfg, c, ra),
