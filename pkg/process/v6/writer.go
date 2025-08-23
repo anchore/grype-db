@@ -72,7 +72,7 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
+func (w *writer) writeEntry(entry transformers.RelatedEntries) error { // nolint:gocognit
 	log.WithFields("entry", entry.String()).Trace("writing entry")
 
 	if entry.VulnerabilityHandle != nil {
@@ -113,6 +113,24 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 		case grypeDB.KnownExploitedVulnerabilityHandle:
 			if err := w.store.AddKnownExploitedVulnerabilities(&row); err != nil {
 				return fmt.Errorf("unable to write known exploited vulnerability to store: %w", err)
+			}
+		case grypeDB.UnaffectedPackageHandle:
+			if entry.VulnerabilityHandle != nil {
+				row.VulnerabilityID = entry.VulnerabilityHandle.ID
+			} else {
+				log.WithFields("package", row.Package).Warn("unaffected package entry does not have a vulnerability ID")
+			}
+			if err := w.store.AddUnaffectedPackages(&row); err != nil {
+				return fmt.Errorf("unable to write unaffected-package to store: %w", err)
+			}
+		case grypeDB.UnaffectedCPEHandle:
+			if entry.VulnerabilityHandle != nil {
+				row.VulnerabilityID = entry.VulnerabilityHandle.ID
+			} else {
+				log.WithFields("cpe", row.CPE).Warn("unaffected CPE entry does not have a vulnerability ID")
+			}
+			if err := w.store.AddUnaffectedCPEs(&row); err != nil {
+				return fmt.Errorf("unable to write unaffected-cpe to store: %w", err)
 			}
 		case grypeDB.EpssHandle:
 			if err := w.store.AddEpss(&row); err != nil {
