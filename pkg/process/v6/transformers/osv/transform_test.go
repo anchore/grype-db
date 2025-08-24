@@ -44,6 +44,10 @@ func expectedProvider() *grypeDB.Provider {
 	}
 }
 
+func timeRef(t time.Time) *time.Time {
+	return &t
+}
+
 func loadFixture(t *testing.T, fixturePath string) []unmarshal.OSVVulnerability {
 	t.Helper()
 
@@ -79,8 +83,8 @@ func TestTransform(t *testing.T) {
 					Status:        grypeDB.VulnerabilityActive,
 					ProviderID:    "osv",
 					Provider:      expectedProvider(),
-					ModifiedDate:  &[]time.Time{time.Date(2025, time.January, 17, 15, 26, 01, 971000000, time.UTC)}[0],
-					PublishedDate: &[]time.Time{time.Date(2024, time.March, 6, 10, 57, 57, 770000000, time.UTC)}[0],
+					ModifiedDate:  timeRef(time.Date(2025, time.January, 17, 15, 26, 01, 971000000, time.UTC)),
+					PublishedDate: timeRef(time.Date(2024, time.March, 6, 10, 57, 57, 770000000, time.UTC)),
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "BIT-apache-2020-11984",
 						Description: "Apache HTTP server 2.4.32 to 2.4.44 mod_proxy_uwsgi info disclosure and possible RCE",
@@ -129,8 +133,8 @@ func TestTransform(t *testing.T) {
 					Status:        grypeDB.VulnerabilityActive,
 					ProviderID:    "osv",
 					Provider:      expectedProvider(),
-					ModifiedDate:  &[]time.Time{time.Date(2024, time.March, 6, 11, 25, 28, 861000000, time.UTC)}[0],
-					PublishedDate: &[]time.Time{time.Date(2024, time.March, 6, 11, 8, 9, 371000000, time.UTC)}[0],
+					ModifiedDate:  timeRef(time.Date(2024, time.March, 6, 11, 25, 28, 861000000, time.UTC)),
+					PublishedDate: timeRef(time.Date(2024, time.March, 6, 11, 8, 9, 371000000, time.UTC)),
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "BIT-node-2020-8201",
 						Description: "Node.js < 12.18.4 and < 14.11 can be exploited to perform HTTP desync attacks and deliver malicious payloads to unsuspecting users. The payloads can be crafted by an attacker to hijack user sessions, poison cookies, perform clickjacking, and a multitude of other attacks depending on the architecture of the underlying system. The attack was possible due to a bug in processing of carrier-return symbols in the HTTP header names.",
@@ -167,6 +171,12 @@ func TestTransform(t *testing.T) {
 								Fix: &grypeDB.Fix{
 									Version: "12.18.4",
 									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: timeRef(time.Date(2020, time.September, 15, 0, 0, 0, 0, time.UTC)),
+											Kind: "first-observed",
+										},
+									},
 								},
 							}, {
 								Version: grypeDB.AffectedVersion{
@@ -176,6 +186,12 @@ func TestTransform(t *testing.T) {
 								Fix: &grypeDB.Fix{
 									Version: "14.11.0",
 									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: timeRef(time.Date(2020, time.September, 15, 0, 0, 0, 0, time.UTC)),
+											Kind: "first-observed",
+										},
+									},
 								},
 							}},
 						},
@@ -317,6 +333,44 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 				},
 			},
 			},
+		},
+		{
+			name: "single range with database-specific fix availability",
+			rnge: models.Range{
+				Type: models.RangeSemVer,
+				Events: []models.Event{{
+					Introduced: "1.0.0",
+				}, {
+					Fixed: "1.2.3",
+				}},
+				DatabaseSpecific: map[string]interface{}{
+					"anchore": map[string]interface{}{
+						"fixes": []interface{}{
+							map[string]interface{}{
+								"version": "1.2.3",
+								"date":    "2023-06-15",
+								"kind":    "first-observed",
+							},
+						},
+					},
+				},
+			},
+			want: []grypeDB.AffectedRange{{
+				Version: grypeDB.AffectedVersion{
+					Type:       "semver",
+					Constraint: ">=1.0.0,<1.2.3",
+				},
+				Fix: &grypeDB.Fix{
+					Version: "1.2.3",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: timeRef(time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC)),
+							Kind: "first-observed",
+						},
+					},
+				},
+			}},
 		},
 	}
 	t.Parallel()
