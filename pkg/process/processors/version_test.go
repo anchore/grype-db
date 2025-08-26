@@ -45,7 +45,7 @@ func TestParseVersion(t *testing.T) {
 		},
 		{
 			name:      "valid version with extra path",
-			schemaURL: "https://example.com/vunnel/path/vulnerability/schema-1.2.3.json",
+			schemaURL: "https://example.com/vunnel/path/vulnerability/schema_1.2.3.json",
 			expected:  &version{Major: 1, Minor: 2, Patch: 3},
 			wantErr:   false,
 		},
