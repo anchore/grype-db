@@ -210,6 +210,24 @@ func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange) *grypeDB.Affect
 }
 
 func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange) *grypeDB.Fix {
+	// check for explicit fix information first
+	if ra.FixInfo != nil {
+		var detail *grypeDB.FixDetail
+		if ra.FixInfo.Date != "" && ra.FixInfo.Kind != "" {
+			detail = &grypeDB.FixDetail{
+				Available: &grypeDB.FixAvailability{
+					Date: internal.ParseTime(ra.FixInfo.Date),
+					Kind: ra.FixInfo.Kind,
+				},
+			}
+		}
+		return &grypeDB.Fix{
+			Version: ra.FixInfo.Version,
+			State:   grypeDB.FixedStatus,
+			Detail:  detail,
+		}
+	}
+
 	if !cfg.InferNVDFixVersions {
 		return nil
 	}

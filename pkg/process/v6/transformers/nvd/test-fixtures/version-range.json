@@ -133,7 +133,12 @@
                 "criteria": "cpe:2.3:a:netapp:oncommand_unified_manager:*:*:*:*:*:*:*:*",
                 "versionStartIncluding": "7.2",
                 "versionEndIncluding": "7.3",
-                "matchCriteriaId": "A5949307-3E9B-441F-B008-81A0E0228DC0"
+                "matchCriteriaId": "A5949307-3E9B-441F-B008-81A0E0228DC0",
+                "fix": {
+                  "version": "7.4",
+                  "date": "2018-05-23",
+                  "kind": "advisory"
+                }
               }
             ]
           },

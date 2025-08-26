@@ -122,6 +122,16 @@ func TestTransform(t *testing.T) {
 										Version: grypeDB.AffectedVersion{
 											Constraint: ">= 7.2, <= 7.3",
 										},
+										Fix: &grypeDB.Fix{
+											Version: "7.4",
+											State:   grypeDB.FixedStatus,
+											Detail: &grypeDB.FixDetail{
+												Available: &grypeDB.FixAvailability{
+													Date: timeRef(time.Date(2018, 5, 23, 0, 0, 0, 0, time.UTC)),
+													Kind: "advisory",
+												},
+											},
+										},
 									},
 								},
 							},
