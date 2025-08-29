@@ -60,6 +60,7 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability, state provi
 				Description: strings.TrimSpace(vulnerability.Description()),
 				References:  getReferences(vulnerability),
 				Severities:  getSeverities(vulnerability),
+				CWEs:        vulnerability.GetCWEIDs(),
 			},
 		},
 	}
