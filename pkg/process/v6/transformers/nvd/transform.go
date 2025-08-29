@@ -180,17 +180,17 @@ func affectedApplicationPackage(cfg Config, vulnerability unmarshal.NVDVulnerabi
 		BlobValue: &grypeDB.AffectedPackageBlob{
 			CVEs:       []string{vulnerability.ID},
 			Qualifiers: qualifiers,
-			Ranges:     getRanges(cfg, p.VulnerableCPE, p.Ranges.toSlice()),
+			Ranges:     getRanges(cfg, p.VulnerableCPE, p.Ranges.toSlice(), vulnerability.ID),
 		},
 	})
 
 	return affs
 }
 
-func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange) []grypeDB.AffectedRange {
+func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange, vulnID string) []grypeDB.AffectedRange {
 	var ranges []grypeDB.AffectedRange
 	for _, ra := range ras {
-		r := getRange(cfg, c, ra)
+		r := getRange(cfg, c, ra, vulnID)
 		if r != nil {
 			ranges = append(ranges, *r)
 		}
@@ -199,35 +199,17 @@ func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange) []grypeDB.A
 	return ranges
 }
 
-func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange) *grypeDB.AffectedRange {
+func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange, vulnID string) *grypeDB.AffectedRange {
 	return &grypeDB.AffectedRange{
 		Version: grypeDB.AffectedVersion{
 			Type:       getVersionFormat(c.Product),
 			Constraint: ra.String(),
 		},
-		Fix: getFix(cfg, c, ra),
+		Fix: getFix(cfg, c, ra, vulnID),
 	}
 }
 
-func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange) *grypeDB.Fix {
-	// check for explicit fix information first
-	if ra.FixInfo != nil {
-		var detail *grypeDB.FixDetail
-		if ra.FixInfo.Date != "" && ra.FixInfo.Kind != "" {
-			detail = &grypeDB.FixDetail{
-				Available: &grypeDB.FixAvailability{
-					Date: internal.ParseTime(ra.FixInfo.Date),
-					Kind: ra.FixInfo.Kind,
-				},
-			}
-		}
-		return &grypeDB.Fix{
-			Version: ra.FixInfo.Version,
-			State:   grypeDB.FixedStatus,
-			Detail:  detail,
-		}
-	}
-
+func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange, vulnID string) *grypeDB.Fix {
 	if !cfg.InferNVDFixVersions {
 		return nil
 	}
@@ -258,9 +240,26 @@ func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange) *grypeDB.Fi
 		return nil
 	}
 
+	fixVersion := possiblyFixed.List()[0]
+
+	// only include fix details if we have a date and kind that matches the inferred fix version
+	var detail *grypeDB.FixDetail
+	if ra.FixInfo != nil {
+		if fixVersion == ra.FixInfo.Version {
+			detail = &grypeDB.FixDetail{
+				Available: &grypeDB.FixAvailability{
+					Date: internal.ParseTime(ra.FixInfo.Date),
+					Kind: ra.FixInfo.Kind,
+				},
+			}
+		} else {
+			log.WithFields("cpe", vulnCPE, "vuln", vulnID, "range", ra, "fix", ra.FixInfo.Version).Debug("skipping fix detail because it does not match inferred fix version")
+		}
+	}
 	return &grypeDB.Fix{
-		Version: possiblyFixed.List()[0],
+		Version: fixVersion,
 		State:   grypeDB.FixedStatus,
+		Detail:  detail,
 	}
 }
 
