@@ -139,7 +139,7 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 //	}
 //
 // ]
-func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange {
+func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange { // nolint: gocognit
 	var ranges []grypeDB.AffectedRange
 	if len(r.Events) == 0 {
 		return nil
