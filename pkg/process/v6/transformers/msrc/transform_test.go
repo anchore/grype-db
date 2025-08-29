@@ -96,6 +96,12 @@ func TestParseMSRCEntry(t *testing.T) {
 									Fix: &grypeDB.Fix{
 										Version: "4516044",
 										State:   grypeDB.FixedStatus,
+										Detail: &grypeDB.FixDetail{
+											Available: &grypeDB.FixAvailability{
+												Date: timePtr(time.Date(2019, 11, 12, 0, 0, 0, 0, time.UTC)),
+												Kind: "advisory",
+											},
+										},
 									},
 								},
 							},
@@ -155,6 +161,12 @@ func TestParseMSRCEntry(t *testing.T) {
 									Fix: &grypeDB.Fix{
 										Version: "4345418",
 										State:   grypeDB.FixedStatus,
+										Detail: &grypeDB.FixDetail{
+											Available: &grypeDB.FixAvailability{
+												Date: timePtr(time.Date(2019, 11, 12, 0, 0, 0, 0, time.UTC)),
+												Kind: "advisory",
+											},
+										},
 									},
 								},
 							},
@@ -182,4 +194,8 @@ func TestParseMSRCEntry(t *testing.T) {
 			t.Errorf("data entry mismatch (-expected +actual):\n%s", diff)
 		}
 	}
+}
+
+func timePtr(t time.Time) *time.Time {
+	return &t
 }
