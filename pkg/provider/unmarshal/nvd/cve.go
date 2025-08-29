@@ -1,6 +1,7 @@
 package nvd
 
 import (
+	"regexp"
 	"sort"
 
 	"github.com/Masterminds/semver/v3"
@@ -57,8 +58,8 @@ type CveItem struct {
 	References       []Reference `json:"references"`
 	SourceIdentifier *string     `json:"sourceIdentifier,omitempty"`
 	// VendorComments        []VendorComment `json:"vendorComments,omitempty"`
-	VulnStatus *string `json:"vulnStatus,omitempty"`
-	// Weaknesses            []Weakness      `json:"weaknesses,omitempty"`
+	VulnStatus *string    `json:"vulnStatus,omitempty"`
+	Weaknesses []Weakness `json:"weaknesses,omitempty"`
 }
 
 type Configuration struct {
@@ -158,17 +159,29 @@ type Reference struct {
 	URL    string   `json:"url"`
 }
 
-// type VendorComment struct {
-//	Comment      string `json:"comment"`
-//	LastModified string `json:"lastModified"`
-//	Organization string `json:"organization"`
-//}
-//
-// type Weakness struct {
-//	Description []LangString `json:"description"`
-//	Source      string       `json:"source"`
-//	Type        string       `json:"type"`
-//}
+//	type VendorComment struct {
+//		Comment      string `json:"comment"`
+//		LastModified string `json:"lastModified"`
+//		Organization string `json:"organization"`
+//	}
+type Weakness struct {
+	Description []LangString `json:"description"`
+	Source      string       `json:"source"`
+	Type        string       `json:"type"`
+}
+
+func (o CveItem) GetCWEIDs() []string {
+	var cwes []string
+	var cwePattern = regexp.MustCompile(`^CWE-\d+$`)
+	for _, w := range o.Weaknesses {
+		for _, d := range w.Description {
+			if cwePattern.MatchString(d.Value) {
+				cwes = append(cwes, d.Value)
+			}
+		}
+	}
+	return cwes
+}
 
 func (o CveItem) Description() string {
 	for _, d := range o.Descriptions {
