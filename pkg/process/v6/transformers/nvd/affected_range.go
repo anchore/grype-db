@@ -18,6 +18,7 @@ type affectedCPERange struct {
 	VersionStartExcluding string
 	VersionEndIncluding   string
 	VersionEndExcluding   string
+	FixInfo               *nvd.FixInfo
 }
 
 func newAffectedRanges(rs ...affectedCPERange) affectedRangeSet {
@@ -32,6 +33,7 @@ func newAffectedRange(match nvd.CpeMatch) affectedCPERange {
 		VersionStartExcluding: nonEmptyValue(match.VersionStartExcluding),
 		VersionEndIncluding:   nonEmptyValue(match.VersionEndIncluding),
 		VersionEndExcluding:   nonEmptyValue(match.VersionEndExcluding),
+		FixInfo:               match.Fix,
 	}
 }
 
