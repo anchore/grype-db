@@ -172,10 +172,16 @@ type Weakness struct {
 
 func (o CveItem) GetCWEIDs() []string {
 	var cwes []string
-	var cwePattern = regexp.MustCompile(`^CWE-\d+$`)
+	isValidCWE := func(s string) bool {
+		matched, err := regexp.MatchString(`^CWE-\d+$`, s)
+		if err != nil {
+			return false
+		}
+		return matched
+	}
 	for _, w := range o.Weaknesses {
 		for _, d := range w.Description {
-			if cwePattern.MatchString(d.Value) {
+			if isValidCWE(d.Value) {
 				cwes = append(cwes, d.Value)
 			}
 		}
