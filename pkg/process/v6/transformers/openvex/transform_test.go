@@ -476,7 +476,7 @@ func Test_GetPackageHandles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPackageHandles(&tt.vuln, provider.State{})
+			got, err := getPackageHandles(&tt.vuln)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -560,7 +560,7 @@ func Test_GetUnaffectedPackage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPackageHandle(&tt.product, &tt.vuln, provider.State{})
+			got, err := getPackageHandle(&tt.product, &tt.vuln)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
