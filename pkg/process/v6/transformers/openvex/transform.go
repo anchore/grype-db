@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/anchore/packageurl-go"
 	govex "github.com/openvex/go-vex/pkg/vex"
 
 	"github.com/anchore/grype-db/pkg/data"
@@ -13,6 +12,8 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/version"
+	"github.com/anchore/packageurl-go"
 	syft "github.com/anchore/syft/syft/pkg"
 )
 
@@ -41,9 +42,7 @@ func Transform(vulnerability unmarshal.OpenVEXVulnerability, state provider.Stat
 		return nil, err
 	}
 	in := []any{vulnHandle}
-	for _, a := range pkgs {
-		in = append(in, a)
-	}
+	in = append(in, pkgs...)
 	return transformers.NewEntries(in...), nil
 }
 
@@ -97,17 +96,17 @@ func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerabili
 	case govex.StatusAffected:
 		ret = grypeDB.AffectedPackageHandle{
 			Package:   pkg,
-			BlobValue: getAffectedBlob(aliases, purl.Version),
+			BlobValue: getAffectedBlob(aliases, purl.Version, purl.Type),
 		}
 	case govex.StatusNotAffected:
 		ret = grypeDB.UnaffectedPackageHandle{
 			Package:   pkg,
-			BlobValue: getUnaffectedBlob(aliases, purl.Version, grypeDB.NotAffectedFixStatus),
+			BlobValue: getUnaffectedBlob(aliases, purl.Version, purl.Type, grypeDB.NotAffectedFixStatus),
 		}
 	case govex.StatusFixed:
 		ret = grypeDB.UnaffectedPackageHandle{
 			Package:   pkg,
-			BlobValue: getUnaffectedBlob(aliases, purl.Version, grypeDB.FixedStatus),
+			BlobValue: getUnaffectedBlob(aliases, purl.Version, purl.Type, grypeDB.FixedStatus),
 		}
 	default:
 		err = fmt.Errorf("invalid vuln states %s", vuln.Status)
@@ -156,15 +155,15 @@ func getReferences(vuln *unmarshal.OpenVEXVulnerability) []grypeDB.Reference {
 }
 
 // getAffectedBlob creates a package blob for affected packages
-func getAffectedBlob(aliases []string, version string) *grypeDB.PackageBlob {
+func getAffectedBlob(aliases []string, ver string, ty string) *grypeDB.PackageBlob {
 	return &grypeDB.PackageBlob{
 		CVEs: aliases,
 		// semantic versioning
 		Ranges: []grypeDB.Range{
 			{
 				Version: grypeDB.Version{
-					Type:       "semver",
-					Constraint: fmt.Sprintf("= %s", version),
+					Type:       version.ParseFormat(ty).String(),
+					Constraint: fmt.Sprintf("= %s", ver),
 				},
 			},
 		},
@@ -172,17 +171,17 @@ func getAffectedBlob(aliases []string, version string) *grypeDB.PackageBlob {
 }
 
 // getUnaffectedBlob creates a package blob for unaffected packages (has a fix)
-func getUnaffectedBlob(aliases []string, version string, fixState grypeDB.FixStatus) *grypeDB.PackageBlob {
+func getUnaffectedBlob(aliases []string, ver string, ty string, fixState grypeDB.FixStatus) *grypeDB.PackageBlob {
 	return &grypeDB.PackageBlob{
 		CVEs: aliases,
 		Ranges: []grypeDB.Range{
 			{
 				Version: grypeDB.Version{
-					Type:       "semver",
-					Constraint: fmt.Sprintf("= %s", version),
+					Type:       version.ParseFormat(ty).String(),
+					Constraint: fmt.Sprintf("= %s", ver),
 				},
 				Fix: &grypeDB.Fix{
-					Version: version,
+					Version: ver,
 					State:   fixState,
 				},
 			},
