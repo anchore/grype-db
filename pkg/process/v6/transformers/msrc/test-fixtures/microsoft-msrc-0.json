@@ -13,7 +13,11 @@
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4493470",
      "https://support.microsoft.com/help/4493470"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4494440",
@@ -22,7 +26,11 @@
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4494440",
      "https://support.microsoft.com/help/4494440"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4503267",
@@ -31,7 +39,11 @@
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4503267",
      "https://support.microsoft.com/en-us/help/4503267"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4507460",
@@ -40,7 +52,11 @@
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4507460",
      "https://support.microsoft.com/help/4507460"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4512517",
@@ -49,7 +65,11 @@
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4512517",
      "https://support.microsoft.com/help/4512517"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4516044",
@@ -58,7 +78,11 @@
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4516044",
      "https://support.microsoft.com/help/4516044"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    }
   ],
   "id": "CVE-2019-0671",
@@ -90,7 +114,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4093119"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4103723",
@@ -98,7 +126,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4103723"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4284880",
@@ -106,7 +138,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4284880"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4338814",
@@ -114,7 +150,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4338814"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4343887",
@@ -122,7 +162,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4343887"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4345418",
@@ -130,7 +174,11 @@
     "is_latest": true,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4345418"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4457131",
@@ -138,7 +186,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4457131"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4462917",
@@ -146,7 +198,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4462917"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4467691",
@@ -154,7 +210,11 @@
     "is_latest": false,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4467691"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    },
    {
     "id": "4471321",
@@ -162,7 +222,11 @@
     "is_latest": true,
     "links": [
      "https://catalog.update.microsoft.com/v7/site/Search.aspx?q=KB4471321"
-    ]
+    ],
+    "available": {
+     "date": "2019-11-12",
+     "kind": "advisory"
+    }
    }
   ],
   "id": "CVE-2018-8116",

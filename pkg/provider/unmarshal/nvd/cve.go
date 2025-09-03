@@ -73,14 +73,21 @@ type Node struct {
 	Operator Operator   `json:"operator"`
 }
 
+type FixInfo struct {
+	Version string `json:"version"`
+	Date    string `json:"date"`
+	Kind    string `json:"kind"`
+}
+
 type CpeMatch struct {
-	Criteria              string  `json:"criteria"`
-	MatchCriteriaID       string  `json:"matchCriteriaId"`
-	VersionEndExcluding   *string `json:"versionEndExcluding,omitempty"`
-	VersionEndIncluding   *string `json:"versionEndIncluding,omitempty"`
-	VersionStartExcluding *string `json:"versionStartExcluding,omitempty"`
-	VersionStartIncluding *string `json:"versionStartIncluding,omitempty"`
-	Vulnerable            bool    `json:"vulnerable"`
+	Criteria              string   `json:"criteria"`
+	MatchCriteriaID       string   `json:"matchCriteriaId"`
+	VersionEndExcluding   *string  `json:"versionEndExcluding,omitempty"`
+	VersionEndIncluding   *string  `json:"versionEndIncluding,omitempty"`
+	VersionStartExcluding *string  `json:"versionStartExcluding,omitempty"`
+	VersionStartIncluding *string  `json:"versionStartIncluding,omitempty"`
+	Vulnerable            bool     `json:"vulnerable"`
+	Fix                   *FixInfo `json:"fix,omitempty"`
 }
 
 type LangString struct {

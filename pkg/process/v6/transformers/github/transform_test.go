@@ -364,6 +364,12 @@ func TestGetAffectedPackage(t *testing.T) {
 								Fix: &grypeDB.Fix{
 									Version: "4.2.0",
 									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: internal.ParseTime("2024-01-30T15:00:00Z"),
+											Kind: "advisory",
+										},
+									},
 								},
 							},
 						},
@@ -478,6 +484,12 @@ func TestGetAffectedPackage(t *testing.T) {
 								Fix: &grypeDB.Fix{
 									Version: "4.3.12",
 									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: internal.ParseTime("2017-05-20T10:30:45Z"),
+											Kind: "release",
+										},
+									},
 								},
 							},
 						},
@@ -499,6 +511,12 @@ func TestGetAffectedPackage(t *testing.T) {
 								Fix: &grypeDB.Fix{
 									Version: "5.1b1",
 									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: internal.ParseTime("2017-06-15T14:22:33Z"),
+											Kind: "commit",
+										},
+									},
 								},
 							},
 						},
@@ -642,6 +660,169 @@ func TestGetRanges(t *testing.T) {
 	if diff := cmp.Diff(expectedRanges, ranges); diff != "" {
 		t.Errorf("getRanges() mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestGetFixAvailability(t *testing.T) {
+	tests := []struct {
+		name     string
+		fixture  string
+		expected map[string]*grypeDB.FixAvailability // keyed by package identifier for fixture-based testing
+	}{
+		{
+			name:    "GHSA-2wgc-48g2-cj5w with advisory availability",
+			fixture: "test-fixtures/GHSA-2wgc-48g2-cj5w.json",
+			expected: map[string]*grypeDB.FixAvailability{
+				"4.2.0": {
+					Date: internal.ParseTime("2024-01-30T15:00:00Z"),
+					Kind: "advisory",
+				},
+			},
+		},
+		{
+			name:    "multiple-fixed-in-names with mixed availability",
+			fixture: "test-fixtures/multiple-fixed-in-names.json",
+			expected: map[string]*grypeDB.FixAvailability{
+				"4.3.12": {
+					Date: internal.ParseTime("2017-05-20T10:30:45Z"),
+					Kind: "release",
+				},
+				"5.1b1": {
+					Date: internal.ParseTime("2017-06-15T14:22:33Z"),
+					Kind: "commit",
+				},
+				"5.0.7": nil, // no availability data in fixture
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			advisories := loadFixture(t, tt.fixture)
+			require.Len(t, advisories, 1, "expected exactly one advisory")
+
+			for _, fixedIn := range advisories[0].Advisory.FixedIn {
+				result := getFixAvailability(fixedIn)
+				expected := tt.expected[fixedIn.Identifier]
+
+				if expected == nil {
+					require.Nil(t, result, "expected nil availability for %s", fixedIn.Identifier)
+				} else {
+					require.NotNil(t, result, "expected non-nil availability for %s", fixedIn.Identifier)
+					require.Equal(t, expected.Kind, result.Kind)
+					require.Equal(t, expected.Date, result.Date)
+				}
+			}
+		})
+	}
+
+	// keep edge case test for scenarios not covered by fixtures
+	t.Run("invalid date returns nil", func(t *testing.T) {
+		fixedIn := unmarshal.GithubFixedIn{
+			Available: struct {
+				Date string `json:"date,omitempty"`
+				Kind string `json:"kind,omitempty"`
+			}{
+				Date: "invalid-date",
+				Kind: "commit",
+			},
+		}
+		result := getFixAvailability(fixedIn)
+		require.Nil(t, result)
+	})
+}
+
+func TestGetFix(t *testing.T) {
+	// fixture-based tests
+	tests := []struct {
+		name     string
+		fixture  string
+		expected map[string]*grypeDB.Fix // keyed by package identifier
+	}{
+		{
+			name:    "GHSA-2wgc-48g2-cj5w with availability",
+			fixture: "test-fixtures/GHSA-2wgc-48g2-cj5w.json",
+			expected: map[string]*grypeDB.Fix{
+				"4.2.0": {
+					Version: "4.2.0",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: internal.ParseTime("2024-01-30T15:00:00Z"),
+							Kind: "advisory",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:    "multiple-fixed-in-names with mixed availability",
+			fixture: "test-fixtures/multiple-fixed-in-names.json",
+			expected: map[string]*grypeDB.Fix{
+				"4.3.12": {
+					Version: "4.3.12",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: internal.ParseTime("2017-05-20T10:30:45Z"),
+							Kind: "release",
+						},
+					},
+				},
+				"5.1b1": {
+					Version: "5.1b1",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: internal.ParseTime("2017-06-15T14:22:33Z"),
+							Kind: "commit",
+						},
+					},
+				},
+				"5.0.7": {
+					Version: "5.0.7",
+					State:   grypeDB.FixedStatus,
+					Detail:  nil, // no availability data
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			advisories := loadFixture(t, tt.fixture)
+			require.Len(t, advisories, 1, "expected exactly one advisory")
+
+			for _, fixedIn := range advisories[0].Advisory.FixedIn {
+				result := getFix(fixedIn)
+				expected := tt.expected[fixedIn.Identifier]
+
+				require.NotNil(t, expected, "no expected result for identifier %s", fixedIn.Identifier)
+				if d := cmp.Diff(expected, result); d != "" {
+					t.Fatalf("unexpected result for %s: %s", fixedIn.Identifier, d)
+				}
+			}
+		})
+	}
+
+	// keep edge case tests
+	t.Run("no fix version and no availability", func(t *testing.T) {
+		fixedIn := unmarshal.GithubFixedIn{
+			Identifier: "",
+			Available: struct {
+				Date string `json:"date,omitempty"`
+				Kind string `json:"kind,omitempty"`
+			}{},
+		}
+		expected := &grypeDB.Fix{
+			Version: "",
+			State:   grypeDB.NotFixedStatus,
+			Detail:  nil,
+		}
+		result := getFix(fixedIn)
+		if d := cmp.Diff(expected, result); d != "" {
+			t.Fatalf("unexpected result: %s", d)
+		}
+	})
 }
 
 func loadFixture(t *testing.T, path string) []unmarshal.GitHubAdvisory {

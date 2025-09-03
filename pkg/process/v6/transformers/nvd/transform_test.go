@@ -43,7 +43,6 @@ func expectedProvider(name string) *grypeDB.Provider {
 }
 
 func TestTransform(t *testing.T) {
-
 	tests := []struct {
 		name     string
 		fixture  string
@@ -121,6 +120,189 @@ func TestTransform(t *testing.T) {
 									{
 										Version: grypeDB.Version{
 											Constraint: ">= 7.2, <= 7.3",
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "netapp",
+								Product: "oncommand_unified_manager",
+							},
+						},
+					),
+				},
+			},
+		},
+		{
+			name:     "with fix version information",
+			fixture:  "test-fixtures/fix-version.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2018-5487",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2018, 7, 5, 13, 52, 30, 627000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2018, 5, 24, 14, 29, 0, 390000000, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2018-5487",
+							Assigners:   []string{"security-alert@netapp.com"},
+							Description: "NetApp OnCommand Unified Manager for Linux versions 7.2 through 7.3 ship with the Java Management Extension Remote Method Invocation (JMX RMI) service bound to the network, and are susceptible to unauthenticated remote code execution.",
+							References: []grypeDB.Reference{
+								{
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
+								},
+								{
+									URL:  "https://security.netapp.com/advisory/ntap-20180523-0001/",
+									Tags: []string{"patch", "vendor-advisory"},
+								},
+							},
+							Severities: []grypeDB.Severity{
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+										Version: "3.0",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+										Version: "2.0",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+										Version: "4.0",
+									},
+									Source: "security@zabbix.com",
+									Rank:   2,
+								},
+							},
+						},
+					},
+					Related: affectedPkgSlice(
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2018-5487"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{
+									PlatformCPEs: []string{"cpe:2.3:o:linux:linux_kernel:-:*:*:*:*:*:*:*"},
+								},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: ">= 7.2, < 7.3",
+										},
+										Fix: &grypeDB.Fix{
+											Version: "7.3",
+											State:   grypeDB.FixedStatus,
+											Detail: &grypeDB.FixDetail{ // important! fix detail is associated to the record
+												Available: &grypeDB.FixAvailability{
+													Date: timeRef(time.Date(2018, 5, 23, 0, 0, 0, 0, time.UTC)),
+													Kind: "advisory",
+												},
+											},
+										},
+									},
+								},
+							},
+							CPE: &grypeDB.Cpe{
+								Part:    "a",
+								Vendor:  "netapp",
+								Product: "oncommand_unified_manager",
+							},
+						},
+					),
+				},
+			},
+		},
+		{
+			name:     "mismatched fix info",
+			fixture:  "test-fixtures/fix-wrong-version.json",
+			provider: "nvd",
+			config:   defaultConfig(),
+			want: []transformers.RelatedEntries{
+				{
+					VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+						Name:          "CVE-2018-5487",
+						ProviderID:    "nvd",
+						Provider:      expectedProvider("nvd"),
+						ModifiedDate:  timeRef(time.Date(2018, 7, 5, 13, 52, 30, 627000000, time.UTC)),
+						PublishedDate: timeRef(time.Date(2018, 5, 24, 14, 29, 0, 390000000, time.UTC)),
+						Status:        grypeDB.VulnerabilityActive,
+						BlobValue: &grypeDB.VulnerabilityBlob{
+							ID:          "CVE-2018-5487",
+							Assigners:   []string{"security-alert@netapp.com"},
+							Description: "NetApp OnCommand Unified Manager for Linux versions 7.2 through 7.3 ship with the Java Management Extension Remote Method Invocation (JMX RMI) service bound to the network, and are susceptible to unauthenticated remote code execution.",
+							References: []grypeDB.Reference{
+								{
+
+									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
+								},
+								{
+									URL:  "https://security.netapp.com/advisory/ntap-20180523-0001/",
+									Tags: []string{"patch", "vendor-advisory"},
+								},
+							},
+							Severities: []grypeDB.Severity{
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+										Version: "3.0",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: grypeDB.SeveritySchemeCVSS,
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+										Version: "2.0",
+									},
+									Source: "nvd@nist.gov",
+									Rank:   1,
+								},
+								{
+									Scheme: "CVSS",
+									Value: grypeDB.CVSSSeverity{
+										Vector:  "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+										Version: "4.0",
+									},
+									Source: "security@zabbix.com",
+									Rank:   2,
+								},
+							},
+						},
+					},
+					Related: affectedPkgSlice(
+						grypeDB.AffectedCPEHandle{
+							BlobValue: &grypeDB.AffectedPackageBlob{
+								CVEs: []string{"CVE-2018-5487"},
+								Qualifiers: &grypeDB.AffectedPackageQualifiers{
+									PlatformCPEs: []string{"cpe:2.3:o:linux:linux_kernel:-:*:*:*:*:*:*:*"},
+								},
+								Ranges: []grypeDB.AffectedRange{
+									{
+										Version: grypeDB.AffectedVersion{
+											Constraint: ">= 7.2, < 7.3",
+										},
+										Fix: &grypeDB.Fix{
+											Version: "7.3",
+											State:   grypeDB.FixedStatus,
+											Detail:  nil, // important! though there is fix info on the record, the versions mismatch, thus the detail is not attached (there is a bug upstream)
 										},
 									},
 								},
