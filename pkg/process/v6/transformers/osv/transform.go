@@ -139,7 +139,7 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 //	}
 //
 // ]
-func getGrypeRangesFromRange(r models.Range) []grypeDB.Range {
+func getGrypeRangesFromRange(r models.Range) []grypeDB.Range { // nolint: gocognit
 	var ranges []grypeDB.Range
 	if len(r.Events) == 0 {
 		return nil
@@ -151,6 +151,36 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.Range {
 			constraint = c
 		} else {
 			constraint = common.AndConstraints(constraint, c)
+		}
+	}
+
+	fixByVersion := make(map[string]grypeDB.FixAvailability)
+	// check r.DatabaseSpecific for "anchore" key which has
+	// {"fixes": [{
+	//   "version": "v1.2.3",
+	//   "date": "YYYY-MM-DD",
+	//   "kind": "first-observed",
+	// }]}
+
+	if dbSpecific, ok := r.DatabaseSpecific["anchore"]; ok {
+		if anchoreInfo, ok := dbSpecific.(map[string]any); ok {
+			if fixes, ok := anchoreInfo["fixes"]; ok {
+				if fixList, ok := fixes.([]any); ok {
+					for _, fixEntry := range fixList {
+						if fixMap, ok := fixEntry.(map[string]any); ok {
+							version, vOk := fixMap["version"].(string)
+							kind, kOk := fixMap["kind"].(string)
+							date, dOk := fixMap["date"].(string)
+							if vOk && kOk && dOk {
+								fixByVersion[version] = grypeDB.FixAvailability{
+									Date: internal.ParseTime(date),
+									Kind: kind,
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -171,9 +201,15 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.Range {
 			// Reset the constraint
 			constraint = ""
 		case e.Fixed != "":
+			var detail *grypeDB.FixDetail
+			if f, ok := fixByVersion[e.Fixed]; ok {
+				detail = &grypeDB.FixDetail{
+					Available: &f,
+				}
+			}
 			updateConstraint(fmt.Sprintf("< %s", e.Fixed))
 			ranges = append(ranges, grypeDB.Range{
-				Fix: normalizeFix(e.Fixed),
+				Fix: normalizeFix(e.Fixed, detail),
 				Version: grypeDB.Version{
 					Type:       rangeType,
 					Constraint: normalizeConstraint(constraint, rangeType),
@@ -204,7 +240,7 @@ func normalizeConstraint(constraint string, rangeType string) string {
 	return constraint
 }
 
-func normalizeFix(fix string) *grypeDB.Fix {
+func normalizeFix(fix string, detail *grypeDB.FixDetail) *grypeDB.Fix {
 	fixedInVersion := common.CleanFixedInVersion(fix)
 	fixState := grypeDB.NotFixedStatus
 	if len(fixedInVersion) > 0 {
@@ -214,6 +250,7 @@ func normalizeFix(fix string) *grypeDB.Fix {
 	return &grypeDB.Fix{
 		State:   fixState,
 		Version: fixedInVersion,
+		Detail:  detail,
 	}
 }
 

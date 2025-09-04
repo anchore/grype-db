@@ -73,7 +73,7 @@ func getRanges(vuln unmarshal.MSRCVulnerability) []grypeDB.Range {
 }
 
 func getFix(vuln unmarshal.MSRCVulnerability) *grypeDB.Fix {
-	fixedInVersion := fixedInKB(vuln)
+	fixedInVersion, fixDetail := fixedInKB(vuln)
 
 	fixState := grypeDB.FixedStatus
 	if fixedInVersion == "" {
@@ -83,18 +83,28 @@ func getFix(vuln unmarshal.MSRCVulnerability) *grypeDB.Fix {
 	return &grypeDB.Fix{
 		Version: fixedInVersion,
 		State:   fixState,
+		Detail:  fixDetail,
 	}
 }
 
 // fixedInKB finds the "latest" patch (KB id) amongst the available microsoft patches and returns it
 // if the "latest" patch cannot be found, an empty string is returned
-func fixedInKB(vulnerability unmarshal.MSRCVulnerability) string {
+func fixedInKB(vulnerability unmarshal.MSRCVulnerability) (string, *grypeDB.FixDetail) {
 	for _, fixedIn := range vulnerability.FixedIn {
 		if fixedIn.IsLatest {
-			return fixedIn.ID
+			var detail *grypeDB.FixDetail
+			if fixedIn.Available.Date != "" {
+				detail = &grypeDB.FixDetail{
+					Available: &grypeDB.FixAvailability{
+						Date: internal.ParseTime(fixedIn.Available.Date),
+						Kind: fixedIn.Available.Kind,
+					},
+				}
+			}
+			return fixedIn.ID, detail
 		}
 	}
-	return ""
+	return "", nil
 }
 
 func getReferences(vuln unmarshal.MSRCVulnerability) []grypeDB.Reference {
