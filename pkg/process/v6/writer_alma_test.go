@@ -56,8 +56,8 @@ func TestAlmaLinuxAliasFinalization(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// Test the finalization logic
-			err = writer.finalizeAliases()
+			// Test the override writing logic
+			err = writer.writeOverrides()
 			require.NoError(t, err)
 
 			// Verify the aliases are correct

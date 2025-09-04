@@ -55,53 +55,7 @@ func NewWriter(directory string, states provider.States) (data.Writer, error) {
 		severityCache: make(map[string]grypeDB.Severity),
 	}
 
-	// Populate initial OS and package specifier overrides
-	if err := w.populateInitialOverrides(); err != nil {
-		return nil, fmt.Errorf("unable to populate initial overrides: %w", err)
-	}
-
 	return w, nil
-}
-
-// populateInitialOverrides populates the database with initial OS and package specifier overrides
-func (w *writer) populateInitialOverrides() error {
-	type lowLevelReader interface {
-		GetDB() *gorm.DB
-	}
-
-	db := w.store.(lowLevelReader).GetDB()
-
-	// Populate OS specifier overrides
-	osOverrides := dataV6.KnownOperatingSystemSpecifierOverrides()
-	for i := range osOverrides {
-		override := &osOverrides[i]
-
-		// Use FirstOrCreate to avoid constraint violations when data already exists
-		if err := db.FirstOrCreate(override, grypeDB.OperatingSystemSpecifierOverride{
-			Alias:          override.Alias,
-			Version:        override.Version,
-			VersionPattern: override.VersionPattern,
-			Codename:       override.Codename,
-		}).Error; err != nil {
-			return fmt.Errorf("unable to populate OS override %s: %w", override.Alias, err)
-		}
-	}
-
-	// Populate package specifier overrides
-	packageOverrides := dataV6.KnownPackageSpecifierOverrides()
-	for i := range packageOverrides {
-		override := &packageOverrides[i]
-
-		// Use FirstOrCreate to avoid constraint violations when data already exists
-		if err := db.FirstOrCreate(override, grypeDB.PackageSpecifierOverride{
-			Ecosystem: override.Ecosystem,
-		}).Error; err != nil {
-			return fmt.Errorf("unable to populate package override %s: %w", override.Ecosystem, err)
-		}
-	}
-
-	log.Info("populated initial OS and package specifier overrides")
-	return nil
 }
 
 func (w writer) Write(entries ...data.Entry) error {
@@ -254,10 +208,9 @@ func isKnownSeverity(s grypeDB.Severity) bool {
 }
 
 func (w writer) Close() error {
-	// Finalize AlmaLinux aliases based on presence of AlmaLinux vulnerabilities
-	if err := w.finalizeAliases(); err != nil {
-		// Log error but don't fail the build process
-		log.WithFields("error", err).Warn("failed to finalize AlmaLinux aliases")
+	// Write overrides based on final state
+	if err := w.writeOverrides(); err != nil {
+		return fmt.Errorf("failed to write overrides: %w", err)
 	}
 
 	if err := w.store.Close(); err != nil {
@@ -269,32 +222,87 @@ func (w writer) Close() error {
 	return nil
 }
 
-// finalizeAliases conditionally removes RHEL aliases for AlmaLinux if AlmaLinux-specific vulnerabilities are present
-func (w *writer) finalizeAliases() error {
+// removeAlmaRHELMappings filters out RHEL mappings for alma and almalinux from the override list
+func (w *writer) removeAlmaRHELMappings(overrides []grypeDB.OperatingSystemSpecifierOverride) []grypeDB.OperatingSystemSpecifierOverride {
+	var filtered []grypeDB.OperatingSystemSpecifierOverride
+	for _, override := range overrides {
+		if (override.Alias == "alma" || override.Alias == "almalinux") &&
+			override.ReplacementName != nil && *override.ReplacementName == "rhel" {
+			continue // skip RHEL mappings for alma/almalinux
+		}
+		filtered = append(filtered, override)
+	}
+	return filtered
+}
+
+// writeFinalOverrides writes OS and package specifier overrides to the database
+func (w *writer) writeFinalOverrides(osOverrides []grypeDB.OperatingSystemSpecifierOverride, packageOverrides []grypeDB.PackageSpecifierOverride) error {
+	type lowLevelReader interface {
+		GetDB() *gorm.DB
+	}
+
+	db := w.store.(lowLevelReader).GetDB()
+
+	// Write OS specifier overrides
+	for i := range osOverrides {
+		override := &osOverrides[i]
+		// Use FirstOrCreate to handle any potential duplicates in the data
+		if err := db.FirstOrCreate(override, grypeDB.OperatingSystemSpecifierOverride{
+			Alias:          override.Alias,
+			Version:        override.Version,
+			VersionPattern: override.VersionPattern,
+			Codename:       override.Codename,
+		}).Error; err != nil {
+			return fmt.Errorf("unable to write OS override %s: %w", override.Alias, err)
+		}
+	}
+
+	// Write package specifier overrides
+	for i := range packageOverrides {
+		override := &packageOverrides[i]
+		// Use FirstOrCreate to handle any potential duplicates in the data
+		if err := db.FirstOrCreate(override, grypeDB.PackageSpecifierOverride{
+			Ecosystem: override.Ecosystem,
+		}).Error; err != nil {
+			return fmt.Errorf("unable to write package override %s: %w", override.Ecosystem, err)
+		}
+	}
+
+	log.Info("wrote all OS and package specifier overrides")
+	return nil
+}
+
+// writeOverrides writes all OS and package specifier overrides based on the final database state
+func (w *writer) writeOverrides() error {
+	// Get base overrides from data.go
+	osOverrides := dataV6.KnownOperatingSystemSpecifierOverrides()
+	packageOverrides := dataV6.KnownPackageSpecifierOverrides()
+
+	// Check if AlmaLinux provider exists
 	hasAlma, err := w.hasAlmaLinuxProvider()
 	if err != nil {
 		return fmt.Errorf("failed to check for AlmaLinux providers: %w", err)
 	}
 
 	if hasAlma {
-		log.Info("AlmaLinux-specific vulnerabilities detected, removing RHEL aliases for AlmaLinux")
+		log.Info("AlmaLinux-specific vulnerabilities detected, configuring AlmaLinux aliases")
 
-		// Remove RHEL aliases for alma and almalinux
-		if err := w.removeAlmaRHELAliases(); err != nil {
-			return fmt.Errorf("failed to remove RHEL aliases: %w", err)
-		}
+		// Remove alma/almalinux -> rhel mappings from the base set
+		osOverrides = w.removeAlmaRHELMappings(osOverrides)
 
-		// Add the correct alma -> almalinux mapping
-		if err := w.addAlmaLinuxAlias(); err != nil {
-			return fmt.Errorf("failed to add AlmaLinux alias: %w", err)
-		}
+		// Add alma -> almalinux mapping
+		osOverrides = append(osOverrides, grypeDB.OperatingSystemSpecifierOverride{
+			Alias:           "alma",
+			ReplacementName: stringPtr("almalinux"),
+		})
 
-		log.Info("Successfully updated AlmaLinux aliases")
+		log.Info("Configured AlmaLinux-specific aliases")
 	} else {
-		log.Info("No AlmaLinux-specific vulnerabilities found, keeping RHEL aliases")
+		log.Info("No AlmaLinux-specific vulnerabilities found, using RHEL aliases")
 	}
 
-	return nil
+	// Write all overrides once
+	return w.writeFinalOverrides(osOverrides, packageOverrides)
 }
 
 // hasAlmaLinuxProvider checks if any providers with ID "almalinux" exist in the database
@@ -309,31 +317,6 @@ func (w *writer) hasAlmaLinuxProvider() (bool, error) {
 		Where("id = ?", "almalinux").
 		Count(&count).Error
 	return count > 0, err
-}
-
-// removeAlmaRHELAliases removes the default RHEL aliases for alma and almalinux
-func (w *writer) removeAlmaRHELAliases() error {
-	type lowLevelReader interface {
-		GetDB() *gorm.DB
-	}
-
-	db := w.store.(lowLevelReader).GetDB()
-	return db.Where("alias IN (?, ?) AND replacement = ?", "alma", "almalinux", "rhel").
-		Delete(&grypeDB.OperatingSystemSpecifierOverride{}).Error
-}
-
-// addAlmaLinuxAlias adds the alma -> almalinux alias
-func (w *writer) addAlmaLinuxAlias() error {
-	type lowLevelReader interface {
-		GetDB() *gorm.DB
-	}
-
-	db := w.store.(lowLevelReader).GetDB()
-	alias := &grypeDB.OperatingSystemSpecifierOverride{
-		Alias:           "alma",
-		ReplacementName: stringPtr("almalinux"),
-	}
-	return db.Create(alias).Error
 }
 
 // stringPtr returns a pointer to the given string
