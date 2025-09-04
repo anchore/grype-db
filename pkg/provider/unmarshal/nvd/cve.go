@@ -1,7 +1,6 @@
 package nvd
 
 import (
-	"regexp"
 	"sort"
 
 	"github.com/Masterminds/semver/v3"
@@ -168,25 +167,6 @@ type Weakness struct {
 	Description []LangString `json:"description"`
 	Source      string       `json:"source"`
 	Type        string       `json:"type"`
-}
-
-func (o CveItem) GetCWEIDs() []string {
-	var cwes []string
-	isValidCWE := func(s string) bool {
-		matched, err := regexp.MatchString(`^CWE-\d+$`, s)
-		if err != nil {
-			return false
-		}
-		return matched
-	}
-	for _, w := range o.Weaknesses {
-		for _, d := range w.Description {
-			if isValidCWE(d.Value) {
-				cwes = append(cwes, d.Value)
-			}
-		}
-	}
-	return cwes
 }
 
 func (o CveItem) Description() string {

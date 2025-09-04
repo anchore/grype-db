@@ -1,6 +1,7 @@
 package nvd
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/scylladb/go-set/strset"
@@ -60,13 +61,16 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability, state provi
 				Description: strings.TrimSpace(vulnerability.Description()),
 				References:  getReferences(vulnerability),
 				Severities:  getSeverities(vulnerability),
-				CWEs:        vulnerability.GetCWEIDs(),
 			},
 		},
 	}
 
 	for _, a := range getAffected(cfg, vulnerability) {
 		in = append(in, a)
+	}
+
+	for _, cwe := range getCWEs(vulnerability) {
+		in = append(in, cwe)
 	}
 
 	return transformers.NewEntries(in...), nil
@@ -156,6 +160,34 @@ func getAffected(cfg Config, vulnerability unmarshal.NVDVulnerability) []grypeDB
 	}
 
 	return affs
+}
+
+func getCWEs(vulnerability unmarshal.NVDVulnerability) []grypeDB.CWEHandle {
+	var cwes []grypeDB.CWEHandle
+	for _, w := range vulnerability.Weaknesses {
+		for _, d := range w.Description {
+			if isValidCWE(d.Value) {
+				cwes = append(cwes, grypeDB.CWEHandle{
+					Cve:    vulnerability.ID,
+					CWE:    d.Value,
+					Source: w.Source,
+					Type:   w.Type,
+				})
+			}
+		}
+	}
+	return cwes
+}
+
+func isValidCWE(s string) bool {
+	if s == "NVD-CWE-Other" {
+		return true
+	}
+	matched, err := regexp.MatchString(`^CWE-\d+$`, s)
+	if err != nil {
+		return false
+	}
+	return matched
 }
 
 func encodeCPEs(cpes []cpe.Attributes) []string {
