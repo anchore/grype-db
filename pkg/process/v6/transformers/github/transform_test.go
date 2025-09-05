@@ -353,11 +353,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Name:      "vantage6",
 						Ecosystem: "python",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2024-21653"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "python",
 									Constraint: "<4.2.0",
 								},
@@ -385,11 +385,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Name:      "craftcms/cms",
 						Ecosystem: "packagist",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2023-30179"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "packagist",
 									Constraint: "<4.4.2",
 								},
@@ -411,11 +411,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Name:      "scratch-vm",
 						Ecosystem: "npm",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2020-14000"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "npm",
 									Constraint: "<=0.2.0-prerelease.20200709173451",
 								},
@@ -437,12 +437,12 @@ func TestGetAffectedPackage(t *testing.T) {
 						Ecosystem: "python",
 						Name:      "notebook",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs:       []string{"CVE-2018-8768"},
 						Qualifiers: nil,
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{Type: "python", Constraint: "<5.4.1"},
+								Version: grypeDB.Version{Type: "python", Constraint: "<5.4.1"},
 								Fix:     &grypeDB.Fix{Version: "5.4.1", State: grypeDB.FixedStatus},
 							},
 						},
@@ -453,11 +453,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Ecosystem: "python",
 						Name:      "Plone",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{Type: "python", Constraint: ">=4.0,<4.3.12"},
+								Version: grypeDB.Version{Type: "python", Constraint: ">=4.0,<4.3.12"},
 								Fix:     &grypeDB.Fix{Version: "4.3.12", State: grypeDB.FixedStatus},
 							},
 						},
@@ -473,11 +473,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Name:      "Plone",
 						Ecosystem: "python",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "python",
 									Constraint: ">=4.0,<4.3.12",
 								},
@@ -500,11 +500,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Name:      "Plone",
 						Ecosystem: "python",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "python",
 									Constraint: ">=5.1a1,<5.1b1",
 								},
@@ -527,11 +527,11 @@ func TestGetAffectedPackage(t *testing.T) {
 						Name:      "Plone-debug",
 						Ecosystem: "python",
 					},
-					BlobValue: &grypeDB.AffectedPackageBlob{
+					BlobValue: &grypeDB.PackageBlob{
 						CVEs: []string{"CVE-2017-5524"},
-						Ranges: []grypeDB.AffectedRange{
+						Ranges: []grypeDB.Range{
 							{
-								Version: grypeDB.AffectedVersion{
+								Version: grypeDB.Version{
 									Type:       "python",
 									Constraint: ">=5.0rc1,<5.0.7",
 								},
@@ -611,10 +611,10 @@ func TestGetRanges(t *testing.T) {
 	advisories := loadFixture(t, "test-fixtures/GHSA-92cp-5422-2mw7.json")
 	require.Len(t, advisories, 1)
 	advisory := advisories[0]
-	var ranges []grypeDB.AffectedRange
-	expectedRanges := []grypeDB.AffectedRange{
+	var ranges []grypeDB.Range
+	expectedRanges := []grypeDB.Range{
 		{
-			Version: grypeDB.AffectedVersion{
+			Version: grypeDB.Version{
 				Type:       "go",
 				Constraint: ">=9.7.0-beta.1,<9.7.3",
 			},
@@ -624,7 +624,7 @@ func TestGetRanges(t *testing.T) {
 			},
 		},
 		{
-			Version: grypeDB.AffectedVersion{
+			Version: grypeDB.Version{
 				// important: this emits an unknown constraint type,
 				// triggering fuzzy matching when the input is not
 				// valid semver
@@ -637,7 +637,7 @@ func TestGetRanges(t *testing.T) {
 			},
 		},
 		{
-			Version: grypeDB.AffectedVersion{
+			Version: grypeDB.Version{
 				Type:       "go",
 				Constraint: ">=9.5.1,<9.5.5",
 			},

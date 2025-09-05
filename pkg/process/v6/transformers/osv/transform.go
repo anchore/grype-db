@@ -68,16 +68,16 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	for _, affected := range vuln.Affected {
 		aph := grypeDB.AffectedPackageHandle{
 			Package:   getPackage(affected.Package),
-			BlobValue: &grypeDB.AffectedPackageBlob{CVEs: vuln.Aliases},
+			BlobValue: &grypeDB.PackageBlob{CVEs: vuln.Aliases},
 		}
 
 		if withCPE {
-			aph.BlobValue.Qualifiers = &grypeDB.AffectedPackageQualifiers{
+			aph.BlobValue.Qualifiers = &grypeDB.PackageQualifiers{
 				PlatformCPEs: cpes.([]string),
 			}
 		}
 
-		var ranges []grypeDB.AffectedRange
+		var ranges []grypeDB.Range
 		for _, r := range affected.Ranges {
 			ranges = append(ranges, getGrypeRangesFromRange(r)...)
 		}
@@ -139,8 +139,8 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 //	}
 //
 // ]
-func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange { // nolint: gocognit
-	var ranges []grypeDB.AffectedRange
+func getGrypeRangesFromRange(r models.Range) []grypeDB.Range { // nolint: gocognit
+	var ranges []grypeDB.Range
 	if len(r.Events) == 0 {
 		return nil
 	}
@@ -192,8 +192,8 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange { // nolint
 		case e.LastAffected != "":
 			updateConstraint(fmt.Sprintf("<= %s", e.LastAffected))
 			// We don't know the fix if last affected is set
-			ranges = append(ranges, grypeDB.AffectedRange{
-				Version: grypeDB.AffectedVersion{
+			ranges = append(ranges, grypeDB.Range{
+				Version: grypeDB.Version{
 					Type:       rangeType,
 					Constraint: normalizeConstraint(constraint, rangeType),
 				},
@@ -208,9 +208,9 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange { // nolint
 				}
 			}
 			updateConstraint(fmt.Sprintf("< %s", e.Fixed))
-			ranges = append(ranges, grypeDB.AffectedRange{
+			ranges = append(ranges, grypeDB.Range{
 				Fix: normalizeFix(e.Fixed, detail),
-				Version: grypeDB.AffectedVersion{
+				Version: grypeDB.Version{
 					Type:       rangeType,
 					Constraint: normalizeConstraint(constraint, rangeType),
 				},
@@ -222,8 +222,8 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.AffectedRange { // nolint
 
 	// Check if there's an event that "introduced" but never had a "fixed" or "last affected" event
 	if constraint != "" {
-		ranges = append(ranges, grypeDB.AffectedRange{
-			Version: grypeDB.AffectedVersion{
+		ranges = append(ranges, grypeDB.Range{
+			Version: grypeDB.Version{
 				Type:       rangeType,
 				Constraint: normalizeConstraint(constraint, rangeType),
 			},
