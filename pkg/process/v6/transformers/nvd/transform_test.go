@@ -109,7 +109,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
@@ -129,6 +129,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "netapp",
 								Product: "oncommand_unified_manager",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2018-5487",
+							CWE:    "CWE-20",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -193,7 +199,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
@@ -223,6 +229,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "netapp",
 								Product: "oncommand_unified_manager",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2018-5487",
+							CWE:    "CWE-20",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -287,7 +299,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
@@ -312,6 +324,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "netapp",
 								Product: "oncommand_unified_manager",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2018-5487",
+							CWE:    "CWE-20",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -380,7 +398,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						// the application package...
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
@@ -445,6 +463,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "debian",
 								Product: "debian_linux",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2018-1000222",
+							CWE:    "CWE-415",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -517,7 +541,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-1000222"},
@@ -534,6 +558,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "libgd",
 								Product: "libgd",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2018-1000222",
+							CWE:    "CWE-415",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -587,7 +617,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2018-10189"},
@@ -614,6 +644,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "mautic",
 								Product: "mautic",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2018-10189",
+							CWE:    "CWE-200",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -671,7 +707,14 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: nil, // when we can't parse the CPE we should not add any affected blobs (but we do add the vuln blob)
+					Related: relatedEntries(
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2015-8978",
+							CWE:    "CWE-399",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+					), // when we can't parse the CPE we should not add any affected CPE blobs (but we do add the vuln blob and CWE)
 				},
 			},
 		},
@@ -727,7 +770,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2022-26488"},
@@ -785,6 +828,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "python",
 								Product: "python",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2022-26488",
+							CWE:    "CWE-426",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -860,7 +909,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2022-0543"},
@@ -885,6 +934,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "redis",
 								Product: "redis",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2022-0543",
+							CWE:    "CWE-862",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -946,7 +1001,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2020-10729"},
@@ -992,6 +1047,18 @@ func TestTransform(t *testing.T) {
 								Vendor:  "debian",
 								Product: "debian_linux",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2020-10729",
+							CWE:    "CWE-330",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2020-10729",
+							CWE:    "CWE-330",
+							Source: "secalert@redhat.com",
+							Type:   "Secondary",
 						},
 					),
 				},
@@ -1049,7 +1116,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2023-38733"},
@@ -1077,6 +1144,18 @@ func TestTransform(t *testing.T) {
 								Vendor:  "ibm",
 								Product: "robotic_process_automation",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2023-38733",
+							CWE:    "CWE-532",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2023-38733",
+							CWE:    "CWE-532",
+							Source: "psirt@us.ibm.com",
+							Type:   "Secondary",
 						},
 					),
 				},
@@ -1154,7 +1233,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2023-45283"},
@@ -1187,6 +1266,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "golang",
 								Product: "go",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2023-45283",
+							CWE:    "CWE-22",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1264,7 +1349,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2023-45283"},
@@ -1297,6 +1382,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "golang",
 								Product: "go",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2023-45283",
+							CWE:    "CWE-22",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1341,7 +1432,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2024-26663"},
@@ -1403,6 +1494,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "linux",
 								Product: "linux_kernel",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2024-26663",
+							CWE:    "CWE-476",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1468,7 +1565,20 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: nil, // important! we dropped all of the node criteria since the topology is unsupported
+					Related: relatedEntries(
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2021-1566",
+							CWE:    "CWE-296",
+							Source: "psirt@cisco.com",
+							Type:   "Secondary",
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2021-1566",
+							CWE:    "CWE-295",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+					), // important! we dropped all of the node criteria since the topology is unsupported
 				},
 			},
 		},
@@ -1493,7 +1603,7 @@ func TestTransform(t *testing.T) {
 							References:  []grypeDB.Reference{{URL: "https://nvd.nist.gov/vuln/detail/CVE-2008-3442"}},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2008-3442"},
@@ -1554,6 +1664,12 @@ func TestTransform(t *testing.T) {
 								Edition: "sr1",
 							},
 						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2008-3442",
+							CWE:    "CWE-94",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -1583,7 +1699,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs:   []string{"CVE-2004-0377"},
@@ -1611,6 +1727,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "larry_wall",
 								Product: "perl",
 							},
+						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2004-0377",
+							CWE:    "NVD-CWE-Other",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1659,7 +1781,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.AffectedPackageBlob{
 								CVEs: []string{"CVE-2023-JVM-TEST"},
@@ -1738,6 +1860,12 @@ func TestTransform(t *testing.T) {
 								Product: "jdk",
 							},
 						},
+						grypeDB.CWEHandle{
+							Cve:    "CVE-2023-JVM-TEST",
+							CWE:    "CWE-79",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -1769,12 +1897,8 @@ func TestTransform(t *testing.T) {
 	}
 }
 
-func affectedPkgSlice(a ...grypeDB.AffectedCPEHandle) []any {
-	var r []any
-	for _, v := range a {
-		r = append(r, v)
-	}
-	return r
+func relatedEntries(items ...any) []any {
+	return items
 }
 
 func loadFixture(t *testing.T, fixturePath string) []unmarshal.NVDVulnerability {
