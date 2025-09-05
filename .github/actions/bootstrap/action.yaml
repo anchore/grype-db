@@ -50,7 +50,7 @@ runs:
       with:
         enable-cache: true
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       if: inputs.python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
