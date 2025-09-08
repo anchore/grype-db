@@ -52,18 +52,29 @@ func getPackageHandles(vuln *unmarshal.OpenVEXVulnerability) ([]any, error) {
 		return nil, nil
 	}
 
-	var aphs []any
+	var aphs []grypeDB.AffectedPackageHandle
+	var uaphs []grypeDB.UnaffectedPackageHandle
 	for _, product := range vuln.Products {
-		aph, err := getPackageHandle(&product, vuln)
+		aph, uph, err := getPackageHandle(&product, vuln)
 		if err != nil {
 			return nil, err
 		}
-		aphs = append(aphs, aph)
+		aphs = append(aphs, aph...)
+		uaphs = append(uaphs, uph...)
 	}
 
-	sort.Sort(internal.ByAny(aphs))
+	sort.Sort(internal.ByAffectedPackage(aphs))
+	sort.Sort(internal.ByUnaffectedPackage(uaphs))
 
-	return aphs, nil
+	var all []any
+	for i := range aphs {
+		all = append(all, aphs[i])
+	}
+	for i := range uaphs {
+		all = append(all, uaphs[i])
+	}
+
+	return all, nil
 }
 
 // getPackageHandle for a single product
@@ -75,13 +86,13 @@ func getPackageHandles(vuln *unmarshal.OpenVEXVulnerability) ([]any, error) {
 //	    PURLIdentifierType: pkg:type/name@version
 //	  }
 //	}
-func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerability) (ret any, err error) {
+func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerability) (aphs []grypeDB.AffectedPackageHandle, uphs []grypeDB.UnaffectedPackageHandle, err error) {
 	if product == nil || vuln == nil {
-		return ret, fmt.Errorf("getAffectedPackage params cannot be nil")
+		return nil, nil, fmt.Errorf("getAffectedPackage params cannot be nil")
 	}
 	purl, err := getPURL(product)
 	if err != nil {
-		return ret, fmt.Errorf("failed to parse purl %s: %w", purl, err)
+		return nil, nil, fmt.Errorf("failed to parse purl %s: %w", purl, err)
 	}
 
 	pkg := &grypeDB.Package{
@@ -94,24 +105,24 @@ func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerabili
 
 	switch vuln.Status {
 	case govex.StatusAffected:
-		ret = grypeDB.AffectedPackageHandle{
+		aphs = append(aphs, grypeDB.AffectedPackageHandle{
 			Package:   pkg,
 			BlobValue: getAffectedBlob(aliases, purl.Version, purl.Type),
-		}
+		})
 	case govex.StatusNotAffected:
-		ret = grypeDB.UnaffectedPackageHandle{
+		uphs = append(uphs, grypeDB.UnaffectedPackageHandle{
 			Package:   pkg,
 			BlobValue: getUnaffectedBlob(aliases, purl.Version, purl.Type, grypeDB.NotAffectedFixStatus),
-		}
+		})
 	case govex.StatusFixed:
-		ret = grypeDB.UnaffectedPackageHandle{
+		uphs = append(uphs, grypeDB.UnaffectedPackageHandle{
 			Package:   pkg,
 			BlobValue: getUnaffectedBlob(aliases, purl.Version, purl.Type, grypeDB.FixedStatus),
-		}
+		})
 	default:
 		err = fmt.Errorf("invalid vuln states %s", vuln.Status)
 	}
-	return ret, err
+	return aphs, uphs, err
 }
 
 // getPURL from either ID field or identifiers

@@ -7,59 +7,15 @@ type ByAffectedPackage []grypeDB.AffectedPackageHandle
 func (a ByAffectedPackage) Len() int      { return len(a) }
 func (a ByAffectedPackage) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByAffectedPackage) Less(i, j int) bool {
-	if a[i].Package.Name == a[j].Package.Name {
-		if a[i].Package.Ecosystem == a[j].Package.Ecosystem {
-			for _, b := range a[i].BlobValue.Ranges {
-				for _, c := range a[j].BlobValue.Ranges {
-					if b.Version.Constraint != c.Version.Constraint {
-						return b.Version.Constraint < c.Version.Constraint
-					}
-				}
-			}
-		}
-		return a[i].Package.Ecosystem < a[j].Package.Ecosystem
-	}
-	return a[i].Package.Name < a[j].Package.Name
+	return comparePackageHandles(a[i].Package, a[i].BlobValue.Ranges, a[j].Package, a[j].BlobValue.Ranges)
 }
-
-// TODO this should be cleaned up and deduplicated
 
 type ByUnaffectedPackage []grypeDB.UnaffectedPackageHandle
 
 func (a ByUnaffectedPackage) Len() int      { return len(a) }
 func (a ByUnaffectedPackage) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByUnaffectedPackage) Less(i, j int) bool {
-	if a[i].Package.Name == a[j].Package.Name {
-		if a[i].Package.Ecosystem == a[j].Package.Ecosystem {
-			for _, b := range a[i].BlobValue.Ranges {
-				for _, c := range a[j].BlobValue.Ranges {
-					if b.Version.Constraint != c.Version.Constraint {
-						return b.Version.Constraint < c.Version.Constraint
-					}
-				}
-			}
-		}
-		return a[i].Package.Ecosystem < a[j].Package.Ecosystem
-	}
-	return a[i].Package.Name < a[j].Package.Name
-}
-
-type ByAny []any
-
-func (a ByAny) Len() int      { return len(a) }
-func (a ByAny) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByAny) Less(i, j int) bool {
-	switch first := a[i].(type) {
-	case grypeDB.UnaffectedPackageHandle:
-		if second, ok := a[j].(grypeDB.UnaffectedPackageHandle); ok {
-			return comparePackageHandles(first.Package, first.BlobValue.Ranges, second.Package, second.BlobValue.Ranges)
-		}
-	case grypeDB.AffectedPackageHandle:
-		if second, ok := a[j].(grypeDB.AffectedPackageHandle); ok {
-			return comparePackageHandles(first.Package, first.BlobValue.Ranges, second.Package, second.BlobValue.Ranges)
-		}
-	}
-	return false
+	return comparePackageHandles(a[i].Package, a[i].BlobValue.Ranges, a[j].Package, a[j].BlobValue.Ranges)
 }
 
 // comparePackageHandles compares two package handles by name, ecosystem, then version constraints

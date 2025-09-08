@@ -581,13 +581,22 @@ func Test_GetUnaffectedPackage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPackageHandle(&tt.product, &tt.vuln)
+			gotaph, gotuph, err := getPackageHandle(&tt.product, &tt.vuln)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
+			var got []any
+			for _, a := range gotaph {
+				got = append(got, a)
+			}
+			for _, u := range gotuph {
+				got = append(got, u)
+			}
+			require.Len(t, got, 1, "should return exactly one package handle")
 			require.NoError(t, err)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			g := got[0]
+			if diff := cmp.Diff(tt.want, g); diff != "" {
 				t.Errorf("GetPackages() mismatch (-want +got):\n%s", diff)
 			}
 		})
