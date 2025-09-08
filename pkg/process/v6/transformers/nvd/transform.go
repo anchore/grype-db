@@ -168,16 +168,16 @@ func encodeCPEs(cpes []cpe.Attributes) []string {
 func affectedApplicationPackage(cfg Config, vulnerability unmarshal.NVDVulnerability, p affectedPackageCandidate) []grypeDB.AffectedCPEHandle {
 	var affs []grypeDB.AffectedCPEHandle
 
-	var qualifiers *grypeDB.AffectedPackageQualifiers
+	var qualifiers *grypeDB.PackageQualifiers
 	if len(p.PlatformCPEs) > 0 {
-		qualifiers = &grypeDB.AffectedPackageQualifiers{
+		qualifiers = &grypeDB.PackageQualifiers{
 			PlatformCPEs: encodeCPEs(p.PlatformCPEs),
 		}
 	}
 
 	affs = append(affs, grypeDB.AffectedCPEHandle{
 		CPE: getCPEFromAttributes(p.VulnerableCPE),
-		BlobValue: &grypeDB.AffectedPackageBlob{
+		BlobValue: &grypeDB.PackageBlob{
 			CVEs:       []string{vulnerability.ID},
 			Qualifiers: qualifiers,
 			Ranges:     getRanges(cfg, p.VulnerableCPE, p.Ranges.toSlice(), vulnerability.ID),
@@ -187,8 +187,8 @@ func affectedApplicationPackage(cfg Config, vulnerability unmarshal.NVDVulnerabi
 	return affs
 }
 
-func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange, vulnID string) []grypeDB.AffectedRange {
-	var ranges []grypeDB.AffectedRange
+func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange, vulnID string) []grypeDB.Range {
+	var ranges []grypeDB.Range
 	for _, ra := range ras {
 		r := getRange(cfg, c, ra, vulnID)
 		if r != nil {
@@ -199,9 +199,9 @@ func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange, vulnID stri
 	return ranges
 }
 
-func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange, vulnID string) *grypeDB.AffectedRange {
-	return &grypeDB.AffectedRange{
-		Version: grypeDB.AffectedVersion{
+func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange, vulnID string) *grypeDB.Range {
+	return &grypeDB.Range{
+		Version: grypeDB.Version{
 			Type:       getVersionFormat(c.Product),
 			Constraint: ra.String(),
 		},
