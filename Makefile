@@ -35,7 +35,7 @@ SUCCESS := $(BOLD)$(GREEN)
 
 # Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
-COVERAGE_THRESHOLD := 55
+COVERAGE_THRESHOLD := 41
 DIST_DIR=./dist
 CHANGELOG := CHANGELOG.md
 SNAPSHOT_DIR=./snapshot
@@ -167,7 +167,7 @@ check-licenses:
 .PHONY: unit
 unit: $(TEMP_DIR) ## Run Go unit tests (with coverage)
 	$(call title,Running Go unit tests)
-	GOEXPERIMENT=nocoverageredesign go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
+	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: unit-python
