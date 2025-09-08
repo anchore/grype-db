@@ -53,6 +53,11 @@ func TestOpenVEXProcessor_IsSupported(t *testing.T) {
 			want:      true,
 		},
 		{
+			name:      "openvex schema 0.3.1 is supported",
+			schemaURL: "https://github.com/openvex/spec/openvex_json_schema_0.3.1.json",
+			want:      true,
+		},
+		{
 			name:      "openvex schema 0.1.1 is not supported",
 			schemaURL: "https://github.com/openvex/spec/openvex_json_schema_0.1.1.json",
 			want:      false,

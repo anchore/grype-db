@@ -51,5 +51,5 @@ func (p openVEXProcessor) IsSupported(schemaURL string) bool {
 	}
 
 	// OpenVEX at 0.2.X (https://github.com/openvex/spec/blob/main/OPENVEX-SPEC.md)
-	return parsedVersion.Major == 0 && parsedVersion.Minor == 2
+	return parsedVersion.Major == 0 && parsedVersion.Minor >= 2
 }
