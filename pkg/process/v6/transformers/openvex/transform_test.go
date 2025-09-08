@@ -12,6 +12,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
+	"github.com/anchore/grype/grype/version"
 )
 
 var timeVal = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -95,8 +96,8 @@ func TestOpenVEXTransform(t *testing.T) {
 							Ranges: []grypeDB.Range{
 								{
 									Version: grypeDB.Version{
-										Type:       "semver",
-										Constraint: "== 1.26.16",
+										Type:       version.PythonFormat.String(),
+										Constraint: "= 1.26.16",
 									},
 								},
 							},
@@ -166,6 +167,10 @@ func TestOpenVEXTransform(t *testing.T) {
 							CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
 							Ranges: []grypeDB.Range{
 								{
+									Version: grypeDB.Version{
+										Type:       version.SemanticFormat.String(),
+										Constraint: "= 4.18.2",
+									},
 									Fix: &grypeDB.Fix{
 										Version: "4.18.2",
 										State:   grypeDB.NotAffectedFixStatus,
@@ -184,6 +189,10 @@ func TestOpenVEXTransform(t *testing.T) {
 							CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
 							Ranges: []grypeDB.Range{
 								{
+									Version: grypeDB.Version{
+										Type:       version.PythonFormat.String(),
+										Constraint: "= 1.26.16",
+									},
 									Fix: &grypeDB.Fix{
 										Version: "1.26.16",
 										State:   grypeDB.NotAffectedFixStatus,
@@ -338,8 +347,8 @@ func Test_GetPackageHandles(t *testing.T) {
 						Ranges: []grypeDB.Range{
 							{
 								Version: grypeDB.Version{
-									Type:       "semver",
-									Constraint: "== 1.26.16",
+									Type:       version.PythonFormat.String(),
+									Constraint: "= 1.26.16",
 								},
 							},
 						},
@@ -384,6 +393,10 @@ func Test_GetPackageHandles(t *testing.T) {
 						CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
 						Ranges: []grypeDB.Range{
 							{
+								Version: grypeDB.Version{
+									Type:       version.SemanticFormat.String(),
+									Constraint: "= 4.18.2",
+								},
 								Fix: &grypeDB.Fix{
 									Version: "4.18.2",
 									State:   grypeDB.NotAffectedFixStatus,
@@ -402,6 +415,10 @@ func Test_GetPackageHandles(t *testing.T) {
 						CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
 						Ranges: []grypeDB.Range{
 							{
+								Version: grypeDB.Version{
+									Type:       version.PythonFormat.String(),
+									Constraint: "= 1.26.16",
+								},
 								Fix: &grypeDB.Fix{
 									Version: "1.26.16",
 									State:   grypeDB.NotAffectedFixStatus,
@@ -433,7 +450,7 @@ func Test_GetPackageHandles(t *testing.T) {
 				},
 			},
 			want: []any{
-				grypeDB.AffectedPackageHandle{
+				grypeDB.UnaffectedPackageHandle{
 					Package: &grypeDB.Package{
 						// converts pypi -> python
 						Ecosystem: "python",
@@ -444,8 +461,12 @@ func Test_GetPackageHandles(t *testing.T) {
 						Ranges: []grypeDB.Range{
 							{
 								Version: grypeDB.Version{
-									Type:       "semver",
-									Constraint: "< 2.0.7",
+									Type:       version.PythonFormat.String(),
+									Constraint: "= 2.0.7",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2.0.7",
+									State:   grypeDB.FixedStatus,
 								},
 							},
 						},
@@ -530,8 +551,8 @@ func Test_GetUnaffectedPackage(t *testing.T) {
 					Ranges: []grypeDB.Range{
 						{
 							Version: grypeDB.Version{
-								Type:       "semver",
-								Constraint: "== 1.26.16",
+								Type:       version.PythonFormat.String(),
+								Constraint: "= 1.26.16",
 							},
 						},
 					},

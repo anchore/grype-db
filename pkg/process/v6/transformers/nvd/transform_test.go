@@ -195,14 +195,14 @@ func TestTransform(t *testing.T) {
 					},
 					Related: affectedPkgSlice(
 						grypeDB.AffectedCPEHandle{
-							BlobValue: &grypeDB.AffectedPackageBlob{
+							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
-								Qualifiers: &grypeDB.AffectedPackageQualifiers{
+								Qualifiers: &grypeDB.PackageQualifiers{
 									PlatformCPEs: []string{"cpe:2.3:o:linux:linux_kernel:-:*:*:*:*:*:*:*"},
 								},
-								Ranges: []grypeDB.AffectedRange{
+								Ranges: []grypeDB.Range{
 									{
-										Version: grypeDB.AffectedVersion{
+										Version: grypeDB.Version{
 											Constraint: ">= 7.2, < 7.3",
 										},
 										Fix: &grypeDB.Fix{
@@ -289,14 +289,14 @@ func TestTransform(t *testing.T) {
 					},
 					Related: affectedPkgSlice(
 						grypeDB.AffectedCPEHandle{
-							BlobValue: &grypeDB.AffectedPackageBlob{
+							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
-								Qualifiers: &grypeDB.AffectedPackageQualifiers{
+								Qualifiers: &grypeDB.PackageQualifiers{
 									PlatformCPEs: []string{"cpe:2.3:o:linux:linux_kernel:-:*:*:*:*:*:*:*"},
 								},
-								Ranges: []grypeDB.AffectedRange{
+								Ranges: []grypeDB.Range{
 									{
-										Version: grypeDB.AffectedVersion{
+										Version: grypeDB.Version{
 											Constraint: ">= 7.2, < 7.3",
 										},
 										Fix: &grypeDB.Fix{

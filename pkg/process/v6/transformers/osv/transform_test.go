@@ -355,8 +355,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					},
 				},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=1.0.0,<1.2.3",
 				},
