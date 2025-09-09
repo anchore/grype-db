@@ -22,16 +22,11 @@ func NewEntries(models ...any) []data.Entry {
 		switch m := model.(type) {
 		case grypeDB.VulnerabilityHandle:
 			entry.VulnerabilityHandle = &m
-		case grypeDB.AffectedPackageHandle:
-			entry.Related = append(entry.Related, m)
-		case grypeDB.AffectedCPEHandle:
-			entry.Related = append(entry.Related, m)
-		case grypeDB.KnownExploitedVulnerabilityHandle:
+		case grypeDB.AffectedPackageHandle, grypeDB.UnaffectedPackageHandle, grypeDB.AffectedCPEHandle,
+			grypeDB.UnaffectedCPEHandle, grypeDB.KnownExploitedVulnerabilityHandle, grypeDB.EpssHandle:
 			entry.Related = append(entry.Related, m)
 		case grypeDB.Provider:
 			entry.Provider = &m
-		case grypeDB.EpssHandle:
-			entry.Related = append(entry.Related, m)
 		default:
 			panic(fmt.Sprintf("unsupported model type: %T", m))
 		}
