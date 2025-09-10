@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/google/osv-scanner/pkg/models"
 
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/process/internal/codename"
 	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/internal"
@@ -16,6 +18,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/db/v6/name"
+	"github.com/anchore/grype/grype/distro"
 	"github.com/anchore/syft/syft/pkg"
 )
 
@@ -67,8 +70,9 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	var aphs []grypeDB.AffectedPackageHandle
 	for _, affected := range vuln.Affected {
 		aph := grypeDB.AffectedPackageHandle{
-			Package:   getPackage(affected.Package),
-			BlobValue: &grypeDB.PackageBlob{CVEs: vuln.Aliases},
+			Package:         getPackage(affected.Package),
+			OperatingSystem: getOperatingSystemFromEcosystem(string(affected.Package.Ecosystem)),
+			BlobValue:       &grypeDB.PackageBlob{CVEs: vuln.Aliases},
 		}
 
 		if withCPE {
@@ -269,9 +273,53 @@ func normalizeRangeType(t models.RangeType, ecosystem string) string {
 }
 
 func getPackage(p models.Package) *grypeDB.Package {
+	// Try to determine package type from ecosystem or PURL
+	var pkgType pkg.Type
+	var ecosystem string
+
+	if p.Purl != "" {
+		pkgType = pkg.TypeFromPURL(p.Purl)
+		ecosystem = string(p.Ecosystem)
+	} else {
+		pkgType = getPackageTypeFromEcosystem(string(p.Ecosystem))
+		// If we found a package type from OS ecosystem, use it; otherwise use original ecosystem
+		if pkgType != "" {
+			ecosystem = string(pkgType)
+		} else {
+			ecosystem = string(p.Ecosystem)
+		}
+	}
+
 	return &grypeDB.Package{
-		Ecosystem: string(p.Ecosystem),
-		Name:      name.Normalize(p.Name, pkg.TypeFromPURL(p.Purl)),
+		Ecosystem: ecosystem,
+		Name:      name.Normalize(p.Name, pkgType),
+	}
+}
+
+// getPackageTypeFromEcosystem determines package type from OSV ecosystem
+func getPackageTypeFromEcosystem(ecosystem string) pkg.Type {
+	if ecosystem == "" {
+		return ""
+	}
+
+	// Split ecosystem by colon to get OS name
+	parts := strings.Split(ecosystem, ":")
+	osName := strings.ToLower(parts[0])
+
+	// Map OS names to package types
+	switch osName {
+	case "almalinux", "redhat", "centos", "fedora", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
+		return pkg.RpmPkg
+	case "ubuntu", "debian":
+		return pkg.DebPkg
+	case "alpine", "chainguard", "wolfi", "minimos":
+		return pkg.ApkPkg
+	case "windows":
+		return pkg.KbPkg
+	default:
+		// For non-OS ecosystems (like npm, pypi, etc.), return empty type
+		// The package type will be determined from PURL if available
+		return ""
 	}
 }
 
@@ -345,4 +393,88 @@ func getSeverities(vuln unmarshal.OSVVulnerability) ([]grypeDB.Severity, error) 
 	}
 
 	return severities, nil
+}
+
+// getOperatingSystemFromEcosystem extracts operating system information from OSV ecosystem field
+// Examples: "AlmaLinux:8" -> almalinux 8, "Ubuntu:Pro:14.04:LTS" -> ubuntu 14.04
+func getOperatingSystemFromEcosystem(ecosystem string) *grypeDB.OperatingSystem {
+	if ecosystem == "" {
+		return nil
+	}
+
+	// Split ecosystem by colon to get components
+	parts := strings.Split(ecosystem, ":")
+	if len(parts) < 2 {
+		return nil
+	}
+
+	osName := strings.ToLower(parts[0])
+	osVersion := parts[1]
+
+	// Handle Ubuntu's more complex ecosystem format
+	if osName == "ubuntu" && len(parts) > 2 {
+		// Ubuntu:Pro:14.04:LTS -> version is 14.04
+		if len(parts) >= 4 {
+			osVersion = parts[2]
+		}
+	}
+
+	// Parse version into major/minor components
+	versionFields := strings.Split(osVersion, ".")
+	var majorVersion, minorVersion string
+	if len(versionFields) > 0 {
+		majorVersion = versionFields[0]
+		// Check if the first field is actually a number
+		if _, err := strconv.Atoi(majorVersion[0:1]); err != nil {
+			// If not numeric, treat the whole thing as a label version
+			return &grypeDB.OperatingSystem{
+				Name:         normalizeOSName(osName),
+				LabelVersion: osVersion,
+				Codename:     codename.LookupOS(normalizeOSName(osName), "", ""),
+			}
+		}
+		if len(versionFields) > 1 {
+			minorVersion = versionFields[1]
+		}
+	}
+
+	return &grypeDB.OperatingSystem{
+		Name:         normalizeOSName(osName),
+		MajorVersion: majorVersion,
+		MinorVersion: minorVersion,
+		Codename:     codename.LookupOS(normalizeOSName(osName), majorVersion, minorVersion),
+	}
+}
+
+// normalizeOSName normalizes operating system names for consistency
+func normalizeOSName(osName string) string {
+	osName = strings.ToLower(osName)
+
+	// Handle specific OS name mappings
+	switch osName {
+	case "almalinux":
+		return "almalinux"
+	case "ubuntu":
+		return "ubuntu"
+	case "debian":
+		return "debian"
+	case "alpine":
+		return "alpine"
+	case "centos":
+		return "centos"
+	case "rhel", "redhat":
+		return "redhat"
+	case "fedora":
+		return "fedora"
+	case "opensuse", "suse":
+		return "opensuse"
+	case "arch":
+		return "archlinux"
+	default:
+		// Try to lookup in distro mapping
+		if d, ok := distro.IDMapping[osName]; ok {
+			return d.String()
+		}
+		return osName
+	}
 }
