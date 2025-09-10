@@ -68,6 +68,14 @@ func affectedPkgSlice(a ...grypeDB.AffectedPackageHandle) []any {
 	return r
 }
 
+func unaffectedPkgSlice(u ...grypeDB.UnaffectedPackageHandle) []any {
+	var r []any
+	for _, v := range u {
+		r = append(r, v)
+	}
+	return r
+}
+
 func TestTransform(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -192,6 +200,78 @@ func TestTransform(t *testing.T) {
 											Kind: "first-observed",
 										},
 									},
+								},
+							}},
+						},
+					},
+				),
+			}},
+		},
+		{
+			name:        "AlmaLinux Advisory",
+			fixturePath: "test-fixtures/ALSA-2025-7467.json",
+			want: []transformers.RelatedEntries{{
+				VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+					Name:          "ALSA-2025:7467",
+					Status:        grypeDB.VulnerabilityActive,
+					ProviderID:    "osv",
+					Provider:      expectedProvider(),
+					ModifiedDate:  timeRef(time.Date(2025, time.July, 2, 12, 50, 6, 0, time.UTC)),
+					PublishedDate: timeRef(time.Date(2025, time.May, 13, 0, 0, 0, 0, time.UTC)),
+					BlobValue: &grypeDB.VulnerabilityBlob{
+						ID:          "ALSA-2025:7467",
+						Description: "The skopeo command lets you inspect images from container image registries.",
+						References: []grypeDB.Reference{{
+							URL:  "https://errata.almalinux.org/10/ALSA-2025-7467.html",
+							Tags: []string{"ADVISORY"},
+						}},
+						Aliases:    []string{"CVE-2025-27144"},
+						Severities: nil,
+					},
+				},
+				Related: unaffectedPkgSlice(
+					grypeDB.UnaffectedPackageHandle{
+						Package: &grypeDB.Package{
+							Name:      "skopeo",
+							Ecosystem: "rpm",
+						},
+						OperatingSystem: &grypeDB.OperatingSystem{
+							Name:         "almalinux",
+							MajorVersion: "10",
+						},
+						BlobValue: &grypeDB.PackageBlob{
+							CVEs: []string{"CVE-2025-27144"},
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "ecosystem",
+									Constraint: ">= 2:1.18.1-1.el10_0",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2:1.18.1-1.el10_0",
+									State:   grypeDB.FixedStatus,
+								},
+							}},
+						},
+					},
+					grypeDB.UnaffectedPackageHandle{
+						Package: &grypeDB.Package{
+							Name:      "skopeo-tests",
+							Ecosystem: "rpm",
+						},
+						OperatingSystem: &grypeDB.OperatingSystem{
+							Name:         "almalinux",
+							MajorVersion: "10",
+						},
+						BlobValue: &grypeDB.PackageBlob{
+							CVEs: []string{"CVE-2025-27144"},
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "ecosystem",
+									Constraint: ">= 2:1.18.1-1.el10_0",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2:1.18.1-1.el10_0",
+									State:   grypeDB.FixedStatus,
 								},
 							}},
 						},
