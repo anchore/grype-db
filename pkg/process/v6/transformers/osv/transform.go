@@ -47,8 +47,17 @@ func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) (
 		},
 	}
 
-	for _, a := range getAffectedPackages(vulnerability) {
-		in = append(in, a)
+	// Check if this is an advisory record
+	if isAdvisoryRecord(vulnerability) {
+		// For advisory records, emit unaffected packages
+		for _, u := range getUnaffectedPackages(vulnerability) {
+			in = append(in, u)
+		}
+	} else {
+		// For vulnerability records, emit affected packages
+		for _, a := range getAffectedPackages(vulnerability) {
+			in = append(in, a)
+		}
 	}
 
 	return transformers.NewEntries(in...), nil
@@ -477,4 +486,130 @@ func normalizeOSName(osName string) string {
 		}
 		return osName
 	}
+}
+
+// isAdvisoryRecord checks if the OSV record is marked as an advisory
+func isAdvisoryRecord(vuln unmarshal.OSVVulnerability) bool {
+	if vuln.DatabaseSpecific == nil {
+		return false
+	}
+
+	vunnelData, ok := vuln.DatabaseSpecific["vunnel"]
+	if !ok {
+		return false
+	}
+
+	vunnelMap, ok := vunnelData.(map[string]any)
+	if !ok {
+		return false
+	}
+
+	recordType, ok := vunnelMap["record_type"]
+	if !ok {
+		return false
+	}
+
+	recordTypeStr, ok := recordType.(string)
+	if !ok {
+		return false
+	}
+
+	return recordTypeStr == "advisory"
+}
+
+// getUnaffectedPackages creates UnaffectedPackageHandle entries for advisory records
+func getUnaffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.UnaffectedPackageHandle {
+	if len(vuln.Affected) == 0 {
+		return nil
+	}
+
+	var uphs []grypeDB.UnaffectedPackageHandle
+	for _, affected := range vuln.Affected {
+		uph := grypeDB.UnaffectedPackageHandle{
+			Package:         getPackage(affected.Package),
+			OperatingSystem: getOperatingSystemFromEcosystem(string(affected.Package.Ecosystem)),
+			BlobValue:       getUnaffectedBlob(vuln.Aliases, affected.Ranges),
+		}
+		uphs = append(uphs, uph)
+	}
+
+	// stable ordering
+	sort.Sort(internal.ByUnaffectedPackage(uphs))
+
+	return uphs
+}
+
+// getUnaffectedBlob creates a package blob for unaffected packages (advisories)
+// For advisories, we need to invert the ranges to represent safe versions
+func getUnaffectedBlob(aliases []string, ranges []models.Range) *grypeDB.PackageBlob {
+	var grypeRanges []grypeDB.Range
+	for _, r := range ranges {
+		grypeRanges = append(grypeRanges, getGrypeSafeRangesFromRange(r)...)
+	}
+
+	return &grypeDB.PackageBlob{
+		CVEs:   aliases,
+		Ranges: grypeRanges,
+	}
+}
+
+// getGrypeSafeRangesFromRange converts OSV ranges to safe version ranges for unaffected packages
+// This inverts the logic: instead of "< fix_version" (vulnerable), we create ">= fix_version" (safe)
+func getGrypeSafeRangesFromRange(r models.Range) []grypeDB.Range {
+	var ranges []grypeDB.Range
+	if len(r.Events) == 0 {
+		return nil
+	}
+
+	// Look for fix events to create safe ranges
+	fixByVersion := make(map[string]grypeDB.FixAvailability)
+
+	// Check r.DatabaseSpecific for "anchore" key which has fix availability information
+	if dbSpecific, ok := r.DatabaseSpecific["anchore"]; ok {
+		if anchoreInfo, ok := dbSpecific.(map[string]any); ok {
+			if fixes, ok := anchoreInfo["fixes"]; ok {
+				if fixList, ok := fixes.([]any); ok {
+					for _, fixEntry := range fixList {
+						if fixMap, ok := fixEntry.(map[string]any); ok {
+							version, vOk := fixMap["version"].(string)
+							kind, kOk := fixMap["kind"].(string)
+							date, dOk := fixMap["date"].(string)
+							if vOk && kOk && dOk {
+								fixByVersion[version] = grypeDB.FixAvailability{
+									Date: internal.ParseTime(date),
+									Kind: kind,
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	rangeType := normalizeRangeType(r.Type)
+
+	// Process events to find fix versions
+	for _, e := range r.Events {
+		if e.Fixed != "" {
+			// For unaffected packages, create a range that represents safe versions (>= fix version)
+			var detail *grypeDB.FixDetail
+			if f, ok := fixByVersion[e.Fixed]; ok {
+				detail = &grypeDB.FixDetail{
+					Available: &f,
+				}
+			}
+
+			constraint := fmt.Sprintf(">= %s", e.Fixed)
+			ranges = append(ranges, grypeDB.Range{
+				Fix: normalizeFix(e.Fixed, detail),
+				Version: grypeDB.Version{
+					Type:       rangeType,
+					Constraint: normalizeConstraint(constraint, rangeType),
+				},
+			})
+		}
+	}
+
+	return ranges
 }
