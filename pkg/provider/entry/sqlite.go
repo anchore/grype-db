@@ -39,7 +39,8 @@ type errorOpener struct {
 func sqliteEntryCount(resultPaths []string) (int64, error) {
 	var dbPath string
 	for _, p := range resultPaths {
-		if strings.HasSuffix(p, ".db") {
+		// we should only be validating against a single results DB, not any DB in the output
+		if strings.HasSuffix(p, "results.db") {
 			dbPath = p
 			break
 		}
