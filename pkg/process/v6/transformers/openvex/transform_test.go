@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers/internal"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
@@ -127,7 +128,7 @@ func TestOpenVEXTransform(t *testing.T) {
 						},
 					},
 				},
-				Status: govex.StatusNotAffected,
+				Status: govex.StatusNotAffected, // important! this means the versions will not be attributed to fixes
 				Vulnerability: govex.Vulnerability{
 					Name:        "cve-2023-43804",
 					Description: "Test vulnerability affecting multiple packages",
@@ -172,8 +173,7 @@ func TestOpenVEXTransform(t *testing.T) {
 										Constraint: "= 4.18.2",
 									},
 									Fix: &grypeDB.Fix{
-										Version: "4.18.2",
-										State:   grypeDB.NotAffectedFixStatus,
+										State: grypeDB.NotAffectedFixStatus,
 									},
 								},
 							},
@@ -194,8 +194,7 @@ func TestOpenVEXTransform(t *testing.T) {
 										Constraint: "= 1.26.16",
 									},
 									Fix: &grypeDB.Fix{
-										Version: "1.26.16",
-										State:   grypeDB.NotAffectedFixStatus,
+										State: grypeDB.NotAffectedFixStatus,
 									},
 								},
 							},
@@ -303,6 +302,7 @@ func Test_GetPackageHandles(t *testing.T) {
 	tests := []struct {
 		name    string
 		vuln    unmarshal.OpenVEXVulnerability
+		fixes   []unmarshal.AnnotatedOpenVEXFix
 		want    []any
 		wantErr bool
 	}{
@@ -358,6 +358,121 @@ func Test_GetPackageHandles(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "single product with fix",
+			vuln: govex.Statement{
+				ID: "test-vuln-2",
+				Products: []govex.Product{
+					{
+						Component: govex.Component{
+							Identifiers: map[govex.IdentifierType]string{
+								govex.PURL: "pkg:pypi/urllib3@1.26.16",
+							},
+						},
+					},
+				},
+				Status: govex.StatusFixed,
+				Vulnerability: govex.Vulnerability{
+					Name:    "cve-2023-43804",
+					Aliases: []govex.VulnerabilityID{"ghsa-v845-jxx5-vc9f"},
+				},
+			},
+			fixes: []unmarshal.AnnotatedOpenVEXFix{
+				{
+					Available: unmarshal.AnnotatedOpenVEXFixAvailability{
+						Date: "2025-01-01",
+						Kind: "advisory",
+					},
+					Product: "pkg:pypi/urllib3@1.26.16",
+				},
+			},
+			want: []any{
+				grypeDB.UnaffectedPackageHandle{
+					Package: &grypeDB.Package{
+						// converts pypi -> python
+						Ecosystem: "python",
+						Name:      "urllib3",
+					},
+					BlobValue: &grypeDB.PackageBlob{
+						CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
+						Ranges: []grypeDB.Range{
+							{
+								Version: grypeDB.Version{
+									Type:       version.PythonFormat.String(),
+									Constraint: "= 1.26.16",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "1.26.16",
+									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: internal.ParseTime("2025-01-01"),
+											Kind: "advisory",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "don't include fix detail for a mismatched status",
+			vuln: govex.Statement{
+				ID: "test-vuln-2",
+				Products: []govex.Product{
+					{
+						Component: govex.Component{
+							Identifiers: map[govex.IdentifierType]string{
+								govex.PURL: "pkg:pypi/urllib3@1.26.16",
+							},
+						},
+					},
+				},
+				Status: govex.StatusNotAffected, // important! not-affected != fixed
+				Vulnerability: govex.Vulnerability{
+					Name:    "cve-2023-43804",
+					Aliases: []govex.VulnerabilityID{"ghsa-v845-jxx5-vc9f"},
+				},
+			},
+			fixes: []unmarshal.AnnotatedOpenVEXFix{ // important! there is a fix, but the status is not "fixed", so this should never be associated with the package
+				{
+					Available: unmarshal.AnnotatedOpenVEXFixAvailability{
+						Date: "2025-01-01",
+						Kind: "advisory",
+					},
+					Product: "pkg:pypi/urllib3@1.26.16",
+				},
+			},
+			want: []any{
+				grypeDB.UnaffectedPackageHandle{
+					Package: &grypeDB.Package{
+						// converts pypi -> python
+						Ecosystem: "python",
+						Name:      "urllib3",
+					},
+					BlobValue: &grypeDB.PackageBlob{
+						CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
+						Ranges: []grypeDB.Range{
+							{
+								Version: grypeDB.Version{
+									Type:       version.PythonFormat.String(),
+									Constraint: "= 1.26.16",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "", // important! no version because the status is not "fixed"
+									State:   grypeDB.NotAffectedFixStatus,
+									Detail:  nil, // important! no detail because the status is not "fixed"
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "multiple products sorted alphabetically",
 			vuln: govex.Statement{
 				ID: "test-vuln-3",
@@ -398,8 +513,7 @@ func Test_GetPackageHandles(t *testing.T) {
 									Constraint: "= 4.18.2",
 								},
 								Fix: &grypeDB.Fix{
-									Version: "4.18.2",
-									State:   grypeDB.NotAffectedFixStatus,
+									State: grypeDB.NotAffectedFixStatus,
 								},
 							},
 						},
@@ -420,8 +534,7 @@ func Test_GetPackageHandles(t *testing.T) {
 									Constraint: "= 1.26.16",
 								},
 								Fix: &grypeDB.Fix{
-									Version: "1.26.16",
-									State:   grypeDB.NotAffectedFixStatus,
+									State: grypeDB.NotAffectedFixStatus,
 								},
 							},
 						},
@@ -497,106 +610,13 @@ func Test_GetPackageHandles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getPackageHandles(&tt.vuln)
+			got, err := getPackageHandles(&tt.vuln, tt.fixes)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("GetPackages() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func Test_GetUnaffectedPackage(t *testing.T) {
-	tests := []struct {
-		name    string
-		product govex.Product
-		vuln    unmarshal.OpenVEXVulnerability
-		want    any
-		wantErr bool
-	}{
-		{
-			name:    "Empty results in error",
-			product: govex.Product{},
-			vuln:    unmarshal.OpenVEXVulnerability{},
-			wantErr: true,
-		},
-		{
-			name: "valid product and vuln",
-			product: govex.Product{
-				Component: govex.Component{
-					Identifiers: map[govex.IdentifierType]string{
-						govex.PURL: "pkg:pypi/urllib3@1.26.16",
-					},
-				},
-			},
-			vuln: govex.Statement{
-				Status: govex.StatusAffected,
-				Vulnerability: govex.Vulnerability{
-					Name:    "cve-2023-43804",
-					Aliases: []govex.VulnerabilityID{"ghsa-v845-jxx5-vc9f"},
-				},
-			},
-			want: grypeDB.AffectedPackageHandle{
-				Package: &grypeDB.Package{
-					// converts pypi -> python
-					Ecosystem: "python",
-					Name:      "urllib3",
-				},
-				BlobValue: &grypeDB.PackageBlob{
-					CVEs: []string{"cve-2023-43804", "ghsa-v845-jxx5-vc9f"},
-					Ranges: []grypeDB.Range{
-						{
-							Version: grypeDB.Version{
-								Type:       version.PythonFormat.String(),
-								Constraint: "= 1.26.16",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid purl returns error",
-			vuln: govex.Statement{
-				ID: "test-vuln-5",
-				Products: []govex.Product{
-					{
-						Component: govex.Component{
-							Identifiers: map[govex.IdentifierType]string{
-								govex.PURL: "invalid-purl",
-							},
-						},
-					},
-				},
-				Status: govex.StatusAffected,
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotaph, gotuph, err := getPackageHandle(&tt.product, &tt.vuln)
-			if tt.wantErr {
-				require.Error(t, err)
-				return
-			}
-			var got []any
-			for _, a := range gotaph {
-				got = append(got, a)
-			}
-			for _, u := range gotuph {
-				got = append(got, u)
-			}
-			require.Len(t, got, 1, "should return exactly one package handle")
-			require.NoError(t, err)
-			g := got[0]
-			if diff := cmp.Diff(tt.want, g); diff != "" {
 				t.Errorf("GetPackages() mismatch (-want +got):\n%s", diff)
 			}
 		})

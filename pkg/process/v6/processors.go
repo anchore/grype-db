@@ -52,5 +52,6 @@ func Processors(cfg Config) []data.Processor {
 		processors.NewV2KEVProcessor(kev.Transform),
 		processors.NewV2EPSSProcessor(epss.Transform),
 		processors.NewV2OpenVEXProcessor(openvex.Transform),
+		processors.NewV2AnnotatedOpenVEXProcessor(openvex.AnnotatedTransform),
 	}
 }
