@@ -17,10 +17,15 @@ import (
 	syft "github.com/anchore/syft/syft/pkg"
 )
 
-// Transform an openvex vulnerability into data entries.
-//
-//	satisifies pkg/data/OpenVexTransformerV2
+func AnnotatedTransform(wrapper unmarshal.AnnotatedOpenVEXVulnerability, state provider.State) ([]data.Entry, error) {
+	return transform(wrapper.Document, state, wrapper.Fixes)
+}
+
 func Transform(vulnerability unmarshal.OpenVEXVulnerability, state provider.State) ([]data.Entry, error) {
+	return transform(vulnerability, state, nil)
+}
+
+func transform(vulnerability unmarshal.OpenVEXVulnerability, state provider.State, fixes []unmarshal.AnnotatedOpenVEXFix) ([]data.Entry, error) {
 	name := getName(&vulnerability)
 	vulnHandle := grypeDB.VulnerabilityHandle{
 		Name:          name,
@@ -37,7 +42,7 @@ func Transform(vulnerability unmarshal.OpenVEXVulnerability, state provider.Stat
 			Aliases:     getAliases(&vulnerability),
 		},
 	}
-	pkgs, err := getPackageHandles(&vulnerability)
+	pkgs, err := getPackageHandles(&vulnerability, fixes)
 	if err != nil {
 		return nil, err
 	}
@@ -47,15 +52,20 @@ func Transform(vulnerability unmarshal.OpenVEXVulnerability, state provider.Stat
 }
 
 // getPackageHandles for all products in this advisory
-func getPackageHandles(vuln *unmarshal.OpenVEXVulnerability) ([]any, error) {
+func getPackageHandles(vuln *unmarshal.OpenVEXVulnerability, fixes []unmarshal.AnnotatedOpenVEXFix) ([]any, error) {
 	if len(vuln.Products) == 0 {
 		return nil, nil
+	}
+
+	fixesByProduct := make(map[string][]unmarshal.AnnotatedOpenVEXFix)
+	for _, fix := range fixes {
+		fixesByProduct[fix.Product] = append(fixesByProduct[fix.Product], fix)
 	}
 
 	var aphs []grypeDB.AffectedPackageHandle
 	var uaphs []grypeDB.UnaffectedPackageHandle
 	for _, product := range vuln.Products {
-		aph, uph, err := getPackageHandle(&product, vuln)
+		aph, uph, err := getPackageHandle(&product, vuln, fixesByProduct[product.Identifiers[govex.PURL]])
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +96,7 @@ func getPackageHandles(vuln *unmarshal.OpenVEXVulnerability) ([]any, error) {
 //	    PURLIdentifierType: pkg:type/name@version
 //	  }
 //	}
-func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerability) (aphs []grypeDB.AffectedPackageHandle, uphs []grypeDB.UnaffectedPackageHandle, err error) {
+func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerability, fixes []unmarshal.AnnotatedOpenVEXFix) (aphs []grypeDB.AffectedPackageHandle, uphs []grypeDB.UnaffectedPackageHandle, err error) {
 	if product == nil || vuln == nil {
 		return nil, nil, fmt.Errorf("getAffectedPackage params cannot be nil")
 	}
@@ -107,17 +117,17 @@ func getPackageHandle(product *govex.Product, vuln *unmarshal.OpenVEXVulnerabili
 	case govex.StatusAffected:
 		aphs = append(aphs, grypeDB.AffectedPackageHandle{
 			Package:   pkg,
-			BlobValue: getAffectedBlob(aliases, purl.Version, purl.Type),
+			BlobValue: getPackageBlob(aliases, purl.Version, purl.Type, "", fixes),
 		})
 	case govex.StatusNotAffected:
 		uphs = append(uphs, grypeDB.UnaffectedPackageHandle{
 			Package:   pkg,
-			BlobValue: getUnaffectedBlob(aliases, purl.Version, purl.Type, grypeDB.NotAffectedFixStatus),
+			BlobValue: getPackageBlob(aliases, purl.Version, purl.Type, grypeDB.NotAffectedFixStatus, fixes),
 		})
 	case govex.StatusFixed:
 		uphs = append(uphs, grypeDB.UnaffectedPackageHandle{
 			Package:   pkg,
-			BlobValue: getUnaffectedBlob(aliases, purl.Version, purl.Type, grypeDB.FixedStatus),
+			BlobValue: getPackageBlob(aliases, purl.Version, purl.Type, grypeDB.FixedStatus, fixes),
 		})
 	default:
 		err = fmt.Errorf("invalid vuln states %s", vuln.Status)
@@ -165,24 +175,36 @@ func getReferences(vuln *unmarshal.OpenVEXVulnerability) []grypeDB.Reference {
 	return refs
 }
 
-// getAffectedBlob creates a package blob for affected packages
-func getAffectedBlob(aliases []string, ver string, ty string) *grypeDB.PackageBlob {
-	return &grypeDB.PackageBlob{
-		CVEs: aliases,
-		// semantic versioning
-		Ranges: []grypeDB.Range{
-			{
-				Version: grypeDB.Version{
-					Type:       version.ParseFormat(ty).String(),
-					Constraint: fmt.Sprintf("= %s", ver),
-				},
-			},
-		},
-	}
-}
+func getPackageBlob(aliases []string, ver string, ty string, fixState grypeDB.FixStatus, fixes []unmarshal.AnnotatedOpenVEXFix) *grypeDB.PackageBlob {
+	var fix *grypeDB.Fix
+	if fixState != "" {
+		fix = &grypeDB.Fix{
+			State: fixState,
+		}
 
-// getUnaffectedBlob creates a package blob for unaffected packages (has a fix)
-func getUnaffectedBlob(aliases []string, ver string, ty string, fixState grypeDB.FixStatus) *grypeDB.PackageBlob {
+		canExpressFixVersion := ver != "" && fixState == grypeDB.FixedStatus
+		if canExpressFixVersion {
+			// only express a fix version if we have a version and the state is "fixed"
+			fix.Version = ver
+		}
+
+		canExpressFixDetail := len(fixes) > 0 && canExpressFixVersion
+		var detail *grypeDB.FixDetail
+		if canExpressFixDetail {
+			time := internal.ParseTime(fixes[0].Available.Date)
+			if time != nil && !time.IsZero() {
+				detail = &grypeDB.FixDetail{
+					Available: &grypeDB.FixAvailability{
+						Date: time,
+						Kind: fixes[0].Available.Kind,
+					},
+				}
+			}
+		}
+
+		fix.Detail = detail
+	}
+
 	return &grypeDB.PackageBlob{
 		CVEs: aliases,
 		Ranges: []grypeDB.Range{
@@ -191,10 +213,7 @@ func getUnaffectedBlob(aliases []string, ver string, ty string, fixState grypeDB
 					Type:       version.ParseFormat(ty).String(),
 					Constraint: fmt.Sprintf("= %s", ver),
 				},
-				Fix: &grypeDB.Fix{
-					Version: ver,
-					State:   fixState,
-				},
+				Fix: fix,
 			},
 		},
 	}

@@ -18,6 +18,7 @@ type OSTransformer func(entry unmarshal.OSVulnerability) ([]Entry, error)
 type MatchExclusionTransformer func(entry unmarshal.MatchExclusion) ([]Entry, error)
 
 // all v2 transformers (schema v6+)
+
 type GitHubTransformerV2 func(entry unmarshal.GitHubAdvisory, state provider.State) ([]Entry, error)
 type MSRCTransformerV2 func(entry unmarshal.MSRCVulnerability, state provider.State) ([]Entry, error)
 type NVDTransformerV2 func(entry unmarshal.NVDVulnerability, state provider.State) ([]Entry, error)
@@ -28,3 +29,4 @@ type KnownExploitedVulnerabilityTransformerV2 func(entry unmarshal.KnownExploite
 type EPSSTransformerV2 func(entry unmarshal.EPSS, state provider.State) ([]Entry, error)
 type OSVTransformerV2 func(entry unmarshal.OSVVulnerability, state provider.State) ([]Entry, error)
 type OpenVEXTransformerV2 func(entry unmarshal.OpenVEXVulnerability, state provider.State) ([]Entry, error)
+type AnnotatedOpenVEXTransformerV2 func(entry unmarshal.AnnotatedOpenVEXVulnerability, state provider.State) ([]Entry, error)
