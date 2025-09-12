@@ -22,6 +22,16 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 )
 
+const (
+	almaLinux = "almalinux"
+	redHat    = "redhat"
+	centos    = "centos"
+	fedora    = "fedora"
+	ubuntu    = "ubuntu"
+	debian    = "debian"
+	alpine    = "alpine"
+)
+
 func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) ([]data.Entry, error) {
 	severities, err := getSeverities(vulnerability)
 	if err != nil {
@@ -317,11 +327,11 @@ func getPackageTypeFromEcosystem(ecosystem string) pkg.Type {
 
 	// Map OS names to package types
 	switch osName {
-	case "almalinux", "redhat", "centos", "fedora", "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
+	case almaLinux, redHat, centos, fedora, "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
 		return pkg.RpmPkg
-	case "ubuntu", "debian":
+	case ubuntu, debian:
 		return pkg.DebPkg
-	case "alpine", "chainguard", "wolfi", "minimos":
+	case alpine, "chainguard", "wolfi", "minimos":
 		return pkg.ApkPkg
 	case "windows":
 		return pkg.KbPkg
@@ -421,7 +431,7 @@ func getOperatingSystemFromEcosystem(ecosystem string) *grypeDB.OperatingSystem 
 	osVersion := parts[1]
 
 	// Handle Ubuntu's more complex ecosystem format
-	if osName == "ubuntu" && len(parts) > 2 {
+	if osName == ubuntu && len(parts) > 2 {
 		// Ubuntu:Pro:14.04:LTS -> version is 14.04
 		if len(parts) >= 4 {
 			osVersion = parts[2]
@@ -461,20 +471,20 @@ func normalizeOSName(osName string) string {
 
 	// Handle specific OS name mappings
 	switch osName {
-	case "almalinux":
-		return "almalinux"
-	case "ubuntu":
-		return "ubuntu"
-	case "debian":
-		return "debian"
-	case "alpine":
-		return "alpine"
-	case "centos":
-		return "centos"
-	case "rhel", "redhat":
-		return "redhat"
-	case "fedora":
-		return "fedora"
+	case almaLinux:
+		return almaLinux
+	case ubuntu:
+		return ubuntu
+	case debian:
+		return debian
+	case alpine:
+		return alpine
+	case centos:
+		return centos
+	case "rhel", redHat:
+		return redHat
+	case fedora:
+		return fedora
 	case "opensuse", "suse":
 		return "opensuse"
 	case "arch":
@@ -540,11 +550,11 @@ func getUnaffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.Unaffected
 }
 
 // getUnaffectedBlob creates a package blob for unaffected packages (advisories)
-// For advisories, we need to invert the ranges to represent safe versions
+// For advisories, we need to invert the ranges to represent unaffected versions
 func getUnaffectedBlob(aliases []string, ranges []models.Range) *grypeDB.PackageBlob {
 	var grypeRanges []grypeDB.Range
 	for _, r := range ranges {
-		grypeRanges = append(grypeRanges, getGrypeSafeRangesFromRange(r)...)
+		grypeRanges = append(grypeRanges, getGrypeUnaffectedRangesFromRange(r)...)
 	}
 
 	return &grypeDB.PackageBlob{
@@ -553,63 +563,98 @@ func getUnaffectedBlob(aliases []string, ranges []models.Range) *grypeDB.Package
 	}
 }
 
-// getGrypeSafeRangesFromRange converts OSV ranges to safe version ranges for unaffected packages
-// This inverts the logic: instead of "< fix_version" (vulnerable), we create ">= fix_version" (safe)
-func getGrypeSafeRangesFromRange(r models.Range) []grypeDB.Range {
-	var ranges []grypeDB.Range
+// getGrypeUnaffectedRangesFromRange converts OSV ranges to unaffected version ranges for unaffected packages
+// This inverts the logic: instead of "< fix_version" (affected), we create ">= fix_version" (unaffected)
+func getGrypeUnaffectedRangesFromRange(r models.Range) []grypeDB.Range {
 	if len(r.Events) == 0 {
 		return nil
 	}
 
-	// Look for fix events to create safe ranges
-	fixByVersion := make(map[string]grypeDB.FixAvailability)
-
-	// Check r.DatabaseSpecific for "anchore" key which has fix availability information
-	if dbSpecific, ok := r.DatabaseSpecific["anchore"]; ok {
-		if anchoreInfo, ok := dbSpecific.(map[string]any); ok {
-			if fixes, ok := anchoreInfo["fixes"]; ok {
-				if fixList, ok := fixes.([]any); ok {
-					for _, fixEntry := range fixList {
-						if fixMap, ok := fixEntry.(map[string]any); ok {
-							version, vOk := fixMap["version"].(string)
-							kind, kOk := fixMap["kind"].(string)
-							date, dOk := fixMap["date"].(string)
-							if vOk && kOk && dOk {
-								fixByVersion[version] = grypeDB.FixAvailability{
-									Date: internal.ParseTime(date),
-									Kind: kind,
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
+	fixByVersion := extractFixAvailability(r)
 	rangeType := normalizeRangeType(r.Type)
 
-	// Process events to find fix versions
-	for _, e := range r.Events {
-		if e.Fixed != "" {
-			// For unaffected packages, create a range that represents safe versions (>= fix version)
-			var detail *grypeDB.FixDetail
-			if f, ok := fixByVersion[e.Fixed]; ok {
-				detail = &grypeDB.FixDetail{
-					Available: &f,
-				}
-			}
+	return buildUnaffectedRangesFromEvents(r.Events, fixByVersion, rangeType)
+}
 
-			constraint := fmt.Sprintf(">= %s", e.Fixed)
-			ranges = append(ranges, grypeDB.Range{
-				Fix: normalizeFix(e.Fixed, detail),
-				Version: grypeDB.Version{
-					Type:       rangeType,
-					Constraint: normalizeConstraint(constraint, rangeType),
-				},
-			})
+// extractFixAvailability extracts fix availability information from DatabaseSpecific
+func extractFixAvailability(r models.Range) map[string]grypeDB.FixAvailability {
+	fixByVersion := make(map[string]grypeDB.FixAvailability)
+
+	dbSpecific, hasDBSpecific := r.DatabaseSpecific["anchore"]
+	if !hasDBSpecific {
+		return fixByVersion
+	}
+
+	anchoreInfo, isMap := dbSpecific.(map[string]any)
+	if !isMap {
+		return fixByVersion
+	}
+
+	fixes, hasFixes := anchoreInfo["fixes"]
+	if !hasFixes {
+		return fixByVersion
+	}
+
+	fixList, isList := fixes.([]any)
+	if !isList {
+		return fixByVersion
+	}
+
+	for _, fixEntry := range fixList {
+		parseSingleFixEntry(fixEntry, fixByVersion)
+	}
+
+	return fixByVersion
+}
+
+// parseSingleFixEntry parses a single fix entry and adds it to the fixByVersion map
+func parseSingleFixEntry(fixEntry any, fixByVersion map[string]grypeDB.FixAvailability) {
+	fixMap, isMap := fixEntry.(map[string]any)
+	if !isMap {
+		return
+	}
+
+	version, vOk := fixMap["version"].(string)
+	kind, kOk := fixMap["kind"].(string)
+	date, dOk := fixMap["date"].(string)
+
+	if vOk && kOk && dOk {
+		fixByVersion[version] = grypeDB.FixAvailability{
+			Date: internal.ParseTime(date),
+			Kind: kind,
+		}
+	}
+}
+
+// buildUnaffectedRangesFromEvents processes events to create unaffected version ranges
+func buildUnaffectedRangesFromEvents(events []models.Event, fixByVersion map[string]grypeDB.FixAvailability, rangeType string) []grypeDB.Range {
+	var ranges []grypeDB.Range
+
+	for _, e := range events {
+		if e.Fixed != "" {
+			unaffectedRange := createUnaffectedRange(e.Fixed, fixByVersion, rangeType)
+			ranges = append(ranges, unaffectedRange)
 		}
 	}
 
 	return ranges
+}
+
+// createUnaffectedRange creates a single safe range for a fixed version
+func createUnaffectedRange(fixedVersion string, fixByVersion map[string]grypeDB.FixAvailability, rangeType string) grypeDB.Range {
+	var detail *grypeDB.FixDetail
+	if f, ok := fixByVersion[fixedVersion]; ok {
+		detail = &grypeDB.FixDetail{
+			Available: &f,
+		}
+	}
+
+	constraint := fmt.Sprintf(">= %s", fixedVersion)
+	return grypeDB.Range{
+		Fix: normalizeFix(fixedVersion, detail),
+		Version: grypeDB.Version{
+			Type:       rangeType,
+			Constraint: normalizeConstraint(constraint, rangeType),
+		},
+	}
 }
