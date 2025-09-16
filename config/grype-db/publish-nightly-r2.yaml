@@ -15,8 +15,7 @@ provider:
     - name: amazon
     - name: bitnami
     - name: chainguard
-    # TODO: add this in when chainguard-libraries data is being released
-    # - name: chainguard-libraries
+    - name: chainguard-libraries
     - name: debian
     - name: echo
     - name: epss
