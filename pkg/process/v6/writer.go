@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anchore/go-logger"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -15,11 +16,12 @@ import (
 var _ data.Writer = (*writer)(nil)
 
 type writer struct {
-	dbPath        string
-	store         grypeDB.ReadWriter
-	providerCache map[string]grypeDB.Provider
-	states        provider.States
-	severityCache map[string]grypeDB.Severity
+	dbPath               string
+	failOnMissingFixDate bool
+	store                grypeDB.ReadWriter
+	providerCache        map[string]grypeDB.Provider
+	states               provider.States
+	severityCache        map[string]grypeDB.Severity
 }
 
 type ProviderMetadata struct {
@@ -31,7 +33,7 @@ type Provider struct {
 	LastSuccessfulRun time.Time `json:"lastSuccessfulRun"`
 }
 
-func NewWriter(directory string, states provider.States) (data.Writer, error) {
+func NewWriter(directory string, states provider.States, failOnMissingFixDate bool) (data.Writer, error) {
 	cfg := grypeDB.Config{
 		DBDirPath: directory,
 	}
@@ -45,11 +47,12 @@ func NewWriter(directory string, states provider.States) (data.Writer, error) {
 	}
 
 	return &writer{
-		dbPath:        cfg.DBFilePath(),
-		providerCache: make(map[string]grypeDB.Provider),
-		store:         s,
-		states:        states,
-		severityCache: make(map[string]grypeDB.Severity),
+		dbPath:               cfg.DBFilePath(),
+		failOnMissingFixDate: failOnMissingFixDate,
+		providerCache:        make(map[string]grypeDB.Provider),
+		store:                s,
+		states:               states,
+		severityCache:        make(map[string]grypeDB.Severity),
 	}, nil
 }
 
@@ -98,6 +101,26 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error { // nolint
 			} else {
 				log.WithFields("package", row.Package).Warn("affected package entry does not have a vulnerability ID")
 			}
+
+			if w.failOnMissingFixDate {
+				if err := ensureFixDates(&row); err != nil {
+					fields := logger.Fields{
+						"pkg": row.Package,
+					}
+					if entry.VulnerabilityHandle != nil {
+						fields["vulnerability"] = entry.VulnerabilityHandle.Name
+					}
+					if row.BlobValue != nil {
+						fields["ranges"] = row.BlobValue.String()
+					}
+					if row.OperatingSystem != nil {
+						fields["os"] = row.OperatingSystem
+					}
+					log.WithFields(fields).Error("fix date validation failed")
+					return fmt.Errorf("unable to validate fix dates: %w", err)
+				}
+			}
+
 			if err := w.store.AddAffectedPackages(&row); err != nil {
 				return fmt.Errorf("unable to write affected-package to store: %w", err)
 			}
@@ -201,6 +224,16 @@ func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 	handle.BlobValue.Severities = sevs
 }
 
+func (w writer) Close() error {
+	if err := w.store.Close(); err != nil {
+		return fmt.Errorf("unable to close store: %w", err)
+	}
+
+	log.WithFields("path", w.dbPath).Info("database created")
+
+	return nil
+}
+
 func filterUnknownSeverities(sevs []grypeDB.Severity) []grypeDB.Severity {
 	var out []grypeDB.Severity
 	for _, s := range sevs {
@@ -220,12 +253,28 @@ func isKnownSeverity(s grypeDB.Severity) bool {
 	}
 }
 
-func (w writer) Close() error {
-	if err := w.store.Close(); err != nil {
-		return fmt.Errorf("unable to close store: %w", err)
+func ensureFixDates(row *grypeDB.AffectedPackageHandle) error {
+	if row.BlobValue == nil {
+		return nil
 	}
 
-	log.WithFields("path", w.dbPath).Info("database created")
-
+	for _, r := range row.BlobValue.Ranges {
+		if r.Fix == nil {
+			continue
+		}
+		if !isFixVersion(r.Fix.Version) || r.Fix.State != grypeDB.FixedStatus {
+			continue
+		}
+		if r.Fix.Detail == nil || r.Fix.Detail.Available == nil || r.Fix.Detail.Available.Date == nil {
+			return fmt.Errorf("missing fix date for version %q", r.Fix.Version)
+		}
+		if r.Fix.Detail.Available.Date.IsZero() {
+			return fmt.Errorf("zero fix date for version %q", r.Fix.Version)
+		}
+	}
 	return nil
+}
+
+func isFixVersion(v string) bool {
+	return v != "" && v != "0" && strings.ToLower(v) != "none"
 }
