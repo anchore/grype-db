@@ -17,19 +17,21 @@ type Build struct {
 	SchemaVersion  int  `yaml:"schema-version" json:"schema-version" mapstructure:"schema-version"`
 
 	// unbound options
-	IncludeCPEParts     []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
-	InferNVDFixVersions bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
-	Hydrate             bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`
+	IncludeCPEParts      []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
+	InferNVDFixVersions  bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
+	Hydrate              bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`
+	FailOnMissingFixDate bool     `yaml:"fail-on-missing-fix-date" json:"fail-on-missing-fix-date" mapstructure:"fail-on-missing-fix-date"`
 }
 
 func DefaultBuild() Build {
 	return Build{
-		DBLocation:          DefaultDBLocation(),
-		SkipValidation:      false,
-		SchemaVersion:       process.DefaultSchemaVersion,
-		IncludeCPEParts:     []string{"a", "h", "o"},
-		InferNVDFixVersions: true,
-		Hydrate:             false,
+		DBLocation:           DefaultDBLocation(),
+		SkipValidation:       false,
+		SchemaVersion:        process.DefaultSchemaVersion,
+		IncludeCPEParts:      []string{"a", "h", "o"},
+		InferNVDFixVersions:  true,
+		Hydrate:              false,
+		FailOnMissingFixDate: false,
 	}
 }
 
@@ -62,6 +64,7 @@ func (o *Build) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	v.SetDefault("build.include-cpe-parts", o.IncludeCPEParts)
 	v.SetDefault("build.infer-nvd-fix-versions", o.InferNVDFixVersions)
 	v.SetDefault("build.hydrate", o.Hydrate)
+	v.SetDefault("build.fail-on-missing-fix-date", o.FailOnMissingFixDate)
 
 	return o.DBLocation.BindFlags(flags, v)
 }

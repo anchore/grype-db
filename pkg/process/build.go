@@ -21,13 +21,14 @@ import (
 )
 
 type BuildConfig struct {
-	SchemaVersion       int
-	Directory           string
-	States              provider.States
-	Timestamp           time.Time
-	IncludeCPEParts     []string
-	InferNVDFixVersions bool
-	Hydrate             bool
+	SchemaVersion        int
+	Directory            string
+	States               provider.States
+	Timestamp            time.Time
+	IncludeCPEParts      []string
+	InferNVDFixVersions  bool
+	Hydrate              bool
+	FailOnMissingFixDate bool // any fixes found without at least one available date will cause a build failure
 }
 
 func Build(cfg BuildConfig) error {
@@ -42,7 +43,7 @@ func Build(cfg BuildConfig) error {
 		return err
 	}
 
-	writer, err := getWriter(cfg.SchemaVersion, cfg.Timestamp, cfg.Directory, cfg.States)
+	writer, err := getWriter(cfg)
 	if err != nil {
 		return err
 	}
@@ -94,14 +95,14 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 	}
 }
 
-func getWriter(schemaVersion int, dataAge time.Time, directory string, states provider.States) (data.Writer, error) {
-	switch schemaVersion {
+func getWriter(cfg BuildConfig) (data.Writer, error) {
+	switch cfg.SchemaVersion {
 	case grypeDBv5.SchemaVersion:
-		return v5.NewWriter(directory, dataAge, states)
+		return v5.NewWriter(cfg.Directory, cfg.Timestamp, cfg.States)
 	case grypeDBv6.ModelVersion:
-		return v6.NewWriter(directory, states)
+		return v6.NewWriter(cfg.Directory, cfg.States, cfg.FailOnMissingFixDate)
 	default:
-		return nil, fmt.Errorf("unable to create writer: unsupported schema version: %+v", schemaVersion)
+		return nil, fmt.Errorf("unable to create writer: unsupported schema version: %+v", cfg.SchemaVersion)
 	}
 }
 
