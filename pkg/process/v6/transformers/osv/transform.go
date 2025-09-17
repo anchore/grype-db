@@ -94,10 +94,10 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 			BlobValue:       &grypeDB.PackageBlob{CVEs: vuln.Aliases},
 		}
 
-		if withCPE {
-			aph.BlobValue.Qualifiers = &grypeDB.PackageQualifiers{
-				PlatformCPEs: cpes.([]string),
-			}
+		// Extract qualifiers (CPE and RPM modularity)
+		qualifiers := getPackageQualifiers(affected, cpes, withCPE)
+		if qualifiers != nil {
+			aph.BlobValue.Qualifiers = qualifiers
 		}
 
 		var ranges []grypeDB.Range
@@ -112,6 +112,49 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	sort.Sort(internal.ByAffectedPackage(aphs))
 
 	return aphs
+}
+
+// getPackageQualifiers extracts package qualifiers from affected package data
+// including CPE information and RPM modularity
+func getPackageQualifiers(affected models.Affected, cpes any, withCPE bool) *grypeDB.PackageQualifiers {
+	var qualifiers *grypeDB.PackageQualifiers
+
+	// Handle CPE qualifiers (existing logic)
+	if withCPE {
+		qualifiers = &grypeDB.PackageQualifiers{
+			PlatformCPEs: cpes.([]string),
+		}
+	}
+
+	// Extract RPM modularity from ecosystem_specific
+	rpmModularity := extractRpmModularity(affected)
+	if rpmModularity != "" {
+		if qualifiers == nil {
+			qualifiers = &grypeDB.PackageQualifiers{}
+		}
+		qualifiers.RpmModularity = &rpmModularity
+	}
+
+	return qualifiers
+}
+
+// extractRpmModularity extracts RPM modularity information from affected package ecosystem_specific
+func extractRpmModularity(affected models.Affected) string {
+	if affected.EcosystemSpecific == nil {
+		return ""
+	}
+
+	rpmModularity, ok := affected.EcosystemSpecific["rpm_modularity"]
+	if !ok {
+		return ""
+	}
+
+	rpmModularityStr, ok := rpmModularity.(string)
+	if !ok {
+		return ""
+	}
+
+	return rpmModularityStr
 }
 
 // OSV supports flattered ranges, so both formats below are valid:
@@ -538,7 +581,7 @@ func getUnaffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.Unaffected
 		uph := grypeDB.UnaffectedPackageHandle{
 			Package:         getPackage(affected.Package),
 			OperatingSystem: getOperatingSystemFromEcosystem(string(affected.Package.Ecosystem)),
-			BlobValue:       getUnaffectedBlob(vuln.Aliases, affected.Ranges),
+			BlobValue:       getUnaffectedBlob(vuln.Aliases, affected.Ranges, affected),
 		}
 		uphs = append(uphs, uph)
 	}
@@ -551,15 +594,19 @@ func getUnaffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.Unaffected
 
 // getUnaffectedBlob creates a package blob for unaffected packages (advisories)
 // For advisories, we need to invert the ranges to represent unaffected versions
-func getUnaffectedBlob(aliases []string, ranges []models.Range) *grypeDB.PackageBlob {
+func getUnaffectedBlob(aliases []string, ranges []models.Range, affected models.Affected) *grypeDB.PackageBlob {
 	var grypeRanges []grypeDB.Range
 	for _, r := range ranges {
 		grypeRanges = append(grypeRanges, getGrypeUnaffectedRangesFromRange(r)...)
 	}
 
+	// Extract qualifiers including RPM modularity
+	qualifiers := getPackageQualifiers(affected, nil, false)
+
 	return &grypeDB.PackageBlob{
-		CVEs:   aliases,
-		Ranges: grypeRanges,
+		CVEs:       aliases,
+		Ranges:     grypeRanges,
+		Qualifiers: qualifiers,
 	}
 }
 

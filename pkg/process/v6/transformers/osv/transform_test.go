@@ -587,3 +587,137 @@ func Test_extractCVSSInfo(t *testing.T) {
 		})
 	}
 }
+
+func Test_extractRpmModularity(t *testing.T) {
+	tests := []struct {
+		name     string
+		affected models.Affected
+		want     string
+	}{
+		{
+			name: "with rpm_modularity",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "mariadb:10.3",
+				},
+			},
+			want: "mariadb:10.3",
+		},
+		{
+			name: "no ecosystem_specific",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			want: "",
+		},
+		{
+			name: "no rpm_modularity key",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"other_key": "some_value",
+				},
+			},
+			want: "",
+		},
+		{
+			name: "rpm_modularity not string",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": 123,
+				},
+			},
+			want: "",
+		},
+		{
+			name: "nodejs modularity",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "nodejs:16",
+				},
+			},
+			want: "nodejs:16",
+		},
+	}
+
+	for _, testToRun := range tests {
+		test := testToRun
+		t.Run(test.name, func(tt *testing.T) {
+			got := extractRpmModularity(test.affected)
+			if got != test.want {
+				t.Errorf("extractRpmModularity() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func Test_getPackageQualifiers(t *testing.T) {
+	tests := []struct {
+		name     string
+		affected models.Affected
+		cpes     any
+		withCPE  bool
+		want     *grypeDB.PackageQualifiers
+	}{
+		{
+			name: "with rpm_modularity only",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "mariadb:10.3",
+				},
+			},
+			cpes:    nil,
+			withCPE: false,
+			want: &grypeDB.PackageQualifiers{
+				RpmModularity: stringRef("mariadb:10.3"),
+			},
+		},
+		{
+			name: "with CPE only",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			cpes:    []string{"cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*"},
+			withCPE: true,
+			want: &grypeDB.PackageQualifiers{
+				PlatformCPEs: []string{"cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*"},
+			},
+		},
+		{
+			name: "with both rpm_modularity and CPE",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "nodejs:16",
+				},
+			},
+			cpes:    []string{"cpe:2.3:a:nodejs:nodejs:*:*:*:*:*:*:*:*"},
+			withCPE: true,
+			want: &grypeDB.PackageQualifiers{
+				PlatformCPEs:  []string{"cpe:2.3:a:nodejs:nodejs:*:*:*:*:*:*:*:*"},
+				RpmModularity: stringRef("nodejs:16"),
+			},
+		},
+		{
+			name: "no qualifiers",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			cpes:    nil,
+			withCPE: false,
+			want:    nil,
+		},
+	}
+
+	for _, testToRun := range tests {
+		test := testToRun
+		t.Run(test.name, func(tt *testing.T) {
+			got := getPackageQualifiers(test.affected, test.cpes, test.withCPE)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("getPackageQualifiers() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func stringRef(s string) *string {
+	return &s
+}
