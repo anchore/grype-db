@@ -38,6 +38,13 @@ func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) (
 		return nil, fmt.Errorf("unable to obtain severities: %w", err)
 	}
 
+	isAdvisory := isAdvisoryRecord(vulnerability)
+	aliases := vulnerability.Aliases
+
+	if isAdvisory {
+		aliases = append(aliases, vulnerability.Related...)
+	}
+
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.ID,
@@ -51,14 +58,14 @@ func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) (
 				Assigners:   nil,
 				Description: vulnerability.Details,
 				References:  getReferences(vulnerability),
-				Aliases:     vulnerability.Aliases,
+				Aliases:     aliases,
 				Severities:  severities,
 			},
 		},
 	}
 
 	// Check if this is an advisory record
-	if isAdvisoryRecord(vulnerability) {
+	if isAdvisory {
 		// For advisory records, emit unaffected packages
 		for _, u := range getUnaffectedPackages(vulnerability) {
 			in = append(in, u)
