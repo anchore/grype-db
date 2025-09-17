@@ -72,7 +72,7 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 			}
 			afs = append(afs, grypeDB.AffectedPackageHandle{
 				Package: getPackage(group),
-				BlobValue: &grypeDB.AffectedPackageBlob{
+				BlobValue: &grypeDB.PackageBlob{
 					CVEs:   getAliases(vuln),
 					Ranges: ranges,
 				},
@@ -89,8 +89,8 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 	return afs
 }
 
-func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, error) {
-	fixedVersion := grypeDB.AffectedVersion{
+func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.Range, error) {
+	fixedVersion := grypeDB.Version{
 		Type:       getAffectedVersionFormat(fixedInEntry),
 		Constraint: common.EnforceSemVerConstraint(fixedInEntry.Range),
 	}
@@ -99,7 +99,7 @@ func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, e
 		log.Warnf("failed to validate affected version: %v", err)
 		fixedVersion.Type = version.UnknownFormat.String()
 	}
-	return []grypeDB.AffectedRange{
+	return []grypeDB.Range{
 		{
 			Version: fixedVersion,
 			Fix:     getFix(fixedInEntry),
@@ -107,7 +107,7 @@ func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, e
 	}, err
 }
 
-func validateAffectedVersion(v grypeDB.AffectedVersion) error {
+func validateAffectedVersion(v grypeDB.Version) error {
 	versionFormat := version.ParseFormat(v.Type)
 	c, err := version.GetConstraint(v.Constraint, versionFormat)
 	if err != nil {

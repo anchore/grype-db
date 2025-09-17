@@ -9,20 +9,20 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
-type osvProcessor struct {
-	transformer data.OSVTransformerV2
+type annotatedOpenVEXProcessor struct {
+	transformer data.AnnotatedOpenVEXTransformerV2
 }
 
-func NewV2OSVProcessor(transformer data.OSVTransformerV2) data.Processor {
-	return &osvProcessor{
+func NewV2AnnotatedOpenVEXProcessor(transformer data.AnnotatedOpenVEXTransformerV2) data.Processor {
+	return &annotatedOpenVEXProcessor{
 		transformer: transformer,
 	}
 }
 
-func (p osvProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
+func (p annotatedOpenVEXProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
-	entries, err := unmarshal.OSVVulnerabilityEntries(reader)
+	entries, err := unmarshal.AnnotatedOpenVEXVulnerabilityEntries(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -39,14 +39,14 @@ func (p osvProcessor) Process(reader io.Reader, state provider.State) ([]data.En
 	return results, nil
 }
 
-func (p osvProcessor) IsSupported(schemaURL string) bool {
-	if !hasSchemaSegment(schemaURL, "osv") {
+func (p annotatedOpenVEXProcessor) IsSupported(schemaURL string) bool {
+	if !hasSchemaSegment(schemaURL, "annotated-openvex") {
 		return false
 	}
 
 	parsedVersion, err := parseVersion(schemaURL)
 	if err != nil {
-		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse NVD schema version")
+		log.WithFields("schema", schemaURL, "error", err).Error("failed to parse annotated OpenVEX schema version")
 		return false
 	}
 

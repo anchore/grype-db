@@ -10,6 +10,7 @@ import (
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/kev"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/msrc"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/nvd"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers/openvex"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/os"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/osv"
 )
@@ -50,5 +51,7 @@ func Processors(cfg Config) []data.Processor {
 		processors.NewV2OSVProcessor(osv.Transform),
 		processors.NewV2KEVProcessor(kev.Transform),
 		processors.NewV2EPSSProcessor(epss.Transform),
+		processors.NewV2OpenVEXProcessor(openvex.Transform),
+		processors.NewV2AnnotatedOpenVEXProcessor(openvex.AnnotatedTransform),
 	}
 }

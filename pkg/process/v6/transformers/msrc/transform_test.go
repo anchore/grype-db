@@ -86,16 +86,22 @@ func TestParseMSRCEntry(t *testing.T) {
 							Name:      "10852",
 							Ecosystem: "msrc-kb",
 						},
-						BlobValue: &grypeDB.AffectedPackageBlob{
-							Ranges: []grypeDB.AffectedRange{
+						BlobValue: &grypeDB.PackageBlob{
+							Ranges: []grypeDB.Range{
 								{
-									Version: grypeDB.AffectedVersion{
+									Version: grypeDB.Version{
 										Type:       "kb",
 										Constraint: `4480961 || 4483229 || 4487026 || 4489882 || base`,
 									},
 									Fix: &grypeDB.Fix{
 										Version: "4516044",
 										State:   grypeDB.FixedStatus,
+										Detail: &grypeDB.FixDetail{
+											Available: &grypeDB.FixAvailability{
+												Date: timePtr(time.Date(2019, 11, 12, 0, 0, 0, 0, time.UTC)),
+												Kind: "advisory",
+											},
+										},
 									},
 								},
 							},
@@ -145,16 +151,22 @@ func TestParseMSRCEntry(t *testing.T) {
 							Name:      "10852",
 							Ecosystem: "msrc-kb",
 						},
-						BlobValue: &grypeDB.AffectedPackageBlob{
-							Ranges: []grypeDB.AffectedRange{
+						BlobValue: &grypeDB.PackageBlob{
+							Ranges: []grypeDB.Range{
 								{
-									Version: grypeDB.AffectedVersion{
+									Version: grypeDB.Version{
 										Type:       "kb",
 										Constraint: `3213986 || 4013429 || 4015217 || 4019472 || 4022715 || 4025339 || 4034658 || 4038782 || 4041691 || 4048953 || 4053579 || 4056890 || 4074590 || 4088787 || base`,
 									},
 									Fix: &grypeDB.Fix{
 										Version: "4345418",
 										State:   grypeDB.FixedStatus,
+										Detail: &grypeDB.FixDetail{
+											Available: &grypeDB.FixAvailability{
+												Date: timePtr(time.Date(2019, 11, 12, 0, 0, 0, 0, time.UTC)),
+												Kind: "advisory",
+											},
+										},
 									},
 								},
 							},
@@ -182,4 +194,8 @@ func TestParseMSRCEntry(t *testing.T) {
 			t.Errorf("data entry mismatch (-expected +actual):\n%s", diff)
 		}
 	}
+}
+
+func timePtr(t time.Time) *time.Time {
+	return &t
 }

@@ -98,7 +98,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_CLOUDFLARE_SECRET_ACCESS_KEY }}
           GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
 
-      - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
+      - uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e #v3.19.0
         with:
           status: ${{ job.status }}
           fields: workflow,eventName,job
@@ -146,7 +146,7 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_CLOUDFLARE_SECRET_ACCESS_KEY }}
             GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
 
-      - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
+      - uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e #v3.19.0
         with:
           status: ${{ job.status }}
           fields: workflow,eventName,job

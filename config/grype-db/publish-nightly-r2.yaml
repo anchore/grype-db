@@ -15,6 +15,7 @@ provider:
     - name: amazon
     - name: bitnami
     - name: chainguard
+    - name: chainguard-libraries
     - name: debian
     - name: echo
     - name: epss
