@@ -595,15 +595,22 @@ def print_annotation(s: str, italic: bool = True, grey: bool = True) -> None:
     sys.stderr.write(s + "\n")
 
 
-def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912
-    os.makedirs(bin_dir, exist_ok=True)
-
-    # Check for explicit grype-db binary override (opt-in only)
+def _check_executable_path_override() -> str | None:
+    """Check for existing grype-db binary via GRYPE_DB_EXECUTABLE_PATH environment variable."""
     if grype_db_path := os.getenv("GRYPE_DB_EXECUTABLE_PATH"):
         if shutil.which(grype_db_path):
             logging.info(f"Using grype-db from GRYPE_DB_EXECUTABLE_PATH: {grype_db_path}")
             return grype_db_path
         logging.warning(f"GRYPE_DB_EXECUTABLE_PATH points to non-executable: {grype_db_path}")
+    return None
+
+
+def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912
+    os.makedirs(bin_dir, exist_ok=True)
+
+    # Check for explicit grype-db binary override (opt-in only)
+    if existing_binary := _check_executable_path_override():
+        return existing_binary
 
     version = input_version
     is_semver = re.match(r"v\d+\.\d+\.\d+", input_version)
