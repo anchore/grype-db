@@ -605,7 +605,23 @@ def _check_executable_path_override() -> str | None:
     return None
 
 
-def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912
+def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912, C901
+    """
+    Install grype-db CLI from a specified version.
+
+    This can be a specific semver version (e.g. v0.7.0), "latest", a GitHub repo (e.g. user/repo or user/repo@branch),
+    or a local file path (e.g. file:///path/to/grype-db).
+    If an environment variable GRYPE_DB_EXECUTABLE_PATH is set and points to an executable, that binary will be used instead.
+
+    Args:
+        input_version (str): The version or source to install from.
+        bin_dir (str): The directory to install the binary into.
+        clone_dir (str): The directory to clone the repository into if needed.
+
+    Returns:
+        str | None: The path to the installed binary, or None if no installation was performed.
+
+    """
     os.makedirs(bin_dir, exist_ok=True)
 
     # Check for explicit grype-db binary override (opt-in only)
