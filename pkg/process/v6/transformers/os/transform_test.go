@@ -956,6 +956,7 @@ func TestTransform(t *testing.T) {
 												},
 												References: []grypeDB.Reference{
 													{
+														ID:   "RHSA-2020:1341",
 														URL:  "https://access.redhat.com/errata/RHSA-2020:1341",
 														Tags: []string{grypeDB.AdvisoryReferenceTag},
 													},
@@ -983,6 +984,7 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
+														ID:   "RHSA-2020:1495",
 														URL:  "https://access.redhat.com/errata/RHSA-2020:1495",
 														Tags: []string{grypeDB.AdvisoryReferenceTag},
 													},
@@ -1052,6 +1054,7 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
+														ID:   "RHSA-2020:3669",
 														URL:  "https://access.redhat.com/errata/RHSA-2020:3669",
 														Tags: []string{grypeDB.AdvisoryReferenceTag},
 													},
@@ -1081,6 +1084,7 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
+														ID:   "RHSA-2020:5620",
 														URL:  "https://access.redhat.com/errata/RHSA-2020:5620",
 														Tags: []string{grypeDB.AdvisoryReferenceTag},
 													},
@@ -1110,6 +1114,7 @@ func TestTransform(t *testing.T) {
 											Detail: &grypeDB.FixDetail{
 												References: []grypeDB.Reference{
 													{
+														ID:   "RHSA-2020:5619",
 														URL:  "https://access.redhat.com/errata/RHSA-2020:5619",
 														Tags: []string{grypeDB.AdvisoryReferenceTag},
 													},
