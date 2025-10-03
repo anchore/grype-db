@@ -1422,6 +1422,7 @@ func TestGetFixWithDetail(t *testing.T) {
 					},
 					References: []grypeDB.Reference{
 						{
+							ID:   "RHSA-2023-001",
 							URL:  "https://access.redhat.com/errata/RHSA-2023-001",
 							Tags: []string{grypeDB.AdvisoryReferenceTag},
 						},
@@ -1541,6 +1542,7 @@ func TestGetFixWithDetailFixtures(t *testing.T) {
 						},
 						References: []grypeDB.Reference{
 							{
+								ID:   "RHSA-2020:1341",
 								URL:  "https://access.redhat.com/errata/RHSA-2020:1341",
 								Tags: []string{grypeDB.AdvisoryReferenceTag},
 							},
@@ -1553,6 +1555,7 @@ func TestGetFixWithDetailFixtures(t *testing.T) {
 					Detail: &grypeDB.FixDetail{
 						References: []grypeDB.Reference{
 							{
+								ID:   "RHSA-2020:1495",
 								URL:  "https://access.redhat.com/errata/RHSA-2020:1495",
 								Tags: []string{grypeDB.AdvisoryReferenceTag},
 							},
