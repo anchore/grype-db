@@ -57,8 +57,8 @@ type CveItem struct {
 	References       []Reference `json:"references"`
 	SourceIdentifier *string     `json:"sourceIdentifier,omitempty"`
 	// VendorComments        []VendorComment `json:"vendorComments,omitempty"`
-	VulnStatus *string `json:"vulnStatus,omitempty"`
-	// Weaknesses            []Weakness      `json:"weaknesses,omitempty"`
+	VulnStatus *string    `json:"vulnStatus,omitempty"`
+	Weaknesses []Weakness `json:"weaknesses,omitempty"`
 }
 
 type Configuration struct {
@@ -158,17 +158,16 @@ type Reference struct {
 	URL    string   `json:"url"`
 }
 
-// type VendorComment struct {
-//	Comment      string `json:"comment"`
-//	LastModified string `json:"lastModified"`
-//	Organization string `json:"organization"`
-//}
-//
-// type Weakness struct {
-//	Description []LangString `json:"description"`
-//	Source      string       `json:"source"`
-//	Type        string       `json:"type"`
-//}
+//	type VendorComment struct {
+//		Comment      string `json:"comment"`
+//		LastModified string `json:"lastModified"`
+//		Organization string `json:"organization"`
+//	}
+type Weakness struct {
+	Description []LangString `json:"description"`
+	Source      string       `json:"source"`
+	Type        string       `json:"type"`
+}
 
 func (o CveItem) Description() string {
 	for _, d := range o.Descriptions {
