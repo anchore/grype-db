@@ -159,6 +159,10 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error { // nolint
 			if err := w.store.AddEpss(&row); err != nil {
 				return fmt.Errorf("unable to write EPSS to store: %w", err)
 			}
+		case grypeDB.CWEHandle:
+			if err := w.store.AddCWE(&row); err != nil {
+				return fmt.Errorf("unable to write CWE to store: %w", err)
+			}
 		default:
 			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
 		}
