@@ -1927,3 +1927,76 @@ func loadFixture(t *testing.T, fixturePath string) []unmarshal.NVDVulnerability 
 func timeRef(ti time.Time) *time.Time {
 	return &ti
 }
+
+func TestIsValidCWE(t *testing.T) {
+	tests := []struct {
+		name     string
+		cwe      string
+		expected bool
+	}{
+		{
+			name:     "empty string",
+			cwe:      "",
+			expected: false,
+		},
+		{
+			name:     "NVD-CWE-noinfo",
+			cwe:      "NVD-CWE-noinfo",
+			expected: false,
+		},
+		{
+			name:     "NVD-CWE-Other",
+			cwe:      "NVD-CWE-Other",
+			expected: true,
+		},
+		{
+			name:     "valid CWE with single digit",
+			cwe:      "CWE-1",
+			expected: true,
+		},
+		{
+			name:     "valid CWE with multiple digits",
+			cwe:      "CWE-123",
+			expected: true,
+		},
+		{
+			name:     "valid CWE-79",
+			cwe:      "CWE-79",
+			expected: true,
+		},
+		{
+			name:     "valid CWE-89",
+			cwe:      "CWE-89",
+			expected: true,
+		},
+		{
+			name:     "invalid CWE without prefix",
+			cwe:      "123",
+			expected: false,
+		},
+		{
+			name:     "invalid CWE without number",
+			cwe:      "CWE-",
+			expected: false,
+		},
+		{
+			name:     "invalid CWE with letters",
+			cwe:      "CWE-ABC",
+			expected: false,
+		},
+		{
+			name:     "invalid lowercase cwe",
+			cwe:      "cwe-123",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isValidCWE(tt.cwe)
+			if got != tt.expected {
+				t.Errorf("isValidCWE(%q) = %v, want %v", tt.cwe, got, tt.expected)
+			}
+		})
+	}
+}
