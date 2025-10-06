@@ -22,6 +22,13 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 )
 
+// advisoryKey is an internal struct used for sorting and deduplicating advisories
+// that have both a link and ID from the vunnel results data
+type advisoryKey struct {
+	id   string
+	link string
+}
+
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
 	in := []any{
 		grypeDB.VulnerabilityHandle{
@@ -106,10 +113,6 @@ func getFix(fixedInEntry unmarshal.OSFixedIn) *grypeDB.Fix {
 		fixState = grypeDB.WontFixStatus
 	}
 
-	type advisoryKey struct {
-		id   string
-		link string
-	}
 	var advisoryOrder []advisoryKey
 	advisorySet := strset.New()
 	for _, a := range fixedInEntry.VendorAdvisory.AdvisorySummary {
