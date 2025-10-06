@@ -1,7 +1,6 @@
 package nvd
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/scylladb/go-set/strset"
@@ -166,28 +165,18 @@ func getCWEs(vulnerability unmarshal.NVDVulnerability) []grypeDB.CWEHandle {
 	var cwes []grypeDB.CWEHandle
 	for _, w := range vulnerability.Weaknesses {
 		for _, d := range w.Description {
-			if isValidCWE(d.Value) {
-				cwes = append(cwes, grypeDB.CWEHandle{
-					Cve:    vulnerability.ID,
-					CWE:    d.Value,
-					Source: w.Source,
-					Type:   w.Type,
-				})
+			if d.Value == "NVD-CWE-noinfo" || d.Value == "" {
+				continue
 			}
+			cwes = append(cwes, grypeDB.CWEHandle{
+				CVE:    vulnerability.ID,
+				CWE:    d.Value,
+				Source: w.Source,
+				Type:   w.Type,
+			})
 		}
 	}
 	return cwes
-}
-
-func isValidCWE(s string) bool {
-	if s == "NVD-CWE-Other" {
-		return true
-	}
-	matched, err := regexp.MatchString(`^CWE-\d+$`, s)
-	if err != nil {
-		return false
-	}
-	return matched
 }
 
 func encodeCPEs(cpes []cpe.Attributes) []string {
