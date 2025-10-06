@@ -75,7 +75,7 @@ func (w writer) Write(entries ...data.Entry) error {
 	return nil
 }
 
-func (w *writer) writeEntry(entry transformers.RelatedEntries) error { // nolint:gocognit
+func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 	log.WithFields("entry", entry.String()).Trace("writing entry")
 
 	if entry.VulnerabilityHandle != nil {
@@ -93,81 +93,100 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error { // nolint
 	}
 
 	for i := range entry.Related {
-		related := entry.Related[i]
-		switch row := related.(type) {
-		case grypeDB.AffectedPackageHandle:
-			if entry.VulnerabilityHandle != nil {
-				row.VulnerabilityID = entry.VulnerabilityHandle.ID
-			} else {
-				log.WithFields("package", row.Package).Warn("affected package entry does not have a vulnerability ID")
-			}
-
-			if w.failOnMissingFixDate {
-				if err := ensureFixDates(&row); err != nil {
-					fields := logger.Fields{
-						"pkg": row.Package,
-					}
-					if entry.VulnerabilityHandle != nil {
-						fields["vulnerability"] = entry.VulnerabilityHandle.Name
-					}
-					if row.BlobValue != nil {
-						fields["ranges"] = row.BlobValue.String()
-					}
-					if row.OperatingSystem != nil {
-						fields["os"] = row.OperatingSystem
-					}
-					log.WithFields(fields).Error("fix date validation failed")
-					return fmt.Errorf("unable to validate fix dates: %w", err)
-				}
-			}
-
-			if err := w.store.AddAffectedPackages(&row); err != nil {
-				return fmt.Errorf("unable to write affected-package to store: %w", err)
-			}
-		case grypeDB.AffectedCPEHandle:
-			if entry.VulnerabilityHandle != nil {
-				row.VulnerabilityID = entry.VulnerabilityHandle.ID
-			} else {
-				log.WithFields("cpe", row.CPE).Warn("affected CPE entry does not have a vulnerability ID")
-			}
-			if err := w.store.AddAffectedCPEs(&row); err != nil {
-				return fmt.Errorf("unable to write affected-cpe to store: %w", err)
-			}
-		case grypeDB.KnownExploitedVulnerabilityHandle:
-			if err := w.store.AddKnownExploitedVulnerabilities(&row); err != nil {
-				return fmt.Errorf("unable to write known exploited vulnerability to store: %w", err)
-			}
-		case grypeDB.UnaffectedPackageHandle:
-			if entry.VulnerabilityHandle != nil {
-				row.VulnerabilityID = entry.VulnerabilityHandle.ID
-			} else {
-				log.WithFields("package", row.Package).Warn("unaffected package entry does not have a vulnerability ID")
-			}
-			if err := w.store.AddUnaffectedPackages(&row); err != nil {
-				return fmt.Errorf("unable to write unaffected-package to store: %w", err)
-			}
-		case grypeDB.UnaffectedCPEHandle:
-			if entry.VulnerabilityHandle != nil {
-				row.VulnerabilityID = entry.VulnerabilityHandle.ID
-			} else {
-				log.WithFields("cpe", row.CPE).Warn("unaffected CPE entry does not have a vulnerability ID")
-			}
-			if err := w.store.AddUnaffectedCPEs(&row); err != nil {
-				return fmt.Errorf("unable to write unaffected-cpe to store: %w", err)
-			}
-		case grypeDB.EpssHandle:
-			if err := w.store.AddEpss(&row); err != nil {
-				return fmt.Errorf("unable to write EPSS to store: %w", err)
-			}
-		case grypeDB.CWEHandle:
-			if err := w.store.AddCWE(&row); err != nil {
-				return fmt.Errorf("unable to write CWE to store: %w", err)
-			}
-		default:
-			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
+		if err := w.writeRelatedEntry(entry.VulnerabilityHandle, entry.Related[i]); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func (w *writer) writeRelatedEntry(vulnHandle *grypeDB.VulnerabilityHandle, related any) error {
+	switch row := related.(type) {
+	case grypeDB.AffectedPackageHandle:
+		return w.writeAffectedPackage(vulnHandle, row)
+	case grypeDB.AffectedCPEHandle:
+		return w.writeAffectedCPE(vulnHandle, row)
+	case grypeDB.KnownExploitedVulnerabilityHandle:
+		return w.store.AddKnownExploitedVulnerabilities(&row)
+	case grypeDB.UnaffectedPackageHandle:
+		return w.writeUnaffectedPackage(vulnHandle, row)
+	case grypeDB.UnaffectedCPEHandle:
+		return w.writeUnaffectedCPE(vulnHandle, row)
+	case grypeDB.EpssHandle:
+		return w.store.AddEpss(&row)
+	case grypeDB.CWEHandle:
+		return w.store.AddCWE(&row)
+	default:
+		return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
+	}
+}
+
+func (w *writer) writeAffectedPackage(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.AffectedPackageHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("package", row.Package).Warn("affected package entry does not have a vulnerability ID")
+	}
+
+	if w.failOnMissingFixDate {
+		if err := ensureFixDates(&row); err != nil {
+			fields := logger.Fields{
+				"pkg": row.Package,
+			}
+			if vulnHandle != nil {
+				fields["vulnerability"] = vulnHandle.Name
+			}
+			if row.BlobValue != nil {
+				fields["ranges"] = row.BlobValue.String()
+			}
+			if row.OperatingSystem != nil {
+				fields["os"] = row.OperatingSystem
+			}
+			log.WithFields(fields).Error("fix date validation failed")
+			return fmt.Errorf("unable to validate fix dates: %w", err)
+		}
+	}
+
+	if err := w.store.AddAffectedPackages(&row); err != nil {
+		return fmt.Errorf("unable to write affected-package to store: %w", err)
+	}
+	return nil
+}
+
+func (w *writer) writeAffectedCPE(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.AffectedCPEHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("cpe", row.CPE).Warn("affected CPE entry does not have a vulnerability ID")
+	}
+	if err := w.store.AddAffectedCPEs(&row); err != nil {
+		return fmt.Errorf("unable to write affected-cpe to store: %w", err)
+	}
+	return nil
+}
+
+func (w *writer) writeUnaffectedPackage(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.UnaffectedPackageHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("package", row.Package).Warn("unaffected package entry does not have a vulnerability ID")
+	}
+	if err := w.store.AddUnaffectedPackages(&row); err != nil {
+		return fmt.Errorf("unable to write unaffected-package to store: %w", err)
+	}
+	return nil
+}
+
+func (w *writer) writeUnaffectedCPE(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.UnaffectedCPEHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("cpe", row.CPE).Warn("unaffected CPE entry does not have a vulnerability ID")
+	}
+	if err := w.store.AddUnaffectedCPEs(&row); err != nil {
+		return fmt.Errorf("unable to write unaffected-cpe to store: %w", err)
+	}
 	return nil
 }
 
