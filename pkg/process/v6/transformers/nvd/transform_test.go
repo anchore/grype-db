@@ -15,12 +15,14 @@ import (
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 )
 
-var timeVal = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
-var listing = provider.File{
-	Path:      "some",
-	Digest:    "123456",
-	Algorithm: "sha256",
-}
+var (
+	timeVal = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
+	listing = provider.File{
+		Path:      "some",
+		Digest:    "123456",
+		Algorithm: "sha256",
+	}
+)
 
 func inputProviderState(name string) provider.State {
 	return provider.State{
@@ -70,7 +72,6 @@ func TestTransform(t *testing.T) {
 							Description: "NetApp OnCommand Unified Manager for Linux versions 7.2 through 7.3 ship with the Java Management Extension Remote Method Invocation (JMX RMI) service bound to the network, and are susceptible to unauthenticated remote code execution.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
 								},
 								{
@@ -109,7 +110,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
@@ -129,6 +130,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "netapp",
 								Product: "oncommand_unified_manager",
 							},
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2018-5487",
+							CWE:    "CWE-20",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -154,7 +161,6 @@ func TestTransform(t *testing.T) {
 							Description: "NetApp OnCommand Unified Manager for Linux versions 7.2 through 7.3 ship with the Java Management Extension Remote Method Invocation (JMX RMI) service bound to the network, and are susceptible to unauthenticated remote code execution.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
 								},
 								{
@@ -193,7 +199,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
@@ -224,6 +230,12 @@ func TestTransform(t *testing.T) {
 								Product: "oncommand_unified_manager",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2018-5487",
+							CWE:    "CWE-20",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -248,7 +260,6 @@ func TestTransform(t *testing.T) {
 							Description: "NetApp OnCommand Unified Manager for Linux versions 7.2 through 7.3 ship with the Java Management Extension Remote Method Invocation (JMX RMI) service bound to the network, and are susceptible to unauthenticated remote code execution.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-5487",
 								},
 								{
@@ -287,7 +298,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-5487"},
@@ -313,6 +324,12 @@ func TestTransform(t *testing.T) {
 								Product: "oncommand_unified_manager",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2018-5487",
+							CWE:    "CWE-20",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -337,7 +354,6 @@ func TestTransform(t *testing.T) {
 							Description: "Libgd version 2.2.5 contains a Double Free Vulnerability vulnerability in gdImageBmpPtr Function that can result in Remote Code Execution . This attack appear to be exploitable via Specially Crafted Jpeg Image can trigger double free. This vulnerability appears to have been fixed in after commit ac16bdf2d41724b5a65255d4c28fb0ec46bc42f5.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-1000222",
 								},
 								{
@@ -365,7 +381,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
-										Version: "3.0"},
+										Version: "3.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -373,14 +390,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:N/AC:M/Au:N/C:P/I:P/A:P",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						// the application package...
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
@@ -446,6 +464,12 @@ func TestTransform(t *testing.T) {
 								Product: "debian_linux",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2018-1000222",
+							CWE:    "CWE-415",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -474,7 +498,6 @@ func TestTransform(t *testing.T) {
 							Description: "Libgd version 2.2.5 contains a Double Free Vulnerability vulnerability in gdImageBmpPtr Function that can result in Remote Code Execution . This attack appear to be exploitable via Specially Crafted Jpeg Image can trigger double free. This vulnerability appears to have been fixed in after commit ac16bdf2d41724b5a65255d4c28fb0ec46bc42f5.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-1000222",
 								},
 								{
@@ -502,7 +525,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
-										Version: "3.0"},
+										Version: "3.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -510,14 +534,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:N/AC:M/Au:N/C:P/I:P/A:P",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-1000222"},
@@ -534,6 +559,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "libgd",
 								Product: "libgd",
 							},
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2018-1000222",
+							CWE:    "CWE-415",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -559,7 +590,6 @@ func TestTransform(t *testing.T) {
 							Description: "An issue was discovered in Mautic 1.x and 2.x before 2.13.0. It is possible to systematically emulate tracking cookies per contact due to tracking the contact by their auto-incremented ID. Thus, a third party can manipulate the cookie value with +1 to systematically assume being tracked as each contact in Mautic. It is then possible to retrieve information about the contact through forms that have progressive profiling enabled.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2018-10189",
 								},
 								{
@@ -572,7 +602,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
-										Version: "3.0"},
+										Version: "3.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -580,14 +611,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:N/AC:L/Au:N/C:P/I:N/A:N",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2018-10189"},
@@ -615,6 +647,12 @@ func TestTransform(t *testing.T) {
 								Product: "mautic",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2018-10189",
+							CWE:    "CWE-200",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -639,7 +677,6 @@ func TestTransform(t *testing.T) {
 							Description: "In Soap Lite (aka the SOAP::Lite extension for Perl) 1.14 and earlier, an example attack consists of defining 10 or more XML entities, each defined as consisting of 10 of the previous entity, with the document consisting of a single instance of the largest entity, which expands to one billion copies of the first entity. The amount of computer memory used for handling an external SOAP call would likely exceed that available to the process parsing the XML.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2015-8978",
 								},
 								{
@@ -656,7 +693,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-										Version: "3.0"},
+										Version: "3.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -664,14 +702,22 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:N/AC:L/Au:N/C:N/I:N/A:P",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: nil, // when we can't parse the CPE we should not add any affected blobs (but we do add the vuln blob)
+					Related: relatedEntries(
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2015-8978",
+							CWE:    "CWE-399",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+					), // when we can't parse the CPE we should not add any affected CPE blobs (but we do add the vuln blob and CWE)
 				},
 			},
 		},
@@ -695,7 +741,6 @@ func TestTransform(t *testing.T) {
 							Description: "In Python before 3.10.3 on Windows, local users can gain privileges because the search path is inadequately secured. The installer may allow a local attacker to add user-writable directories to the system search path. To exploit, an administrator must have installed Python for all users and enabled PATH entries. A non-administrative user can trigger a repair that incorrectly adds user-writable paths into PATH, enabling search-path hijacking of other users and system services. This affects Python (CPython) through 3.7.12, 3.8.x through 3.8.12, 3.9.x through 3.9.10, and 3.10.x through 3.10.2.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2022-26488",
 								},
 								{
@@ -712,7 +757,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
-										Version: "3.1"},
+										Version: "3.1",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -720,14 +766,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:L/AC:M/Au:N/C:P/I:P/A:P",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2022-26488"},
@@ -786,6 +833,12 @@ func TestTransform(t *testing.T) {
 								Product: "python",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2022-26488",
+							CWE:    "CWE-426",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -810,7 +863,6 @@ func TestTransform(t *testing.T) {
 							Description: "It was discovered, that redis, a persistent key-value database, due to a packaging issue, is prone to a (Debian-specific) Lua sandbox escape, which could result in remote code execution.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2022-0543",
 								},
 								{
@@ -860,7 +912,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2022-0543"},
@@ -886,6 +938,12 @@ func TestTransform(t *testing.T) {
 								Product: "redis",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2022-0543",
+							CWE:    "CWE-862",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -910,7 +968,6 @@ func TestTransform(t *testing.T) {
 							Description: "A flaw was found in the use of insufficiently random values in Ansible. Two random password lookups of the same length generate the equal value as the template caching action for the same file since no re-evaluation happens. The highest threat from this vulnerability would be that all passwords are exposed at once for the file. This flaw affects Ansible Engine versions before 2.9.6.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2020-10729",
 								},
 								{
@@ -931,7 +988,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
-										Version: "3.1"},
+										Version: "3.1",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -939,14 +997,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "AV:L/AC:L/Au:N/C:P/I:N/A:N",
-										Version: "2.0"},
+										Version: "2.0",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2020-10729"},
@@ -993,6 +1052,18 @@ func TestTransform(t *testing.T) {
 								Product: "debian_linux",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2020-10729",
+							CWE:    "CWE-330",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2020-10729",
+							CWE:    "CWE-330",
+							Source: "secalert@redhat.com",
+							Type:   "Secondary",
+						},
 					),
 				},
 			},
@@ -1017,7 +1088,6 @@ func TestTransform(t *testing.T) {
 							Description: "IBM Robotic Process Automation 21.0.0 through 21.0.7.1 and 23.0.0 through 23.0.1 server could allow an authenticated user to view sensitive information from installation logs.  IBM X-Force Id:  262293.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-38733",
 								},
 								{
@@ -1034,7 +1104,8 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
-										Version: "3.1"},
+										Version: "3.1",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
@@ -1042,14 +1113,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
-										Version: "3.1"},
+										Version: "3.1",
+									},
 									Source: "psirt@us.ibm.com",
 									Rank:   2,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2023-38733"},
@@ -1078,6 +1150,18 @@ func TestTransform(t *testing.T) {
 								Product: "robotic_process_automation",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2023-38733",
+							CWE:    "CWE-532",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2023-38733",
+							CWE:    "CWE-532",
+							Source: "psirt@us.ibm.com",
+							Type:   "Secondary",
+						},
 					),
 				},
 			},
@@ -1102,7 +1186,6 @@ func TestTransform(t *testing.T) {
 							Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
 								},
 								{
@@ -1147,14 +1230,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
-										Version: "3.1"},
+										Version: "3.1",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2023-45283"},
@@ -1187,6 +1271,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "golang",
 								Product: "go",
 							},
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2023-45283",
+							CWE:    "CWE-22",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1212,7 +1302,6 @@ func TestTransform(t *testing.T) {
 							Description: "The filepath package does not recognize paths with a \\??\\ prefix as special. On Windows, a path beginning with \\??\\ is a Root Local Device path equivalent to a path beginning with \\\\?\\. Paths with a \\??\\ prefix may be used to access arbitrary locations on the system. For example, the path \\??\\c:\\x is equivalent to the more common path c:\\x. Before fix, Clean could convert a rooted path such as \\a\\..\\??\\b into the root local device path \\??\\b. Clean will now convert this to .\\??\\b. Similarly, Join(\\, ??, b) could convert a seemingly innocent sequence of path elements into the root local device path \\??\\b. Join will now convert this to \\.\\??\\b. In addition, with fix, IsAbs now correctly reports paths beginning with \\??\\ as absolute, and VolumeName correctly reports the \\??\\ prefix as a volume name. UPDATE: Go 1.20.11 and Go 1.21.4 inadvertently changed the definition of the volume name in Windows paths starting with \\?, resulting in filepath.Clean(\\?\\c:) returning \\?\\c: rather than \\?\\c:\\ (among other effects). The previous behavior has been restored.",
 							References: []grypeDB.Reference{
 								{
-
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-45283",
 								},
 								{
@@ -1257,14 +1346,15 @@ func TestTransform(t *testing.T) {
 									Scheme: grypeDB.SeveritySchemeCVSS,
 									Value: grypeDB.CVSSSeverity{
 										Vector:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
-										Version: "3.1"},
+										Version: "3.1",
+									},
 									Source: "nvd@nist.gov",
 									Rank:   1,
 								},
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2023-45283"},
@@ -1297,6 +1387,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "golang",
 								Product: "go",
 							},
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2023-45283",
+							CWE:    "CWE-22",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1341,7 +1437,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2024-26663"},
@@ -1403,6 +1499,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "linux",
 								Product: "linux_kernel",
 							},
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2024-26663",
+							CWE:    "CWE-476",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1468,7 +1570,20 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: nil, // important! we dropped all of the node criteria since the topology is unsupported
+					Related: relatedEntries(
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2021-1566",
+							CWE:    "CWE-296",
+							Source: "psirt@cisco.com",
+							Type:   "Secondary",
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2021-1566",
+							CWE:    "CWE-295",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
+					), // important! we dropped all of the node criteria since the topology is unsupported
 				},
 			},
 		},
@@ -1493,7 +1608,7 @@ func TestTransform(t *testing.T) {
 							References:  []grypeDB.Reference{{URL: "https://nvd.nist.gov/vuln/detail/CVE-2008-3442"}},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2008-3442"},
@@ -1554,6 +1669,12 @@ func TestTransform(t *testing.T) {
 								Edition: "sr1",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2008-3442",
+							CWE:    "CWE-94",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -1583,7 +1704,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs:   []string{"CVE-2004-0377"},
@@ -1611,6 +1732,12 @@ func TestTransform(t *testing.T) {
 								Vendor:  "larry_wall",
 								Product: "perl",
 							},
+						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2004-0377",
+							CWE:    "NVD-CWE-Other",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
 						},
 					),
 				},
@@ -1659,7 +1786,7 @@ func TestTransform(t *testing.T) {
 							},
 						},
 					},
-					Related: affectedPkgSlice(
+					Related: relatedEntries(
 						grypeDB.AffectedCPEHandle{
 							BlobValue: &grypeDB.PackageBlob{
 								CVEs: []string{"CVE-2023-JVM-TEST"},
@@ -1738,6 +1865,12 @@ func TestTransform(t *testing.T) {
 								Product: "jdk",
 							},
 						},
+						grypeDB.CWEHandle{
+							CVE:    "CVE-2023-JVM-TEST",
+							CWE:    "CWE-79",
+							Source: "nvd@nist.gov",
+							Type:   "Primary",
+						},
 					),
 				},
 			},
@@ -1769,12 +1902,8 @@ func TestTransform(t *testing.T) {
 	}
 }
 
-func affectedPkgSlice(a ...grypeDB.AffectedCPEHandle) []any {
-	var r []any
-	for _, v := range a {
-		r = append(r, v)
-	}
-	return r
+func relatedEntries(items ...any) []any {
+	return items
 }
 
 func loadFixture(t *testing.T, fixturePath string) []unmarshal.NVDVulnerability {
@@ -1797,4 +1926,77 @@ func loadFixture(t *testing.T, fixturePath string) []unmarshal.NVDVulnerability 
 
 func timeRef(ti time.Time) *time.Time {
 	return &ti
+}
+
+func TestIsValidCWE(t *testing.T) {
+	tests := []struct {
+		name     string
+		cwe      string
+		expected bool
+	}{
+		{
+			name:     "empty string",
+			cwe:      "",
+			expected: false,
+		},
+		{
+			name:     "NVD-CWE-noinfo",
+			cwe:      "NVD-CWE-noinfo",
+			expected: false,
+		},
+		{
+			name:     "NVD-CWE-Other",
+			cwe:      "NVD-CWE-Other",
+			expected: true,
+		},
+		{
+			name:     "valid CWE with single digit",
+			cwe:      "CWE-1",
+			expected: true,
+		},
+		{
+			name:     "valid CWE with multiple digits",
+			cwe:      "CWE-123",
+			expected: true,
+		},
+		{
+			name:     "valid CWE-79",
+			cwe:      "CWE-79",
+			expected: true,
+		},
+		{
+			name:     "valid CWE-89",
+			cwe:      "CWE-89",
+			expected: true,
+		},
+		{
+			name:     "invalid CWE without prefix",
+			cwe:      "123",
+			expected: false,
+		},
+		{
+			name:     "invalid CWE without number",
+			cwe:      "CWE-",
+			expected: false,
+		},
+		{
+			name:     "invalid CWE with letters",
+			cwe:      "CWE-ABC",
+			expected: false,
+		},
+		{
+			name:     "invalid lowercase cwe",
+			cwe:      "cwe-123",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isValidCWE(tt.cwe)
+			if got != tt.expected {
+				t.Errorf("isValidCWE(%q) = %v, want %v", tt.cwe, got, tt.expected)
+			}
+		})
+	}
 }
