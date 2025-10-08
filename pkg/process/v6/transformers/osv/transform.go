@@ -395,8 +395,16 @@ func getPackageTypeFromEcosystem(ecosystem string) pkg.Type {
 func getReferences(vuln unmarshal.OSVVulnerability) []grypeDB.Reference {
 	var refs []grypeDB.Reference
 	for _, ref := range vuln.References {
+		// For advisory references, use the vulnerability ID as the advisory ID
+		// This allows tools consuming the data to link back to the specific advisory
+		refID := ""
+		if ref.Type == models.ReferenceAdvisory && isAdvisoryRecord(vuln) {
+			refID = vuln.ID
+		}
+
 		refs = append(refs,
 			grypeDB.Reference{
+				ID:   refID,
 				URL:  ref.URL,
 				Tags: []string{string(ref.Type)},
 			},

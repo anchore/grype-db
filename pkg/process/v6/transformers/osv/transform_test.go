@@ -222,6 +222,7 @@ func TestTransform(t *testing.T) {
 						ID:          "ALSA-2025:7467",
 						Description: "The skopeo command lets you inspect images from container image registries.",
 						References: []grypeDB.Reference{{
+							ID:   "ALSA-2025:7467",
 							URL:  "https://errata.almalinux.org/10/ALSA-2025-7467.html",
 							Tags: []string{"ADVISORY"},
 						}},
