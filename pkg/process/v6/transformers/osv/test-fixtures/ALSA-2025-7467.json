@@ -54,7 +54,7 @@
     }
   ],
   "database_specific": {
-    "vunnel": {
+    "anchore": {
       "record_type": "advisory"
     }
   }

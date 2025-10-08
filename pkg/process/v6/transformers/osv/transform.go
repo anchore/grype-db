@@ -562,17 +562,17 @@ func isAdvisoryRecord(vuln unmarshal.OSVVulnerability) bool {
 		return false
 	}
 
-	vunnelData, ok := vuln.DatabaseSpecific["vunnel"]
+	anchoreData, ok := vuln.DatabaseSpecific["anchore"]
 	if !ok {
 		return false
 	}
 
-	vunnelMap, ok := vunnelData.(map[string]any)
+	anchoreMap, ok := anchoreData.(map[string]any)
 	if !ok {
 		return false
 	}
 
-	recordType, ok := vunnelMap["record_type"]
+	recordType, ok := anchoreMap["record_type"]
 	if !ok {
 		return false
 	}
