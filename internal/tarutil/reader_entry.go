@@ -69,18 +69,52 @@ func writeEntry(tw lowLevelWriter, filename string, fileInfo os.FileInfo, opener
 			return err
 		}
 
-		contents, err := io.ReadAll(reader)
-		if err != nil {
-			return err
+		// Determine content size without reading entire file into memory
+		var size int64
+		switch r := reader.(type) {
+		case *bytes.Reader:
+			// For bytes.Reader (used by NewEntryFromBytes), get actual size
+			size = r.Size()
+		case interface{ Stat() (os.FileInfo, error) }:
+			// For *os.File, use Stat to get size
+			if stat, err := r.Stat(); err == nil {
+				size = stat.Size()
+			} else {
+				// Fallback: this is rare, but for seekable readers we could try other methods
+				// For now, keep old behavior for unknown reader types
+				contents, err := io.ReadAll(reader)
+				if err != nil {
+					return err
+				}
+				size = int64(len(contents))
+				reader = bytes.NewReader(contents)
+			}
+		default:
+			// Fallback for unknown reader types: read into memory
+			contents, err := io.ReadAll(reader)
+			if err != nil {
+				return err
+			}
+			size = int64(len(contents))
+			reader = bytes.NewReader(contents)
 		}
-		header.Size = int64(len(contents))
+
+		header.Size = size
 
 		if err := tw.WriteHeader(header); err != nil {
 			return err
 		}
 
-		if _, err := tw.Write(contents); err != nil {
+		// Stream the file contents directly to the tar writer
+		if _, err := io.Copy(tw, reader); err != nil {
 			return err
+		}
+
+		// Close the reader if it implements io.Closer
+		if closer, ok := reader.(io.Closer); ok {
+			if err := closer.Close(); err != nil {
+				return err
+			}
 		}
 
 		// ensure proper alignment in the tar archive (padding with zeros)
