@@ -2,9 +2,12 @@ package tarutil
 
 import (
 	"archive/tar"
+	"bytes"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -140,4 +143,98 @@ func TestReaderEntry_writeEntry(t *testing.T) {
 			assert.Equal(t, tt.expectFlush, tw.flushCalled)
 		})
 	}
+}
+
+func Test_readerWithSize(t *testing.T) {
+	testData := "hello world from test"
+
+	tests := []struct {
+		name     string
+		reader   func(t *testing.T) io.Reader
+		wantSize int64
+		wantErr  require.ErrorAssertionFunc
+	}{
+		{
+			name: "bytes.Reader",
+			reader: func(t *testing.T) io.Reader {
+				return bytes.NewReader([]byte(testData))
+			},
+			wantSize: int64(len(testData)),
+		},
+		{
+			name: "os.File success",
+			reader: func(t *testing.T) io.Reader {
+				dir := t.TempDir()
+				path := filepath.Join(dir, "test.txt")
+				require.NoError(t, os.WriteFile(path, []byte(testData), 0644))
+				f, err := os.Open(path)
+				require.NoError(t, err)
+				t.Cleanup(func() { f.Close() })
+				return f
+			},
+			wantSize: int64(len(testData)),
+		},
+		{
+			name: "os.File stat fails",
+			reader: func(t *testing.T) io.Reader {
+				dir := t.TempDir()
+				path := filepath.Join(dir, "test.txt")
+				require.NoError(t, os.WriteFile(path, []byte(testData), 0644))
+				f, err := os.Open(path)
+				require.NoError(t, err)
+				f.Close()
+				return f
+			},
+			wantErr: require.Error,
+		},
+		{
+			name: "unknown reader creates temp file",
+			reader: func(t *testing.T) io.Reader {
+				return strings.NewReader(testData)
+			},
+			wantSize: int64(len(testData)),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantErr == nil {
+				tt.wantErr = require.NoError
+			}
+
+			reader := tt.reader(t)
+			size, rc, err := readerWithSize(reader)
+			tt.wantErr(t, err)
+			if err != nil {
+				return
+			}
+			defer rc.Close()
+
+			assert.Equal(t, tt.wantSize, size)
+
+			content, err := io.ReadAll(rc)
+			require.NoError(t, err)
+			assert.Equal(t, testData, string(content))
+		})
+	}
+}
+
+func Test_autoDeleteFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.txt")
+	require.NoError(t, os.WriteFile(path, []byte("test content"), 0644))
+
+	f, err := os.Open(path)
+	require.NoError(t, err)
+
+	adf := &autoDeleteFile{File: f}
+
+	_, err = os.Stat(path)
+	require.NoError(t, err)
+
+	err = adf.Close()
+	require.NoError(t, err)
+
+	_, err = os.Stat(path)
+	assert.True(t, os.IsNotExist(err))
 }
