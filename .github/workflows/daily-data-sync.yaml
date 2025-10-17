@@ -14,7 +14,7 @@ env:
 jobs:
   discover-providers:
     name: "Discover vulnerability providers"
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     if: github.repository == 'anchore/grype-db' # only run for main repo
     permissions:
       contents: read
@@ -47,7 +47,7 @@ jobs:
   update-provider:
     name: "Update provider"
     needs: discover-providers
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}/runner=large
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -102,7 +102,7 @@ jobs:
 
   aggregate-cache:
     name: "Aggregate provider cache"
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}/runner=large
     if: ${{ always() }}
     needs:
       - update-provider

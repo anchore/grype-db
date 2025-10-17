@@ -21,7 +21,7 @@ jobs:
     name: "Static analysis"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
 
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
@@ -39,7 +39,7 @@ jobs:
     name: "Unit tests (Go)"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
 
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
@@ -59,7 +59,7 @@ jobs:
     name: "Unit tests (Python)"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
 
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
@@ -79,7 +79,7 @@ jobs:
     name: "Build snapshot artifacts"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
         with:
@@ -112,7 +112,7 @@ jobs:
     name: "Discover supported schema versions"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
@@ -131,7 +131,7 @@ jobs:
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}/runner=large
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
@@ -171,7 +171,7 @@ jobs:
     permissions:
       contents: read
     needs: [Build-Snapshot-Artifacts]
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
         with:
@@ -202,7 +202,7 @@ jobs:
     name: "CLI tests (Python)"
     permissions:
       contents: read
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}/runner=large
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
         with:
