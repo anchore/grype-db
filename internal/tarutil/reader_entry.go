@@ -43,16 +43,11 @@ func getReaderSize(reader io.Reader) (int64, io.Reader, error) {
 		return r.Size(), reader, nil
 	case interface{ Stat() (os.FileInfo, error) }:
 		// For *os.File, use Stat to get size
-		if stat, err := r.Stat(); err == nil {
-			return stat.Size(), reader, nil
-		}
-		// Fallback: this is rare, but for seekable readers we could try other methods
-		// For now, keep old behavior for unknown reader types
-		contents, err := io.ReadAll(reader)
+		stat, err := r.Stat()
 		if err != nil {
 			return 0, nil, err
 		}
-		return int64(len(contents)), bytes.NewReader(contents), nil
+		return stat.Size(), reader, nil
 	default:
 		// Fallback for unknown reader types: read into memory
 		contents, err := io.ReadAll(reader)
