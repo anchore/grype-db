@@ -12,6 +12,7 @@ provider:
   configs:
     - name: nvd
     - name: alpine
+    - name: alma
     - name: amazon
     - name: bitnami
     - name: chainguard
