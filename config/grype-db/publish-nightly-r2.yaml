@@ -11,6 +11,7 @@ provider:
   # Any providers that should be excluded from processing should be added to the 'provider.vunnel.excludeProviders' list.
   configs:
     - name: nvd
+    - name: alma
     - name: alpine
     - name: amazon
     - name: bitnami
