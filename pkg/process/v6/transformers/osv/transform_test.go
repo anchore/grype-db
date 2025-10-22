@@ -115,7 +115,7 @@ func TestTransform(t *testing.T) {
 							CVEs: []string{"CVE-2020-11984"},
 							Ranges: []grypeDB.Range{{
 								Version: grypeDB.Version{
-									Type:       "semver",
+									Type:       "bitnami",
 									Constraint: ">=2.4.32,<=2.4.43",
 								},
 							}},
@@ -165,7 +165,7 @@ func TestTransform(t *testing.T) {
 							CVEs: []string{"CVE-2020-8201"},
 							Ranges: []grypeDB.Range{{
 								Version: grypeDB.Version{
-									Type:       "semver",
+									Type:       "bitnami",
 									Constraint: ">=12.0.0,<12.18.4",
 								},
 								Fix: &grypeDB.Fix{
@@ -180,7 +180,7 @@ func TestTransform(t *testing.T) {
 								},
 							}, {
 								Version: grypeDB.Version{
-									Type:       "semver",
+									Type:       "bitnami",
 									Constraint: ">=14.0.0,<14.11.0",
 								},
 								Fix: &grypeDB.Fix{
@@ -225,12 +225,14 @@ func TestTransform(t *testing.T) {
 }
 func Test_getGrypeRangesFromRange(t *testing.T) {
 	tests := []struct {
-		name string
-		rnge models.Range
-		want []grypeDB.Range
+		name      string
+		rnge      models.Range
+		ecosystem string
+		want      []grypeDB.Range
 	}{
 		{
-			name: "single range with 'fixed' status",
+			name:      "single range with 'fixed' status",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -251,7 +253,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			}},
 		},
 		{
-			name: "single range with 'last affected' status",
+			name:      "single range with 'last affected' status",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -268,7 +271,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			}},
 		},
 		{
-			name: "single range with no 'fixed' or 'last affected' status",
+			name:      "single range with no 'fixed' or 'last affected' status",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -283,7 +287,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			}},
 		},
 		{
-			name: "single range introduced with '0'",
+			name:      "single range introduced with '0'",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -300,7 +305,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			}},
 		},
 		{
-			name: "multiple ranges",
+			name:      "multiple ranges",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -335,7 +341,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			},
 		},
 		{
-			name: "single range with database-specific fix availability",
+			name:      "single range with database-specific fix availability",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -378,7 +385,7 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 		test := testToRun
 		t.Run(test.name, func(tt *testing.T) {
 			tt.Parallel()
-			if got := getGrypeRangesFromRange(test.rnge); !reflect.DeepEqual(got, test.want) {
+			if got := getGrypeRangesFromRange(test.rnge, test.ecosystem); !reflect.DeepEqual(got, test.want) {
 				t.Errorf("getGrypeRangesFromRange() = %v, want %v", got, test.want)
 			}
 		})

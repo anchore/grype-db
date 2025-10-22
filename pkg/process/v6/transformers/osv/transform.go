@@ -79,7 +79,7 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 
 		var ranges []grypeDB.Range
 		for _, r := range affected.Ranges {
-			ranges = append(ranges, getGrypeRangesFromRange(r)...)
+			ranges = append(ranges, getGrypeRangesFromRange(r, string(affected.Package.Ecosystem))...)
 		}
 		aph.BlobValue.Ranges = ranges
 		aphs = append(aphs, aph)
@@ -139,7 +139,7 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 //	}
 //
 // ]
-func getGrypeRangesFromRange(r models.Range) []grypeDB.Range { // nolint: gocognit
+func getGrypeRangesFromRange(r models.Range, ecosystem string) []grypeDB.Range { // nolint: gocognit
 	var ranges []grypeDB.Range
 	if len(r.Events) == 0 {
 		return nil
@@ -184,7 +184,7 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.Range { // nolint: gocogn
 		}
 	}
 
-	rangeType := normalizeRangeType(r.Type)
+	rangeType := normalizeRangeType(r.Type, ecosystem)
 	for _, e := range r.Events {
 		switch {
 		case e.Introduced != "" && e.Introduced != "0":
@@ -234,7 +234,7 @@ func getGrypeRangesFromRange(r models.Range) []grypeDB.Range { // nolint: gocogn
 }
 
 func normalizeConstraint(constraint string, rangeType string) string {
-	if rangeType == "semver" {
+	if rangeType == "semver" || rangeType == "bitnami" {
 		return common.EnforceSemVerConstraint(constraint)
 	}
 	return constraint
@@ -254,7 +254,12 @@ func normalizeFix(fix string, detail *grypeDB.FixDetail) *grypeDB.Fix {
 	}
 }
 
-func normalizeRangeType(t models.RangeType) string {
+func normalizeRangeType(t models.RangeType, ecosystem string) string {
+	// For Bitnami ecosystem, use "bitnami" format instead of "semver"
+	if ecosystem == "Bitnami" && t == models.RangeSemVer {
+		return "bitnami"
+	}
+
 	switch t {
 	case models.RangeSemVer, models.RangeEcosystem, models.RangeGit:
 		return strings.ToLower(string(t))
