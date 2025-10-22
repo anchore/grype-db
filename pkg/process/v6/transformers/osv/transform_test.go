@@ -68,6 +68,14 @@ func affectedPkgSlice(a ...grypeDB.AffectedPackageHandle) []any {
 	return r
 }
 
+func unaffectedPkgSlice(u ...grypeDB.UnaffectedPackageHandle) []any {
+	var r []any
+	for _, v := range u {
+		r = append(r, v)
+	}
+	return r
+}
+
 func TestTransform(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -192,6 +200,79 @@ func TestTransform(t *testing.T) {
 											Kind: "first-observed",
 										},
 									},
+								},
+							}},
+						},
+					},
+				),
+			}},
+		},
+		{
+			name:        "AlmaLinux Advisory",
+			fixturePath: "test-fixtures/ALSA-2025-7467.json",
+			want: []transformers.RelatedEntries{{
+				VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+					Name:          "ALSA-2025:7467",
+					Status:        grypeDB.VulnerabilityActive,
+					ProviderID:    "osv",
+					Provider:      expectedProvider(),
+					ModifiedDate:  timeRef(time.Date(2025, time.July, 2, 12, 50, 6, 0, time.UTC)),
+					PublishedDate: timeRef(time.Date(2025, time.May, 13, 0, 0, 0, 0, time.UTC)),
+					BlobValue: &grypeDB.VulnerabilityBlob{
+						ID:          "ALSA-2025:7467",
+						Description: "The skopeo command lets you inspect images from container image registries.",
+						References: []grypeDB.Reference{{
+							ID:   "ALSA-2025:7467",
+							URL:  "https://errata.almalinux.org/10/ALSA-2025-7467.html",
+							Tags: []string{"ADVISORY"},
+						}},
+						Aliases:    []string{"CVE-2025-27144"},
+						Severities: nil,
+					},
+				},
+				Related: unaffectedPkgSlice(
+					grypeDB.UnaffectedPackageHandle{
+						Package: &grypeDB.Package{
+							Name:      "skopeo",
+							Ecosystem: "rpm",
+						},
+						OperatingSystem: &grypeDB.OperatingSystem{
+							Name:         "almalinux",
+							MajorVersion: "10",
+						},
+						BlobValue: &grypeDB.PackageBlob{
+							CVEs: []string{"CVE-2025-27144"},
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "ecosystem",
+									Constraint: ">= 2:1.18.1-1.el10_0",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2:1.18.1-1.el10_0",
+									State:   grypeDB.FixedStatus,
+								},
+							}},
+						},
+					},
+					grypeDB.UnaffectedPackageHandle{
+						Package: &grypeDB.Package{
+							Name:      "skopeo-tests",
+							Ecosystem: "rpm",
+						},
+						OperatingSystem: &grypeDB.OperatingSystem{
+							Name:         "almalinux",
+							MajorVersion: "10",
+						},
+						BlobValue: &grypeDB.PackageBlob{
+							CVEs: []string{"CVE-2025-27144"},
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "ecosystem",
+									Constraint: ">= 2:1.18.1-1.el10_0",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2:1.18.1-1.el10_0",
+									State:   grypeDB.FixedStatus,
 								},
 							}},
 						},
@@ -506,4 +587,138 @@ func Test_extractCVSSInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_extractRpmModularity(t *testing.T) {
+	tests := []struct {
+		name     string
+		affected models.Affected
+		want     string
+	}{
+		{
+			name: "with rpm_modularity",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "mariadb:10.3",
+				},
+			},
+			want: "mariadb:10.3",
+		},
+		{
+			name: "no ecosystem_specific",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			want: "",
+		},
+		{
+			name: "no rpm_modularity key",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"other_key": "some_value",
+				},
+			},
+			want: "",
+		},
+		{
+			name: "rpm_modularity not string",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": 123,
+				},
+			},
+			want: "",
+		},
+		{
+			name: "nodejs modularity",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "nodejs:16",
+				},
+			},
+			want: "nodejs:16",
+		},
+	}
+
+	for _, testToRun := range tests {
+		test := testToRun
+		t.Run(test.name, func(tt *testing.T) {
+			got := extractRpmModularity(test.affected)
+			if got != test.want {
+				t.Errorf("extractRpmModularity() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func Test_getPackageQualifiers(t *testing.T) {
+	tests := []struct {
+		name     string
+		affected models.Affected
+		cpes     any
+		withCPE  bool
+		want     *grypeDB.PackageQualifiers
+	}{
+		{
+			name: "with rpm_modularity only",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "mariadb:10.3",
+				},
+			},
+			cpes:    nil,
+			withCPE: false,
+			want: &grypeDB.PackageQualifiers{
+				RpmModularity: stringRef("mariadb:10.3"),
+			},
+		},
+		{
+			name: "with CPE only",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			cpes:    []string{"cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*"},
+			withCPE: true,
+			want: &grypeDB.PackageQualifiers{
+				PlatformCPEs: []string{"cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*"},
+			},
+		},
+		{
+			name: "with both rpm_modularity and CPE",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "nodejs:16",
+				},
+			},
+			cpes:    []string{"cpe:2.3:a:nodejs:nodejs:*:*:*:*:*:*:*:*"},
+			withCPE: true,
+			want: &grypeDB.PackageQualifiers{
+				PlatformCPEs:  []string{"cpe:2.3:a:nodejs:nodejs:*:*:*:*:*:*:*:*"},
+				RpmModularity: stringRef("nodejs:16"),
+			},
+		},
+		{
+			name: "no qualifiers",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			cpes:    nil,
+			withCPE: false,
+			want:    nil,
+		},
+	}
+
+	for _, testToRun := range tests {
+		test := testToRun
+		t.Run(test.name, func(tt *testing.T) {
+			got := getPackageQualifiers(test.affected, test.cpes, test.withCPE)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("getPackageQualifiers() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func stringRef(s string) *string {
+	return &s
 }

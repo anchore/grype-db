@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/google/osv-scanner/pkg/models"
 
 	"github.com/anchore/grype-db/pkg/data"
+	"github.com/anchore/grype-db/pkg/process/internal/codename"
 	"github.com/anchore/grype-db/pkg/process/internal/common"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/internal"
@@ -19,10 +21,21 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 )
 
+const (
+	almaLinux = "almalinux"
+)
+
 func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) ([]data.Entry, error) {
 	severities, err := getSeverities(vulnerability)
 	if err != nil {
 		return nil, fmt.Errorf("unable to obtain severities: %w", err)
+	}
+
+	isAdvisory := isAdvisoryRecord(vulnerability)
+	aliases := vulnerability.Aliases
+
+	if isAdvisory {
+		aliases = append(aliases, vulnerability.Related...)
 	}
 
 	in := []any{
@@ -38,14 +51,23 @@ func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) (
 				Assigners:   nil,
 				Description: vulnerability.Details,
 				References:  getReferences(vulnerability),
-				Aliases:     vulnerability.Aliases,
+				Aliases:     aliases,
 				Severities:  severities,
 			},
 		},
 	}
 
-	for _, a := range getAffectedPackages(vulnerability) {
-		in = append(in, a)
+	// Check if this is an advisory record
+	if isAdvisory {
+		// For advisory records, emit unaffected packages
+		for _, u := range getUnaffectedPackages(vulnerability) {
+			in = append(in, u)
+		}
+	} else {
+		// For vulnerability records, emit affected packages
+		for _, a := range getAffectedPackages(vulnerability) {
+			in = append(in, a)
+		}
 	}
 
 	return transformers.NewEntries(in...), nil
@@ -67,14 +89,15 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	var aphs []grypeDB.AffectedPackageHandle
 	for _, affected := range vuln.Affected {
 		aph := grypeDB.AffectedPackageHandle{
-			Package:   getPackage(affected.Package),
-			BlobValue: &grypeDB.PackageBlob{CVEs: vuln.Aliases},
+			Package:         getPackage(affected.Package),
+			OperatingSystem: getOperatingSystemFromEcosystem(string(affected.Package.Ecosystem)),
+			BlobValue:       &grypeDB.PackageBlob{CVEs: vuln.Aliases},
 		}
 
-		if withCPE {
-			aph.BlobValue.Qualifiers = &grypeDB.PackageQualifiers{
-				PlatformCPEs: cpes.([]string),
-			}
+		// Extract qualifiers (CPE and RPM modularity)
+		qualifiers := getPackageQualifiers(affected, cpes, withCPE)
+		if qualifiers != nil {
+			aph.BlobValue.Qualifiers = qualifiers
 		}
 
 		var ranges []grypeDB.Range
@@ -89,6 +112,49 @@ func getAffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.AffectedPack
 	sort.Sort(internal.ByAffectedPackage(aphs))
 
 	return aphs
+}
+
+// getPackageQualifiers extracts package qualifiers from affected package data
+// including CPE information and RPM modularity
+func getPackageQualifiers(affected models.Affected, cpes any, withCPE bool) *grypeDB.PackageQualifiers {
+	var qualifiers *grypeDB.PackageQualifiers
+
+	// Handle CPE qualifiers (existing logic)
+	if withCPE {
+		qualifiers = &grypeDB.PackageQualifiers{
+			PlatformCPEs: cpes.([]string),
+		}
+	}
+
+	// Extract RPM modularity from ecosystem_specific
+	rpmModularity := extractRpmModularity(affected)
+	if rpmModularity != "" {
+		if qualifiers == nil {
+			qualifiers = &grypeDB.PackageQualifiers{}
+		}
+		qualifiers.RpmModularity = &rpmModularity
+	}
+
+	return qualifiers
+}
+
+// extractRpmModularity extracts RPM modularity information from affected package ecosystem_specific
+func extractRpmModularity(affected models.Affected) string {
+	if affected.EcosystemSpecific == nil {
+		return ""
+	}
+
+	rpmModularity, ok := affected.EcosystemSpecific["rpm_modularity"]
+	if !ok {
+		return ""
+	}
+
+	rpmModularityStr, ok := rpmModularity.(string)
+	if !ok {
+		return ""
+	}
+
+	return rpmModularityStr
 }
 
 // OSV supports flattered ranges, so both formats below are valid:
@@ -269,17 +335,63 @@ func normalizeRangeType(t models.RangeType, ecosystem string) string {
 }
 
 func getPackage(p models.Package) *grypeDB.Package {
-	return &grypeDB.Package{
-		Ecosystem: string(p.Ecosystem),
-		Name:      name.Normalize(p.Name, pkg.TypeFromPURL(p.Purl)),
+	// Try to determine package type from ecosystem or PURL
+	var pkgType pkg.Type
+	var ecosystem string
+
+	if p.Purl != "" {
+		pkgType = pkg.TypeFromPURL(p.Purl)
+		ecosystem = string(p.Ecosystem)
+	} else {
+		pkgType = getPackageTypeFromEcosystem(string(p.Ecosystem))
+		// If we found a package type from OS ecosystem, use it; otherwise use original ecosystem
+		if pkgType != "" {
+			ecosystem = string(pkgType)
+		} else {
+			ecosystem = string(p.Ecosystem)
+		}
 	}
+
+	return &grypeDB.Package{
+		Ecosystem: ecosystem,
+		Name:      name.Normalize(p.Name, pkgType),
+	}
+}
+
+// getPackageTypeFromEcosystem determines package type from OSV ecosystem
+// Currently only supports AlmaLinux; other ecosystems use PURL-based detection
+func getPackageTypeFromEcosystem(ecosystem string) pkg.Type {
+	if ecosystem == "" {
+		return ""
+	}
+
+	// Split ecosystem by colon to get OS name
+	parts := strings.Split(ecosystem, ":")
+	osName := strings.ToLower(parts[0])
+
+	// Only handle AlmaLinux
+	if osName == almaLinux {
+		return pkg.RpmPkg
+	}
+
+	// For other ecosystems (like Bitnami, npm, pypi, etc.), return empty type
+	// The package type will be determined from PURL if available
+	return ""
 }
 
 func getReferences(vuln unmarshal.OSVVulnerability) []grypeDB.Reference {
 	var refs []grypeDB.Reference
 	for _, ref := range vuln.References {
+		// For advisory references, use the vulnerability ID as the advisory ID
+		// This allows tools consuming the data to link back to the specific advisory
+		refID := ""
+		if ref.Type == models.ReferenceAdvisory && isAdvisoryRecord(vuln) {
+			refID = vuln.ID
+		}
+
 		refs = append(refs,
 			grypeDB.Reference{
+				ID:   refID,
 				URL:  ref.URL,
 				Tags: []string{string(ref.Type)},
 			},
@@ -345,4 +457,233 @@ func getSeverities(vuln unmarshal.OSVVulnerability) ([]grypeDB.Severity, error) 
 	}
 
 	return severities, nil
+}
+
+// getOperatingSystemFromEcosystem extracts operating system information from OSV ecosystem field
+// Currently only supports AlmaLinux ecosystems
+// Example: "AlmaLinux:8" -> almalinux 8
+func getOperatingSystemFromEcosystem(ecosystem string) *grypeDB.OperatingSystem {
+	if ecosystem == "" {
+		return nil
+	}
+
+	// Split ecosystem by colon to get components
+	parts := strings.Split(ecosystem, ":")
+	if len(parts) < 2 {
+		return nil
+	}
+
+	osName := strings.ToLower(parts[0])
+
+	// Only handle AlmaLinux
+	if osName != almaLinux {
+		return nil
+	}
+
+	osVersion := parts[1]
+
+	// Parse version into major/minor components
+	versionFields := strings.Split(osVersion, ".")
+	var majorVersion, minorVersion string
+	if len(versionFields) > 0 {
+		majorVersion = versionFields[0]
+		// Check if the first field is actually a number
+		if _, err := strconv.Atoi(majorVersion[0:1]); err != nil {
+			// If not numeric, treat the whole thing as a label version
+			return &grypeDB.OperatingSystem{
+				Name:         normalizeOSName(osName),
+				LabelVersion: osVersion,
+				Codename:     codename.LookupOS(normalizeOSName(osName), "", ""),
+			}
+		}
+		if len(versionFields) > 1 {
+			minorVersion = versionFields[1]
+		}
+	}
+
+	return &grypeDB.OperatingSystem{
+		Name:         normalizeOSName(osName),
+		MajorVersion: majorVersion,
+		MinorVersion: minorVersion,
+		Codename:     codename.LookupOS(normalizeOSName(osName), majorVersion, minorVersion),
+	}
+}
+
+// normalizeOSName normalizes operating system names for consistency
+// Currently only supports AlmaLinux
+func normalizeOSName(osName string) string {
+	osName = strings.ToLower(osName)
+
+	// Only handle AlmaLinux
+	if osName == almaLinux {
+		return almaLinux
+	}
+
+	return osName
+}
+
+// isAdvisoryRecord checks if the OSV record is marked as an advisory
+func isAdvisoryRecord(vuln unmarshal.OSVVulnerability) bool {
+	if vuln.DatabaseSpecific == nil {
+		return false
+	}
+
+	anchoreData, ok := vuln.DatabaseSpecific["anchore"]
+	if !ok {
+		return false
+	}
+
+	anchoreMap, ok := anchoreData.(map[string]any)
+	if !ok {
+		return false
+	}
+
+	recordType, ok := anchoreMap["record_type"]
+	if !ok {
+		return false
+	}
+
+	recordTypeStr, ok := recordType.(string)
+	if !ok {
+		return false
+	}
+
+	return recordTypeStr == "advisory"
+}
+
+// getUnaffectedPackages creates UnaffectedPackageHandle entries for advisory records
+func getUnaffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.UnaffectedPackageHandle {
+	if len(vuln.Affected) == 0 {
+		return nil
+	}
+
+	var uphs []grypeDB.UnaffectedPackageHandle
+	for _, affected := range vuln.Affected {
+		uph := grypeDB.UnaffectedPackageHandle{
+			Package:         getPackage(affected.Package),
+			OperatingSystem: getOperatingSystemFromEcosystem(string(affected.Package.Ecosystem)),
+			BlobValue:       getUnaffectedBlob(vuln.Aliases, affected.Ranges, affected),
+		}
+		uphs = append(uphs, uph)
+	}
+
+	// stable ordering
+	sort.Sort(internal.ByUnaffectedPackage(uphs))
+
+	return uphs
+}
+
+// getUnaffectedBlob creates a package blob for unaffected packages (advisories)
+// For advisories, we need to invert the ranges to represent unaffected versions
+func getUnaffectedBlob(aliases []string, ranges []models.Range, affected models.Affected) *grypeDB.PackageBlob {
+	var grypeRanges []grypeDB.Range
+	ecosystem := string(affected.Package.Ecosystem)
+	for _, r := range ranges {
+		grypeRanges = append(grypeRanges, getGrypeUnaffectedRangesFromRange(r, ecosystem)...)
+	}
+
+	// Extract qualifiers including RPM modularity
+	qualifiers := getPackageQualifiers(affected, nil, false)
+
+	return &grypeDB.PackageBlob{
+		CVEs:       aliases,
+		Ranges:     grypeRanges,
+		Qualifiers: qualifiers,
+	}
+}
+
+// getGrypeUnaffectedRangesFromRange converts OSV ranges to unaffected version ranges for unaffected packages
+// This inverts the logic: instead of "< fix_version" (affected), we create ">= fix_version" (unaffected)
+func getGrypeUnaffectedRangesFromRange(r models.Range, ecosystem string) []grypeDB.Range {
+	if len(r.Events) == 0 {
+		return nil
+	}
+
+	fixByVersion := extractFixAvailability(r)
+	rangeType := normalizeRangeType(r.Type, ecosystem)
+
+	return buildUnaffectedRangesFromEvents(r.Events, fixByVersion, rangeType)
+}
+
+// extractFixAvailability extracts fix availability information from DatabaseSpecific
+func extractFixAvailability(r models.Range) map[string]grypeDB.FixAvailability {
+	fixByVersion := make(map[string]grypeDB.FixAvailability)
+
+	dbSpecific, hasDBSpecific := r.DatabaseSpecific["anchore"]
+	if !hasDBSpecific {
+		return fixByVersion
+	}
+
+	anchoreInfo, isMap := dbSpecific.(map[string]any)
+	if !isMap {
+		return fixByVersion
+	}
+
+	fixes, hasFixes := anchoreInfo["fixes"]
+	if !hasFixes {
+		return fixByVersion
+	}
+
+	fixList, isList := fixes.([]any)
+	if !isList {
+		return fixByVersion
+	}
+
+	for _, fixEntry := range fixList {
+		parseSingleFixEntry(fixEntry, fixByVersion)
+	}
+
+	return fixByVersion
+}
+
+// parseSingleFixEntry parses a single fix entry and adds it to the fixByVersion map
+func parseSingleFixEntry(fixEntry any, fixByVersion map[string]grypeDB.FixAvailability) {
+	fixMap, isMap := fixEntry.(map[string]any)
+	if !isMap {
+		return
+	}
+
+	version, vOk := fixMap["version"].(string)
+	kind, kOk := fixMap["kind"].(string)
+	date, dOk := fixMap["date"].(string)
+
+	if vOk && kOk && dOk {
+		fixByVersion[version] = grypeDB.FixAvailability{
+			Date: internal.ParseTime(date),
+			Kind: kind,
+		}
+	}
+}
+
+// buildUnaffectedRangesFromEvents processes events to create unaffected version ranges
+func buildUnaffectedRangesFromEvents(events []models.Event, fixByVersion map[string]grypeDB.FixAvailability, rangeType string) []grypeDB.Range {
+	var ranges []grypeDB.Range
+
+	for _, e := range events {
+		if e.Fixed != "" {
+			unaffectedRange := createUnaffectedRange(e.Fixed, fixByVersion, rangeType)
+			ranges = append(ranges, unaffectedRange)
+		}
+	}
+
+	return ranges
+}
+
+// createUnaffectedRange creates a single safe range for a fixed version
+func createUnaffectedRange(fixedVersion string, fixByVersion map[string]grypeDB.FixAvailability, rangeType string) grypeDB.Range {
+	var detail *grypeDB.FixDetail
+	if f, ok := fixByVersion[fixedVersion]; ok {
+		detail = &grypeDB.FixDetail{
+			Available: &f,
+		}
+	}
+
+	constraint := fmt.Sprintf(">= %s", fixedVersion)
+	return grypeDB.Range{
+		Fix: normalizeFix(fixedVersion, detail),
+		Version: grypeDB.Version{
+			Type:       rangeType,
+			Constraint: normalizeConstraint(constraint, rangeType),
+		},
+	}
 }
