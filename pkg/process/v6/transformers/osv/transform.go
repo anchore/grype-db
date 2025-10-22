@@ -18,18 +18,11 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 	"github.com/anchore/grype/grype/db/v6/name"
-	"github.com/anchore/grype/grype/distro"
 	"github.com/anchore/syft/syft/pkg"
 )
 
 const (
 	almaLinux = "almalinux"
-	redHat    = "redhat"
-	centos    = "centos"
-	fedora    = "fedora"
-	ubuntu    = "ubuntu"
-	debian    = "debian"
-	alpine    = "alpine"
 )
 
 func Transform(vulnerability unmarshal.OSVVulnerability, state provider.State) ([]data.Entry, error) {
@@ -366,6 +359,7 @@ func getPackage(p models.Package) *grypeDB.Package {
 }
 
 // getPackageTypeFromEcosystem determines package type from OSV ecosystem
+// Currently only supports AlmaLinux; other ecosystems use PURL-based detection
 func getPackageTypeFromEcosystem(ecosystem string) pkg.Type {
 	if ecosystem == "" {
 		return ""
@@ -375,21 +369,14 @@ func getPackageTypeFromEcosystem(ecosystem string) pkg.Type {
 	parts := strings.Split(ecosystem, ":")
 	osName := strings.ToLower(parts[0])
 
-	// Map OS names to package types
-	switch osName {
-	case almaLinux, redHat, centos, fedora, "amazonlinux", "oraclelinux", "sles", "mariner", "azurelinux":
+	// Only handle AlmaLinux
+	if osName == almaLinux {
 		return pkg.RpmPkg
-	case ubuntu, debian:
-		return pkg.DebPkg
-	case alpine, "chainguard", "wolfi", "minimos":
-		return pkg.ApkPkg
-	case "windows":
-		return pkg.KbPkg
-	default:
-		// For non-OS ecosystems (like npm, pypi, etc.), return empty type
-		// The package type will be determined from PURL if available
-		return ""
 	}
+
+	// For other ecosystems (like Bitnami, npm, pypi, etc.), return empty type
+	// The package type will be determined from PURL if available
+	return ""
 }
 
 func getReferences(vuln unmarshal.OSVVulnerability) []grypeDB.Reference {
@@ -473,7 +460,8 @@ func getSeverities(vuln unmarshal.OSVVulnerability) ([]grypeDB.Severity, error) 
 }
 
 // getOperatingSystemFromEcosystem extracts operating system information from OSV ecosystem field
-// Examples: "AlmaLinux:8" -> almalinux 8, "Ubuntu:Pro:14.04:LTS" -> ubuntu 14.04
+// Currently only supports AlmaLinux ecosystems
+// Example: "AlmaLinux:8" -> almalinux 8
 func getOperatingSystemFromEcosystem(ecosystem string) *grypeDB.OperatingSystem {
 	if ecosystem == "" {
 		return nil
@@ -486,15 +474,13 @@ func getOperatingSystemFromEcosystem(ecosystem string) *grypeDB.OperatingSystem 
 	}
 
 	osName := strings.ToLower(parts[0])
-	osVersion := parts[1]
 
-	// Handle Ubuntu's more complex ecosystem format
-	if osName == ubuntu && len(parts) > 2 {
-		// Ubuntu:Pro:14.04:LTS -> version is 14.04
-		if len(parts) >= 4 {
-			osVersion = parts[2]
-		}
+	// Only handle AlmaLinux
+	if osName != almaLinux {
+		return nil
 	}
+
+	osVersion := parts[1]
 
 	// Parse version into major/minor components
 	versionFields := strings.Split(osVersion, ".")
@@ -524,36 +510,16 @@ func getOperatingSystemFromEcosystem(ecosystem string) *grypeDB.OperatingSystem 
 }
 
 // normalizeOSName normalizes operating system names for consistency
+// Currently only supports AlmaLinux
 func normalizeOSName(osName string) string {
 	osName = strings.ToLower(osName)
 
-	// Handle specific OS name mappings
-	switch osName {
-	case almaLinux:
+	// Only handle AlmaLinux
+	if osName == almaLinux {
 		return almaLinux
-	case ubuntu:
-		return ubuntu
-	case debian:
-		return debian
-	case alpine:
-		return alpine
-	case centos:
-		return centos
-	case "rhel", redHat:
-		return redHat
-	case fedora:
-		return fedora
-	case "opensuse", "suse":
-		return "opensuse"
-	case "arch":
-		return "archlinux"
-	default:
-		// Try to lookup in distro mapping
-		if d, ok := distro.IDMapping[osName]; ok {
-			return d.String()
-		}
-		return osName
 	}
+
+	return osName
 }
 
 // isAdvisoryRecord checks if the OSV record is marked as an advisory
@@ -611,8 +577,9 @@ func getUnaffectedPackages(vuln unmarshal.OSVVulnerability) []grypeDB.Unaffected
 // For advisories, we need to invert the ranges to represent unaffected versions
 func getUnaffectedBlob(aliases []string, ranges []models.Range, affected models.Affected) *grypeDB.PackageBlob {
 	var grypeRanges []grypeDB.Range
+	ecosystem := string(affected.Package.Ecosystem)
 	for _, r := range ranges {
-		grypeRanges = append(grypeRanges, getGrypeUnaffectedRangesFromRange(r)...)
+		grypeRanges = append(grypeRanges, getGrypeUnaffectedRangesFromRange(r, ecosystem)...)
 	}
 
 	// Extract qualifiers including RPM modularity
@@ -627,13 +594,13 @@ func getUnaffectedBlob(aliases []string, ranges []models.Range, affected models.
 
 // getGrypeUnaffectedRangesFromRange converts OSV ranges to unaffected version ranges for unaffected packages
 // This inverts the logic: instead of "< fix_version" (affected), we create ">= fix_version" (unaffected)
-func getGrypeUnaffectedRangesFromRange(r models.Range) []grypeDB.Range {
+func getGrypeUnaffectedRangesFromRange(r models.Range, ecosystem string) []grypeDB.Range {
 	if len(r.Events) == 0 {
 		return nil
 	}
 
 	fixByVersion := extractFixAvailability(r)
-	rangeType := normalizeRangeType(r.Type)
+	rangeType := normalizeRangeType(r.Type, ecosystem)
 
 	return buildUnaffectedRangesFromEvents(r.Events, fixByVersion, rangeType)
 }
