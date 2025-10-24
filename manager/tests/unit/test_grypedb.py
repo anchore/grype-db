@@ -175,16 +175,16 @@ class TestGrypeDB:
 
         # make certain the mock was called with at least
         #   env = {GRYPE_DB_VUNNEL_ROOT: "provider_root_path", GRYPE_DB_CONFIG: "config_path", GRYPE_DB_LOG_LEVEL: "DEBUG"}
-        #   shell = True
-        #   cmd= ".../bin/grype-db-v0.19.0 version"
+        #   shell = False (or not set, which defaults to False)
+        #   cmd = [".../bin/grype-db-v0.19.0", "version"]
 
         mock_check_call.assert_called_once()
         args, kwargs = mock_check_call.call_args
-        assert kwargs["shell"] is True
+        assert "shell" not in kwargs or kwargs["shell"] is False
         assert kwargs["env"]["GRYPE_DB_VUNNEL_ROOT"] == "provider_root_path"
         assert kwargs["env"]["GRYPE_DB_CONFIG"] == "config_path"
         assert kwargs["env"]["GRYPE_DB_LOG_LEVEL"] == "DEBUG"
-        assert args[0] == f"{bin_path} version"
+        assert args[0] == [bin_path, "version"]
 
     def test_check_executable_path_override_valid_path(self, tmp_path: pathlib.Path, mocker):
         """Test _check_executable_path_override returns path when GRYPE_DB_EXECUTABLE_PATH is valid."""
