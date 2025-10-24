@@ -6,10 +6,12 @@ listing:
   minimum-vulnerabilities: 40
 
 expected-providers:
+  - alma
   - alpine
   - amazon
   - bitnami
   - chainguard
+  - chainguard-libraries
   - debian
   - echo
   - epss
