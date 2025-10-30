@@ -3,9 +3,9 @@ on:
   # allow for kicking off data syncs manually
   workflow_dispatch:
 
-  # run 1 AM (UTC) daily
+  # run midnight (UTC) daily
   schedule:
-    - cron:  '0 1 * * *'
+    - cron:  '0 0 * * *'
 
 env:
   CGO_ENABLED: "0"
