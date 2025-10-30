@@ -14,9 +14,9 @@ on:
         required: true
         default: true
 
-  # run 4 AM (UTC) daily
+  # run 7 AM (UTC) daily
   schedule:
-    - cron:  '0 6 * * *'
+    - cron:  '0 7 * * *'
 
 env:
   CGO_ENABLED: "0"
