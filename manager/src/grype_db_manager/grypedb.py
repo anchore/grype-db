@@ -562,7 +562,7 @@ class GrypeDB:
         )
 
     def run(self, *args, provider_root_dir: str, config: str) -> int:
-        cmd = " ".join([self.bin_path, *args]) if self.bin_path else " ".join(["grype-db", *args])
+        cmd = [self.bin_path, *args] if self.bin_path else ["grype-db", *args]
         level = logging.getLevelName(logging.getLogger().getEffectiveLevel())
         if level == "TRACE":
             # trace is not supported in grype-db yet
@@ -578,7 +578,7 @@ class GrypeDB:
             GRYPE_DB_LOG_LEVEL=level,
         )
 
-        ret = subprocess.check_call(cmd, env=env, shell=True)  # noqa: S602
+        ret = subprocess.check_call(cmd, env=env)  # noqa: S603
 
         print_annotation("[end grype-db output]")
         return ret
