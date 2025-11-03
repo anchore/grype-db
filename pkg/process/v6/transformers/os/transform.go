@@ -22,6 +22,14 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 )
 
+const (
+	rootioUnaffectedMarker  = "ROOTIO_UNAFFECTED"
+	rootioUnaffectedTag     = "rootio-unaffected"
+	rootioURL               = "https://root.io"
+	rootioNamespacePrefix   = "rootio"
+	rootioDefaultConstraint = "NOT version_contains .root.io"
+)
+
 // advisoryKey is an internal struct used for sorting and deduplicating advisories
 // that have both a link and ID from the vunnel results data
 type advisoryKey struct {
@@ -30,6 +38,15 @@ type advisoryKey struct {
 }
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
+	vulnBlob := &grypeDB.VulnerabilityBlob{
+		ID:          vulnerability.Vulnerability.Name,
+		Assigners:   nil,
+		Description: strings.TrimSpace(vulnerability.Vulnerability.Description),
+		References:  getReferences(vulnerability),
+		Aliases:     getAliases(vulnerability),
+		Severities:  getSeverities(vulnerability),
+	}
+
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.Vulnerability.Name,
@@ -38,14 +55,7 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 			Status:        grypeDB.VulnerabilityActive,
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
 			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
-			BlobValue: &grypeDB.VulnerabilityBlob{
-				ID:          vulnerability.Vulnerability.Name,
-				Assigners:   nil,
-				Description: strings.TrimSpace(vulnerability.Vulnerability.Description),
-				References:  getReferences(vulnerability),
-				Aliases:     getAliases(vulnerability),
-				Severities:  getSeverities(vulnerability),
-			},
+			BlobValue:     vulnBlob,
 		},
 	}
 
@@ -106,6 +116,21 @@ func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPacka
 func getFix(fixedInEntry unmarshal.OSFixedIn) *grypeDB.Fix {
 	fixedInVersion := common.CleanFixedInVersion(fixedInEntry.Version)
 
+	// Check for Root.io unaffected marker
+	if fixedInEntry.Version == rootioUnaffectedMarker {
+		// This is a special marker indicating packages with .root.io in version are not affected
+		return &grypeDB.Fix{
+			Version: rootioUnaffectedMarker,
+			State:   grypeDB.NotAffectedFixStatus,
+			Detail: &grypeDB.FixDetail{
+				References: []grypeDB.Reference{{
+					URL:  rootioURL,
+					Tags: []string{rootioUnaffectedTag},
+				}},
+			},
+		}
+	}
+
 	fixState := grypeDB.NotFixedStatus
 	if len(fixedInVersion) > 0 {
 		fixState = grypeDB.FixedStatus
@@ -165,6 +190,15 @@ func getFixAvailability(fixedInEntry unmarshal.OSFixedIn) *grypeDB.FixAvailabili
 }
 
 func enforceConstraint(fixedVersion, vulnerableRange, format, vulnerabilityID string) string {
+	// Special handling for Root.io unaffected markers
+	if fixedVersion == rootioUnaffectedMarker {
+		// Return the vulnerable range as-is or use default constraint
+		if vulnerableRange != "" {
+			return vulnerableRange
+		}
+		return rootioDefaultConstraint
+	}
+
 	if len(vulnerableRange) > 0 {
 		return vulnerableRange
 	}
@@ -270,7 +304,21 @@ type osInfo struct {
 
 func getOSInfo(group string) osInfo {
 	// derived from enterprise feed groups, expected to be of the form {distro release ID}:{version}
+	// or for Root.io: rootio:distro:{distro}:{version}
 	feedGroupComponents := strings.Split(group, ":")
+
+	// Handle Root.io namespace format
+	if len(feedGroupComponents) >= 4 && feedGroupComponents[0] == rootioNamespacePrefix && feedGroupComponents[1] == "distro" {
+		// Root.io format: rootio:distro:alpine:3.17
+		id := feedGroupComponents[2]
+		version := feedGroupComponents[3]
+		return osInfo{
+			name:    normalizeOsName(id),
+			id:      rootioNamespacePrefix + "-" + id, // Prefix with rootio to distinguish
+			version: version,
+			channel: "",
+		}
+	}
 
 	id := feedGroupComponents[0]
 	version := feedGroupComponents[1]
