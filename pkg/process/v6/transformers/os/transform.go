@@ -46,14 +46,13 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 			Status:        grypeDB.VulnerabilityActive,
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
 			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
-			BlobValue:     &grypeDB.VulnerabilityBlob{
+			BlobValue:  &grypeDB.VulnerabilityBlob{
 				ID:          vulnerability.Vulnerability.Name,
 				Assigners:   nil,
 				Description: strings.TrimSpace(vulnerability.Vulnerability.Description),
 				References:  getReferences(vulnerability),
 				Aliases:     getAliases(vulnerability),
 				Severities:  getSeverities(vulnerability),
-	}
 		},
 	}
 
