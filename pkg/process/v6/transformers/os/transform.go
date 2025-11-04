@@ -38,15 +38,6 @@ type advisoryKey struct {
 }
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
-	vulnBlob := &grypeDB.VulnerabilityBlob{
-		ID:          vulnerability.Vulnerability.Name,
-		Assigners:   nil,
-		Description: strings.TrimSpace(vulnerability.Vulnerability.Description),
-		References:  getReferences(vulnerability),
-		Aliases:     getAliases(vulnerability),
-		Severities:  getSeverities(vulnerability),
-	}
-
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.Vulnerability.Name,
@@ -55,7 +46,14 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 			Status:        grypeDB.VulnerabilityActive,
 			ModifiedDate:  internal.ParseTime(vulnerability.Vulnerability.Metadata.Updated),
 			PublishedDate: internal.ParseTime(vulnerability.Vulnerability.Metadata.Issued),
-			BlobValue:     vulnBlob,
+			BlobValue:     &grypeDB.VulnerabilityBlob{
+				ID:          vulnerability.Vulnerability.Name,
+				Assigners:   nil,
+				Description: strings.TrimSpace(vulnerability.Vulnerability.Description),
+				References:  getReferences(vulnerability),
+				Aliases:     getAliases(vulnerability),
+				Severities:  getSeverities(vulnerability),
+	}
 		},
 	}
 
