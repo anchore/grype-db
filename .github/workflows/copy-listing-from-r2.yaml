@@ -22,7 +22,9 @@ jobs:
   sync-listing-file:
     name: "Sync listing file"
 
-    runs-on: ubuntu-22.04
+    # Sync listing file: runs-on 'small' (m7i-flex.large, spot) - Optimal for cpu-balanced workload with other priority
+    # Runner definition: workflows/.github/runs-on.yml
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     permissions:
       contents: read
     steps:

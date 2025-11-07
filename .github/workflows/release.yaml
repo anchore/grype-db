@@ -18,7 +18,9 @@ jobs:
 
   quality-gate:
     environment: release
-    runs-on: ubuntu-latest
+    # quality-gate: runs-on 'large' (r7i.xlarge, on-demand) - Optimal for memory-intensive workload with production-critical priority
+    # Runner definition: workflows/.github/runs-on.yml
+    runs-on: runs-on=${{ github.run_id }}/runner=large
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
         with:
@@ -99,7 +101,9 @@ jobs:
           false
 
   read-schema-versions:
-    runs-on: ubuntu-24.04
+    # read-schema-versions: runs-on 'release' (m7i-flex.large, on-demand) - Optimal for cpu-balanced workload with production-critical priority
+    # Runner definition: workflows/.github/runs-on.yml
+    runs-on: runs-on=${{ github.run_id }}/runner=release
     if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
@@ -117,7 +121,9 @@ jobs:
 
   quality-gate-acceptance-test:
     needs: read-schema-versions
-    runs-on: ubuntu-24.04
+    # quality-gate-acceptance-test: runs-on 'release' (c7a.xlarge, on-demand) - Optimal for cpu-intensive workload with production-critical priority
+    # Runner definition: workflows/.github/runs-on.yml
+    runs-on: runs-on=${{ github.run_id }}/runner=release
     if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
     strategy:
       matrix:
@@ -149,7 +155,9 @@ jobs:
     permissions:
       contents: write
       packages: write
-    runs-on: ubuntu-latest
+    # release: runs-on 'release' (m7i-flex.large, on-demand) - Optimal for cpu-balanced workload with production-critical priority
+    # Runner definition: workflows/.github/runs-on.yml
+    runs-on: runs-on=${{ github.run_id }}/runner=release
     steps:
 
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
