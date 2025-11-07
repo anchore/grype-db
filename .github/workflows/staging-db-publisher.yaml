@@ -46,7 +46,6 @@ env:
 jobs:
   publish-staging-db:
     name: "Generate and publish staging DB"
-    # Generate and publish staging DB: runs-on 'large' (r7i.xlarge, on-demand) - Optimal for memory-intensive workload with production-critical priority
     # Runner definition: workflows/.github/runs-on.yml
     runs-on: runs-on=${{ github.run_id }}/runner=large
     # set the permissions granted to the github token to read the pull cache from ghcr.io

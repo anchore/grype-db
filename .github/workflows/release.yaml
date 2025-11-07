@@ -18,7 +18,6 @@ jobs:
 
   quality-gate:
     environment: release
-    # quality-gate: runs-on 'tiny' (ARM t4g, spot) - Lightweight validation/orchestration in release
     # Runner definition: workflows/.github/runs-on.yml
     runs-on: runs-on=${{ github.run_id }}/runner=tiny
     steps:
@@ -101,7 +100,6 @@ jobs:
           false
 
   read-schema-versions:
-    # read-schema-versions: runs-on 'release' (m7i-flex.large, on-demand) - Optimal for cpu-balanced workload with production-critical priority
     # Runner definition: workflows/.github/runs-on.yml
     runs-on: runs-on=${{ github.run_id }}/runner=release
     if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
@@ -121,7 +119,6 @@ jobs:
 
   quality-gate-acceptance-test:
     needs: read-schema-versions
-    # quality-gate-acceptance-test: runs-on 'release' (c7a.xlarge, on-demand) - Optimal for cpu-intensive workload with production-critical priority
     # Runner definition: workflows/.github/runs-on.yml
     runs-on: runs-on=${{ github.run_id }}/runner=release
     if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
@@ -155,7 +152,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-    # release: runs-on 'release' (m7i-flex.large, on-demand) - Optimal for cpu-balanced workload with production-critical priority
     # Runner definition: workflows/.github/runs-on.yml
     runs-on: runs-on=${{ github.run_id }}/runner=release
     steps:
