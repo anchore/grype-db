@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 
 	"github.com/anchore/grype-db/pkg/process/v6/internal/tests"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
 	"github.com/anchore/grype-db/pkg/provider"
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 	grypeDB "github.com/anchore/grype/grype/db/v6"
 )
 
@@ -1534,10 +1536,6 @@ func TestTransform(t *testing.T) {
 									URL:  "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-esa-wsa-cert-vali-n8L97RW",
 									Tags: []string{"vendor-advisory"},
 								},
-								{
-									URL:  "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-esa-wsa-cert-vali-n8L97RW",
-									Tags: []string{"vendor-advisory"},
-								},
 							},
 							Severities: []grypeDB.Severity{
 								{
@@ -1762,9 +1760,6 @@ func TestTransform(t *testing.T) {
 							Assigners:   []string{"cve@mitre.org"},
 							Description: "Test vulnerability affecting JVM packages to demonstrate version format detection.",
 							References: []grypeDB.Reference{
-								{
-									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-JVM-TEST",
-								},
 								{
 									URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-JVM-TEST",
 								},
@@ -1996,6 +1991,237 @@ func TestIsValidCWE(t *testing.T) {
 			got := isValidCWE(tt.cwe)
 			if got != tt.expected {
 				t.Errorf("isValidCWE(%q) = %v, want %v", tt.cwe, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetReferences(t *testing.T) {
+	tests := []struct {
+		name     string
+		vuln     unmarshal.NVDVulnerability
+		expected []grypeDB.Reference
+	}{
+		{
+			name: "no upstream references - only canonical NVD URL",
+			vuln: unmarshal.NVDVulnerability{
+				ID:         "CVE-2023-12345",
+				References: []nvd.Reference{},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+			},
+		},
+		{
+			name: "single unique reference",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com/advisory", Tags: []string{"patch", "vendor-advisory"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com/advisory", Tags: []string{"patch", "vendor-advisory"}},
+			},
+		},
+		{
+			name: "multiple unique references",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com/advisory", Tags: []string{"patch"}},
+					{URL: "https://github.com/project/issues/123", Tags: []string{"issue-tracking"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com/advisory", Tags: []string{"patch"}},
+				{URL: "https://github.com/project/issues/123", Tags: []string{"issue-tracking"}},
+			},
+		},
+		{
+			name: "exact duplicate references",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com", Tags: []string{"patch", "vendor-advisory"}},
+					{URL: "https://example.com", Tags: []string{"patch", "vendor-advisory"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com", Tags: []string{"patch", "vendor-advisory"}},
+			},
+		},
+		{
+			name: "duplicate with tags in different order (congruent sets)",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com", Tags: []string{"patch", "vendor-advisory"}},
+					{URL: "https://example.com", Tags: []string{"vendor-advisory", "patch"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com", Tags: []string{"patch", "vendor-advisory"}},
+			},
+		},
+		{
+			name: "same URL with different tags - keep both",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com", Tags: []string{"patch"}},
+					{URL: "https://example.com", Tags: []string{"vendor-advisory"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com", Tags: []string{"patch"}},
+				{URL: "https://example.com", Tags: []string{"vendor-advisory"}},
+			},
+		},
+		{
+			name: "same URL with and without tags - keep both",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com", Tags: []string{"patch"}},
+					{URL: "https://example.com", Tags: nil},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com", Tags: []string{"patch"}},
+				{URL: "https://example.com"},
+			},
+		},
+		{
+			name: "duplicate canonical NVD URL in upstream data",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345", Tags: nil},
+					{URL: "https://example.com/advisory", Tags: []string{"vendor-advisory"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com/advisory", Tags: []string{"vendor-advisory"}},
+			},
+		},
+		{
+			name: "empty URL in upstream data - should be filtered",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "", Tags: []string{"patch"}},
+					{URL: "https://example.com", Tags: []string{"vendor-advisory"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com", Tags: []string{"vendor-advisory"}},
+			},
+		},
+		{
+			name: "multiple duplicates among many references",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com/1", Tags: []string{"patch"}},
+					{URL: "https://example.com/2", Tags: []string{"vendor-advisory"}},
+					{URL: "https://example.com/1", Tags: []string{"patch"}},
+					{URL: "https://example.com/3", Tags: nil},
+					{URL: "https://example.com/2", Tags: []string{"vendor-advisory"}},
+					{URL: "https://example.com/3", Tags: []string{}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com/1", Tags: []string{"patch"}},
+				{URL: "https://example.com/2", Tags: []string{"vendor-advisory"}},
+				{URL: "https://example.com/3"},
+			},
+		},
+		{
+			name: "preserves order of first occurrence",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com/1", Tags: []string{"patch"}},
+					{URL: "https://example.com/2", Tags: []string{"advisory"}},
+					{URL: "https://example.com/3", Tags: []string{"exploit"}},
+					{URL: "https://example.com/1", Tags: []string{"patch"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com/1", Tags: []string{"patch"}},
+				{URL: "https://example.com/2", Tags: []string{"advisory"}},
+				{URL: "https://example.com/3", Tags: []string{"exploit"}},
+			},
+		},
+		{
+			name: "complex real-world scenario with duplicates and tag reordering",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+					{URL: "https://github.com/project/issues/123", Tags: []string{"issue-tracking", "third-party-advisory"}},
+					{URL: "https://security.vendor.com/advisory", Tags: []string{"patch", "vendor-advisory"}},
+					{URL: "https://github.com/project/issues/123", Tags: []string{"third-party-advisory", "issue-tracking"}},
+					{URL: "https://lists.vendor.com/announce", Tags: []string{"mailing-list"}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://github.com/project/issues/123", Tags: []string{"issue-tracking", "third-party-advisory"}},
+				{URL: "https://security.vendor.com/advisory", Tags: []string{"patch", "vendor-advisory"}},
+				{URL: "https://lists.vendor.com/announce", Tags: []string{"mailing-list"}},
+			},
+		},
+		{
+			name: "references with nil tags vs empty tags - treated as identical",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com", Tags: nil},
+					{URL: "https://example.com", Tags: []string{}},
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com"},
+			},
+		},
+		{
+			name: "duplicate after different tags on same URL - exposes logic bug",
+			vuln: unmarshal.NVDVulnerability{
+				ID: "CVE-2023-12345",
+				References: []nvd.Reference{
+					{URL: "https://example.com", Tags: []string{"patch"}},
+					{URL: "https://example.com", Tags: []string{"vendor-advisory"}},
+					{URL: "https://example.com", Tags: []string{"patch"}}, // duplicate of first
+				},
+			},
+			expected: []grypeDB.Reference{
+				{URL: "https://nvd.nist.gov/vuln/detail/CVE-2023-12345"},
+				{URL: "https://example.com", Tags: []string{"patch"}},
+				{URL: "https://example.com", Tags: []string{"vendor-advisory"}},
+				// Should NOT have a duplicate "patch" entry here
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := getReferences(tt.vuln)
+
+			if diff := cmp.Diff(tt.expected, actual, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("getReferences() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
