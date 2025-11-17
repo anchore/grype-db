@@ -47,7 +47,7 @@ jobs:
   update-provider:
     name: "Update provider"
     needs: discover-providers
-    runs-on: runs-on=${{ github.run_id }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}/runner=large/volume=100gb:gp3
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
