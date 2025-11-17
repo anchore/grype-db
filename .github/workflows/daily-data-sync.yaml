@@ -102,7 +102,7 @@ jobs:
 
   aggregate-cache:
     name: "Aggregate provider cache"
-    runs-on: runs-on=${{ github.run_id }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}/runner=large/volume=100gb:gp3
     if: ${{ always() }}
     needs:
       - update-provider
