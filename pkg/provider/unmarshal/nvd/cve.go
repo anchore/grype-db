@@ -219,16 +219,19 @@ func (o CvssSummaries) Less(i, j int) bool {
 		return iEntry.Type == Secondary
 	}
 
-	// prefer NVD as primary source
+	// then compare by source (NVD preferred, then lexicographic)
 	if iEntry.Source != jEntry.Source {
 		if iEntry.Source == "nvd@nist.gov" {
 			return false
-		} else if jEntry.Source == "nvd@nist.gov" {
+		}
+		if jEntry.Source == "nvd@nist.gov" {
 			return true
 		}
+		// for non-NVD sources, use lexicographic ordering (descending for Reverse sort)
+		return iEntry.Source > jEntry.Source
 	}
 
-	// if types are the same, then compare by version
+	// finally, compare by version when type and source are the same (v4 > v3 > v2 > v1)
 	iV := iEntry.version()
 	jV := jEntry.version()
 	return iV.LessThan(jV)
