@@ -115,7 +115,7 @@ func validateAffectedVersion(v grypeDB.Version) error {
 	}
 
 	// ensure we can use this version format in a comparison
-	ver := version.NewVersion("1.0.0", versionFormat)
+	ver := version.New("1.0.0", versionFormat)
 	if err := ver.Validate(); err != nil {
 		// don't have a good example to use here
 		// TODO: we should consider finding a better way to do this without having to create a valid version for comparison
