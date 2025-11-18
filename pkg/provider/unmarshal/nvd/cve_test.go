@@ -16,29 +16,29 @@ func TestCvssSummariesSorted(t *testing.T) {
 		{
 			name: "primary types sorted by version descending",
 			input: CvssSummaries{
-				{Type: Primary, Version: "2.0", Source: "A"},
-				{Type: Primary, Version: "3.1", Source: "B"},
-				{Type: Primary, Version: "3.0", Source: "C"},
-				{Type: Primary, Version: "4.0", Source: "D"},
+				{Type: Primary, Version: "2.0", Source: "same-source"},
+				{Type: Primary, Version: "3.1", Source: "same-source"},
+				{Type: Primary, Version: "3.0", Source: "same-source"},
+				{Type: Primary, Version: "4.0", Source: "same-source"},
 			},
 			expected: CvssSummaries{
-				{Type: Primary, Version: "4.0", Source: "D"},
-				{Type: Primary, Version: "3.1", Source: "B"},
-				{Type: Primary, Version: "3.0", Source: "C"},
-				{Type: Primary, Version: "2.0", Source: "A"},
+				{Type: Primary, Version: "4.0", Source: "same-source"},
+				{Type: Primary, Version: "3.1", Source: "same-source"},
+				{Type: Primary, Version: "3.0", Source: "same-source"},
+				{Type: Primary, Version: "2.0", Source: "same-source"},
 			},
 		},
 		{
 			name: "secondary types sorted by version descending",
 			input: CvssSummaries{
-				{Type: Secondary, Version: "2.0", Source: "D"},
-				{Type: Secondary, Version: "3.1", Source: "E"},
-				{Type: Secondary, Version: "3.0", Source: "F"},
+				{Type: Secondary, Version: "2.0", Source: "same-source"},
+				{Type: Secondary, Version: "3.1", Source: "same-source"},
+				{Type: Secondary, Version: "3.0", Source: "same-source"},
 			},
 			expected: CvssSummaries{
-				{Type: Secondary, Version: "3.1", Source: "E"},
-				{Type: Secondary, Version: "3.0", Source: "F"},
-				{Type: Secondary, Version: "2.0", Source: "D"},
+				{Type: Secondary, Version: "3.1", Source: "same-source"},
+				{Type: Secondary, Version: "3.0", Source: "same-source"},
+				{Type: Secondary, Version: "2.0", Source: "same-source"},
 			},
 		},
 		{
@@ -50,8 +50,8 @@ func TestCvssSummariesSorted(t *testing.T) {
 				{Type: Primary, Version: "3.0", Source: "J"},
 			},
 			expected: CvssSummaries{
-				{Type: Primary, Version: "3.0", Source: "J"},
 				{Type: Primary, Version: "2.0", Source: "H"},
+				{Type: Primary, Version: "3.0", Source: "J"},
 				{Type: Secondary, Version: "3.1", Source: "G"},
 				{Type: Secondary, Version: "2.0", Source: "I"},
 			},
@@ -68,11 +68,11 @@ func TestCvssSummariesSorted(t *testing.T) {
 			},
 			expected: CvssSummaries{
 				{Type: Primary, Version: "3.1", Source: "L"},
-				{Type: Primary, Version: "3.0", Source: "O"},
 				{Type: Primary, Version: "2.0", Source: "M"},
+				{Type: Primary, Version: "3.0", Source: "O"},
 				{Type: Secondary, Version: "3.1", Source: "K"},
-				{Type: Secondary, Version: "3.0", Source: "P"},
 				{Type: Secondary, Version: "2.0", Source: "N"},
+				{Type: Secondary, Version: "3.0", Source: "P"},
 			},
 		},
 		{
@@ -141,8 +141,23 @@ func TestCvssSummariesSorted(t *testing.T) {
 				{Type: Primary, Version: "3.0", Source: "R"},
 			},
 			expected: CvssSummaries{
+				{Type: Primary, Version: "invalid", Source: "Q"}, // sorted by source (Q < R)
 				{Type: Primary, Version: "3.0", Source: "R"},
-				{Type: Primary, Version: "invalid", Source: "Q"}, // should use default "2.0"
+			},
+		},
+		{
+			name: "source takes priority over version, then version as tiebreaker",
+			input: CvssSummaries{
+				{Type: Primary, Version: "4.0", Source: "other-source"},
+				{Type: Primary, Version: "3.0", Source: "nvd@nist.gov"},
+				{Type: Primary, Version: "2.0", Source: "nvd@nist.gov"},
+				{Type: Primary, Version: "3.0", Source: "source-a"},
+			},
+			expected: CvssSummaries{
+				{Type: Primary, Version: "3.0", Source: "nvd@nist.gov"},
+				{Type: Primary, Version: "2.0", Source: "nvd@nist.gov"},
+				{Type: Primary, Version: "4.0", Source: "other-source"},
+				{Type: Primary, Version: "3.0", Source: "source-a"},
 			},
 		},
 	}
