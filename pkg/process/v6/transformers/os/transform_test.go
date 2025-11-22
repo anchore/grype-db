@@ -1616,3 +1616,204 @@ func timeRef(ti time.Time) *time.Time {
 func strRef(s string) *string {
 	return &s
 }
+
+// Root.io specific tests
+
+func TestTransform_RootIoUnaffected(t *testing.T) {
+	tests := []struct {
+		name           string
+		vulnerability  unmarshal.OSVulnerability
+		expectedStatus grypeDB.FixStatus
+		hasRootIoRef   bool
+	}{
+		{
+			name: "Root.io unaffected marker creates NotAffected status",
+			vulnerability: unmarshal.OSVulnerability{
+				Vulnerability: unmarshal.OSVulnerabilityVulnerability{
+					Name:          "CVE-2023-1234",
+					NamespaceName: "rootio:distro:alpine:3.17",
+					FixedIn: []unmarshal.OSFixedIn{
+						{
+							Name:            "test-package",
+							Version:         "ROOTIO_UNAFFECTED",
+							VersionFormat:   "apk",
+							VulnerableRange: "NOT version_contains .root.io",
+						},
+					},
+				},
+			},
+			expectedStatus: grypeDB.NotAffectedFixStatus,
+			hasRootIoRef:   true,
+		},
+		{
+			name: "Regular fixed version creates Fixed status",
+			vulnerability: unmarshal.OSVulnerability{
+				Vulnerability: unmarshal.OSVulnerabilityVulnerability{
+					Name:          "CVE-2023-5678",
+					NamespaceName: "alpine:3.17",
+					FixedIn: []unmarshal.OSFixedIn{
+						{
+							Name:          "test-package",
+							Version:       "1.2.3-r4",
+							VersionFormat: "apk",
+						},
+					},
+				},
+			},
+			expectedStatus: grypeDB.FixedStatus,
+			hasRootIoRef:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := inputProviderState("test-provider")
+
+			entries, err := Transform(tt.vulnerability, state)
+			require.NoError(t, err)
+			require.NotEmpty(t, entries)
+
+			// Find the AffectedPackageHandle entry
+			var affectedPkg *grypeDB.AffectedPackageHandle
+			for _, entry := range entries {
+				if e, ok := entry.Data.(grypeDB.AffectedPackageHandle); ok {
+					affectedPkg = &e
+					break
+				}
+			}
+
+			require.NotNil(t, affectedPkg, "should have an AffectedPackageHandle")
+			require.NotNil(t, affectedPkg.BlobValue)
+			require.NotEmpty(t, affectedPkg.BlobValue.Ranges)
+
+			// Check the fix status
+			fix := affectedPkg.BlobValue.Ranges[0].Fix
+			require.NotNil(t, fix)
+			assert.Equal(t, tt.expectedStatus, fix.State)
+
+			// Check for Root.io reference if expected
+			if tt.hasRootIoRef {
+				assert.NotNil(t, fix.Detail)
+				assert.NotEmpty(t, fix.Detail.References)
+
+				foundRootIo := false
+				for _, ref := range fix.Detail.References {
+					if ref.URL == "https://root.io" {
+						foundRootIo = true
+						assert.Contains(t, ref.Tags, "rootio-unaffected")
+						break
+					}
+				}
+				assert.True(t, foundRootIo, "should have Root.io reference")
+			}
+		})
+	}
+}
+
+func TestGetOSInfo_RootIoNamespace(t *testing.T) {
+	tests := []struct {
+		name      string
+		namespace string
+		expected  osInfo
+	}{
+		{
+			name:      "Root.io Alpine namespace",
+			namespace: "rootio:distro:alpine:3.17",
+			expected: osInfo{
+				name:    "alpine",
+				id:      "rootio-alpine",
+				version: "3.17",
+				channel: "",
+			},
+		},
+		{
+			name:      "Root.io Debian namespace",
+			namespace: "rootio:distro:debian:11",
+			expected: osInfo{
+				name:    "debian",
+				id:      "rootio-debian",
+				version: "11",
+				channel: "",
+			},
+		},
+		{
+			name:      "Regular Alpine namespace",
+			namespace: "alpine:3.17",
+			expected: osInfo{
+				name:    "alpine",
+				id:      "alpine",
+				version: "3.17",
+				channel: "",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getOSInfo(tt.namespace)
+			assert.Equal(t, tt.expected.name, result.name)
+			assert.Equal(t, tt.expected.id, result.id)
+			assert.Equal(t, tt.expected.version, result.version)
+			assert.Equal(t, tt.expected.channel, result.channel)
+		})
+	}
+}
+
+func TestEnforceConstraint_RootIo(t *testing.T) {
+	tests := []struct {
+		name            string
+		fixedVersion    string
+		vulnerableRange string
+		format          string
+		vulnID          string
+		expected        string
+	}{
+		{
+			name:            "Root.io unaffected with explicit range",
+			fixedVersion:    "ROOTIO_UNAFFECTED",
+			vulnerableRange: "NOT version_contains .root.io",
+			format:          "apk",
+			vulnID:          "CVE-2023-1234",
+			expected:        "NOT version_contains .root.io",
+		},
+		{
+			name:            "Root.io unaffected without range uses default",
+			fixedVersion:    "ROOTIO_UNAFFECTED",
+			vulnerableRange: "",
+			format:          "apk",
+			vulnID:          "CVE-2023-1234",
+			expected:        "NOT version_contains .root.io",
+		},
+		{
+			name:            "Regular version constraint",
+			fixedVersion:    "1.2.3",
+			vulnerableRange: "",
+			format:          "apk",
+			vulnID:          "CVE-2023-5678",
+			expected:        "< 1.2.3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := enforceConstraint(tt.fixedVersion, tt.vulnerableRange, tt.format, tt.vulnID)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetFix_RootIoUnaffected(t *testing.T) {
+	fixedIn := unmarshal.OSFixedIn{
+		Version: "ROOTIO_UNAFFECTED",
+	}
+
+	fix := getFix(fixedIn)
+
+	assert.NotNil(t, fix)
+	assert.Equal(t, grypeDB.NotAffectedFixStatus, fix.State)
+	assert.Equal(t, "ROOTIO_UNAFFECTED", fix.Version)
+	assert.NotNil(t, fix.Detail)
+	assert.Len(t, fix.Detail.References, 1)
+	assert.Equal(t, "https://root.io", fix.Detail.References[0].URL)
+	assert.Contains(t, fix.Detail.References[0].Tags, "rootio-unaffected")
+}
