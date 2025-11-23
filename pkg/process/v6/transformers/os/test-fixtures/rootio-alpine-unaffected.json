@@ -1,0 +1,30 @@
+{
+  "Vulnerability": {
+    "CVSS": [],
+    "Description": "Root.io vulnerability record indicating test-package is fixed",
+    "FixedIn": [
+      {
+        "Name": "test-package",
+        "NamespaceName": "rootio:distro:alpine:3.17",
+        "VendorAdvisory": {
+          "AdvisorySummary": [],
+          "NoAdvisory": false
+        },
+        "Version": "3.0.8-r4",
+        "VersionFormat": "apk"
+      }
+    ],
+    "Link": "",
+    "Metadata": {
+      "CVE": [
+        {
+          "Name": "CVE-2023-1234",
+          "Link": ""
+        }
+      ]
+    },
+    "Name": "CVE-2023-1234",
+    "NamespaceName": "rootio:distro:alpine:3.17",
+    "Severity": "Medium"
+  }
+}

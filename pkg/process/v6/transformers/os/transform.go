@@ -22,6 +22,10 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 )
 
+const (
+	rootioNamespacePrefix = "rootio"
+)
+
 // advisoryKey is an internal struct used for sorting and deduplicating advisories
 // that have both a link and ID from the vunnel results data
 type advisoryKey struct {
@@ -30,6 +34,9 @@ type advisoryKey struct {
 }
 
 func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
+	if isRootIoNamespace(vulnerability.Vulnerability.NamespaceName) {
+		return processRootIoVulnerability(vulnerability, state)
+	}
 	in := []any{
 		grypeDB.VulnerabilityHandle{
 			Name:          vulnerability.Vulnerability.Name,
@@ -54,6 +61,96 @@ func Transform(vulnerability unmarshal.OSVulnerability, state provider.State) ([
 	}
 
 	return transformers.NewEntries(in...), nil
+}
+
+func isRootIoNamespace(namespace string) bool {
+	return strings.HasPrefix(namespace, rootioNamespacePrefix+":")
+}
+
+func processRootIoVulnerability(vuln unmarshal.OSVulnerability, state provider.State) ([]data.Entry, error) {
+	var entries []any
+
+	entries = append(entries, grypeDB.VulnerabilityHandle{
+		Name:          vuln.Vulnerability.Name,
+		ProviderID:    state.Provider,
+		Provider:      internal.ProviderModel(state),
+		Status:        grypeDB.VulnerabilityActive,
+		ModifiedDate:  internal.ParseTime(vuln.Vulnerability.Metadata.Updated),
+		PublishedDate: internal.ParseTime(vuln.Vulnerability.Metadata.Issued),
+		BlobValue: &grypeDB.VulnerabilityBlob{
+			ID:          vuln.Vulnerability.Name,
+			Assigners:   nil,
+			Description: strings.TrimSpace(vuln.Vulnerability.Description),
+			References:  getReferences(vuln),
+			Aliases:     getAliases(vuln),
+			Severities:  getSeverities(vuln),
+		},
+	})
+
+	for _, u := range getRootIoUnaffectedPackages(vuln) {
+		entries = append(entries, u)
+	}
+
+	return transformers.NewEntries(entries...), nil
+}
+
+func getRootIoUnaffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.UnaffectedPackageHandle {
+	var uphs []grypeDB.UnaffectedPackageHandle
+	groups := groupFixedIns(vuln)
+
+	for group, fixedIns := range groups {
+		for _, fixedIn := range fixedIns {
+			if fixedIn.Version != "" {
+				uph := grypeDB.UnaffectedPackageHandle{
+					Package:         getPackage(group),
+					OperatingSystem: getOperatingSystem(group.osName, group.id, group.osVersion, group.osChannel),
+					BlobValue:       getRootIoUnaffectedBlob(vuln, fixedIn, group),
+				}
+				uphs = append(uphs, uph)
+				break
+			}
+		}
+	}
+
+	sort.Sort(internal.ByUnaffectedPackage(uphs))
+	return uphs
+}
+
+func getRootIoUnaffectedBlob(vuln unmarshal.OSVulnerability, fixedIn unmarshal.OSFixedIn, group groupIndex) *grypeDB.PackageBlob {
+	cves := getAliases(vuln)
+
+	constraint := determineRootIoConstraint(group.osName, fixedIn.Version)
+	ranges := []grypeDB.Range{
+		{
+			Version: grypeDB.Version{
+				Type:       fixedIn.VersionFormat,
+				Constraint: constraint,
+			},
+		},
+	}
+
+	return &grypeDB.PackageBlob{
+		CVEs:   cves,
+		Ranges: ranges,
+	}
+}
+
+func determineRootIoConstraint(osName string, version string) string {
+	switch osName {
+	case "debian", "ubuntu":
+		// Debian/Ubuntu packages use .root.io suffix
+		// Example: 1.5.2-6+deb12u1.root.io.4
+		return "version_contains .root.io"
+	case "alpine", "chainguard", "wolfi":
+		// Alpine packages may use either:
+		// 1. .root.io suffix (e.g., 3.0.8-r3.root.io.1)
+		// 2. -rXX007X pattern (e.g., 3.0.8-r00071, 3.0.8-r10074)
+		// We check for .root.io first as it's more common across distros
+		// The -rXX007X pattern check is handled in Grype's IsRootIoPackage()
+		return "version_contains .root.io"
+	default:
+		return "version_contains .root.io"
+	}
 }
 
 func getAffectedPackages(vuln unmarshal.OSVulnerability) []grypeDB.AffectedPackageHandle {
@@ -270,7 +367,21 @@ type osInfo struct {
 
 func getOSInfo(group string) osInfo {
 	// derived from enterprise feed groups, expected to be of the form {distro release ID}:{version}
+	// or for Root.io: rootio:distro:{distro}:{version}
 	feedGroupComponents := strings.Split(group, ":")
+
+	// Handle Root.io namespace format
+	if len(feedGroupComponents) >= 4 && feedGroupComponents[0] == rootioNamespacePrefix && feedGroupComponents[1] == "distro" {
+		// Root.io format: rootio:distro:alpine:3.17
+		id := feedGroupComponents[2]
+		version := feedGroupComponents[3]
+		return osInfo{
+			name:    normalizeOsName(id),
+			id:      rootioNamespacePrefix + "-" + id, // Prefix with rootio to distinguish
+			version: version,
+			channel: "",
+		}
+	}
 
 	id := feedGroupComponents[0]
 	version := feedGroupComponents[1]
