@@ -1,0 +1,30 @@
+{
+  "Vulnerability": {
+    "CVSS": [],
+    "Description": "Root.io vulnerability record with no fix available",
+    "FixedIn": [
+      {
+        "Name": "unpatched-package",
+        "NamespaceName": "rootio:distro:alpine:3.17",
+        "VendorAdvisory": {
+          "AdvisorySummary": [],
+          "NoAdvisory": true
+        },
+        "Version": "",
+        "VersionFormat": "apk"
+      }
+    ],
+    "Link": "",
+    "Metadata": {
+      "CVE": [
+        {
+          "Name": "CVE-2023-9999",
+          "Link": ""
+        }
+      ]
+    },
+    "Name": "CVE-2023-9999",
+    "NamespaceName": "rootio:distro:alpine:3.17",
+    "Severity": "Medium"
+  }
+}

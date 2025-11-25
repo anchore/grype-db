@@ -1,0 +1,30 @@
+{
+  "Vulnerability": {
+    "CVSS": [],
+    "Description": "Root.io vulnerability record with Alpine -rXX007X pattern",
+    "FixedIn": [
+      {
+        "Name": "libssl3",
+        "NamespaceName": "rootio:distro:alpine:3.21",
+        "VendorAdvisory": {
+          "AdvisorySummary": [],
+          "NoAdvisory": false
+        },
+        "Version": "3.0.8-r00071",
+        "VersionFormat": "apk"
+      }
+    ],
+    "Link": "",
+    "Metadata": {
+      "CVE": [
+        {
+          "Name": "CVE-2024-1234",
+          "Link": ""
+        }
+      ]
+    },
+    "Name": "CVE-2024-1234",
+    "NamespaceName": "rootio:distro:alpine:3.21",
+    "Severity": "High"
+  }
+}
