@@ -136,7 +136,12 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 		}
 	}(wd)
 
-	if err := extractTarGz(f, selectedProviders); err != nil {
+	maxFileSize, err := parseSize(cfg.Cache.CacheRestore.MaxFileSize)
+	if err != nil {
+		return fmt.Errorf("invalid max-file-size: %w", err)
+	}
+
+	if err := extractTarGz(f, selectedProviders, maxFileSize); err != nil {
 		return fmt.Errorf("failed to extract cache archive: %w", err)
 	}
 
@@ -193,7 +198,7 @@ func readProviderNamesFromTarGz(tarPath string) ([]string, error) {
 	return providers.List(), nil
 }
 
-func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
+func extractTarGz(reader io.Reader, selectedProviders *strset.Set, maxFileSize int64) error {
 	gr, err := gzip.NewReader(reader)
 	if err != nil {
 		return fmt.Errorf("failed to create gzip reader: %w", err)
@@ -232,7 +237,7 @@ func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
 
 		restoredAny = true
 
-		if err := processTarHeader(fs, rootPath, header, tr); err != nil {
+		if err := processTarHeader(fs, rootPath, header, tr, maxFileSize); err != nil {
 			return err
 		}
 	}
@@ -243,7 +248,7 @@ func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
 	return nil
 }
 
-func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader io.Reader) error {
+func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader io.Reader, maxFileSize int64) error {
 	// clean the path to avoid traversal (removes "..", ".", etc.)
 	cleanedPath := cleanPathRelativeToRoot(rootPath, header.Name)
 
@@ -263,7 +268,7 @@ func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader i
 			return fmt.Errorf("failed to create symlink: %w", err)
 		}
 	case tar.TypeReg:
-		if err := handleFile(fs, cleanedPath, reader); err != nil {
+		if err := handleFile(fs, cleanedPath, reader, maxFileSize); err != nil {
 			return fmt.Errorf("failed to handle file: %w", err)
 		}
 	default:
@@ -272,7 +277,7 @@ func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader i
 	return nil
 }
 
-func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader) error {
+func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader, maxFileSize int64) error {
 	if cleanedPath == "" {
 		return fmt.Errorf("empty path")
 	}
@@ -288,12 +293,17 @@ func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	if err := safeCopy(outFile, reader); err != nil {
+	bytesWritten, err := safeCopy(outFile, reader, maxFileSize, cleanedPath)
+	if err != nil {
 		return fmt.Errorf("failed to copy file: %w", err)
 	}
 	if err := outFile.Close(); err != nil {
 		return fmt.Errorf("failed to close file: %w", err)
 	}
+
+	// Log size info for monitoring
+	logFileSizeInfo(cleanedPath, bytesWritten, maxFileSize)
+
 	return nil
 }
 
@@ -364,16 +374,79 @@ const (
 	kb = 1 << (10 * iota) //nolint:deadcode
 	mb                    //nolint:deadcode
 	gb
+	tb
 )
 
-const perFileReadLimit = 25 * gb
+// parseSize parses a human-readable size string (e.g., "25GB", "1TB") into bytes
+func parseSize(size string) (int64, error) {
+	if size == "" {
+		return 25 * gb, nil // default to 25GB for backwards compatibility
+	}
+
+	size = strings.ToUpper(strings.TrimSpace(size))
+
+	var multiplier int64
+	var suffix string
+
+	if strings.HasSuffix(size, "TB") {
+		multiplier = tb
+		suffix = "TB"
+	} else if strings.HasSuffix(size, "GB") {
+		multiplier = gb
+		suffix = "GB"
+	} else if strings.HasSuffix(size, "MB") {
+		multiplier = mb
+		suffix = "MB"
+	} else if strings.HasSuffix(size, "KB") {
+		multiplier = kb
+		suffix = "KB"
+	} else {
+		return 0, fmt.Errorf("size must end with KB, MB, GB, or TB (got: %s)", size)
+	}
+
+	numStr := strings.TrimSuffix(size, suffix)
+	numStr = strings.TrimSpace(numStr)
+
+	var num int64
+	_, err := fmt.Sscanf(numStr, "%d", &num)
+	if err != nil {
+		return 0, fmt.Errorf("invalid size format: %w", err)
+	}
+
+	if num <= 0 {
+		return 0, fmt.Errorf("size must be positive (got: %d)", num)
+	}
+
+	return num * multiplier, nil
+}
+
+// logFileSizeInfo logs information about file sizes for monitoring purposes
+func logFileSizeInfo(path string, size int64, maxSize int64) {
+	// Calculate percentage of limit used
+	percentUsed := float64(size) / float64(maxSize) * 100
+
+	// Log at different levels based on how close we are to the limit
+	switch {
+	case percentUsed >= 90:
+		log.WithFields("path", path, "size_bytes", size, "max_bytes", maxSize, "percent_used", fmt.Sprintf("%.1f%%", percentUsed)).
+			Error("file size is dangerously close to extraction limit - consider increasing max-file-size")
+	case percentUsed >= 80:
+		log.WithFields("path", path, "size_bytes", size, "max_bytes", maxSize, "percent_used", fmt.Sprintf("%.1f%%", percentUsed)).
+			Warn("file size is approaching extraction limit - monitor for future increases")
+	case percentUsed >= 50:
+		log.WithFields("path", path, "size_bytes", size, "max_bytes", maxSize, "percent_used", fmt.Sprintf("%.1f%%", percentUsed)).
+			Info("large file extracted")
+	default:
+		log.WithFields("path", path, "size_bytes", size).Trace("file extracted")
+	}
+}
 
 // safeCopy limits the copy from the reader. This is useful when extracting files from archives to
-// protect against decompression bomb attacks.
-func safeCopy(writer io.Writer, reader io.Reader) error {
-	numBytes, err := io.Copy(writer, io.LimitReader(reader, perFileReadLimit))
-	if numBytes >= perFileReadLimit || errors.Is(err, io.EOF) {
-		return fmt.Errorf("zip read limit hit (potential decompression bomb attack)")
+// protect against decompression bomb attacks. Returns the number of bytes written.
+func safeCopy(writer io.Writer, reader io.Reader, maxFileSize int64, path string) (int64, error) {
+	numBytes, err := io.Copy(writer, io.LimitReader(reader, maxFileSize))
+	if numBytes >= maxFileSize || errors.Is(err, io.EOF) {
+		return numBytes, fmt.Errorf("zip read limit hit (potential decompression bomb attack)")
 	}
-	return nil
+	return numBytes, nil
 }
