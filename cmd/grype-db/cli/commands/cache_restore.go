@@ -366,7 +366,7 @@ const (
 	gb
 )
 
-const perFileReadLimit = 10 * gb
+const perFileReadLimit = 25 * gb
 
 // safeCopy limits the copy from the reader. This is useful when extracting files from archives to
 // protect against decompression bomb attacks.
