@@ -23,9 +23,18 @@ import (
 
 var _ options.Interface = &cacheRestoreConfig{}
 
+const (
+	// represents the order of bytes
+	_  = iota
+	kb = 1 << (10 * iota) //nolint:deadcode
+	mb                    //nolint:deadcode
+	gb
+)
+
 type cacheRestoreConfig struct {
-	Cache    cacheRestoreCache `yaml:"cache" json:"cache" mapstructure:"cache"`
-	Provider struct {
+	Cache                    cacheRestoreCache `yaml:"cache" json:"cache" mapstructure:"cache"`
+	DecompressPerFileMaxSize int64             `yaml:"decompress-per-file-max-size" json:"decompress-per-file-max-size" mapstructure:"decompress-per-file-max-size"`
+	Provider                 struct {
 		options.Store     `yaml:",inline" mapstructure:",squash"`
 		options.Selection `yaml:",inline" mapstructure:",squash"`
 	} `yaml:"provider" json:"provider" mapstructure:"provider"`
@@ -53,6 +62,7 @@ func CacheRestore(app *application.Application) *cobra.Command {
 			CacheArchive: options.DefaultCacheArchive(),
 			CacheRestore: options.DefaultCacheRestore(),
 		},
+		DecompressPerFileMaxSize: 25 * gb,
 	}
 
 	cfg.Provider.Store = options.DefaultStore()
@@ -136,7 +146,7 @@ func cacheRestore(cfg cacheRestoreConfig) error {
 		}
 	}(wd)
 
-	if err := extractTarGz(f, selectedProviders); err != nil {
+	if err := extractTarGz(f, selectedProviders, cfg.DecompressPerFileMaxSize); err != nil {
 		return fmt.Errorf("failed to extract cache archive: %w", err)
 	}
 
@@ -193,7 +203,7 @@ func readProviderNamesFromTarGz(tarPath string) ([]string, error) {
 	return providers.List(), nil
 }
 
-func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
+func extractTarGz(reader io.Reader, selectedProviders *strset.Set, decompressPerFileMaxSize int64) error {
 	gr, err := gzip.NewReader(reader)
 	if err != nil {
 		return fmt.Errorf("failed to create gzip reader: %w", err)
@@ -232,7 +242,7 @@ func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
 
 		restoredAny = true
 
-		if err := processTarHeader(fs, rootPath, header, tr); err != nil {
+		if err := processTarHeader(fs, rootPath, header, tr, decompressPerFileMaxSize); err != nil {
 			return err
 		}
 	}
@@ -243,7 +253,7 @@ func extractTarGz(reader io.Reader, selectedProviders *strset.Set) error {
 	return nil
 }
 
-func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader io.Reader) error {
+func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader io.Reader, decompressPerFileMaxSize int64) error {
 	// clean the path to avoid traversal (removes "..", ".", etc.)
 	cleanedPath := cleanPathRelativeToRoot(rootPath, header.Name)
 
@@ -263,7 +273,7 @@ func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader i
 			return fmt.Errorf("failed to create symlink: %w", err)
 		}
 	case tar.TypeReg:
-		if err := handleFile(fs, cleanedPath, reader); err != nil {
+		if err := handleFile(fs, cleanedPath, reader, decompressPerFileMaxSize); err != nil {
 			return fmt.Errorf("failed to handle file: %w", err)
 		}
 	default:
@@ -272,7 +282,7 @@ func processTarHeader(fs afero.Fs, rootPath string, header *tar.Header, reader i
 	return nil
 }
 
-func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader) error {
+func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader, decompressPerFileMaxSize int64) error {
 	if cleanedPath == "" {
 		return fmt.Errorf("empty path")
 	}
@@ -288,7 +298,7 @@ func handleFile(fs afero.Fs, cleanedPath string, reader io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	if err := safeCopy(outFile, reader); err != nil {
+	if err := safeCopy(outFile, reader, decompressPerFileMaxSize); err != nil {
 		return fmt.Errorf("failed to copy file: %w", err)
 	}
 	if err := outFile.Close(); err != nil {
@@ -358,21 +368,11 @@ func detectPathTraversal(rootPath, cleanedPath string) error {
 	return nil
 }
 
-const (
-	// represents the order of bytes
-	_  = iota
-	kb = 1 << (10 * iota) //nolint:deadcode
-	mb                    //nolint:deadcode
-	gb
-)
-
-const perFileReadLimit = 10 * gb
-
 // safeCopy limits the copy from the reader. This is useful when extracting files from archives to
 // protect against decompression bomb attacks.
-func safeCopy(writer io.Writer, reader io.Reader) error {
-	numBytes, err := io.Copy(writer, io.LimitReader(reader, perFileReadLimit))
-	if numBytes >= perFileReadLimit || errors.Is(err, io.EOF) {
+func safeCopy(writer io.Writer, reader io.Reader, decompressPerFileMaxSize int64) error {
+	numBytes, err := io.Copy(writer, io.LimitReader(reader, decompressPerFileMaxSize))
+	if numBytes >= decompressPerFileMaxSize || errors.Is(err, io.EOF) {
 		return fmt.Errorf("zip read limit hit (potential decompression bomb attack)")
 	}
 	return nil
