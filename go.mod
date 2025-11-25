@@ -317,8 +317,5 @@ require (
 	modernc.org/sqlite v1.43.0 // indirect
 )
 
-// this is a breaking change, so we need to pin the version until glebarez/go-sqlite is updated to use internal/libc
-replace modernc.org/sqlite v1.33.0 => modernc.org/sqlite v1.32.0
-
 // the go.mod file did not have the correct minimum go version at the time of release tagging
 retract v0.30.0
