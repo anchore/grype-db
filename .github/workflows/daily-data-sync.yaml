@@ -21,6 +21,8 @@ jobs:
       packages: read
     outputs:
       providers: ${{ steps.read-providers.outputs.providers }}
+      multicore-providers: ${{ steps.split-providers.outputs.multicore-providers }}
+      other-providers: ${{ steps.split-providers.outputs.other-providers }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
         with:
@@ -44,8 +46,17 @@ jobs:
           content=`make show-providers`
           echo "providers=$content" >> $GITHUB_OUTPUT
 
-  update-provider:
-    name: "Update provider"
+      - name: Split providers by concurrency needs
+        id: split-providers
+        run: |
+          all_providers='${{ steps.read-providers.outputs.providers }}'
+          multicore_providers=$(echo "$all_providers" | jq -c '[.[] | select(. == "ubuntu")]')
+          other_providers=$(echo "$all_providers" | jq -c '[.[] | select(. != "ubuntu")]')
+          echo "multicore-providers=$multicore_providers" >> $GITHUB_OUTPUT
+          echo "other-providers=$other_providers" >> $GITHUB_OUTPUT
+
+  update-provider-multicore:
+    name: "Update provider (multicore)"
     needs: discover-providers
     runs-on: runs-on=${{ github.run_id }}/cpu=32/volume=80gb:gp3/family=r8+m8+r7+r6i+r6a+m7+m6i+m6a
     timeout-minutes: 480
@@ -55,7 +66,64 @@ jobs:
       packages: write
     strategy:
       matrix:
-        provider: ${{fromJson(needs.discover-providers.outputs.providers)}}
+        provider: ${{fromJson(needs.discover-providers.outputs.multicore-providers)}}
+      fail-fast: false
+    steps:
+
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd #v5.0.1
+        with:
+          persist-credentials: false
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+        with:
+          python: false
+
+      - name: Login to ghcr.io
+        run: make ci-oras-ghcr-login
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+
+      - name: Download the existing provider state
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: bash -c "make download-provider-cache provider=\"$PROVIDER\" date=latest || true"
+
+      - name: Update the provider
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROVIDER: ${{ matrix.provider }}
+        run: make refresh-provider-cache provider="$PROVIDER"
+
+      - uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e #v3.19.0
+        with:
+          status: ${{ job.status }}
+          fields: workflow,eventName
+          text: Daily Data Sync for ${{ matrix.provider }} failed
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+
+      - name: Upload the provider workspace state
+        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
+        if: ${{ always() }}
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: make upload-provider-cache provider="$PROVIDER"
+
+  update-provider:
+    name: "Update provider"
+    needs: discover-providers
+    runs-on: runs-on=${{ github.run_id }}/runner=large
+    timeout-minutes: 480
+    # set the permissions granted to the github token to publish to ghcr.io
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        provider: ${{fromJson(needs.discover-providers.outputs.other-providers)}}
       fail-fast: false
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
@@ -106,6 +174,7 @@ jobs:
     if: ${{ always() }}
     needs:
       - update-provider
+      - update-provider-multicore
       - discover-providers
     # set the permissions granted to the github token to read the pull cache from ghcr.io
     permissions:
