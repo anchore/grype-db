@@ -82,6 +82,7 @@ validate:
     - nvd
     - oracle
     - rhel
+    - secureos
     - sles
     - ubuntu
     - wolfi
