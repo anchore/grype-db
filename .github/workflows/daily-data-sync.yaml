@@ -1,11 +1,11 @@
-name: 'Daily Data Sync'
+name: "Daily Data Sync"
 on:
   # allow for kicking off data syncs manually
   workflow_dispatch:
 
   # run midnight (UTC) daily
   schedule:
-    - cron:  '0 0 * * *'
+    - cron: "0 0 * * *"
 
 env:
   CGO_ENABLED: "0"
@@ -47,8 +47,8 @@ jobs:
   update-provider:
     name: "Update provider"
     needs: discover-providers
-    runs-on: runs-on=${{ github.run_id }}/runner=large
-    timeout-minutes: 420  # 7 hours; db publisher looks for this cache 8 hours later, but we need time to aggregate the cache
+    runs-on: runs-on=${{ github.run_id }}/cpu=32/volume=80gb:gp3/family=r8+m8+r7+r6i+r6a+m7+m6i+m6a
+    timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -58,7 +58,6 @@ jobs:
         provider: ${{fromJson(needs.discover-providers.outputs.providers)}}
       fail-fast: false
     steps:
-
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
         with:
           persist-credentials: false
@@ -113,7 +112,6 @@ jobs:
       packages: write
       contents: read
     steps:
-
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
         with:
           persist-credentials: false
