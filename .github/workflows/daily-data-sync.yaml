@@ -47,7 +47,8 @@ jobs:
   update-provider:
     name: "Update provider"
     needs: discover-providers
-    runs-on: runs-on=${{ github.run_id }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}/cpu=32/volume=80gb:gp3/family=r8+m8+r7+r6i+r6a+m7+m6i+m6a
+    timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
