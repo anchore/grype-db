@@ -48,6 +48,7 @@ jobs:
     name: "Update provider"
     needs: discover-providers
     runs-on: runs-on=${{ github.run_id }}/runner=large
+    timeout-minutes: 420  # 7 hours; db publisher looks for this cache 8 hours later, but we need time to aggregate the cache
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
