@@ -58,7 +58,7 @@ jobs:
   update-provider-multicore:
     name: "Update provider (multicore)"
     needs: discover-providers
-    runs-on: runs-on=${{ github.run_id }}/cpu=32/volume=80gb:gp3/family=r8+m8+r7+r6i+r6a+m7+m6i+m6a
+    runs-on: runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}/cpu=32/volume=80gb:gp3/family=r8+m8+r7+r6i+r6a+m7+m6i+m6a
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
@@ -115,7 +115,7 @@ jobs:
   update-provider:
     name: "Update provider"
     needs: discover-providers
-    runs-on: runs-on=${{ github.run_id }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}/runner=large
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
