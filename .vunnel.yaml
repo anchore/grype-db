@@ -7,8 +7,7 @@ log:
 providers:
   ubuntu:
     # there is a lot of IO when running git log commands in this provider, so some concurrency helps here
-    # increased to 64 to match the 32-CPU runner used in daily-data-sync (2x oversubscription for I/O bound work)
-    max_workers: 64
+    max_workers: 10
 
   nvd:
     # apply community-provided overrides to the NVD data
