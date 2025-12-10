@@ -1616,3 +1616,267 @@ func timeRef(ti time.Time) *time.Time {
 func strRef(s string) *string {
 	return &s
 }
+
+func TestTransform_RootIoUnaffected(t *testing.T) {
+	// Test Root.io namespace-based processing
+	vulnerabilities := loadFixture(t, "test-fixtures/rootio-alpine-unaffected.json")
+	require.Len(t, vulnerabilities, 1, "expected exactly one vulnerability")
+
+	state := inputProviderState("test-provider")
+	entries, err := Transform(vulnerabilities[0], state)
+	require.NoError(t, err)
+	require.NotEmpty(t, entries)
+
+	// Should have both VulnerabilityHandle and UnaffectedPackageHandle entries
+	require.Len(t, entries, 1, "expected exactly one entry")
+	relatedEntries, ok := entries[0].Data.(transformers.RelatedEntries)
+	require.True(t, ok, "expected entry.Data to be of type RelatedEntries")
+
+	// Should have VulnerabilityHandle
+	require.NotNil(t, relatedEntries.VulnerabilityHandle, "should have a VulnerabilityHandle")
+	assert.Equal(t, "CVE-2023-1234", relatedEntries.VulnerabilityHandle.Name)
+
+	// Find UnaffectedPackageHandle in the Related field
+	var unaffectedPkg *grypeDB.UnaffectedPackageHandle
+	for _, related := range relatedEntries.Related {
+		if e, ok := related.(grypeDB.UnaffectedPackageHandle); ok {
+			unaffectedPkg = &e
+			break
+		}
+	}
+	require.NotNil(t, unaffectedPkg, "should have an UnaffectedPackageHandle")
+	require.NotNil(t, unaffectedPkg.BlobValue)
+
+	// Check CVEs
+	assert.Equal(t, []string{"CVE-2023-1234"}, unaffectedPkg.BlobValue.CVEs)
+
+	// Check constraint - should indicate packages with .root.io are unaffected
+	require.NotEmpty(t, unaffectedPkg.BlobValue.Ranges)
+	assert.Equal(t, "version_contains .root.io", unaffectedPkg.BlobValue.Ranges[0].Version.Constraint)
+
+	// Check package details
+	assert.Equal(t, "test-package", unaffectedPkg.Package.Name)
+	assert.Equal(t, "apk", unaffectedPkg.Package.Ecosystem)
+
+	// Check OS details
+	require.NotNil(t, unaffectedPkg.OperatingSystem)
+	assert.Equal(t, "alpine", unaffectedPkg.OperatingSystem.Name)
+	assert.Equal(t, "rootio-alpine", unaffectedPkg.OperatingSystem.ReleaseID)
+}
+
+func TestIsRootIoNamespace(t *testing.T) {
+	tests := []struct {
+		name      string
+		namespace string
+		expected  bool
+	}{
+		{
+			name:      "Root.io Alpine namespace",
+			namespace: "rootio:distro:alpine:3.17",
+			expected:  true,
+		},
+		{
+			name:      "Root.io Debian namespace",
+			namespace: "rootio:distro:debian:11",
+			expected:  true,
+		},
+		{
+			name:      "Root.io language namespace",
+			namespace: "rootio:language:python",
+			expected:  true,
+		},
+		{
+			name:      "Regular Alpine namespace",
+			namespace: "alpine:3.17",
+			expected:  false,
+		},
+		{
+			name:      "Empty namespace",
+			namespace: "",
+			expected:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isRootIoNamespace(tt.namespace)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestDetermineRootIoConstraint(t *testing.T) {
+	tests := []struct {
+		name     string
+		osName   string
+		version  string
+		expected string
+	}{
+		{
+			name:     "Debian uses .root.io constraint",
+			osName:   "debian",
+			version:  "1.5.2-6+deb12u1",
+			expected: "version_contains .root.io",
+		},
+		{
+			name:     "Ubuntu uses .root.io constraint",
+			osName:   "ubuntu",
+			version:  "2.3.4-1ubuntu1",
+			expected: "version_contains .root.io",
+		},
+		{
+			name:     "Alpine uses .root.io constraint",
+			osName:   "alpine",
+			version:  "3.0.8-r4",
+			expected: "version_contains .root.io",
+		},
+		{
+			name:     "Chainguard uses .root.io constraint",
+			osName:   "chainguard",
+			version:  "1.2.3-r1",
+			expected: "version_contains .root.io",
+		},
+		{
+			name:     "Unknown OS defaults to .root.io",
+			osName:   "fedora",
+			version:  "1.2.3-1.fc38",
+			expected: "version_contains .root.io",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := determineRootIoConstraint(tt.osName, tt.version)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetOSInfo_RootIoNamespace(t *testing.T) {
+	tests := []struct {
+		name      string
+		namespace string
+		expected  osInfo
+	}{
+		{
+			name:      "Root.io Alpine namespace",
+			namespace: "rootio:distro:alpine:3.17",
+			expected: osInfo{
+				name:    "alpine",
+				id:      "rootio-alpine",
+				version: "3.17",
+				channel: "",
+			},
+		},
+		{
+			name:      "Root.io Debian namespace",
+			namespace: "rootio:distro:debian:11",
+			expected: osInfo{
+				name:    "debian",
+				id:      "rootio-debian",
+				version: "11",
+				channel: "",
+			},
+		},
+		{
+			name:      "Regular Alpine namespace",
+			namespace: "alpine:3.17",
+			expected: osInfo{
+				name:    "alpine",
+				id:      "alpine",
+				version: "3.17",
+				channel: "",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getOSInfo(tt.namespace)
+			assert.Equal(t, tt.expected.name, result.name)
+			assert.Equal(t, tt.expected.id, result.id)
+			assert.Equal(t, tt.expected.version, result.version)
+			assert.Equal(t, tt.expected.channel, result.channel)
+		})
+	}
+}
+
+func TestTransform_RootIoUnaffected_EmptyVersion(t *testing.T) {
+	// Test Root.io record with empty version (no fix available)
+	vulnerabilities := loadFixture(t, "test-fixtures/rootio-alpine-no-fix.json")
+	require.Len(t, vulnerabilities, 1, "expected exactly one vulnerability")
+
+	state := inputProviderState("test-provider")
+	entries, err := Transform(vulnerabilities[0], state)
+	require.NoError(t, err)
+	require.NotEmpty(t, entries)
+
+	// Should have VulnerabilityHandle but NO UnaffectedPackageHandle
+	require.Len(t, entries, 1, "expected exactly one entry")
+	relatedEntries, ok := entries[0].Data.(transformers.RelatedEntries)
+	require.True(t, ok, "expected entry.Data to be of type RelatedEntries")
+
+	// Should have VulnerabilityHandle
+	require.NotNil(t, relatedEntries.VulnerabilityHandle, "should have a VulnerabilityHandle")
+	assert.Equal(t, "CVE-2023-9999", relatedEntries.VulnerabilityHandle.Name)
+
+	// Should NOT have UnaffectedPackageHandle when version is empty
+	hasUnaffectedPackage := false
+	for _, related := range relatedEntries.Related {
+		if _, ok := related.(grypeDB.UnaffectedPackageHandle); ok {
+			hasUnaffectedPackage = true
+			break
+		}
+	}
+	assert.False(t, hasUnaffectedPackage, "should not have UnaffectedPackageHandle for empty version")
+}
+
+func TestTransform_RootIoUnaffected_AlpineR007Pattern(t *testing.T) {
+	// Test Root.io record with Alpine -rXX007X version pattern
+	vulnerabilities := loadFixture(t, "test-fixtures/rootio-alpine-r007-pattern.json")
+	require.Len(t, vulnerabilities, 1, "expected exactly one vulnerability")
+
+	state := inputProviderState("test-provider")
+	entries, err := Transform(vulnerabilities[0], state)
+	require.NoError(t, err)
+	require.NotEmpty(t, entries)
+
+	// Should have both VulnerabilityHandle and UnaffectedPackageHandle entries
+	require.Len(t, entries, 1, "expected exactly one entry")
+	relatedEntries, ok := entries[0].Data.(transformers.RelatedEntries)
+	require.True(t, ok, "expected entry.Data to be of type RelatedEntries")
+
+	// Should have VulnerabilityHandle
+	require.NotNil(t, relatedEntries.VulnerabilityHandle, "should have a VulnerabilityHandle")
+	assert.Equal(t, "CVE-2024-1234", relatedEntries.VulnerabilityHandle.Name)
+
+	// Find UnaffectedPackageHandle in the Related field
+	var unaffectedPkg *grypeDB.UnaffectedPackageHandle
+	for _, related := range relatedEntries.Related {
+		if e, ok := related.(grypeDB.UnaffectedPackageHandle); ok {
+			unaffectedPkg = &e
+			break
+		}
+	}
+	require.NotNil(t, unaffectedPkg, "should have an UnaffectedPackageHandle")
+	require.NotNil(t, unaffectedPkg.BlobValue)
+
+	// Check CVEs
+	assert.Equal(t, []string{"CVE-2024-1234"}, unaffectedPkg.BlobValue.CVEs)
+
+	// Check constraint - should use .root.io even for Alpine -rXX007X pattern
+	// The actual pattern matching happens in Grype
+	require.NotEmpty(t, unaffectedPkg.BlobValue.Ranges)
+	assert.Equal(t, "version_contains .root.io", unaffectedPkg.BlobValue.Ranges[0].Version.Constraint)
+
+	// Check package details
+	assert.Equal(t, "libssl3", unaffectedPkg.Package.Name)
+	assert.Equal(t, "apk", unaffectedPkg.Package.Ecosystem)
+
+	// Check OS details
+	require.NotNil(t, unaffectedPkg.OperatingSystem)
+	assert.Equal(t, "alpine", unaffectedPkg.OperatingSystem.Name)
+	assert.Equal(t, "rootio-alpine", unaffectedPkg.OperatingSystem.ReleaseID)
+	assert.Equal(t, "3", unaffectedPkg.OperatingSystem.MajorVersion)
+	assert.Equal(t, "21", unaffectedPkg.OperatingSystem.MinorVersion)
+}
