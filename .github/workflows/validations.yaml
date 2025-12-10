@@ -131,7 +131,7 @@ jobs:
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: runs-on=${{ github.run_id }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/runner=large
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
