@@ -63,7 +63,7 @@ runs:
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v3.4.0
+      uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v3.4.0
       with:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}
