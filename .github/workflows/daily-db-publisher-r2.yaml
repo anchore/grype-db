@@ -83,6 +83,32 @@ jobs:
 
       - name: Pull vulnerability data
         run: make download-all-provider-cache
+        env:
+          GRYPE_DB_LOG_FILE: /tmp/cache-restore.log
+
+      - name: Check for cache size alerts
+        if: always()
+        run: |
+          if [ -f /tmp/cache-restore.log ]; then
+            .github/scripts/check-cache-size-alerts.sh /tmp/cache-restore.log
+          else
+            echo "No log file found, skipping cache size check"
+          fi
+
+      - name: Send Slack alert for cache size warnings
+        if: env.CACHE_SIZE_ALERT == 'critical' || env.CACHE_SIZE_ALERT == 'warning'
+        uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e #v3.19.0
+        with:
+          status: custom
+          custom_payload: |
+            {
+              attachments: [{
+                color: '${{ env.CACHE_SIZE_ALERT }}' === 'critical' ? 'danger' : 'warning',
+                text: `Cache size alert (${{ env.CACHE_SIZE_ALERT }}): Files are approaching extraction limits. See workflow logs for details.`
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
 
       - name: Generate and upload DB
         run: |
