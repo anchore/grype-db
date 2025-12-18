@@ -5,6 +5,7 @@ import (
 
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/processors"
+	"github.com/anchore/grype-db/pkg/process/v6/transformers/csafvex"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/epss"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/github"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers/kev"
@@ -53,5 +54,6 @@ func Processors(cfg Config) []data.Processor {
 		processors.NewV2EPSSProcessor(epss.Transform),
 		processors.NewV2OpenVEXProcessor(openvex.Transform),
 		processors.NewV2AnnotatedOpenVEXProcessor(openvex.AnnotatedTransform),
+		processors.NewV2CSAFVEXProcessor(csafvex.Transform),
 	}
 }
