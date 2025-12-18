@@ -620,9 +620,14 @@ func isChannelProduct(info productInfo) bool {
 // This handles SUSE's CSAF data model where EOL base distros only have channel fixes.
 // Without this, CVEs that only have fixes in extended support channels would result
 // in false negatives for base SLES users.
+//
+// It processes two types of channel entries:
+// - uphs: UnaffectedPackageHandles from channel fixes (need constraint inversion)
+// - channelKnownAffected: AffectedPackageHandles from channel known_affected (use as-is)
 func synthesizeBaseSLESEntries(
 	aphs []grypeDB.AffectedPackageHandle,
 	uphs []grypeDB.UnaffectedPackageHandle,
+	channelKnownAffected []grypeDB.AffectedPackageHandle,
 ) []grypeDB.AffectedPackageHandle {
 	// Key for grouping by package + OS version (without channel)
 	type osKey struct {
@@ -648,10 +653,10 @@ func synthesizeBaseSLESEntries(
 		baseExists[key] = true
 	}
 
-	// Check channel entries (UnaffectedPackageHandles) for missing base entries
 	var synthesized []grypeDB.AffectedPackageHandle
-	seen := make(map[osKey]bool) // avoid duplicates if multiple channels have the same fix
+	seen := make(map[osKey]bool) // avoid duplicates if multiple channels have the same entry
 
+	// First, process channel fixes (UnaffectedPackageHandles) - these need constraint inversion
 	for _, uph := range uphs {
 		if uph.OperatingSystem == nil || uph.OperatingSystem.ReleaseID != "sles" {
 			continue
@@ -710,6 +715,39 @@ func synthesizeBaseSLESEntries(
 		}
 	}
 
+	// Second, process channel known_affected entries - these can be used directly
+	// (just need to clear the channel to make them base entries)
+	for _, aph := range channelKnownAffected {
+		if aph.OperatingSystem == nil || aph.OperatingSystem.ReleaseID != "sles" {
+			continue
+		}
+		if aph.OperatingSystem.Channel == "" {
+			continue // not a channel entry
+		}
+
+		key := osKey{
+			pkgName:      aph.Package.Name,
+			majorVersion: aph.OperatingSystem.MajorVersion,
+			minorVersion: aph.OperatingSystem.MinorVersion,
+		}
+
+		// If no base entry exists and we haven't synthesized one yet
+		if !baseExists[key] && !seen[key] {
+			seen[key] = true
+
+			// Create base OS by clearing the channel
+			baseOS := *aph.OperatingSystem
+			baseOS.Channel = ""
+
+			// For known_affected, we can use the blob as-is (no constraint inversion needed)
+			synthesized = append(synthesized, grypeDB.AffectedPackageHandle{
+				OperatingSystem: &baseOS,
+				Package:         aph.Package,
+				BlobValue:       aph.BlobValue,
+			})
+		}
+	}
+
 	return append(aphs, synthesized...)
 }
 
@@ -720,6 +758,10 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 
 	var aphs []grypeDB.AffectedPackageHandle
 	var uphs []grypeDB.UnaffectedPackageHandle
+
+	// Track channel known_affected entries for base synthesis
+	// These are channel products marked as affected but not emitted directly
+	var channelKnownAffected []grypeDB.AffectedPackageHandle
 
 	// Helper to process a product ID and route to the appropriate handle type
 	processProduct := func(productID csaf.ProductID, fixStatus grypeDB.FixStatus) {
@@ -738,8 +780,14 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 				if uph != nil {
 					uphs = append(uphs, *uph)
 				}
+			} else {
+				// Track channel known_affected for base synthesis
+				// We don't emit these directly, but use them to synthesize base entries
+				aph := createAffectedPackage(productID, productMap, vuln, vulnID, fixStatus)
+				if aph != nil {
+					channelKnownAffected = append(channelKnownAffected, *aph)
+				}
 			}
-			// Skip known_affected for channel products - they shouldn't mark things as vulnerable
 			return
 		}
 
@@ -793,7 +841,8 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 
 	// Synthesize base SLES entries from channel entries when base is missing
 	// This handles SUSE's CSAF data model where EOL base distros only have channel fixes
-	aphs = synthesizeBaseSLESEntries(aphs, uphs)
+	// We pass both channel fixes (uphs) and channel known_affected entries
+	aphs = synthesizeBaseSLESEntries(aphs, uphs, channelKnownAffected)
 
 	// stable ordering
 	sort.Sort(internal.ByAffectedPackage(aphs))
@@ -818,13 +867,12 @@ func createAffectedPackage(productID csaf.ProductID, productMap map[csaf.Product
 	}
 
 	// Build version constraint
+	// For FixedStatus, the version is the fix version, so constraint is "< version"
+	// For NotFixedStatus (known_affected), we don't set a constraint - it means all versions are affected
+	// (The version info from PURL is often unreliable for known_affected entries)
 	constraint := ""
-	if info.version != "" {
-		if fixStatus == grypeDB.FixedStatus {
-			constraint = fmt.Sprintf("< %s", info.version)
-		} else {
-			constraint = fmt.Sprintf("= %s", info.version)
-		}
+	if info.version != "" && fixStatus == grypeDB.FixedStatus {
+		constraint = fmt.Sprintf("< %s", info.version)
 	}
 
 	var fix *grypeDB.Fix
