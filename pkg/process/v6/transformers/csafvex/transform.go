@@ -303,8 +303,8 @@ func parseOSFromCPE(cpeStr string) *grypeDB.OperatingSystem {
 		update = ""
 	}
 
-	// Map SUSE product codes to distro IDs
-	releaseID := normalizeReleaseID(product)
+	// Map SUSE product codes to distro IDs and extract channel (ltss, espos, bcl, etc.)
+	releaseID, channel := normalizeReleaseID(product)
 
 	// Parse version and update (service pack) into major/minor
 	majorVersion, minorVersion := parseVersionComponents(version, update)
@@ -321,41 +321,59 @@ func parseOSFromCPE(cpeStr string) *grypeDB.OperatingSystem {
 		ReleaseID:    releaseID,
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
+		Channel:      channel,
 		Codename:     codename.LookupOS(osName, majorVersion, minorVersion),
 	}
 }
 
-// normalizeReleaseID maps SUSE product codes to standard distro release IDs
-func normalizeReleaseID(product string) string {
+// normalizeReleaseID maps SUSE product codes to standard distro release IDs and extracts any channel.
+// Channels distinguish variants like LTSS, ESPOS, BCL which have different fix timelines.
+// For example:
+//   - "sles" → releaseID="sles", channel=""
+//   - "sles-ltss" → releaseID="sles", channel="ltss"
+//   - "sles-espos" → releaseID="sles", channel="espos"
+//   - "sles-bcl" → releaseID="sles", channel="bcl"
+func normalizeReleaseID(product string) (releaseID, channel string) {
 	product = strings.ToLower(product)
 
-	// Handle hyphenated and underscored SLES variants
-	// e.g., sles-bcl, sles-ltss, sles-espos, suse_sles, sles_sap, sles_bcl
-	if strings.HasPrefix(product, "sles-") || strings.HasPrefix(product, "sles_") {
-		return "sles"
+	// Handle hyphenated SLES variants with channels (ltss, espos, bcl, sap, etc.)
+	// These are distinct support channels with different fix timelines
+	if strings.HasPrefix(product, "sles-") {
+		parts := strings.SplitN(product, "-", 2)
+		return "sles", parts[1]
 	}
+
+	// Handle underscored SLES variants with channels
+	if strings.HasPrefix(product, "sles_") {
+		parts := strings.SplitN(product, "_", 2)
+		return "sles", parts[1]
+	}
+
+	// Handle suse_sles variants (older naming convention)
 	if strings.HasPrefix(product, "suse_sles") || strings.HasPrefix(product, "suse-sles") {
-		return "sles"
+		return "sles", ""
 	}
+
+	// Handle SLE module variants (no channel, these are part of base SLES)
 	if strings.HasPrefix(product, "sle-") || strings.HasPrefix(product, "sle_") {
-		return "sles"
+		return "sles", ""
 	}
 
 	switch product {
-	case "sled", "sles", "sle_hpc", "sle-module-basesystem", "sle-module-server-applications":
-		return "sles"
+	case "sled", "sles", "sle_hpc":
+		return "sles", ""
 	case "caasp":
-		return "sles" // SUSE CaaS Platform is based on SLES
+		return "sles", "" // SUSE CaaS Platform is based on SLES
 	case "ses":
-		return "sles" // SUSE Enterprise Storage is based on SLES
+		return "sles", "" // SUSE Enterprise Storage is based on SLES
 	case "sll":
-		return "sles" // SUSE Liberty Linux
+		return "sles", "" // SUSE Liberty Linux
 	case "opensuse", "leap", "opensuse-leap":
-		return "opensuse-leap"
+		return "opensuse-leap", ""
 	case "tumbleweed", "opensuse-tumbleweed":
-		return "opensuse-tumbleweed"
+		return "opensuse-tumbleweed", ""
 	default:
-		return product
+		return product, ""
 	}
 }
 
@@ -422,10 +440,15 @@ func transformVulnerability(advisory unmarshal.CSAFVEXVulnerability, vuln *csaf.
 
 	in := []any{vulnHandle}
 
-	// Get affected packages from product_status
-	aphs := getAffectedPackages(vuln, productMap, vulnID)
+	// Get affected and unaffected packages from product_status
+	// - Standard products emit AffectedPackageHandle (can mark as vulnerable or fixed)
+	// - Channel products (LTSS, ESPOS, BCL) emit UnaffectedPackageHandle (can only mark as fixed)
+	aphs, uphs := getAffectedPackages(vuln, productMap, vulnID)
 	for _, aph := range aphs {
 		in = append(in, aph)
+	}
+	for _, uph := range uphs {
+		in = append(in, uph)
 	}
 
 	return transformers.NewEntries(in...), nil
@@ -580,12 +603,152 @@ func getSeverities(vuln *csaf.Vulnerability) []grypeDB.Severity {
 	return severities
 }
 
-func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID]productInfo, vulnID string) []grypeDB.AffectedPackageHandle {
+// isChannelProduct returns true if the product belongs to an extended support channel
+// (like LTSS, ESPOS, BCL) rather than the standard distribution.
+// Channel products should emit UnaffectedPackageHandle to only mark packages as "not affected"
+// rather than "affected", since they only release patches and should never add vulnerabilities.
+func isChannelProduct(info productInfo) bool {
+	if info.os == nil {
+		return false
+	}
+	// Channel products have non-empty Channel field (ltss, espos, bcl, etc.)
+	return info.os.Channel != ""
+}
+
+// synthesizeBaseSLESEntries creates base SLES AffectedPackageHandle entries
+// when only channel entries (LTSS, ESPOS, BCL) exist for a given OS version.
+// This handles SUSE's CSAF data model where EOL base distros only have channel fixes.
+// Without this, CVEs that only have fixes in extended support channels would result
+// in false negatives for base SLES users.
+func synthesizeBaseSLESEntries(
+	aphs []grypeDB.AffectedPackageHandle,
+	uphs []grypeDB.UnaffectedPackageHandle,
+) []grypeDB.AffectedPackageHandle {
+	// Key for grouping by package + OS version (without channel)
+	type osKey struct {
+		pkgName      string
+		majorVersion string
+		minorVersion string
+	}
+
+	// Build set of existing base entries
+	baseExists := make(map[osKey]bool)
+	for _, aph := range aphs {
+		if aph.OperatingSystem == nil || aph.OperatingSystem.ReleaseID != "sles" {
+			continue
+		}
+		if aph.OperatingSystem.Channel != "" {
+			continue // skip channel entries
+		}
+		key := osKey{
+			pkgName:      aph.Package.Name,
+			majorVersion: aph.OperatingSystem.MajorVersion,
+			minorVersion: aph.OperatingSystem.MinorVersion,
+		}
+		baseExists[key] = true
+	}
+
+	// Check channel entries (UnaffectedPackageHandles) for missing base entries
+	var synthesized []grypeDB.AffectedPackageHandle
+	seen := make(map[osKey]bool) // avoid duplicates if multiple channels have the same fix
+
+	for _, uph := range uphs {
+		if uph.OperatingSystem == nil || uph.OperatingSystem.ReleaseID != "sles" {
+			continue
+		}
+		if uph.OperatingSystem.Channel == "" {
+			continue // not a channel entry
+		}
+
+		key := osKey{
+			pkgName:      uph.Package.Name,
+			majorVersion: uph.OperatingSystem.MajorVersion,
+			minorVersion: uph.OperatingSystem.MinorVersion,
+		}
+
+		// If no base entry exists and we haven't synthesized one yet
+		if !baseExists[key] && !seen[key] {
+			seen[key] = true
+
+			// Create base OS by clearing the channel
+			baseOS := *uph.OperatingSystem
+			baseOS.Channel = ""
+
+			// Create a new blob with inverted constraint
+			// UnaffectedPackageHandle uses ">= version" (not affected at/above this)
+			// AffectedPackageHandle needs "< version" (affected below this)
+			var newRanges []grypeDB.Range
+			if uph.BlobValue != nil {
+				for _, r := range uph.BlobValue.Ranges {
+					newRange := grypeDB.Range{
+						Version: grypeDB.Version{
+							Type: r.Version.Type,
+						},
+						Fix: r.Fix,
+					}
+					// Invert the constraint: ">= X" becomes "< X"
+					if r.Fix != nil && r.Fix.Version != "" {
+						newRange.Version.Constraint = fmt.Sprintf("< %s", r.Fix.Version)
+					}
+					newRanges = append(newRanges, newRange)
+				}
+			}
+
+			var cves []string
+			if uph.BlobValue != nil {
+				cves = uph.BlobValue.CVEs
+			}
+
+			synthesized = append(synthesized, grypeDB.AffectedPackageHandle{
+				OperatingSystem: &baseOS,
+				Package:         uph.Package,
+				BlobValue: &grypeDB.PackageBlob{
+					CVEs:   cves,
+					Ranges: newRanges,
+				},
+			})
+		}
+	}
+
+	return append(aphs, synthesized...)
+}
+
+func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID]productInfo, vulnID string) ([]grypeDB.AffectedPackageHandle, []grypeDB.UnaffectedPackageHandle) {
 	if vuln.ProductStatus == nil {
-		return nil
+		return nil, nil
 	}
 
 	var aphs []grypeDB.AffectedPackageHandle
+	var uphs []grypeDB.UnaffectedPackageHandle
+
+	// Helper to process a product ID and route to the appropriate handle type
+	processProduct := func(productID csaf.ProductID, fixStatus grypeDB.FixStatus) {
+		info, ok := productMap[productID]
+		if !ok || info.name == "" {
+			return
+		}
+
+		// Channel products (LTSS, ESPOS, BCL, etc.) emit UnaffectedPackageHandle
+		// These can only mark packages as "not affected" (fixed), never as "affected" (vulnerable)
+		// This prevents false positives for users on standard SLES who don't have access to channel-specific fixes
+		if isChannelProduct(info) {
+			// Only emit unaffected handles for fixed statuses (not for known_affected)
+			if fixStatus == grypeDB.FixedStatus {
+				uph := createUnaffectedPackage(productID, productMap, vuln, vulnID)
+				if uph != nil {
+					uphs = append(uphs, *uph)
+				}
+			}
+			// Skip known_affected for channel products - they shouldn't mark things as vulnerable
+			return
+		}
+
+		// Standard products emit AffectedPackageHandle (normal vulnerability tracking)
+		aph := createAffectedPackage(productID, productMap, vuln, vulnID, fixStatus)
+		if aph != nil {
+			aphs = append(aphs, *aph)
+		}
+	}
 
 	// Process known_affected products
 	if vuln.ProductStatus.KnownAffected != nil {
@@ -593,10 +756,7 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 			if productID == nil {
 				continue
 			}
-			aph := createAffectedPackage(*productID, productMap, vuln, vulnID, grypeDB.NotFixedStatus)
-			if aph != nil {
-				aphs = append(aphs, *aph)
-			}
+			processProduct(*productID, grypeDB.NotFixedStatus)
 		}
 	}
 
@@ -606,10 +766,7 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 			if productID == nil {
 				continue
 			}
-			aph := createAffectedPackage(*productID, productMap, vuln, vulnID, grypeDB.FixedStatus)
-			if aph != nil {
-				aphs = append(aphs, *aph)
-			}
+			processProduct(*productID, grypeDB.FixedStatus)
 		}
 	}
 
@@ -619,10 +776,7 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 			if productID == nil {
 				continue
 			}
-			aph := createAffectedPackage(*productID, productMap, vuln, vulnID, grypeDB.FixedStatus)
-			if aph != nil {
-				aphs = append(aphs, *aph)
-			}
+			processProduct(*productID, grypeDB.FixedStatus)
 		}
 	}
 
@@ -633,17 +787,18 @@ func getAffectedPackages(vuln *csaf.Vulnerability, productMap map[csaf.ProductID
 			if productID == nil {
 				continue
 			}
-			aph := createAffectedPackage(*productID, productMap, vuln, vulnID, grypeDB.FixedStatus)
-			if aph != nil {
-				aphs = append(aphs, *aph)
-			}
+			processProduct(*productID, grypeDB.FixedStatus)
 		}
 	}
+
+	// Synthesize base SLES entries from channel entries when base is missing
+	// This handles SUSE's CSAF data model where EOL base distros only have channel fixes
+	aphs = synthesizeBaseSLESEntries(aphs, uphs)
 
 	// stable ordering
 	sort.Sort(internal.ByAffectedPackage(aphs))
 
-	return aphs
+	return aphs, uphs
 }
 
 func createAffectedPackage(productID csaf.ProductID, productMap map[csaf.ProductID]productInfo, vuln *csaf.Vulnerability, vulnID string, fixStatus grypeDB.FixStatus) *grypeDB.AffectedPackageHandle {
@@ -697,6 +852,61 @@ func createAffectedPackage(productID csaf.ProductID, productMap map[csaf.Product
 	}
 
 	return &grypeDB.AffectedPackageHandle{
+		OperatingSystem: info.os,
+		Package:         grypePackage,
+		BlobValue: &grypeDB.PackageBlob{
+			CVEs:   []string{vulnID},
+			Ranges: ranges,
+		},
+	}
+}
+
+// createUnaffectedPackage creates an UnaffectedPackageHandle for channel products (LTSS, ESPOS, BCL).
+// These handles can only mark packages as "not affected" (fixed), never as "affected" (vulnerable).
+// This ensures that channel-specific fixes don't cause false positives for users on standard SLES.
+func createUnaffectedPackage(productID csaf.ProductID, productMap map[csaf.ProductID]productInfo, vuln *csaf.Vulnerability, vulnID string) *grypeDB.UnaffectedPackageHandle {
+	info, ok := productMap[productID]
+	if !ok || info.name == "" {
+		return nil
+	}
+
+	ecosystem := ""
+	if info.purl != nil {
+		ecosystem = string(pkg.TypeFromPURL(info.purl.String()))
+	}
+
+	grypePackage := &grypeDB.Package{
+		Ecosystem: ecosystem,
+		Name:      info.name,
+	}
+
+	// For unaffected packages, we record the fixed version
+	// This indicates: versions >= this are NOT affected by the vulnerability
+	constraint := ""
+	if info.version != "" {
+		constraint = fmt.Sprintf(">= %s", info.version)
+	}
+
+	fix := &grypeDB.Fix{
+		State:  grypeDB.FixedStatus,
+		Detail: getFixDetail(vuln, productID),
+	}
+	if info.version != "" {
+		fix.Version = info.version
+	}
+
+	var ranges []grypeDB.Range
+	if constraint != "" {
+		ranges = append(ranges, grypeDB.Range{
+			Version: grypeDB.Version{
+				Type:       getVersionType(info.purl),
+				Constraint: constraint,
+			},
+			Fix: fix,
+		})
+	}
+
+	return &grypeDB.UnaffectedPackageHandle{
 		OperatingSystem: info.os,
 		Package:         grypePackage,
 		BlobValue: &grypeDB.PackageBlob{
