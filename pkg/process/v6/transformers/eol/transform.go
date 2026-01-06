@@ -74,18 +74,16 @@ func translateProductName(product string) string {
 
 // getOperatingSystemEOL creates an OperatingSystemEOLHandle from an EOL record.
 func getOperatingSystemEOL(entry unmarshal.EOLRecord, distroName string) *grypeDB.OperatingSystemEOLHandle {
-	item := entry.Item
-
 	// Parse version from cycle (e.g., "12", "22.04", "8.5")
-	majorVersion, minorVersion := parseVersion(item.Cycle)
+	majorVersion, minorVersion := parseVersion(entry.Cycle)
 
 	// Parse EOL dates
 	var eolDate, eoasDate *time.Time
-	if item.EOLFrom != nil {
-		eolDate = internal.ParseTime(*item.EOLFrom)
+	if entry.EOLFrom != nil {
+		eolDate = internal.ParseTime(*entry.EOLFrom)
 	}
-	if item.EOASFrom != nil {
-		eoasDate = internal.ParseTime(*item.EOASFrom)
+	if entry.EOASFrom != nil {
+		eoasDate = internal.ParseTime(*entry.EOASFrom)
 	}
 
 	// Skip if no EOL data
@@ -94,8 +92,8 @@ func getOperatingSystemEOL(entry unmarshal.EOLRecord, distroName string) *grypeD
 	}
 
 	var codename string
-	if item.Codename != nil {
-		codename = *item.Codename
+	if entry.Codename != nil {
+		codename = *entry.Codename
 	}
 
 	return &grypeDB.OperatingSystemEOLHandle{

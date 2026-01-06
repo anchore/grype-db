@@ -2,17 +2,10 @@ package unmarshal
 
 import "io"
 
-// EOLRecord represents a single end-of-life record from vunnel with its envelope.
+// EOLRecord represents a single end-of-life record from vunnel.
+// This parses the "item" content directly (not the full envelope).
 type EOLRecord struct {
-	Schema     string  `json:"schema"`
-	Identifier string  `json:"identifier"` // e.g., "debian:13", "ubuntu:22.04"
-	Item       EOLItem `json:"item"`
-}
-
-// EOLItem contains the end-of-life information for a product release.
-// This data comes from endoflife.date and includes information about
-// software/OS lifecycle status.
-type EOLItem struct {
+	Product      string          `json:"product"`
 	Cycle        string          `json:"cycle"`
 	Codename     *string         `json:"codename"`
 	Label        string          `json:"label"`
@@ -35,17 +28,12 @@ type EOLIdentifier struct {
 
 // IsEmpty returns true if the record has no meaningful data.
 func (e EOLRecord) IsEmpty() bool {
-	return e.Identifier == ""
+	return e.Product == ""
 }
 
-// ProductName extracts the product name from the identifier (e.g., "debian" from "debian:13").
+// ProductName returns the product name from the record.
 func (e EOLRecord) ProductName() string {
-	for i, c := range e.Identifier {
-		if c == ':' {
-			return e.Identifier[:i]
-		}
-	}
-	return e.Identifier
+	return e.Product
 }
 
 // EOLRecordEntries unmarshals EOL records from a reader.
