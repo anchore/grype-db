@@ -1,6 +1,7 @@
 package eol
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -91,29 +92,37 @@ func getOperatingSystemEOL(entry unmarshal.EOLRecord, distroName string) *grypeD
 		return nil
 	}
 
-	var codename string
-	if entry.Codename != nil {
-		codename = *entry.Codename
-	}
-
+	// Note: We intentionally don't include codename in the handle because
+	// endoflife.date uses full names like "Noble Numbat" while the DB uses
+	// short lowercase names like "noble". Version matching is sufficient.
 	return &grypeDB.OperatingSystemEOLHandle{
 		Name:         distroName,
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
-		Codename:     codename,
 		EOLDate:      eolDate,
 		EOASDate:     eoasDate,
 	}
 }
 
 // parseVersion extracts major and minor version from a cycle string.
+// Normalizes versions by stripping leading zeros (e.g., "04" -> "4")
+// to match the format used in the vulnerability database.
 func parseVersion(cycle string) (major, minor string) {
 	parts := strings.Split(cycle, ".")
 	if len(parts) >= 1 {
-		major = parts[0]
+		major = normalizeVersion(parts[0])
 	}
 	if len(parts) >= 2 {
-		minor = parts[1]
+		minor = normalizeVersion(parts[1])
 	}
 	return major, minor
+}
+
+// normalizeVersion strips leading zeros from a version string.
+func normalizeVersion(v string) string {
+	// Try to parse as integer to strip leading zeros
+	if i, err := strconv.Atoi(v); err == nil {
+		return strconv.Itoa(i)
+	}
+	return v
 }
