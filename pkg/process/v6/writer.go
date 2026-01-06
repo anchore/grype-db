@@ -117,6 +117,8 @@ func (w *writer) writeRelatedEntry(vulnHandle *grypeDB.VulnerabilityHandle, rela
 		return w.store.AddEpss(&row)
 	case grypeDB.CWEHandle:
 		return w.store.AddCWE(&row)
+	case grypeDB.OperatingSystemEOLHandle:
+		return w.writeOperatingSystemEOL(row)
 	default:
 		return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
 	}
@@ -300,4 +302,24 @@ func ensureFixDates(row *grypeDB.AffectedPackageHandle) error {
 
 func isFixVersion(v string) bool {
 	return v != "" && v != "0" && strings.ToLower(v) != "none"
+}
+
+func (w *writer) writeOperatingSystemEOL(row grypeDB.OperatingSystemEOLHandle) error {
+	spec := grypeDB.OSSpecifier{
+		Name:         row.Name,
+		MajorVersion: row.MajorVersion,
+		MinorVersion: row.MinorVersion,
+		LabelVersion: row.Codename,
+	}
+
+	updated, err := w.store.UpdateOperatingSystemEOL(spec, row.EOLDate, row.EOASDate)
+	if err != nil {
+		return fmt.Errorf("unable to update OS EOL data: %w", err)
+	}
+
+	if updated == 0 {
+		log.WithFields("os", row.String()).Trace("no OS record found to update with EOL data")
+	}
+
+	return nil
 }
