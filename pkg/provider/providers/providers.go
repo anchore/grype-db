@@ -14,6 +14,7 @@ var ErrNoProviders = fmt.Errorf("no providers configured")
 
 func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Providers, error) {
 	var providers []provider.Provider
+	var eolProviders []provider.Provider
 
 	if vCfg.GenerateConfigs {
 		generatedCfgs, err := vunnel.GenerateConfigs(root, vCfg)
@@ -32,13 +33,20 @@ func New(root string, vCfg vunnel.Config, cfgs ...provider.Config) (provider.Pro
 		if err != nil {
 			return nil, err
 		}
-		if p.ID().Name == "nvd" {
+		switch p.ID().Name {
+		case "nvd":
 			// it is important that NVD is processed first since other providers depend on the severity information from these records
 			providers = append([]provider.Provider{p}, providers...)
-		} else {
+		case "eol":
+			// EOL provider must run last since it needs OperatingSystem records to exist (created by other providers)
+			eolProviders = append(eolProviders, p)
+		default:
 			providers = append(providers, p)
 		}
 	}
+
+	// append EOL providers at the end
+	providers = append(providers, eolProviders...)
 
 	return providers, nil
 }
