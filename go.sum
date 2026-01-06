@@ -468,8 +468,6 @@ github.com/gobwas/pool v0.2.1/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6Wezm
 github.com/gobwas/ws v1.2.1/go.mod h1:hRKAFb8wOxFROYNsT1bqfWnhX+b5MFeJM9r2ZSwg/KY=
 github.com/goccy/go-yaml v1.19.0 h1:EmkZ9RIsX+Uq4DYFowegAuJo8+xdX3T/2dwNPXbxEYE=
 github.com/goccy/go-yaml v1.19.0/go.mod h1:XBurs7gK8ATbW4ZPGKgcbrY1Br56PdM69F7LkFRi1kA=
-github.com/gocsaf/csaf/v3 v3.5.0 h1:tj8l1vK2V8GwjCh3axwKF/yJ9d28xuFn3NsZDdPSkJ8=
-github.com/gocsaf/csaf/v3 v3.5.0/go.mod h1:JKOjRGPvEFalUm5u2vP1itqqgUaojWTpBtGlhEUI7g0=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
@@ -999,6 +997,8 @@ github.com/wagoodman/go-partybus v0.0.0-20230516145632-8ccac152c651 h1:jIVmlAFIq
 github.com/wagoodman/go-partybus v0.0.0-20230516145632-8ccac152c651/go.mod h1:b26F2tHLqaoRQf8DywqzVaV1MQ9yvjb0OMcNl7Nxu20=
 github.com/wagoodman/go-progress v0.0.0-20230925121702-07e42b3cdba0 h1:0KGbf+0SMg+UFy4e1A/CPVvXn21f1qtWdeJwxZFoQG8=
 github.com/wagoodman/go-progress v0.0.0-20230925121702-07e42b3cdba0/go.mod h1:jLXFoL31zFaHKAAyZUh+sxiTDFe1L1ZHrcK2T1itVKA=
+github.com/willmurphyscode/csaf/v3 v3.0.0-20251218131956-45fe87e833e6 h1:VPxdhU5g8H9lJzn+F/VXD2M0Xb3ELb5sKzEgUOYhzqM=
+github.com/willmurphyscode/csaf/v3 v3.0.0-20251218131956-45fe87e833e6/go.mod h1:JKOjRGPvEFalUm5u2vP1itqqgUaojWTpBtGlhEUI7g0=
 github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM=
 github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
 github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb h1:zGWFAtiMcyryUHoUjUJX0/lt1H2+i2Ka2n+D3DImSNo=

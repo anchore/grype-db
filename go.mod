@@ -323,3 +323,5 @@ replace modernc.org/sqlite v1.33.0 => modernc.org/sqlite v1.32.0
 
 // the go.mod file did not have the correct minimum go version at the time of release tagging
 retract v0.30.0
+
+replace github.com/gocsaf/csaf/v3 => github.com/willmurphyscode/csaf/v3 v3.0.0-20251218131956-45fe87e833e6
