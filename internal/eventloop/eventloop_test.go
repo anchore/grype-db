@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/wagoodman/go-partybus"
 
+	"github.com/anchore/grype-db/internal/bus/event"
 	"github.com/anchore/grype-db/internal/ui"
-	"github.com/anchore/grype-db/pkg/event"
 )
 
 var _ ui.UI = (*uiMock)(nil)

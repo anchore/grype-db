@@ -14,8 +14,8 @@ import (
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype-db/pkg/provider/entry"
+	"github.com/anchore/grype/grype/db/provider"
+	"github.com/anchore/grype/grype/db/provider/entry"
 )
 
 var _ options.Interface = &cacheStatusConfig{}

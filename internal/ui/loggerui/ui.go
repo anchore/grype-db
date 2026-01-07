@@ -11,8 +11,8 @@ import (
 	"github.com/wagoodman/go-progress"
 
 	"github.com/anchore/go-logger"
+	"github.com/anchore/grype-db/internal/bus/event"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/event"
 )
 
 type UI struct {

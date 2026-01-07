@@ -16,7 +16,7 @@ package bus
 import (
 	"github.com/wagoodman/go-partybus"
 
-	"github.com/anchore/grype-db/pkg/event"
+	"github.com/anchore/grype-db/internal/bus/event"
 )
 
 var publisher partybus.Publisher
