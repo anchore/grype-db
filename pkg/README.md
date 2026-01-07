@@ -1,0 +1,1 @@
+Note: all implementation has been moved to anchore/grype under the grype/db package.

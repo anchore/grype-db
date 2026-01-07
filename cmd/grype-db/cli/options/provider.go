@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/anchore/grype-db/pkg/provider"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/pull"
 )
 
 var _ Interface = &Provider{}
@@ -15,11 +15,11 @@ type Provider struct {
 
 	// unbound options
 	Store   `yaml:",inline" mapstructure:",squash"`
-	Vunnel  Vunnel            `yaml:"vunnel" json:"vunnel" mapstructure:"vunnel"`
-	Configs []provider.Config `yaml:"configs" json:"configs" mapstructure:"configs"`
+	Vunnel  Vunnel                   `yaml:"vunnel" json:"vunnel" mapstructure:"vunnel"`
+	Configs []pull.ProviderRunConfig `yaml:"configs" json:"configs" mapstructure:"configs"`
 }
 
-func (o Provider) Redact() {
+func (o *Provider) Redact() {
 	o.Vunnel.Redact()
 	for _, v := range o.Configs {
 		v.Redact()
