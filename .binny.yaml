@@ -63,6 +63,14 @@ tools:
     with:
       repo: cli/cli
 
+  # used for running all local and CI tasks
+  - name: task
+    version:
+      want: v3.46.3
+    method: github-release
+    with:
+      repo: go-task/task
+
   # used to upload test fixture cache
   - name: oras
     version:
