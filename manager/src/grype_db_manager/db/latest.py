@@ -153,7 +153,7 @@ def smoke_test(
 
         # make the archive available at the expected location via symlink
         archive_dest = os.path.join(sub_path, test_latest.path)
-        os.link(archive_path, archive_dest)
+        os.symlink(archive_path, archive_dest)
 
         # ensure grype can perform a db update for all supported schema versions. Note: we are only testing the
         # latest.json for the DB is usable (the download succeeds and grype and the update process, which does
