@@ -20,6 +20,7 @@ SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --snapshot
 CHRONICLE_CMD = $(TOOL_DIR)/chronicle
 GLOW_CMD = $(TOOL_DIR)/glow
 ORAS = $(TOOL_DIR)/oras
+ORAS_FLAGS = $(if $(filter true,$(CI)),--no-tty,)
 BOUNCER = $(TOOL_DIR)/bouncer
 CRANE = $(TOOL_DIR)/crane
 
@@ -211,7 +212,10 @@ ci-oras-ghcr-login:
 .PHONY: download-provider-cache
 download-provider-cache:
 	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path grype-db-cache-$(provider).tar.gz && rm -f grype-db-cache-$(provider).tar.gz || (echo 'no data cache found for today' && exit 1)"
+	@mkdir -p .cache/vunnel/$(provider)
+	@bash -c "$(ORAS) pull $(ORAS_FLAGS) $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) --output .cache/vunnel/$(provider) || (echo 'no data cache found for today' && exit 1)"
+	$(GRYPE_DB) cache restore --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz
+	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: refresh-provider-cache
 refresh-provider-cache:
@@ -222,12 +226,13 @@ refresh-provider-cache:
 upload-provider-cache: ci-check
 	$(call title,Uploading "$(provider)" existing provider data cache)
 
-	@rm -f grype-db-cache-$(provider).tar.gz
+	@mkdir -p .cache/vunnel/$(provider)
+	@rm -f .cache/vunnel/$(provider)/grype-db-cache.tar.gz
 	$(GRYPE_DB) cache status -p $(provider)
-	$(GRYPE_DB) cache backup -v --path grype-db-cache-$(provider).tar.gz -p $(provider)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) grype-db-cache-$(provider).tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(GRYPE_DB) cache backup -v --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz -p $(provider)
+	$(ORAS) push $(ORAS_FLAGS) -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) .cache/vunnel/$(provider)/grype-db-cache.tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
-	@rm -f grype-db-cache-$(provider).tar.gz
+	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: download-all-provider-cache
 download-all-provider-cache:
