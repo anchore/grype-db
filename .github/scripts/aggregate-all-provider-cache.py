@@ -14,7 +14,7 @@ def get_providers():
     if not output:
         print("invoking grype-db to get list of providers to use")
         result = subprocess.run(
-            "make show-providers",
+            "make -s show-providers",
             shell=True, check=True,
             stdout=subprocess.PIPE, stderr=sys.stderr
         )
