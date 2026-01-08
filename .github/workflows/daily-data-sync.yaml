@@ -168,38 +168,3 @@ jobs:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
 
-  aggregate-cache:
-    name: "Aggregate provider cache"
-    runs-on: runs-on=${{ github.run_id }}/runner=large
-    if: ${{ always() }}
-    needs:
-      - update-provider
-      - update-provider-multicore
-      - discover-providers
-    # set the permissions granted to the github token to read the pull cache from ghcr.io
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
-        with:
-          persist-credentials: false
-
-      - name: Bootstrap environment
-        uses: ./.github/actions/bootstrap
-        with:
-          python: false
-
-      - name: Login to ghcr.io
-        run: make ci-oras-ghcr-login
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_USERNAME: ${{ github.actor }}
-
-      - name: Aggregate vulnerability data
-        run: make aggregate-all-provider-cache
-        env:
-          PROVIDERS_USED: ${{ needs.discover-providers.outputs.providers }}
-
-      - name: Upload vulnerability data cache image
-        run: make upload-all-provider-cache

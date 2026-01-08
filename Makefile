@@ -211,7 +211,7 @@ ci-oras-ghcr-login:
 .PHONY: download-provider-cache
 download-provider-cache:
 	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path grype-db-cache-$(provider).tar.gz && rm -f grype-db-cache-$(provider).tar.gz || (echo 'no data cache found for today' && exit 1)"
 
 .PHONY: refresh-provider-cache
 refresh-provider-cache:
@@ -222,33 +222,17 @@ refresh-provider-cache:
 upload-provider-cache: ci-check
 	$(call title,Uploading "$(provider)" existing provider data cache)
 
-	@rm -f $(DB_ARCHIVE)
+	@rm -f grype-db-cache-$(provider).tar.gz
 	$(GRYPE_DB) cache status -p $(provider)
-	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(GRYPE_DB) cache backup -v --path grype-db-cache-$(provider).tar.gz -p $(provider)
+	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) grype-db-cache-$(provider).tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
-
-.PHONY: aggregate-all-provider-cache
-aggregate-all-provider-cache:
-	$(call title,Aggregating all of todays provider data cache)
-	.github/scripts/aggregate-all-provider-cache.py
-
-.PHONY: upload-all-provider-cache
-upload-all-provider-cache: ci-check
-	$(call title,Uploading existing provider data cache)
-
-	@rm -f $(DB_ARCHIVE)
-	$(GRYPE_DB) cache status
-	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
-
+	@rm -f grype-db-cache-$(provider).tar.gz
 
 .PHONY: download-all-provider-cache
 download-all-provider-cache:
-	$(call title,Downloading and restoring all of todays provider data cache)
-	@rm -f $(DB_ARCHIVE)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	$(call title,Downloading and restoring all provider data caches)
+	.github/scripts/aggregate-all-provider-cache.py
 
 
 ## Code and data generation targets #################################

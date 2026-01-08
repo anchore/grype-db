@@ -19,7 +19,7 @@ CLAUDE.md
 /go.work.sum
 
 # tools
-.mise.toml
+mise.toml
 .tool
 
 # default data directories
@@ -28,6 +28,8 @@ CLAUDE.md
 .yardstick
 .grype-db-manager
 /tmp
+/specs
+/hack
 
 /grype-db
 /build
