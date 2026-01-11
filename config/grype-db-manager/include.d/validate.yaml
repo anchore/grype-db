@@ -22,6 +22,7 @@ expected-providers:
   - nvd
   - oracle
   - rhel
+  - secureos
   - sles
   - ubuntu
   - wolfi
