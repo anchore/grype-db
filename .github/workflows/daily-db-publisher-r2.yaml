@@ -105,7 +105,7 @@ jobs:
           text: Publishing the Grype DB has failed (schema ${{ matrix.schema-version }})
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
   publish-listing-file:
     # fun! https://github.com/actions/runner/issues/491#issuecomment-850884422
@@ -153,7 +153,7 @@ jobs:
           text: Publishing the Grype DB listing file has failed
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
   sync-listing-file-to-s3:
     name: "Sync listing file to S3"
