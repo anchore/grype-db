@@ -302,6 +302,10 @@ func getOSInfo(group string) osInfo {
 func normalizeOsName(id string) string {
 	d, ok := distro.IDMapping[id]
 	if !ok {
+		// check aliases (e.g., "archlinux" is an alias for "arch")
+		d, ok = distro.AliasTypes[id]
+	}
+	if !ok {
 		log.WithFields("distro", id).Warn("unknown distro name")
 
 		return id
