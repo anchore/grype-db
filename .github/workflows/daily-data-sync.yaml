@@ -103,7 +103,7 @@ jobs:
           text: Daily Data Sync for ${{ matrix.provider }} failed
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
       - name: Upload the provider workspace state
         # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
@@ -159,7 +159,7 @@ jobs:
           text: Daily Data Sync for ${{ matrix.provider }} failed
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
       - name: Upload the provider workspace state
         # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
