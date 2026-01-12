@@ -20,6 +20,7 @@ SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --snapshot
 CHRONICLE_CMD = $(TOOL_DIR)/chronicle
 GLOW_CMD = $(TOOL_DIR)/glow
 ORAS = $(TOOL_DIR)/oras
+ORAS_FLAGS = $(if $(filter true,$(CI)),--no-tty,)
 BOUNCER = $(TOOL_DIR)/bouncer
 CRANE = $(TOOL_DIR)/crane
 
@@ -211,7 +212,9 @@ ci-oras-ghcr-login:
 .PHONY: download-provider-cache
 download-provider-cache:
 	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	@bash -c "$(ORAS) pull $(ORAS_FLAGS) $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) || (echo 'no data cache found for today' && exit 1)"
+	$(GRYPE_DB) cache restore --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz
+	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: refresh-provider-cache
 refresh-provider-cache:
@@ -222,33 +225,18 @@ refresh-provider-cache:
 upload-provider-cache: ci-check
 	$(call title,Uploading "$(provider)" existing provider data cache)
 
-	@rm -f $(DB_ARCHIVE)
+	@mkdir -p .cache/vunnel/$(provider)
+	@rm -f .cache/vunnel/$(provider)/grype-db-cache.tar.gz
 	$(GRYPE_DB) cache status -p $(provider)
-	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(GRYPE_DB) cache backup -v --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz -p $(provider)
+	$(ORAS) push $(ORAS_FLAGS) -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) .cache/vunnel/$(provider)/grype-db-cache.tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
-
-.PHONY: aggregate-all-provider-cache
-aggregate-all-provider-cache:
-	$(call title,Aggregating all of todays provider data cache)
-	.github/scripts/aggregate-all-provider-cache.py
-
-.PHONY: upload-all-provider-cache
-upload-all-provider-cache: ci-check
-	$(call title,Uploading existing provider data cache)
-
-	@rm -f $(DB_ARCHIVE)
-	$(GRYPE_DB) cache status
-	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
-
+	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: download-all-provider-cache
 download-all-provider-cache:
-	$(call title,Downloading and restoring all of todays provider data cache)
-	@rm -f $(DB_ARCHIVE)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	$(call title,Downloading and restoring all provider data caches)
+	.github/scripts/aggregate-all-provider-cache.py
 
 
 ## Code and data generation targets #################################
