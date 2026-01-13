@@ -57,7 +57,7 @@ jobs:
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
     needs: discover-schema-versions
-    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/family=i7i/cpu=4+16/ram=32+128
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
@@ -105,7 +105,7 @@ jobs:
           text: Publishing the Grype DB has failed (schema ${{ matrix.schema-version }})
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
   publish-listing-file:
     # fun! https://github.com/actions/runner/issues/491#issuecomment-850884422
@@ -153,7 +153,7 @@ jobs:
           text: Publishing the Grype DB listing file has failed
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
   sync-listing-file-to-s3:
     name: "Sync listing file to S3"
