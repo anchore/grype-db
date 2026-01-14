@@ -1,0 +1,43 @@
+name: "Incremental Data Sync"
+on:
+  # allow for kicking off incremental syncs manually
+  workflow_dispatch:
+
+  # run 8 and 16 hours after the daily sync (which runs at midnight UTC)
+  schedule:
+    - cron: "0 8 * * *"
+    - cron: "0 16 * * *"
+
+permissions: {}
+
+jobs:
+  discover-incremental-providers:
+    name: "Discover incremental providers"
+    runs-on: ubuntu-latest
+    if: github.repository == 'anchore/grype-db' # only run for main repo
+    permissions:
+      contents: read
+    outputs:
+      providers: ${{ steps.get-providers.outputs.providers }}
+    steps:
+      - name: Get incremental providers
+        id: get-providers
+        run: |
+          # Use vunnel (via Docker) to list providers tagged as incremental
+          # Convert JSON array to comma-separated string for the called workflow
+          json_list=$(docker run --rm ghcr.io/anchore/vunnel:latest list --tag incremental -o json)
+          csv_list=$(echo "$json_list" | jq -r 'join(",")')
+          echo "providers=$csv_list" >> $GITHUB_OUTPUT
+
+  sync-providers:
+    name: "Sync incremental providers"
+    needs: discover-incremental-providers
+    if: needs.discover-incremental-providers.outputs.providers != ''
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/daily-data-sync.yaml
+    with:
+      providers: ${{ needs.discover-incremental-providers.outputs.providers }}
+    secrets:
+      SLACK_TOOLBOX_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}

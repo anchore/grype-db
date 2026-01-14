@@ -35,12 +35,12 @@ def download_provider(provider: str, status: dict, lock: threading.Lock, verbose
     try:
         if verbose:
             subprocess.run(
-                f"make download-provider-cache provider={provider}",
+                f"make download-provider-cache provider={provider} date=latest",
                 shell=True, check=True,
             )
         else:
             subprocess.run(
-                f"make download-provider-cache provider={provider}",
+                f"make download-provider-cache provider={provider} date=latest",
                 shell=True, check=True,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
