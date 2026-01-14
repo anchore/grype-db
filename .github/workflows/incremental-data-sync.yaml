@@ -24,9 +24,9 @@ jobs:
         id: get-providers
         run: |
           # Use vunnel (via Docker) to list providers tagged as incremental
-          # Convert JSON array to comma-separated string for the called workflow
+          # Output is array of objects like [{"name": "nvd", ...}], extract names and join
           json_list=$(docker run --rm ghcr.io/anchore/vunnel:latest list --tag incremental -o json)
-          csv_list=$(echo "$json_list" | jq -r 'join(",")')
+          csv_list=$(echo "$json_list" | jq -r '[.providers[].name] | join(",")')
           echo "providers=$csv_list" >> $GITHUB_OUTPUT
 
   sync-providers:
