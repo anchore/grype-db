@@ -9,6 +9,18 @@ on:
         default: ''
         type: string
 
+  # allow other workflows to call this one
+  workflow_call:
+    inputs:
+      providers:
+        description: 'Comma-separated list of providers to sync. Leave empty to sync all providers.'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      SLACK_TOOLBOX_WEBHOOK_URL:
+        required: false
+
   # run midnight (UTC) daily
   schedule:
     - cron: "0 0 * * *"
@@ -47,11 +59,12 @@ jobs:
 
       - name: Read configured providers
         id: read-providers
+        env:
+          INPUT_PROVIDERS: ${{ inputs.providers }}
         run: |
-          input_providers="${{ inputs.providers }}"
-          if [ -n "$input_providers" ]; then
+          if [ -n "$INPUT_PROVIDERS" ]; then
             # Convert comma-separated input to JSON array
-            content=$(echo "$input_providers" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | jq -R . | jq -s -c .)
+            content=$(echo "$INPUT_PROVIDERS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | jq -R . | jq -s -c .)
           else
             # Use all configured providers
             content=$(make show-providers)
