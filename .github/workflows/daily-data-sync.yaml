@@ -2,6 +2,12 @@ name: "Daily Data Sync"
 on:
   # allow for kicking off data syncs manually
   workflow_dispatch:
+    inputs:
+      providers:
+        description: 'Comma-separated list of providers to sync (e.g., "nvd,github,alpine"). Leave empty to sync all providers.'
+        required: false
+        default: ''
+        type: string
 
   # run midnight (UTC) daily
   schedule:
@@ -41,9 +47,15 @@ jobs:
 
       - name: Read configured providers
         id: read-providers
-        # TODO: honor CI overrides
         run: |
-          content=`make show-providers`
+          input_providers="${{ inputs.providers }}"
+          if [ -n "$input_providers" ]; then
+            # Convert comma-separated input to JSON array
+            content=$(echo "$input_providers" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | jq -R . | jq -s -c .)
+          else
+            # Use all configured providers
+            content=$(make show-providers)
+          fi
           echo "providers=$content" >> $GITHUB_OUTPUT
 
       - name: Split providers by concurrency needs
