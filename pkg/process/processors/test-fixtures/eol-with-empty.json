@@ -1,23 +1,24 @@
 [
   {
     "product": "",
-    "cycle": "",
-    "is_eol": false,
-    "is_maintained": false
+    "identifiers": [],
+    "name": "",
+    "isEol": false,
+    "isMaintained": false
   },
   {
     "product": "alpine",
-    "cycle": "3.18",
+    "identifiers": [],
+    "name": "3.18",
     "codename": null,
     "label": "3.18",
-    "release_date": "2023-05-09",
-    "is_lts": false,
-    "lts_from": null,
-    "is_eoas": false,
-    "eoas_from": null,
-    "is_eol": false,
-    "eol_from": "2025-05-09",
-    "is_maintained": true,
-    "identifiers": []
+    "releaseDate": "2023-05-09",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": null,
+    "isEol": false,
+    "eolFrom": "2025-05-09",
+    "isMaintained": true
   }
 ]

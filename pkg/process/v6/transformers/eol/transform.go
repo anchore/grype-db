@@ -47,7 +47,7 @@ var supportedDistros = map[string]bool{
 }
 
 // Transform converts an EOL record into entries for the database.
-func Transform(entry unmarshal.EOLRecord, state provider.State) ([]data.Entry, error) {
+func Transform(entry unmarshal.EndOfLifeDateRelease, state provider.State) ([]data.Entry, error) {
 	productName := entry.ProductName()
 	distroName := translateProductName(productName)
 
@@ -74,9 +74,9 @@ func translateProductName(product string) string {
 }
 
 // getOperatingSystemEOL creates an OperatingSystemEOLHandle from an EOL record.
-func getOperatingSystemEOL(entry unmarshal.EOLRecord, distroName string) *grypeDB.OperatingSystemEOLHandle {
-	// Parse version from cycle (e.g., "12", "22.04", "8.5")
-	majorVersion, minorVersion := parseVersion(entry.Cycle)
+func getOperatingSystemEOL(entry unmarshal.EndOfLifeDateRelease, distroName string) *grypeDB.OperatingSystemEOLHandle {
+	// Parse version from name (e.g., "12", "22.04", "8.5")
+	majorVersion, minorVersion := parseVersion(entry.Name)
 
 	// Parse EOL dates
 	var eolDate, eoasDate *time.Time

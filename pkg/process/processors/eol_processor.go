@@ -23,7 +23,7 @@ func NewV2EOLProcessor(transformer data.EOLTransformerV2) data.Processor {
 func (p eolProcessor) Process(reader io.Reader, state provider.State) ([]data.Entry, error) {
 	var results []data.Entry
 
-	entries, err := unmarshal.EOLRecordEntries(reader)
+	entries, err := unmarshal.EndOfLifeDateReleaseEntries(reader)
 	if err != nil {
 		return nil, err
 	}
