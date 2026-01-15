@@ -8,6 +8,7 @@ listing:
 expected-providers:
   - alma
   - alpine
+  - arch
   - amazon
   - bitnami
   - chainguard

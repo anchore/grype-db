@@ -13,6 +13,7 @@ provider:
     - name: nvd
     - name: alpine
     - name: alma
+    - name: arch
     - name: amazon
     - name: bitnami
     - name: chainguard
