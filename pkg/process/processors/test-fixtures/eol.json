@@ -1,32 +1,32 @@
 [
   {
     "product": "ubuntu",
-    "cycle": "22.04",
+    "identifiers": [],
+    "name": "22.04",
     "codename": "Jammy Jellyfish",
     "label": "22.04 LTS (Jammy Jellyfish)",
-    "release_date": "2022-04-21",
-    "is_lts": true,
-    "lts_from": "2022-04-21",
-    "is_eoas": false,
-    "eoas_from": null,
-    "is_eol": false,
-    "eol_from": "2027-04-01",
-    "is_maintained": true,
-    "identifiers": []
+    "releaseDate": "2022-04-21",
+    "isLts": true,
+    "ltsFrom": "2022-04-21",
+    "isEoas": false,
+    "eoasFrom": null,
+    "isEol": false,
+    "eolFrom": "2027-04-01",
+    "isMaintained": true
   },
   {
     "product": "debian",
-    "cycle": "11",
+    "identifiers": [],
+    "name": "11",
     "codename": "Bullseye",
     "label": "11 (Bullseye)",
-    "release_date": "2021-08-14",
-    "is_lts": false,
-    "lts_from": null,
-    "is_eoas": false,
-    "eoas_from": null,
-    "is_eol": false,
-    "eol_from": "2026-08-14",
-    "is_maintained": true,
-    "identifiers": []
+    "releaseDate": "2021-08-14",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": null,
+    "isEol": false,
+    "eolFrom": "2026-08-14",
+    "isMaintained": true
   }
 ]

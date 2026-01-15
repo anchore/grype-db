@@ -12,7 +12,7 @@ import (
 	"github.com/anchore/grype-db/pkg/provider/unmarshal"
 )
 
-func mockEOLProcessorTransform(entry unmarshal.EOLRecord, state provider.State) ([]data.Entry, error) {
+func mockEOLProcessorTransform(entry unmarshal.EndOfLifeDateRelease, state provider.State) ([]data.Entry, error) {
 	return []data.Entry{
 		{
 			DBSchemaVersion: 0,
@@ -35,17 +35,17 @@ func TestEOLProcessor_Process(t *testing.T) {
 	assert.Len(t, entries, 2)
 
 	// Verify first entry is ubuntu
-	entry0, ok := entries[0].Data.(unmarshal.EOLRecord)
+	entry0, ok := entries[0].Data.(unmarshal.EndOfLifeDateRelease)
 	require.True(t, ok)
 	assert.Equal(t, "ubuntu", entry0.Product)
-	assert.Equal(t, "22.04", entry0.Cycle)
+	assert.Equal(t, "22.04", entry0.Name)
 	assert.True(t, entry0.IsLTS)
 
 	// Verify second entry is debian
-	entry1, ok := entries[1].Data.(unmarshal.EOLRecord)
+	entry1, ok := entries[1].Data.(unmarshal.EndOfLifeDateRelease)
 	require.True(t, ok)
 	assert.Equal(t, "debian", entry1.Product)
-	assert.Equal(t, "11", entry1.Cycle)
+	assert.Equal(t, "11", entry1.Name)
 }
 
 func TestEOLProcessor_Process_EmptyEntry(t *testing.T) {
@@ -62,7 +62,7 @@ func TestEOLProcessor_Process_EmptyEntry(t *testing.T) {
 	assert.NoError(t, err)
 	// Should only have 1 entry (empty one filtered out)
 	assert.Len(t, entries, 1)
-	entry, ok := entries[0].Data.(unmarshal.EOLRecord)
+	entry, ok := entries[0].Data.(unmarshal.EndOfLifeDateRelease)
 	require.True(t, ok)
 	assert.Equal(t, "alpine", entry.Product)
 }

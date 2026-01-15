@@ -5,7 +5,14 @@ import "io"
 // EndOfLifeDateRelease represents a single release entry from the endoflife.date API v1.
 // This matches the ProductRelease schema with camelCase field names.
 // Ref: https://endoflife.date/api/v1/products/{product}
+//
+// Note: Product and Identifiers are denormalized from the parent product by vunnel.
 type EndOfLifeDateRelease struct {
+	// Denormalized fields added by vunnel
+	Product     string                    `json:"product"`
+	Identifiers []EndOfLifeDateIdentifier `json:"identifiers"`
+
+	// Fields from endoflife.date ProductRelease schema
 	Name         string                 `json:"name"`
 	Codename     *string                `json:"codename"`
 	Label        string                 `json:"label"`
@@ -73,7 +80,12 @@ type EndOfLifeDateProduct struct {
 
 // IsEmpty returns true if the release has no meaningful data.
 func (e EndOfLifeDateRelease) IsEmpty() bool {
-	return e.Name == ""
+	return e.Product == ""
+}
+
+// ProductName returns the product name from the release.
+func (e EndOfLifeDateRelease) ProductName() string {
+	return e.Product
 }
 
 // EndOfLifeDateReleaseEntries unmarshals EndOfLifeDateRelease records from a reader.
