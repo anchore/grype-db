@@ -32,26 +32,47 @@ def download_provider(provider: str, status: dict, lock: threading.Lock, verbose
     with lock:
         status[provider] = "downloading"
 
-    try:
-        if verbose:
-            subprocess.run(
-                f"make download-provider-cache provider={provider} date=latest",
-                shell=True, check=True,
-            )
-        else:
-            subprocess.run(
-                f"make download-provider-cache provider={provider} date=latest",
-                shell=True, check=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-        with lock:
-            status[provider] = "done"
-        return (provider, True, "success")
+    cmd = f"make download-provider-cache provider={provider} date=latest"
+    max_attempts = 2
+    last_error = None
 
-    except subprocess.CalledProcessError as e:
-        with lock:
-            status[provider] = "failed"
-        return (provider, False, str(e))
+    for attempt in range(max_attempts):
+        try:
+            # Always capture stderr so we can include it in error messages.
+            # In verbose mode, let stdout go to terminal; in quiet mode, capture both.
+            if verbose:
+                subprocess.run(cmd, shell=True, check=True, stderr=subprocess.PIPE)
+            else:
+                subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            with lock:
+                status[provider] = "done"
+            return (provider, True, "success")
+
+        except subprocess.CalledProcessError as e:
+            last_error = e
+            if attempt < max_attempts - 1:
+                # Log retry attempt, then try again
+                with lock:
+                    status[provider] = "retrying"
+                time.sleep(2)
+
+    # All attempts failed
+    with lock:
+        status[provider] = "failed"
+    # Extract the actual error output from the exception (truncate to avoid massive logs)
+    max_output_len = 2000
+    error_details = []
+    if last_error.stderr:
+        stderr_text = last_error.stderr.decode(errors='replace') if isinstance(last_error.stderr, bytes) else last_error.stderr
+        stderr_text = stderr_text.strip().replace('\n', '; ')[:max_output_len]
+        error_details.append(f"stderr: {stderr_text}")
+    if last_error.stdout:
+        stdout_text = last_error.stdout.decode(errors='replace') if isinstance(last_error.stdout, bytes) else last_error.stdout
+        stdout_text = stdout_text.strip().replace('\n', '; ')[:max_output_len]
+        error_details.append(f"stdout: {stdout_text}")
+    if error_details:
+        return (provider, False, f"exit code {last_error.returncode} (after {max_attempts} attempts): {'; '.join(error_details)}")
+    return (provider, False, f"exit code {last_error.returncode} (after {max_attempts} attempts, no output captured)")
 
 
 def progress_reporter(status: dict, lock: threading.Lock, stop_event: threading.Event, total: int):
@@ -65,10 +86,12 @@ def progress_reporter(status: dict, lock: threading.Lock, stop_event: threading.
             done = sum(1 for s in status.values() if s == "done")
             failed = sum(1 for s in status.values() if s == "failed")
             in_progress = [p for p, s in status.items() if s == "downloading"]
+            retrying = [p for p, s in status.items() if s == "retrying"]
 
         completed = done + failed
-        if in_progress:
-            print(f"[progress] {completed}/{total} complete, downloading: {', '.join(sorted(in_progress))}")
+        active = sorted(in_progress + [f"{p} (retry)" for p in retrying])
+        if active:
+            print(f"[progress] {completed}/{total} complete, downloading: {', '.join(active)}")
 
 
 def main():
