@@ -73,10 +73,11 @@ jobs:
 
       - name: Split providers by concurrency needs
         id: split-providers
+        env:
+          ALL_PROVIDERS: ${{ steps.read-providers.outputs.providers }}
         run: |
-          all_providers='${{ steps.read-providers.outputs.providers }}'
-          multicore_providers=$(echo "$all_providers" | jq -c '[.[] | select(. == "ubuntu")]')
-          other_providers=$(echo "$all_providers" | jq -c '[.[] | select(. != "ubuntu")]')
+          multicore_providers=$(echo "$ALL_PROVIDERS" | jq -c '[.[] | select(. == "ubuntu")]')
+          other_providers=$(echo "$ALL_PROVIDERS" | jq -c '[.[] | select(. != "ubuntu")]')
           echo "multicore-providers=$multicore_providers" >> $GITHUB_OUTPUT
           echo "other-providers=$other_providers" >> $GITHUB_OUTPUT
 
