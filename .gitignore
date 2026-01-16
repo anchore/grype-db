@@ -40,6 +40,7 @@ listing.json
 .vscode/
 *.db
 *.db-journal
+*.xxh64
 !**/test-fixtures/**/*.db
 *.tar
 *tar.gz
