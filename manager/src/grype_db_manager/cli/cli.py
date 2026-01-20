@@ -17,9 +17,11 @@ from grype_db_manager.db.format import Format
 @click.version_option(package_name=package_name, message="%(prog)s %(version)s")
 @click.pass_context
 def cli(ctx: click.core.Context, verbosity: int, config_path: str | None) -> None:
-    import logging.config
+    # imported here to avoid configuring logging when this package is used as a library;
+    # logging setup should only occur when the CLI is the entry point
+    import logging.config  # noqa: PLC0415
 
-    import colorlog
+    import colorlog  # noqa: PLC0415
 
     ctx.obj = config.load(path=config_path, verbosity=verbosity)
 

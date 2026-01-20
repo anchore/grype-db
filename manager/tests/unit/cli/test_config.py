@@ -150,6 +150,7 @@ validate:
         name: default
         referenceToolLabel: reference
         requiredNamespaces: []
+        yearFromCveOnly: null
       grype:
         config: ''
       images:
