@@ -39,3 +39,8 @@ updates:
       - "dependencies"
     cooldown:
       default-days: 7
+    groups:
+      python-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
