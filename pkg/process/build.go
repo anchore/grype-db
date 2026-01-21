@@ -3,7 +3,9 @@ package process
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -29,6 +31,7 @@ type BuildConfig struct {
 	InferNVDFixVersions  bool
 	Hydrate              bool
 	FailOnMissingFixDate bool // any fixes found without at least one available date will cause a build failure
+	BatchSize            int  // number of operations to batch before committing (default: 2000)
 }
 
 func Build(cfg BuildConfig) error {
@@ -96,11 +99,25 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 }
 
 func getWriter(cfg BuildConfig) (data.Writer, error) {
+	// Default to 2000 if batchSize is 0 (proven effective in vunnel)
+	// Can be overridden via GRYPE_DB_BATCH_SIZE environment variable for testing
+	batchSize := cfg.BatchSize
+	if batchSize == 0 {
+		if envSize := os.Getenv("GRYPE_DB_BATCH_SIZE"); envSize != "" {
+			if size, err := strconv.Atoi(envSize); err == nil && size > 0 {
+				batchSize = size
+			}
+		}
+	}
+	if batchSize == 0 {
+		batchSize = 2000
+	}
+
 	switch cfg.SchemaVersion {
 	case grypeDBv5.SchemaVersion:
-		return v5.NewWriter(cfg.Directory, cfg.Timestamp, cfg.States)
+		return v5.NewWriter(cfg.Directory, cfg.Timestamp, cfg.States, batchSize)
 	case grypeDBv6.ModelVersion:
-		return v6.NewWriter(cfg.Directory, cfg.States, cfg.FailOnMissingFixDate)
+		return v6.NewWriter(cfg.Directory, cfg.States, cfg.FailOnMissingFixDate, batchSize)
 	default:
 		return nil, fmt.Errorf("unable to create writer: unsupported schema version: %+v", cfg.SchemaVersion)
 	}
