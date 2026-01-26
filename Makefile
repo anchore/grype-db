@@ -211,8 +211,8 @@ ci-oras-ghcr-login:
 
 .PHONY: download-provider-cache
 download-provider-cache:
-	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "$(ORAS) pull $(ORAS_FLAGS) $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) || (echo 'no data cache found for today' && exit 1)"
+	$(call title,Downloading and restoring "$(provider)" provider data cache ($(date)))
+	@bash -c "$(ORAS) pull $(ORAS_FLAGS) $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) || (echo 'no data cache found for $(date)' && exit 1)"
 	$(GRYPE_DB) cache restore --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz
 	@rm -rf .cache/vunnel/$(provider)
 
