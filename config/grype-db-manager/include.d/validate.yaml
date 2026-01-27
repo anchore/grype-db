@@ -15,7 +15,6 @@ expected-providers:
   - chainguard-libraries
   - debian
   - echo
-  - eol
   - epss
   - github
   - kev
