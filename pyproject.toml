@@ -43,7 +43,7 @@ dev = [
     "pytest-xdist>=3.3.1",
     "ruff<1,>=0.0.282",
     "types-requests<3,>=2.31.0.2",
-    "moto<5,>=4.1.14",
+    "moto>=4.1.14,<6",
     "coverage[toml]<8.0.0,>=7.6.10",
     "uv-dynamic-versioning>=0.6.0",
 ]
