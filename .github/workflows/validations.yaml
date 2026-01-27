@@ -164,6 +164,23 @@ jobs:
           SCHEMA_VERSION: ${{ matrix.schema-version }}
         run: make db-acceptance schema="$SCHEMA_VERSION"
 
+  # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+  # and possibly in branch protection rules
+  Acceptance-Test-Gate:
+    name: "DB acceptance tests"
+    needs: Acceptance-Test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check acceptance test results
+        env:
+          ACCEPTANCE_RESULT: ${{ needs.Acceptance-Test.result }}
+        run: |
+          if [[ "$ACCEPTANCE_RESULT" != "success" ]]; then
+            echo "Acceptance tests failed with result: $ACCEPTANCE_RESULT"
+            exit 1
+          fi
+          echo "All acceptance tests passed"
 
   Cli-Go-Linux:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
