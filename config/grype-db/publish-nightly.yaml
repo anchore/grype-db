@@ -12,12 +12,15 @@ provider:
   configs:
     - name: nvd
     - name: alpine
+    - name: alma
+    - name: arch
     - name: amazon
     - name: bitnami
     - name: chainguard
     - name: chainguard-libraries
     - name: debian
     - name: echo
+    - name: eol
     - name: epss
     - name: github
     - name: kev
