@@ -80,6 +80,7 @@ validate:
     - mariner
     - minimos
     - nvd
+    - openeuler
     - oracle
     - rhel
     - sles
