@@ -9,7 +9,8 @@ var _ Interface = &CacheRestore{}
 
 type CacheRestore struct {
 	// bound options
-	DeleteExisting bool `yaml:"delete-existing" json:"delete-existing" mapstructure:"delete-existing"`
+	DeleteExisting bool   `yaml:"delete-existing" json:"delete-existing" mapstructure:"delete-existing"`
+	MaxFileSize    string `yaml:"max-file-size" json:"max-file-size" mapstructure:"max-file-size"`
 
 	// unbound options
 	// (none)
@@ -18,6 +19,7 @@ type CacheRestore struct {
 func DefaultCacheRestore() CacheRestore {
 	return CacheRestore{
 		DeleteExisting: false,
+		MaxFileSize:    "25GB",
 	}
 }
 
@@ -36,7 +38,7 @@ func (o *CacheRestore) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	}
 
 	// set default values for non-bound struct items
-	// (none)
+	v.SetDefault("restore.max-file-size", o.MaxFileSize)
 
 	return nil
 }

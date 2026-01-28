@@ -157,7 +157,7 @@ func TestHandleFile(t *testing.T) {
 			}
 			reader := bytes.NewReader([]byte(tt.content))
 
-			err := handleFile(fs, tt.path, reader)
+			err := handleFile(fs, tt.path, reader, 25*gb)
 			tt.wantErr(t, err)
 			if tt.verifyFunc != nil {
 				tt.verifyFunc(t, fs, tt.path, tt.content)
