@@ -94,6 +94,7 @@ class Validate:
             "nvd",
             "oracle",
             "rhel",
+            "secureos",
             "sles",
             "ubuntu",
             "wolfi",
