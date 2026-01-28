@@ -8,9 +8,9 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20250318195838-07ae343dd722
-	github.com/anchore/grype v0.107.0
+	github.com/anchore/grype v0.106.1-0.20260129173039-5fbfca858faf
 	github.com/anchore/packageurl-go v0.1.1-0.20250220190351-d62adb6e1115
-	github.com/anchore/syft v1.41.1
+	github.com/anchore/syft v1.41.0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dave/jennifer v1.7.1
 	github.com/dustin/go-humanize v1.0.1
