@@ -17,7 +17,7 @@ else
   title "Building DB"
 fi
 
-DB_ID=$(grype-db-manager -v db build --schema-version $SCHEMA_VERSION)
+DB_ID=$(grype-db-manager -v -c ./config/grype-db-manager/acceptance-pr.yaml db build --schema-version $SCHEMA_VERSION)
 
 if [ -z "$DB_ID" ]; then
   echo "Failed to create DB instance"
@@ -26,4 +26,4 @@ fi
 
 title "Validating DB"
 
-grype-db-manager -vv db validate $DB_ID
+grype-db-manager -vv -c ./config/grype-db-manager/acceptance-pr.yaml db validate $DB_ID
