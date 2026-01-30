@@ -92,7 +92,6 @@ v4_expected_namespaces = [
     "redhat:distro:redhat:7",
     "redhat:distro:redhat:8",
     "redhat:distro:redhat:9",
-    "secureos:distro:secureos:rolling",
     "sles:distro:sles:11",
     "sles:distro:sles:11.1",
     "sles:distro:sles:11.2",
