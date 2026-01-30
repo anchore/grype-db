@@ -28,6 +28,7 @@ provider:
     - name: minimos
     - name: oracle
     - name: rhel
+    - name: secureos
     - name: sles
     - name: ubuntu
     - name: wolfi

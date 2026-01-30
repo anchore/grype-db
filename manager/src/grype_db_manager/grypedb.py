@@ -191,6 +191,7 @@ v3_expected_namespaces = [
     "rhel:7",
     "rhel:8",
     "rhel:9",
+    "secureos:rolling",
     "sles:11",
     "sles:11.1",
     "sles:11.2",
