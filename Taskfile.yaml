@@ -1,0 +1,382 @@
+version: "3"
+
+vars:
+  OWNER: anchore
+  PROJECT: grype-db
+
+  # static file dirs
+  TOOL_DIR: .tool
+  TMP_DIR: .tmp
+  RESULTS_DIR: "{{ .TMP_DIR }}/results"
+
+  # used for changelog generation
+  CHANGELOG: CHANGELOG.md
+  NEXT_VERSION: VERSION
+
+  # used for snapshot builds
+  OS:
+    sh: uname -s | tr '[:upper:]' '[:lower:]'
+  ARCH:
+    sh: |
+      [ "$(uname -m)" = "x86_64" ] && echo "amd64_v1" || echo "$(uname -m)"
+  PROJECT_ROOT:
+    sh: echo $PWD
+  # note: the snapshot dir must be a relative path starting with ./
+  SNAPSHOT_DIR: ./snapshot
+  DIST_DIR: ./dist
+  SNAPSHOT_BIN: "{{ .PROJECT_ROOT }}/{{ .SNAPSHOT_DIR }}/{{ .OS }}-build_{{ .OS }}_{{ .ARCH }}/{{ .PROJECT }}"
+  SNAPSHOT_CMD: "{{ .TOOL_DIR }}/goreleaser release --config {{ .TMP_DIR }}/goreleaser.yaml --clean --snapshot --skip=publish"
+  RELEASE_CMD: "{{ .TOOL_DIR }}/goreleaser release --clean"
+  VERSION:
+    sh: git describe --dirty --always --tags
+
+  # data management
+  DB_ARCHIVE: ./grype-db-cache.tar.gz
+  GRYPE_DB: go run ./cmd/{{ .PROJECT }}/main.go -c config/grype-db/publish-nightly-r2.yaml
+  GRYPE_DB_DATA_IMAGE_NAME: ghcr.io/anchore/{{ .PROJECT }}/data
+  SOURCE_REPO_URL: https://github.com/anchore/grype-db
+  DATE:
+    sh: date -u +"%y-%m-%d"
+
+  # unit test coverage threshold (in % coverage)
+  COVERAGE_THRESHOLD: 41
+
+tasks:
+
+  ## High-level tasks #################################
+
+  default:
+    desc: Run all checks (linting, license checks, unit, and acceptance tests)
+    aliases:
+      - all
+    cmds:
+      - task: static-analysis
+      - task: test
+
+  static-analysis:
+    desc: Run all static analysis checks (linting and license checks)
+    cmds:
+      - task: check-go-mod-tidy
+      - task: lint
+      - task: check-licenses
+      - cmd: cd manager && uv run make static-analysis
+
+  test:
+    desc: Run all tests
+    cmds:
+      - task: unit
+      - task: cli
+      - cmd: cd manager && uv run make test
+
+  ## Bootstrap tasks #################################
+
+  binny:
+    internal: true
+    generates:
+      - "{{ .TOOL_DIR }}/binny"
+    status:
+      - "test -f {{ .TOOL_DIR }}/binny"
+    cmd: "curl -sSfL https://raw.githubusercontent.com/{{ .OWNER }}/binny/main/install.sh | sh -s -- -b {{ .TOOL_DIR }}"
+    silent: true
+
+  tools:
+    desc: Install all tools needed for CI and local development
+    deps: [binny]
+    aliases:
+      - bootstrap-tools
+    generates:
+      - ".binny.yaml"
+      - "{{ .TOOL_DIR }}/*"
+    status:
+      - "{{ .TOOL_DIR }}/binny check -v"
+    cmd: "{{ .TOOL_DIR }}/binny install"
+    silent: true
+
+  bootstrap-go:
+    desc: Download Go module dependencies
+    cmds:
+      - go mod download
+
+  bootstrap-python:
+    desc: Bootstrap Python environment
+    cmds:
+      - cd manager && make bootstrap
+
+  bootstrap:
+    desc: Download and install all tooling dependencies
+    deps: [tmpdir]
+    cmds:
+      - task: bootstrap-go
+      - task: tools
+      - task: bootstrap-python
+
+  update-tools:
+    desc: Update pinned versions of all tools to their latest available versions
+    deps: [binny]
+    generates:
+      - ".binny.yaml"
+      - "{{ .TOOL_DIR }}/*"
+    cmd: "{{ .TOOL_DIR }}/binny update -v"
+    silent: true
+
+  list-tools:
+    desc: List all tools needed for CI and local development
+    deps: [binny]
+    cmd: "{{ .TOOL_DIR }}/binny list"
+    silent: true
+
+  list-tool-updates:
+    desc: List all tools that are not up to date relative to the binny config
+    deps: [binny]
+    cmd: "{{ .TOOL_DIR }}/binny list --updates"
+    silent: true
+
+  tmpdir:
+    internal: true
+    silent: true
+    generates:
+      - "{{ .TMP_DIR }}"
+    cmd: "mkdir -p {{ .TMP_DIR }}"
+
+  ## Static analysis tasks #################################
+
+  format:
+    desc: Auto-format all source code
+    deps: [tools]
+    cmds:
+      - gofmt -w -s .
+      - "{{ .TOOL_DIR }}/gosimports -local github.com/anchore -w ."
+      - go mod tidy
+
+  lint-fix:
+    desc: Auto-format all source code + run golangci lint fixers
+    deps: [tools]
+    cmds:
+      - task: format
+      - "{{ .TOOL_DIR }}/golangci-lint run --config .golangci.yaml --fix"
+
+  lint:
+    desc: Run gofmt + golangci lint checks
+    vars:
+      BAD_FMT_FILES:
+        sh: gofmt -l -s .
+    deps: [tools]
+    cmds:
+      # ensure there are no go fmt differences
+      - cmd: 'test -z "{{ .BAD_FMT_FILES }}" || (echo "files with gofmt issues: [{{ .BAD_FMT_FILES }}]"; exit 1)'
+        silent: true
+      # run all golangci-lint rules
+      - "{{ .TOOL_DIR }}/golangci-lint run --config .golangci.yaml"
+      # check goimports
+      - cmd: '[ -z "$({{ .TOOL_DIR }}/gosimports -local github.com/anchore -d .)" ] || (echo "goimports needs to be fixed" && exit 1)'
+        silent: true
+
+  check-licenses:
+    desc: Ensure transitive dependencies are compliant with the current license policy
+    deps: [tools]
+    cmd: "{{ .TOOL_DIR }}/bouncer check ./cmd/{{ .PROJECT }}"
+
+  check-go-mod-tidy:
+    desc: Ensure go.mod and go.sum are up to date
+    cmds:
+      - cmd: .github/scripts/go-mod-tidy-check.sh && echo "go.mod and go.sum are tidy!"
+        silent: true
+
+  ## Testing tasks #################################
+
+  unit:
+    desc: Run Go unit tests (with coverage)
+    deps: [tmpdir]
+    vars:
+      TEST_PKGS:
+        sh: "go list ./... | grep -v anchore/grype-db/test | tr '\n' ' '"
+    cmds:
+      - "go test -coverprofile {{ .TMP_DIR }}/unit-coverage-details.txt {{ .TEST_PKGS }}"
+      - cmd: ".github/scripts/coverage.py {{ .COVERAGE_THRESHOLD }} {{ .TMP_DIR }}/unit-coverage-details.txt"
+        silent: true
+
+  unit-python:
+    desc: Run Python unit tests (with coverage)
+    cmds:
+      - cd manager && make unit
+
+  db-acceptance:
+    desc: Run acceptance tests
+    cmds:
+      - uv run ./test/db/acceptance.sh {{.schema | default .SCHEMA_VERSION}}
+
+  cli:
+    desc: Run all CLI tests
+    cmds:
+      - task: cli-go
+      - task: cli-python
+
+  cli-python:
+    desc: Run python CLI tests
+    cmds:
+      - cd manager && uv run make cli
+
+  cli-go:
+    desc: Run go CLI tests
+    deps: [snapshot]
+    cmds:
+      - chmod 755 "{{ .SNAPSHOT_BIN }}"
+      - "{{ .SNAPSHOT_BIN }} version"
+      - cmd: |
+          GRYPE_DB_BINARY_LOCATION='{{ .SNAPSHOT_BIN }}' \
+            go test -count=1 -timeout=15m -v ./test/cli
+
+  ## Data management targets #################################
+
+  show-providers:
+    desc: Show available providers (used in CI for job matrix)
+    cmds:
+      - cmd: "{{ .GRYPE_DB }} list-providers -q -o json"
+        silent: true
+
+  ci-oras-ghcr-login:
+    desc: Login to GHCR using ORAS
+    cmds:
+      - cmd: '[ -n "$GITHUB_USERNAME" ] || (echo "Error: GITHUB_USERNAME environment variable is not set" && exit 1)'
+        silent: true
+      - cmd: '[ -n "$GITHUB_TOKEN" ] || (echo "Error: GITHUB_TOKEN environment variable is not set" && exit 1)'
+        silent: true
+      - cmd: 'echo $GITHUB_TOKEN | {{ .TOOL_DIR }}/oras login ghcr.io --username $GITHUB_USERNAME --password-stdin'
+
+  download-provider-cache:
+    desc: Download and restore today's provider data cache
+    cmds:
+      - cmd: |
+          {{ .TOOL_DIR }}/oras pull {{ .GRYPE_DB_DATA_IMAGE_NAME }}/{{ .PROVIDER }}:{{ .date | default .DATE }} && \
+          {{ .GRYPE_DB }} cache restore --path {{ .DB_ARCHIVE }} || \
+          (echo 'no data cache found for today' && exit 1)
+
+  refresh-provider-cache:
+    desc: Refresh provider data cache
+    cmds:
+      - "{{ .GRYPE_DB }} pull -v -p {{ .PROVIDER }}"
+
+  upload-provider-cache:
+    desc: Upload existing provider data cache
+    cmds:
+      - task: ci-check
+      - rm -f {{ .DB_ARCHIVE }}
+      - "{{ .GRYPE_DB }} cache status -p {{ .PROVIDER }}"
+      - "{{ .GRYPE_DB }} cache backup -v --path {{ .DB_ARCHIVE }} -p {{ .PROVIDER }}"
+      - "{{ .TOOL_DIR }}/oras push -v {{ .GRYPE_DB_DATA_IMAGE_NAME }}/{{ .PROVIDER }}:{{ .DATE }} {{ .DB_ARCHIVE }} --annotation org.opencontainers.image.source={{ .SOURCE_REPO_URL }}"
+      - "{{ .TOOL_DIR }}/crane tag {{ .GRYPE_DB_DATA_IMAGE_NAME }}/{{ .PROVIDER }}:{{ .DATE }} latest"
+
+  download-all-provider-cache:
+    desc: Download and restore all provider data caches
+    cmds:
+      - .github/scripts/aggregate-all-provider-cache.py
+
+  ## Code generation targets #################################
+
+  generate-processor-code:
+    desc: Generate processor code
+    cmds:
+      - go generate ./pkg/process
+      - task: format
+
+  ## Build-related targets #################################
+
+  build:
+    desc: Build release snapshot binaries and packages
+    aliases:
+      - snapshot
+    deps: [tools, tmpdir]
+    sources:
+      - cmd/**/*.go
+      - pkg/**/*.go
+      - internal/**/*.go
+    method: checksum
+    generates:
+      - "{{ .SNAPSHOT_BIN }}"
+    cmds:
+      - silent: true
+        cmd: |
+          echo "dist: {{ .SNAPSHOT_DIR }}" > {{ .TMP_DIR }}/goreleaser.yaml
+          cat .goreleaser.yaml >> {{ .TMP_DIR }}/goreleaser.yaml
+      - "{{ .SNAPSHOT_CMD }} --config {{ .TMP_DIR }}/goreleaser.yaml"
+
+  changelog:
+    desc: Generate and show the changelog for the current unreleased version
+    deps: [tools, clean-changelog]
+    generates:
+      - "{{ .CHANGELOG }}"
+      - "{{ .NEXT_VERSION }}"
+    cmds:
+      - "{{ .TOOL_DIR }}/chronicle -vvv -n --version-file {{ .NEXT_VERSION }} > {{ .CHANGELOG }}"
+      - "{{ .TOOL_DIR }}/glow {{ .CHANGELOG }}"
+
+  release:
+    desc: Trigger a release
+    interactive: true
+    cmds:
+      - .github/scripts/trigger-release.sh
+
+  ## CI-only targets #################################
+
+  ci-check:
+    desc: Verify running in CI environment
+    cmds:
+      - cmd: .github/scripts/ci-check.sh
+        silent: true
+
+  ci-release:
+    desc: Build and publish final binaries and packages (CI only)
+    deps: [tools, tmpdir, clean-dist]
+    cmds:
+      - task: ci-check
+      - "{{ .TOOL_DIR }}/chronicle -vvv > {{ .CHANGELOG }}"
+      - cmd: "cat {{ .CHANGELOG }}"
+        silent: true
+      - silent: true
+        cmd: |
+          echo "dist: {{ .DIST_DIR }}" > {{ .TMP_DIR }}/goreleaser.yaml
+          cat .goreleaser.yaml >> {{ .TMP_DIR }}/goreleaser.yaml
+      - cmd: |
+          {{ .RELEASE_CMD }} --config {{ .TMP_DIR }}/goreleaser.yaml --release-notes {{ .CHANGELOG }}
+
+  ## Cleanup targets #################################
+
+  clean:
+    desc: Remove previous builds and result reports
+    cmds:
+      - task: clean-dist
+      - task: clean-snapshot
+      - task: clean-changelog
+      - cmd: 'rm -rf {{ .RESULTS_DIR }}/*'
+        ignore_error: true
+
+  clean-changelog:
+    desc: Remove changelog files
+    cmds:
+      - rm -f {{ .CHANGELOG }} {{ .NEXT_VERSION }}
+
+  clear-test-cache:
+    desc: Clear test fixture cache
+    cmds:
+      - find . -type f -wholename "**/test-fixtures/tar-cache/*.tar" -delete
+
+  clean-db:
+    desc: Remove database build artifacts
+    cmds:
+      - rm -rf build/
+      - rm -f metadata.json listing.json vulnerability-db*.tar.gz vulnerability.db
+
+  clean-dist:
+    desc: Remove distribution artifacts
+    deps: [clean-changelog]
+    cmds:
+      - cmd: 'rm -rf {{ .DIST_DIR }}'
+        ignore_error: true
+      - rm -f {{ .TMP_DIR }}/goreleaser.yaml
+
+  clean-snapshot:
+    desc: Remove snapshot artifacts
+    cmds:
+      - cmd: 'rm -rf {{ .SNAPSHOT_DIR }}'
+        ignore_error: true
+      - rm -f {{ .TMP_DIR }}/goreleaser.yaml
