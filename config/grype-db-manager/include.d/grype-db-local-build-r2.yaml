@@ -1,9 +1,0 @@
-# grype-db:
-
-# use the current repo at the current commit as the source of truth for the grype-db build source.
-# note: assume this will be invoked from the root of the repo
-version: latest
-
-# grype-db application configuration to use.
-# note: assume this will be invoked from the root of the repo
-config: config/grype-db/publish-nightly-r2.yaml
