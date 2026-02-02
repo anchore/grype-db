@@ -23,7 +23,8 @@ def cli(ctx: click.core.Context, verbosity: int, config_path: str | None) -> Non
 
     import colorlog  # noqa: PLC0415
 
-    ctx.obj = config.load(path=config_path, verbosity=verbosity)
+    ctx.obj = config.load(path=config_path)
+    ctx.obj.verbosity = verbosity
 
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
         def __init__(self, *args: Any, **kwargs: Any):
