@@ -522,6 +522,10 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str: 
         str | None: The path to the installed binary, or None if no installation was performed.
 
     """
+    if not input_version:
+        msg = "grype-db version is required (set grype_db.version in config)"
+        raise ValueError(msg)
+
     os.makedirs(bin_dir, exist_ok=True)
 
     # Check for explicit grype-db binary override (opt-in only)

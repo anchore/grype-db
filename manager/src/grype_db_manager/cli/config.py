@@ -21,10 +21,6 @@ if TYPE_CHECKING:
 yaml.add_constructor("!include", yaml_include.Constructor(base_dir=os.getcwd()), Loader=yaml.SafeLoader)
 
 
-DEFAULT_CONFIGS = (
-    ".grype-db-manager.yaml",
-    "grype-db-manager.yaml",
-)
 
 
 @dataclass
@@ -177,45 +173,15 @@ class Application:
 
 
 def load(
-    path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS,
+    path: str,
     wire_values: bool = True,
     env: Mapping | None = None,
 ) -> Application:
-    cfg = _load_paths(path, wire_values=wire_values, env=env)
-
-    if not cfg:
-        msg = "no config found"
-        raise FileNotFoundError(msg)
-
-    return cfg
-
-
-def _load_paths(
-    path: None | str | list[str] | tuple[str],
-    wire_values: bool = True,
-    env: Mapping | None = None,
-) -> Application | None:
     if not path:
-        path = DEFAULT_CONFIGS
+        msg = "config path is required (use -c/--config)"
+        raise ValueError(msg)
 
-    if isinstance(path, str):
-        if path == "":
-            path = DEFAULT_CONFIGS
-        else:
-            return _load(path, wire_values=wire_values, env=env)
-
-    if isinstance(path, (list, tuple)):
-        for p in path:
-            if not os.path.exists(p):
-                continue
-
-            return _load(p, wire_values=wire_values, env=env)
-
-        # no config file found
-        return None
-
-    msg = f"invalid path type {type(path)}"
-    raise ValueError(msg)
+    return _load(path, wire_values=wire_values, env=env)
 
 
 def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Application:

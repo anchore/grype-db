@@ -46,20 +46,6 @@ cli:  ## Run cli tests
 	cd tests/cli && uv run make
 
 
-## DB Testing targets #################################
-
-.PHONY: db-acceptance
-db-acceptance:  ## Run DB acceptance tests
-	@ echo "Building and testing DB schema=$(schema_version)"
-	if [ -z "$(schema_version)" ]; then \
-		echo "schema_version is not set"; \
-		exit 1; \
-	fi
-
-	export DB_ID=$(shell uv run grype-db-manager db build --schema-version $(schema_version))
-	uv run grype-db-manager db validaate $(DB_ID)
-
-
 ## Halp! #################################
 
 .PHONY: help
