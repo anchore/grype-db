@@ -1,9 +1,0 @@
-data: !include config/grype-db-manager/include.d/data.yaml
-
-grype-db: !include config/grype-db-manager/include.d/grype-db-local-build-r2.yaml
-
-# note: do not put any values here!
-# distribution:
-#  ...
-
-validate: !include config/grype-db-manager/include.d/validate.yaml

@@ -2,7 +2,7 @@
 
 data: !include config/grype-db-manager/include.d/data.yaml
 
-grype-db: !include config/grype-db-manager/include.d/grype-db-local-build-r2.yaml
+grype-db: !include config/grype-db-manager/include.d/grype-db-local-build.yaml
 
 distribution: !include config/grype-db-manager/include.d/distribution-production-r2.yaml
 

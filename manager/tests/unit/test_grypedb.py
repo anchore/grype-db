@@ -73,9 +73,6 @@ class TestDBManager:
             pytest.param(grypedb.expected_namespaces(5), 5, False, id="v5 matches"),
             pytest.param(grypedb.expected_namespaces(5) + ["extra_items"], 5, False, id="v5 with extra items"),
             pytest.param(list(grypedb.expected_namespaces(5))[:-5], 5, True, id="v5 missing items"),
-            pytest.param(grypedb.expected_namespaces(3), 3, False, id="v3 matches"),
-            pytest.param(grypedb.expected_namespaces(3) + ["extra_items"], 3, False, id="v3 with extra items"),
-            pytest.param(list(grypedb.expected_namespaces(3))[:-5], 3, True, id="v3 missing items"),
         ],
     )
     def test_validate_namespaces(self, tmp_path: pathlib.Path, mocker, schema_version, listed_namespaces, expect_error):

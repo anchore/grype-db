@@ -39,7 +39,7 @@ def listing_s3_mock(redact_aws_credentials):
         listing_file_name = "listing.json"
 
         with utils.set_directory(dir_with_config):
-            cfg = config.load()
+            cfg = config.load(".grype-db-manager.yaml")
             if os.path.exists(listing_file_name):
                 os.remove(listing_file_name)
 
@@ -144,7 +144,7 @@ def test_create_listing(
             expected_object = db.Listing.from_json(f.read())
 
         runner = CliRunner()
-        result = runner.invoke(cli.cli, "listing create".split())
+        result = runner.invoke(cli.cli, "-c .grype-db-manager.yaml listing create".split())
 
         # for debugging
         print(result.output)

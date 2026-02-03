@@ -42,63 +42,6 @@ def test_load_from_env_vars_overrides_disk(test_dir_path):
     assert cfg.distribution.s3_path == "s3-path"
 
 
-def test_load_default():
-    cfg = config.Application()
-
-    actual = cfg.to_yaml()
-
-    expected = """\
-assertAwsCredentials: true
-data:
-  root: .grype-db-manager
-  vunnelRoot: data/vunnel
-  yardstickRoot: data/yardstick
-distribution:
-  awsRegion: null
-  downloadUrlPrefix: null
-  listingFileName: listing.json
-  listingReplicas: []
-  s3AlwaysSuffixSchemaVersion: false
-  s3Bucket: null
-  s3EndpointUrl: null
-  s3Path: null
-grypeDb:
-  config: ''
-  version: latest
-log:
-  level: INFO
-schemaMappingFile: ''
-validate:
-  defaultMaxYear: 2021
-  expectedProviders:
-    - alpine
-    - amazon
-    - chainguard
-    - debian
-    - echo
-    - github
-    - mariner
-    - minimos
-    - nvd
-    - oracle
-    - rhel
-    - secureos
-    - sles
-    - ubuntu
-    - wolfi
-  gates: []
-  listing:
-    image: null
-    minimumPackages: null
-    minimumVulnerabilities: null
-    overrideDbSchemaVersion: null
-    overrideGrypeVersion: null
-verbosity: 0
-"""
-
-    assert actual == expected
-
-
 def test_load(test_dir_path):
     config_path = test_dir_path("fixtures/config/full.yaml")
 

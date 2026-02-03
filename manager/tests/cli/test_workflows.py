@@ -31,7 +31,7 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
         }
     )
 
-    cfg = config.load()
+    cfg = config.load(".grype-db-manager.yaml")
     image = cfg.validate.gates[0].images[0]
 
     grype = grype.install(schema.grype_version(schema_version), bin_dir)
@@ -46,15 +46,15 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
         command.run("python setup-workflow-1.py", env=cli_env)
 
     logger.step("case 1: create the DB")
-    stdout, _ = command.run(f"grype-db-manager -v db build -s {schema_version}", env=cli_env)
+    stdout, _ = command.run(f"grype-db-manager -c .grype-db-manager.yaml -v db build -s {schema_version}", env=cli_env)
     assert stdout.strip(), "Expected non-empty output"
     db_id = stdout.splitlines()[-1]  # assume DB ID is the last line of output
 
-    stdout, _ = command.run("grype-db-manager db list", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml db list", env=cli_env)
     assert db_id in stdout, f"Expected DB ID {db_id} in output"
 
     logger.step("case 2: upload the DB")
-    stdout, _ = command.run(f"grype-db-manager db upload {db_id}", env=cli_env)
+    stdout, _ = command.run(f"grype-db-manager -c .grype-db-manager.yaml db upload {db_id}", env=cli_env)
     assert f"DB archive '{db_id}' uploaded to s3://testbucket/grype/databases/v{schema_version}" in stdout
     assert f"latest.json '{db_id}' uploaded to s3://testbucket/grype/databases/v{schema_version}" in stdout
 
@@ -66,8 +66,8 @@ def test_workflow_1(cli_env, command, logger, tmp_path, grype):
     assert "ELSA-2021-9314" in stdout
 
     logger.step("case 4: delete the DB")
-    command.run("grype-db-manager db clear", env=cli_env)
-    stdout, _ = command.run("grype-db-manager db list", env=cli_env)
+    command.run("grype-db-manager -c .grype-db-manager.yaml db clear", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml db list", env=cli_env)
     assert db_id not in stdout, f"Did not expect DB ID {db_id} in output"
 
     ### end of testing ###
@@ -89,7 +89,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make vunnel-oracle-data", env=cli_env)
 
     # create the database
-    stdout, _ = command.run("grype-db-manager -v db build -s 6", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml -v db build -s 6", env=cli_env)
     assert stdout.strip(), "Expected non-empty output"
     db_id = stdout.splitlines()[-1]  # Get the last line as the DB ID
 
@@ -102,7 +102,7 @@ def test_workflow_2(cli_env, command, logger):
 
     # note: we add --force to ensure we're checking validations (even if it's disabled for the schema)
     stdout, stderr = command.run(
-        f"grype-db-manager -vv db validate {db_id} --skip-namespace-check --force --recapture",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --force --recapture",
         env=cli_env,
         expect_fail=True,
     )
@@ -117,7 +117,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     _, stderr = command.run(
-        f"grype-db-manager -vv db validate {db_id} --force",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --force",
         env=cli_env,
         expect_fail=True,
     )
@@ -131,7 +131,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     stdout, _ = command.run(
-        f"grype-db-manager -vv db validate {db_id} --skip-namespace-check --force",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --force",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout
