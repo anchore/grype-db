@@ -21,12 +21,6 @@ if TYPE_CHECKING:
 yaml.add_constructor("!include", yaml_include.Constructor(base_dir=os.getcwd()), Loader=yaml.SafeLoader)
 
 
-DEFAULT_CONFIGS = (
-    ".grype-db-manager.yaml",
-    "grype-db-manager.yaml",
-)
-
-
 @dataclass
 class Log:
     level: str = "INFO"
@@ -37,7 +31,7 @@ class Log:
 
 @dataclass
 class GrypeDB:
-    version: str = "latest"
+    version: str = ""
     config: str = ""
 
 
@@ -78,28 +72,10 @@ class ValidateListing:
 
 @dataclass()
 class Validate:
-    default_max_year: int = 2021
+    default_max_year: int = 0
     gates: list[ValidateDB] = field(default_factory=list)
     listing: ValidateListing = field(default_factory=ValidateListing)
-    expected_providers: list[str] = field(
-        default_factory=lambda: [
-            "alpine",
-            "amazon",
-            "chainguard",
-            "debian",
-            "echo",
-            "github",
-            "mariner",
-            "minimos",
-            "nvd",
-            "oracle",
-            "rhel",
-            "secureos",
-            "sles",
-            "ubuntu",
-            "wolfi",
-        ],
-    )
+    expected_providers: list[str] = field(default_factory=list)
 
 
 @dataclass()
@@ -124,9 +100,9 @@ class Distribution:
 
 @dataclass
 class Data:
-    root: str = ".grype-db-manager"
-    vunnel_root: str = "data/vunnel"
-    yardstick_root: str = "data/yardstick"
+    root: str = ""
+    vunnel_root: str = ""
+    yardstick_root: str = ""
 
 
 @dataclass
@@ -195,47 +171,15 @@ class Application:
 
 
 def load(
-    path: None | str | list[str] | tuple[str] = DEFAULT_CONFIGS,
+    path: str,
     wire_values: bool = True,
-    verbosity: int = 0,
     env: Mapping | None = None,
 ) -> Application:
-    cfg = _load_paths(path, wire_values=wire_values, env=env, verbosity=verbosity)
-
-    if not cfg:
-        msg = "no config found"
-        raise FileNotFoundError(msg)
-
-    return cfg
-
-
-def _load_paths(
-    path: None | str | list[str] | tuple[str],
-    wire_values: bool = True,
-    env: Mapping | None = None,
-    verbosity: int = 0,
-) -> Application | None:
     if not path:
-        path = DEFAULT_CONFIGS
+        msg = "config path is required (use -c/--config)"
+        raise ValueError(msg)
 
-    if isinstance(path, str):
-        if path == "":
-            path = DEFAULT_CONFIGS
-        else:
-            return _load(path, wire_values=wire_values, env=env)
-
-    if isinstance(path, (list, tuple)):
-        for p in path:
-            if not os.path.exists(p):
-                continue
-
-            return _load(p, wire_values=wire_values, env=env)
-
-        # use the default application config
-        return Application(verbosity=verbosity)
-
-    msg = f"invalid path type {type(path)}"
-    raise ValueError(msg)
+    return _load(path, wire_values=wire_values, env=env)
 
 
 def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Application:

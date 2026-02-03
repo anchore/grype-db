@@ -12,7 +12,7 @@ from grype_db_manager.db.format import Format
 
 
 @click.option("--verbose", "-v", "verbosity", count=True, help="show details of all comparisons")
-@click.option("--config", "-c", "config_path", default=None, help="override config path")
+@click.option("--config", "-c", "config_path", default=None, help="config file path (required for subcommands)")
 @click.group(help="A tool for publishing validated grype databases to S3 for distribution.")
 @click.version_option(package_name=package_name, message="%(prog)s %(version)s")
 @click.pass_context
@@ -23,7 +23,17 @@ def cli(ctx: click.core.Context, verbosity: int, config_path: str | None) -> Non
 
     import colorlog  # noqa: PLC0415
 
-    ctx.obj = config.load(path=config_path, verbosity=verbosity)
+    # config is required for subcommands, but not for --help or --version
+    if ctx.invoked_subcommand is not None:
+        if not config_path:
+            msg = "missing required option: -c/--config"
+            raise click.UsageError(msg)
+        ctx.obj = config.load(path=config_path)
+        ctx.obj.verbosity = verbosity
+    elif config_path:
+        # allow loading config even without subcommand (e.g., for future use)
+        ctx.obj = config.load(path=config_path)
+        ctx.obj.verbosity = verbosity
 
     class DeltaTimeFormatter(colorlog.ColoredFormatter):
         def __init__(self, *args: Any, **kwargs: Any):

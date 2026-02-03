@@ -11,7 +11,7 @@ from grype_db_manager.cli import config
 
 
 def main():
-    cfg = config.load()
+    cfg = config.load(".grype-db-manager.yaml")
 
     s3_bucket = cfg.distribution.s3_bucket
     region = cfg.distribution.aws_region

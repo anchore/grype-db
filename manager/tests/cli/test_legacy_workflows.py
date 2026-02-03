@@ -14,16 +14,16 @@ def test_workflow_1(cli_env, command, logger):
     command.run("make vunnel-oracle-data", env=cli_env)
 
     logger.step("case 1: create the DB")
-    stdout, _ = command.run("grype-db-manager -v db build -s 5", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml -v db build -s 5", env=cli_env)
     assert stdout.strip(), "Expected non-empty output"
     db_id = stdout.splitlines()[-1]  # assume DB ID is the last line of output
 
-    stdout, _ = command.run("grype-db-manager db list", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml db list", env=cli_env)
     assert db_id in stdout, f"Expected DB ID {db_id} in output"
 
     logger.step("case 2: delete the DB")
-    command.run("grype-db-manager db clear", env=cli_env)
-    stdout, _ = command.run("grype-db-manager db list", env=cli_env)
+    command.run("grype-db-manager -c .grype-db-manager.yaml db clear", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml db list", env=cli_env)
     assert db_id not in stdout, f"Did not expect DB ID {db_id} in output"
 
 
@@ -39,7 +39,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make vunnel-oracle-data", env=cli_env)
 
     # create the database
-    stdout, _ = command.run("grype-db-manager -v db build -s 5", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml -v db build -s 5", env=cli_env)
     assert stdout.strip(), "Expected non-empty output"
     db_id = stdout.splitlines()[-1]  # Get the last line as the DB ID
 
@@ -51,7 +51,7 @@ def test_workflow_2(cli_env, command, logger):
     cli_env["GOWORK"] = "off"
 
     stdout, _ = command.run(
-        f"grype-db-manager  -vv db validate {db_id} --skip-namespace-check --recapture",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --recapture",
         env=cli_env,
         expect_fail=True,
     )
@@ -65,7 +65,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     _, stderr = command.run(
-        f"grype-db-manager -vv db validate {db_id}",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id}",
         env=cli_env,
         expect_fail=True,
     )
@@ -79,7 +79,7 @@ def test_workflow_2(cli_env, command, logger):
     command.run("make install-oracle-labels", env=cli_env)
 
     stdout, _ = command.run(
-        f"grype-db-manager -vv db validate {db_id} --skip-namespace-check",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout
@@ -121,7 +121,7 @@ def test_workflow_3(cli_env, command, logger, tmp_path, grype):
     logger.step("case 1: update a listing file based on S3 state")
 
     # generate a new listing file
-    stdout, _ = command.run("grype-db-manager listing update", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml listing update", env=cli_env)
     assert "Validation passed" in stdout
     assert "listing.json uploaded to s3://testbucket/grype/databases" in stdout
 
@@ -195,7 +195,7 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
 
     # build, validate, and upload the database
     stdout, _ = command.run(
-        f"grype-db-manager db build-and-upload --schema-version {schema_version} --skip-namespace-check",
+        f"grype-db-manager -c .grype-db-manager.yaml db build-and-upload --schema-version {schema_version} --skip-namespace-check",
         env=cli_env,
     )
     assert "Quality gate passed!" in stdout
@@ -204,7 +204,7 @@ def test_workflow_4(cli_env, command, logger, tmp_path, grype):
     logger.step("case 2: update the listing file based on the DB uploaded")
 
     # update the listing file and validate
-    stdout, _ = command.run("grype-db-manager -v listing update", env=cli_env)
+    stdout, _ = command.run("grype-db-manager -c .grype-db-manager.yaml -v listing update", env=cli_env)
     assert "Validation passed" in stdout
     assert "listing.json uploaded to s3://testbucket/grype/databases" in stdout
 

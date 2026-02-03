@@ -136,112 +136,11 @@ v4_expected_namespaces = [
     "wolfi:distro:wolfi:rolling",
 ]
 
-v3_expected_namespaces = [
-    "alpine:3.10",
-    "alpine:3.11",
-    "alpine:3.12",
-    "alpine:3.13",
-    "alpine:3.14",
-    "alpine:3.15",
-    "alpine:3.16",
-    "alpine:3.17",
-    "alpine:3.18",
-    "alpine:3.2",
-    "alpine:3.3",
-    "alpine:3.4",
-    "alpine:3.5",
-    "alpine:3.6",
-    "alpine:3.7",
-    "alpine:3.8",
-    "alpine:3.9",
-    "alpine:edge",
-    "amzn:2",
-    "amzn:2022",
-    "amzn:2023",
-    "chainguard:rolling",
-    "debian:10",
-    "debian:11",
-    "debian:12",
-    "debian:13",
-    "debian:7",
-    "debian:8",
-    "debian:9",
-    "debian:unstable",
-    "github:composer",
-    "github:dart",
-    "github:gem",
-    "github:go",
-    "github:java",
-    "github:npm",
-    "github:nuget",
-    "github:python",
-    "github:rust",
-    "github:swift",
-    "mariner:1.0",
-    "mariner:2.0",
-    "minimos:rolling",
-    "nvd",
-    "ol:5",
-    "ol:6",
-    "ol:7",
-    "ol:8",
-    "ol:9",
-    "rhel:5",
-    "rhel:6",
-    "rhel:7",
-    "rhel:8",
-    "rhel:9",
-    "secureos:rolling",
-    "sles:11",
-    "sles:11.1",
-    "sles:11.2",
-    "sles:11.3",
-    "sles:11.4",
-    "sles:12",
-    "sles:12.1",
-    "sles:12.2",
-    "sles:12.3",
-    "sles:12.4",
-    "sles:12.5",
-    "sles:15",
-    "sles:15.1",
-    "sles:15.2",
-    "sles:15.3",
-    "sles:15.4",
-    "sles:15.5",
-    "ubuntu:12.04",
-    "ubuntu:12.10",
-    "ubuntu:13.04",
-    "ubuntu:14.04",
-    "ubuntu:14.10",
-    "ubuntu:15.04",
-    "ubuntu:15.10",
-    "ubuntu:16.04",
-    "ubuntu:16.10",
-    "ubuntu:17.04",
-    "ubuntu:17.10",
-    "ubuntu:18.04",
-    "ubuntu:18.10",
-    "ubuntu:19.04",
-    "ubuntu:19.10",
-    "ubuntu:20.04",
-    "ubuntu:20.10",
-    "ubuntu:21.04",
-    "ubuntu:21.10",
-    "ubuntu:22.04",
-    "ubuntu:22.10",
-    "ubuntu:23.04",
-    "ubuntu:23.10",
-    "ubuntu:24.04",
-    "wolfi:rolling",
-]
-
 
 def expected_namespaces(schema_version: int) -> list[str]:
-    if schema_version <= 3:
-        return v3_expected_namespaces
-    if schema_version == 4:
-        return v4_expected_namespaces
+    if schema_version < 5:
+        msg = f"schema {schema_version} is EOL. v5 is latest supported version"
+        raise ValueError(msg)
     return v4_expected_namespaces + v5_additional_namespaces
 
 
@@ -623,6 +522,10 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str: 
         str | None: The path to the installed binary, or None if no installation was performed.
 
     """
+    if not input_version:
+        msg = "grype-db version is required (set grype_db.version in config)"
+        raise ValueError(msg)
+
     os.makedirs(bin_dir, exist_ok=True)
 
     # Check for explicit grype-db binary override (opt-in only)
