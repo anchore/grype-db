@@ -21,8 +21,6 @@ if TYPE_CHECKING:
 yaml.add_constructor("!include", yaml_include.Constructor(base_dir=os.getcwd()), Loader=yaml.SafeLoader)
 
 
-
-
 @dataclass
 class Log:
     level: str = "INFO"

@@ -26,7 +26,8 @@ def cli(ctx: click.core.Context, verbosity: int, config_path: str | None) -> Non
     # config is required for subcommands, but not for --help or --version
     if ctx.invoked_subcommand is not None:
         if not config_path:
-            raise click.UsageError("missing required option: -c/--config")
+            msg = "missing required option: -c/--config"
+            raise click.UsageError(msg)
         ctx.obj = config.load(path=config_path)
         ctx.obj.verbosity = verbosity
     elif config_path:
