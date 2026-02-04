@@ -3,9 +3,7 @@ package process
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -99,18 +97,10 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 }
 
 func getWriter(cfg BuildConfig) (data.Writer, error) {
-	// Default to 2000 if batchSize is 0 (proven effective in vunnel)
-	// Can be overridden via GRYPE_DB_BATCH_SIZE environment variable for testing
+	// Use default if not configured
 	batchSize := cfg.BatchSize
 	if batchSize == 0 {
-		if envSize := os.Getenv("GRYPE_DB_BATCH_SIZE"); envSize != "" {
-			if size, err := strconv.Atoi(envSize); err == nil && size > 0 {
-				batchSize = size
-			}
-		}
-	}
-	if batchSize == 0 {
-		batchSize = 2000
+		batchSize = DefaultBatchSize
 	}
 
 	switch cfg.SchemaVersion {

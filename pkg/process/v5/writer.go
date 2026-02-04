@@ -37,7 +37,6 @@ type writer struct {
 
 	// Batching infrastructure
 	batchSize   int
-	pendingOps  int
 	batchBuffer []func() error
 	mu          sync.Mutex // Protect batch state
 
@@ -65,7 +64,7 @@ func NewWriter(directory string, dataAge time.Time, states provider.States, batc
 		return nil, fmt.Errorf("unable to set DB ID: %w", err)
 	}
 
-	// Default to 2000 if batchSize is 0 (proven effective in vunnel)
+	// Use default if not configured
 	if batchSize == 0 {
 		batchSize = 2000
 	}
@@ -126,9 +125,8 @@ func (w *writer) addToBatch(op func() error) error {
 	defer w.mu.Unlock()
 
 	w.batchBuffer = append(w.batchBuffer, op)
-	w.pendingOps++
 
-	if w.pendingOps >= w.batchSize {
+	if len(w.batchBuffer) >= w.batchSize {
 		return w.flushUnlocked()
 	}
 	return nil
@@ -159,7 +157,6 @@ func (w *writer) flushUnlocked() error {
 	}
 
 	w.batchBuffer = w.batchBuffer[:0]
-	w.pendingOps = 0
 	w.totalBatches++
 	return nil
 }

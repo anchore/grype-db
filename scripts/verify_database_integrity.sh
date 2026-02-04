@@ -46,16 +46,18 @@ go build -o /tmp/grype-db-verify-test ./cmd/grype-db
 # Build baseline with batch_size=1 (simulates unbatched behavior)
 echo ""
 echo "Building baseline database (batch_size=1, unbatched)..."
-GRYPE_DB_BATCH_SIZE=1 GRYPE_DB_CONFIG=/tmp/grype-db-test.yaml /tmp/grype-db-verify-test build \
+GRYPE_DB_CONFIG=/tmp/grype-db-test.yaml /tmp/grype-db-verify-test build \
     --schema 6 \
+    --batch-size 1 \
     --dir="$BASELINE_DIR" \
     2>&1 | tee "$BASELINE_DIR/build.log"
 
 # Build optimized with batch_size=2000 (batched)
 echo ""
 echo "Building optimized database (batch_size=$BATCH_SIZE, batched)..."
-GRYPE_DB_BATCH_SIZE=$BATCH_SIZE GRYPE_DB_CONFIG=/tmp/grype-db-test.yaml /tmp/grype-db-verify-test build \
+GRYPE_DB_CONFIG=/tmp/grype-db-test.yaml /tmp/grype-db-verify-test build \
     --schema 6 \
+    --batch-size "$BATCH_SIZE" \
     --dir="$OPTIMIZED_DIR" \
     2>&1 | tee "$OPTIMIZED_DIR/build.log"
 

@@ -33,10 +33,8 @@ type writer struct {
 	mu              sync.Mutex // Protect batch state
 
 	// Metrics
-	totalParentBatches  int
-	totalChildBatches   int
-	providerCacheHits   int
-	providerCacheMisses int
+	totalParentBatches int
+	totalChildBatches  int
 }
 
 type ProviderMetadata struct {
@@ -61,7 +59,7 @@ func NewWriter(directory string, states provider.States, failOnMissingFixDate bo
 		return nil, fmt.Errorf("unable to set DB ID: %w", err)
 	}
 
-	// Default to 2000 if batchSize is 0 (proven effective in vunnel)
+	// Use default if not configured
 	if batchSize == 0 {
 		batchSize = 2000
 	}
@@ -115,8 +113,16 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 		}
 	}
 
-	// Provider is handled automatically by AddVulnerabilities() via addProviders()
-	// The grype store has internal provider caching, no separate write needed
+	// Handle providers for entries without vulnerabilities (EPSS, KEV, etc.)
+	// AddVulnerabilities() only handles providers implicitly for vulnerability entries
+	if entry.Provider != nil && entry.VulnerabilityHandle == nil {
+		provider := *entry.Provider
+		if err := w.addToParentBatch(func() error {
+			return w.store.AddProvider(provider)
+		}); err != nil {
+			return fmt.Errorf("unable to batch provider write: %w", err)
+		}
+	}
 
 	// Add all related entries to child batch
 	// NOTE: No explicit flush here. Parent batch auto-flushes at threshold.
@@ -410,8 +416,6 @@ func (w *writer) Close() error {
 		"path", w.dbPath,
 		"parent_batches", w.totalParentBatches,
 		"child_batches", w.totalChildBatches,
-		"provider_cache_hits", w.providerCacheHits,
-		"provider_cache_misses", w.providerCacheMisses,
 	).Info("database created")
 
 	return nil
