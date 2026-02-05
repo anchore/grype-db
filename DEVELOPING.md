@@ -5,16 +5,11 @@
 This codebase is primarily Go, however, there are also Python scripts critical to the daily DB publishing process as
 well as acceptance testing. You will require the following:
 
-- Python 3.8+ installed on your system. Consider using [pyenv](https://github.com/pyenv/pyenv) if you do not have a 
+- Python 3.11+ installed on your system. Consider using [pyenv](https://github.com/pyenv/pyenv) if you do not have a
   preference for managing python interpreter installations.
 - `zstd` binary utility if you are packaging v6+ DB schemas
 - _(optional)_ `xz` binary utility if you have specifically overridden the package command options
-
-- [Poetry](https://python-poetry.org/) installed for dependency and virtualenv management for python dependencies, to install:
-
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
-   ```
+- [uv](https://docs.astral.sh/uv/) installed for dependency and virtualenv management for python dependencies (see [installation docs](https://docs.astral.sh/uv/getting-started/installation/))
 
 To download go tooling used for static analysis and dependent go modules run the following:
 
@@ -264,8 +259,7 @@ for all supported schema versions and making them available to the public. The p
 
    ```bash
    # from the repo root
-   # must be in a poetry shell
-   grype-db-manager db build-and-upload --schema-version <version>
+   uv run grype-db-manager db build-and-upload --schema-version <version>
    ```
 
    This call needs to be repeated for all schema versions that are supported (see `manager/src/grype_db_manager/data/schema-info.json`).
@@ -282,8 +276,7 @@ for all supported schema versions and making them available to the public. The p
 
    ```bash
    # from the repo root
-   # must be in a poetry shell
-   grype-db-manager listing update
+   uv run grype-db-manager listing update
    ```
    
    During this step the locally crafted listing file is tested against installations of grype. The correctness of the
