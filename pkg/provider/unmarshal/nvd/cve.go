@@ -57,8 +57,8 @@ type CveItem struct {
 	References       []Reference `json:"references"`
 	SourceIdentifier *string     `json:"sourceIdentifier,omitempty"`
 	// VendorComments        []VendorComment `json:"vendorComments,omitempty"`
-	VulnStatus *string `json:"vulnStatus,omitempty"`
-	// Weaknesses            []Weakness      `json:"weaknesses,omitempty"`
+	VulnStatus *string    `json:"vulnStatus,omitempty"`
+	Weaknesses []Weakness `json:"weaknesses,omitempty"`
 }
 
 type Configuration struct {
@@ -73,14 +73,21 @@ type Node struct {
 	Operator Operator   `json:"operator"`
 }
 
+type FixInfo struct {
+	Version string `json:"version"`
+	Date    string `json:"date"`
+	Kind    string `json:"kind"`
+}
+
 type CpeMatch struct {
-	Criteria              string  `json:"criteria"`
-	MatchCriteriaID       string  `json:"matchCriteriaId"`
-	VersionEndExcluding   *string `json:"versionEndExcluding,omitempty"`
-	VersionEndIncluding   *string `json:"versionEndIncluding,omitempty"`
-	VersionStartExcluding *string `json:"versionStartExcluding,omitempty"`
-	VersionStartIncluding *string `json:"versionStartIncluding,omitempty"`
-	Vulnerable            bool    `json:"vulnerable"`
+	Criteria              string   `json:"criteria"`
+	MatchCriteriaID       string   `json:"matchCriteriaId"`
+	VersionEndExcluding   *string  `json:"versionEndExcluding,omitempty"`
+	VersionEndIncluding   *string  `json:"versionEndIncluding,omitempty"`
+	VersionStartExcluding *string  `json:"versionStartExcluding,omitempty"`
+	VersionStartIncluding *string  `json:"versionStartIncluding,omitempty"`
+	Vulnerable            bool     `json:"vulnerable"`
+	Fix                   *FixInfo `json:"fix,omitempty"`
 }
 
 type LangString struct {
@@ -151,17 +158,16 @@ type Reference struct {
 	URL    string   `json:"url"`
 }
 
-// type VendorComment struct {
-//	Comment      string `json:"comment"`
-//	LastModified string `json:"lastModified"`
-//	Organization string `json:"organization"`
-//}
-//
-// type Weakness struct {
-//	Description []LangString `json:"description"`
-//	Source      string       `json:"source"`
-//	Type        string       `json:"type"`
-//}
+//	type VendorComment struct {
+//		Comment      string `json:"comment"`
+//		LastModified string `json:"lastModified"`
+//		Organization string `json:"organization"`
+//	}
+type Weakness struct {
+	Description []LangString `json:"description"`
+	Source      string       `json:"source"`
+	Type        string       `json:"type"`
+}
 
 func (o CveItem) Description() string {
 	for _, d := range o.Descriptions {
@@ -213,16 +219,19 @@ func (o CvssSummaries) Less(i, j int) bool {
 		return iEntry.Type == Secondary
 	}
 
-	// prefer NVD as primary source
+	// then compare by source (NVD preferred, then lexicographic)
 	if iEntry.Source != jEntry.Source {
 		if iEntry.Source == "nvd@nist.gov" {
 			return false
-		} else if jEntry.Source == "nvd@nist.gov" {
+		}
+		if jEntry.Source == "nvd@nist.gov" {
 			return true
 		}
+		// for non-NVD sources, use lexicographic ordering (descending for Reverse sort)
+		return iEntry.Source > jEntry.Source
 	}
 
-	// if types are the same, then compare by version
+	// finally, compare by version when type and source are the same (v4 > v3 > v2 > v1)
 	iV := iEntry.version()
 	jV := jEntry.version()
 	return iV.LessThan(jV)

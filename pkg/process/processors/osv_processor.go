@@ -1,4 +1,4 @@
-package processors
+package processors // nolint:dupl
 
 import (
 	"io"

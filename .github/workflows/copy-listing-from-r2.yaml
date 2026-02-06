@@ -27,7 +27,7 @@ jobs:
       contents: read
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -47,12 +47,22 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
 
-      - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+      - name: Notify Slack on failure
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
         with:
-          status: ${{ job.status }}
-          fields: workflow,eventName,job
-          text: Sync of the Grype DB listing file from R2 to S3 has failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Sync of the Grype DB listing file from R2 to S3 has failed"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Sync of the Grype DB listing file from R2 to S3 has failed*
+                    • Workflow: `${{ github.workflow }}`
+                    • Event: `${{ github.event_name }}`
+                    • Job Status: `${{ job.status }}`
+                    • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
 

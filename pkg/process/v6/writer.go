@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anchore/go-logger"
 	"github.com/anchore/grype-db/internal/log"
 	"github.com/anchore/grype-db/pkg/data"
 	"github.com/anchore/grype-db/pkg/process/v6/transformers"
@@ -15,11 +16,12 @@ import (
 var _ data.Writer = (*writer)(nil)
 
 type writer struct {
-	dbPath        string
-	store         grypeDB.ReadWriter
-	providerCache map[string]grypeDB.Provider
-	states        provider.States
-	severityCache map[string]grypeDB.Severity
+	dbPath               string
+	failOnMissingFixDate bool
+	store                grypeDB.ReadWriter
+	providerCache        map[string]grypeDB.Provider
+	states               provider.States
+	severityCache        map[string]grypeDB.Severity
 }
 
 type ProviderMetadata struct {
@@ -31,7 +33,7 @@ type Provider struct {
 	LastSuccessfulRun time.Time `json:"lastSuccessfulRun"`
 }
 
-func NewWriter(directory string, states provider.States) (data.Writer, error) {
+func NewWriter(directory string, states provider.States, failOnMissingFixDate bool) (data.Writer, error) {
 	cfg := grypeDB.Config{
 		DBDirPath: directory,
 	}
@@ -45,11 +47,12 @@ func NewWriter(directory string, states provider.States) (data.Writer, error) {
 	}
 
 	return &writer{
-		dbPath:        cfg.DBFilePath(),
-		providerCache: make(map[string]grypeDB.Provider),
-		store:         s,
-		states:        states,
-		severityCache: make(map[string]grypeDB.Severity),
+		dbPath:               cfg.DBFilePath(),
+		failOnMissingFixDate: failOnMissingFixDate,
+		providerCache:        make(map[string]grypeDB.Provider),
+		store:                s,
+		states:               states,
+		severityCache:        make(map[string]grypeDB.Severity),
 	}, nil
 }
 
@@ -90,39 +93,102 @@ func (w *writer) writeEntry(entry transformers.RelatedEntries) error {
 	}
 
 	for i := range entry.Related {
-		related := entry.Related[i]
-		switch row := related.(type) {
-		case grypeDB.AffectedPackageHandle:
-			if entry.VulnerabilityHandle != nil {
-				row.VulnerabilityID = entry.VulnerabilityHandle.ID
-			} else {
-				log.WithFields("package", row.Package).Warn("affected package entry does not have a vulnerability ID")
-			}
-			if err := w.store.AddAffectedPackages(&row); err != nil {
-				return fmt.Errorf("unable to write affected-package to store: %w", err)
-			}
-		case grypeDB.AffectedCPEHandle:
-			if entry.VulnerabilityHandle != nil {
-				row.VulnerabilityID = entry.VulnerabilityHandle.ID
-			} else {
-				log.WithFields("cpe", row.CPE).Warn("affected CPE entry does not have a vulnerability ID")
-			}
-			if err := w.store.AddAffectedCPEs(&row); err != nil {
-				return fmt.Errorf("unable to write affected-cpe to store: %w", err)
-			}
-		case grypeDB.KnownExploitedVulnerabilityHandle:
-			if err := w.store.AddKnownExploitedVulnerabilities(&row); err != nil {
-				return fmt.Errorf("unable to write known exploited vulnerability to store: %w", err)
-			}
-		case grypeDB.EpssHandle:
-			if err := w.store.AddEpss(&row); err != nil {
-				return fmt.Errorf("unable to write EPSS to store: %w", err)
-			}
-		default:
-			return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
+		if err := w.writeRelatedEntry(entry.VulnerabilityHandle, entry.Related[i]); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func (w *writer) writeRelatedEntry(vulnHandle *grypeDB.VulnerabilityHandle, related any) error {
+	switch row := related.(type) {
+	case grypeDB.AffectedPackageHandle:
+		return w.writeAffectedPackage(vulnHandle, row)
+	case grypeDB.AffectedCPEHandle:
+		return w.writeAffectedCPE(vulnHandle, row)
+	case grypeDB.KnownExploitedVulnerabilityHandle:
+		return w.store.AddKnownExploitedVulnerabilities(&row)
+	case grypeDB.UnaffectedPackageHandle:
+		return w.writeUnaffectedPackage(vulnHandle, row)
+	case grypeDB.UnaffectedCPEHandle:
+		return w.writeUnaffectedCPE(vulnHandle, row)
+	case grypeDB.EpssHandle:
+		return w.store.AddEpss(&row)
+	case grypeDB.CWEHandle:
+		return w.store.AddCWE(&row)
+	case grypeDB.OperatingSystemEOLHandle:
+		return w.writeOperatingSystemEOL(row)
+	default:
+		return fmt.Errorf("data entry is not of type vulnerability, vulnerability metadata, or exclusion: %T", row)
+	}
+}
+
+func (w *writer) writeAffectedPackage(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.AffectedPackageHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("package", row.Package).Warn("affected package entry does not have a vulnerability ID")
+	}
+
+	if w.failOnMissingFixDate {
+		if err := ensureFixDates(&row); err != nil {
+			fields := logger.Fields{
+				"pkg": row.Package,
+			}
+			if vulnHandle != nil {
+				fields["vulnerability"] = vulnHandle.Name
+			}
+			if row.BlobValue != nil {
+				fields["ranges"] = row.BlobValue.String()
+			}
+			if row.OperatingSystem != nil {
+				fields["os"] = row.OperatingSystem
+			}
+			log.WithFields(fields).Error("fix date validation failed")
+			return fmt.Errorf("unable to validate fix dates: %w", err)
+		}
+	}
+
+	if err := w.store.AddAffectedPackages(&row); err != nil {
+		return fmt.Errorf("unable to write affected-package to store: %w", err)
+	}
+	return nil
+}
+
+func (w *writer) writeAffectedCPE(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.AffectedCPEHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("cpe", row.CPE).Warn("affected CPE entry does not have a vulnerability ID")
+	}
+	if err := w.store.AddAffectedCPEs(&row); err != nil {
+		return fmt.Errorf("unable to write affected-cpe to store: %w", err)
+	}
+	return nil
+}
+
+func (w *writer) writeUnaffectedPackage(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.UnaffectedPackageHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("package", row.Package).Warn("unaffected package entry does not have a vulnerability ID")
+	}
+	if err := w.store.AddUnaffectedPackages(&row); err != nil {
+		return fmt.Errorf("unable to write unaffected-package to store: %w", err)
+	}
+	return nil
+}
+
+func (w *writer) writeUnaffectedCPE(vulnHandle *grypeDB.VulnerabilityHandle, row grypeDB.UnaffectedCPEHandle) error {
+	if vulnHandle != nil {
+		row.VulnerabilityID = vulnHandle.ID
+	} else {
+		log.WithFields("cpe", row.CPE).Warn("unaffected CPE entry does not have a vulnerability ID")
+	}
+	if err := w.store.AddUnaffectedCPEs(&row); err != nil {
+		return fmt.Errorf("unable to write unaffected-cpe to store: %w", err)
+	}
 	return nil
 }
 
@@ -183,6 +249,16 @@ func (w *writer) fillInMissingSeverity(handle *grypeDB.VulnerabilityHandle) {
 	handle.BlobValue.Severities = sevs
 }
 
+func (w writer) Close() error {
+	if err := w.store.Close(); err != nil {
+		return fmt.Errorf("unable to close store: %w", err)
+	}
+
+	log.WithFields("path", w.dbPath).Info("database created")
+
+	return nil
+}
+
 func filterUnknownSeverities(sevs []grypeDB.Severity) []grypeDB.Severity {
 	var out []grypeDB.Severity
 	for _, s := range sevs {
@@ -202,12 +278,48 @@ func isKnownSeverity(s grypeDB.Severity) bool {
 	}
 }
 
-func (w writer) Close() error {
-	if err := w.store.Close(); err != nil {
-		return fmt.Errorf("unable to close store: %w", err)
+func ensureFixDates(row *grypeDB.AffectedPackageHandle) error {
+	if row.BlobValue == nil {
+		return nil
 	}
 
-	log.WithFields("path", w.dbPath).Info("database created")
+	for _, r := range row.BlobValue.Ranges {
+		if r.Fix == nil {
+			continue
+		}
+		if !isFixVersion(r.Fix.Version) || r.Fix.State != grypeDB.FixedStatus {
+			continue
+		}
+		if r.Fix.Detail == nil || r.Fix.Detail.Available == nil || r.Fix.Detail.Available.Date == nil {
+			return fmt.Errorf("missing fix date for version %q", r.Fix.Version)
+		}
+		if r.Fix.Detail.Available.Date.IsZero() {
+			return fmt.Errorf("zero fix date for version %q", r.Fix.Version)
+		}
+	}
+	return nil
+}
+
+func isFixVersion(v string) bool {
+	return v != "" && v != "0" && strings.ToLower(v) != "none"
+}
+
+func (w *writer) writeOperatingSystemEOL(row grypeDB.OperatingSystemEOLHandle) error {
+	spec := grypeDB.OSSpecifier{
+		Name:         row.Name,
+		MajorVersion: row.MajorVersion,
+		MinorVersion: row.MinorVersion,
+		LabelVersion: row.Codename,
+	}
+
+	updated, err := w.store.UpdateOperatingSystemEOL(spec, row.EOLDate, row.EOASDate)
+	if err != nil {
+		return fmt.Errorf("unable to update OS EOL data: %w", err)
+	}
+
+	if updated == 0 {
+		log.WithFields("os", row.String()).Trace("no OS record found to update with EOL data")
+	}
 
 	return nil
 }

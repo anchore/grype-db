@@ -21,10 +21,10 @@ jobs:
     name: "Static analysis"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -39,10 +39,10 @@ jobs:
     name: "Unit tests (Go)"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -59,10 +59,10 @@ jobs:
     name: "Unit tests (Python)"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -79,9 +79,9 @@ jobs:
     name: "Build snapshot artifacts"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -103,7 +103,7 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 #v4.2.4
+        uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 #v5.0.3
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -112,12 +112,12 @@ jobs:
     name: "Discover supported schema versions"
     permissions:
       contents: read
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -131,7 +131,7 @@ jobs:
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/family=i7i/cpu=4+16/ram=32+128
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
@@ -141,7 +141,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           submodules: true
           persist-credentials: false
@@ -155,8 +155,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.actor }}
 
-      - name: Pull vulnerability data
-        run: make download-all-provider-cache
+      - name: Pull latest vulnerability data
+        run: make download-all-provider-cache date=latest
 
       - name: Build and validate the DB
         env:
@@ -164,6 +164,23 @@ jobs:
           SCHEMA_VERSION: ${{ matrix.schema-version }}
         run: make db-acceptance schema="$SCHEMA_VERSION"
 
+  # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
+  # and possibly in branch protection rules
+  Acceptance-Test-Gate:
+    name: "DB acceptance tests"
+    needs: Acceptance-Test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check acceptance test results
+        env:
+          ACCEPTANCE_RESULT: ${{ needs.Acceptance-Test.result }}
+        run: |
+          if [[ "$ACCEPTANCE_RESULT" != "success" ]]; then
+            echo "Acceptance tests failed with result: $ACCEPTANCE_RESULT"
+            exit 1
+          fi
+          echo "All acceptance tests passed"
 
   Cli-Go-Linux:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
@@ -171,9 +188,9 @@ jobs:
     permissions:
       contents: read
     needs: [Build-Snapshot-Artifacts]
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -183,13 +200,13 @@ jobs:
           python: false
 
       - name: Restore CLI test-fixture cache
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 #v4.2.4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 #v5.0.3
         with:
           path: ${{ github.workspace }}/test/cli/test-fixtures/cache
           key: ${{ runner.os }}-cli-test-cache-${{ hashFiles('test/cli/test-fixtures/cache.fingerprint') }}
 
       - name: Download snapshot build
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 #v4.2.4
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 #v5.0.3
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -202,9 +219,9 @@ jobs:
     name: "CLI tests (Python)"
     permissions:
       contents: read
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}/runner=large
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           submodules: true
           persist-credentials: false

@@ -72,7 +72,7 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 			}
 			afs = append(afs, grypeDB.AffectedPackageHandle{
 				Package: getPackage(group),
-				BlobValue: &grypeDB.AffectedPackageBlob{
+				BlobValue: &grypeDB.PackageBlob{
 					CVEs:   getAliases(vuln),
 					Ranges: ranges,
 				},
@@ -89,8 +89,8 @@ func getAffectedPackage(vuln unmarshal.GitHubAdvisory) []grypeDB.AffectedPackage
 	return afs
 }
 
-func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, error) {
-	fixedVersion := grypeDB.AffectedVersion{
+func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.Range, error) {
+	fixedVersion := grypeDB.Version{
 		Type:       getAffectedVersionFormat(fixedInEntry),
 		Constraint: common.EnforceSemVerConstraint(fixedInEntry.Range),
 	}
@@ -99,7 +99,7 @@ func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, e
 		log.Warnf("failed to validate affected version: %v", err)
 		fixedVersion.Type = version.UnknownFormat.String()
 	}
-	return []grypeDB.AffectedRange{
+	return []grypeDB.Range{
 		{
 			Version: fixedVersion,
 			Fix:     getFix(fixedInEntry),
@@ -107,7 +107,7 @@ func getRanges(fixedInEntry unmarshal.GithubFixedIn) ([]grypeDB.AffectedRange, e
 	}, err
 }
 
-func validateAffectedVersion(v grypeDB.AffectedVersion) error {
+func validateAffectedVersion(v grypeDB.Version) error {
 	versionFormat := version.ParseFormat(v.Type)
 	c, err := version.GetConstraint(v.Constraint, versionFormat)
 	if err != nil {
@@ -115,7 +115,7 @@ func validateAffectedVersion(v grypeDB.AffectedVersion) error {
 	}
 
 	// ensure we can use this version format in a comparison
-	ver := version.NewVersion("1.0.0", versionFormat)
+	ver := version.New("1.0.0", versionFormat)
 	if err := ver.Validate(); err != nil {
 		// don't have a good example to use here
 		// TODO: we should consider finding a better way to do this without having to create a valid version for comparison
@@ -145,9 +145,35 @@ func getFix(fixedInEntry unmarshal.GithubFixedIn) *grypeDB.Fix {
 		fixState = grypeDB.FixedStatus
 	}
 
+	var detail *grypeDB.FixDetail
+	availability := getFixAvailability(fixedInEntry)
+	if availability != nil {
+		detail = &grypeDB.FixDetail{
+			Available: availability,
+		}
+	}
+
 	return &grypeDB.Fix{
 		Version: fixedInVersion,
 		State:   fixState,
+		Detail:  detail,
+	}
+}
+
+func getFixAvailability(fixedInEntry unmarshal.GithubFixedIn) *grypeDB.FixAvailability {
+	if fixedInEntry.Available.Date == "" {
+		return nil
+	}
+
+	t := internal.ParseTime(fixedInEntry.Available.Date)
+	if t == nil {
+		log.WithFields("date", fixedInEntry.Available.Date).Warn("unable to parse fix availability date")
+		return nil
+	}
+
+	return &grypeDB.FixAvailability{
+		Date: t,
+		Kind: fixedInEntry.Available.Kind,
 	}
 }
 
@@ -193,6 +219,8 @@ func getPackageType(ecosystem string) pkg.Type {
 		return pkg.SwiftPkg
 	case "rubygems", "ruby", "gem":
 		return pkg.GemPkg
+	case "erlang", "hex", "elixir":
+		return pkg.HexPkg
 	case "apk":
 		return pkg.ApkPkg
 	case "rpm":
@@ -236,7 +264,8 @@ func getSeverities(vulnerability unmarshal.GitHubAdvisory) []grypeDB.Severity {
 		})
 	}
 
-	if vulnerability.Advisory.CVSS != nil {
+	// If the new CVSSSeverities field isn't populated, fallback to the old CVSS property
+	if len(vulnerability.Advisory.CVSSSeverities) == 0 && vulnerability.Advisory.CVSS != nil {
 		severities = append(severities, grypeDB.Severity{
 			Scheme: grypeDB.SeveritySchemeCVSS,
 			Value: grypeDB.CVSSSeverity{
@@ -244,6 +273,16 @@ func getSeverities(vulnerability unmarshal.GitHubAdvisory) []grypeDB.Severity {
 				Version: vulnerability.Advisory.CVSS.Version,
 			},
 		})
+	} else {
+		for _, cvss := range vulnerability.Advisory.CVSSSeverities {
+			severities = append(severities, grypeDB.Severity{
+				Scheme: grypeDB.SeveritySchemeCVSS,
+				Value: grypeDB.CVSSSeverity{
+					Vector:  cvss.Vector,
+					Version: cvss.Version,
+				},
+			})
+		}
 	}
 
 	return severities
@@ -255,13 +294,23 @@ func getAliases(vulnerability unmarshal.GitHubAdvisory) (aliases []string) {
 }
 
 func getReferences(vulnerability unmarshal.GitHubAdvisory) []grypeDB.Reference {
-	// TODO: The additional reference links are not currently captured in the vunnel result, but should be enhanced to
-	// https://github.com/anchore/vunnel/issues/646 to capture this
+	// Capture the GitHub Advisory URL as the first reference
 	refs := []grypeDB.Reference{
 		{
 			URL: vulnerability.Advisory.URL,
 		},
 	}
 
-	return refs
+	for _, reference := range vulnerability.Advisory.References {
+		clean := strings.TrimSpace(reference.URL)
+		if clean == "" {
+			continue
+		}
+		// TODO there is other info we could be capturing too (source)
+		refs = append(refs, grypeDB.Reference{
+			URL: clean,
+		})
+	}
+
+	return transformers.DeduplicateReferences(refs)
 }

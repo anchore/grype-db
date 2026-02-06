@@ -34,7 +34,7 @@ grype-db-manager = "grype_db_manager.cli:run"
 [dependency-groups]
 dev = [
     "mypy<2,>=1.4.1",
-    "pytest<8,>=7.4.0",
+    "pytest>=7.4.0,<10",
     "pytest-sugar>=0.9.7",
     "pytest-unordered>=0.5.2",
     "pytest-cov>=4.1.0",
@@ -80,6 +80,7 @@ source = "uv-dynamic-versioning"
 [tool.uv-dynamic-versioning]
 vcs = "git"
 style = "semver"
+fallback-version = "0.0.0"
 
 [tool.pytest.ini_options]
 testpaths = ["manager/tests"]
@@ -151,7 +152,7 @@ ignore = [
   "PLW2901", # "Outer for loop variable X overwritten by inner assignment target", not useful in most cases
   "RUF100", # no blanket "noqa" usage, can be improved over time, but not now
   "TRY003", # specifying long messages outside the exception class is excellent context! why is this an antipattern?
-  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)` -- not compatible with python 3.9 (even with __future__ import)
+  "COM812", # conflicts with ruff formatter
 ]
 
 

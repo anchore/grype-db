@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/anchore/grype-db/pkg/provider/unmarshal/nvd"
 )
 
 func Test_AffectedCPERange_String(t *testing.T) {
@@ -123,4 +125,59 @@ func Test_AffectedCPERange_String(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_newAffectedRange(t *testing.T) {
+	tests := []struct {
+		name     string
+		match    nvd.CpeMatch
+		expected affectedCPERange
+	}{
+		{
+			name: "basic range without fix info",
+			match: nvd.CpeMatch{
+				VersionStartIncluding: stringPtr("1.0"),
+				VersionEndExcluding:   stringPtr("2.0"),
+			},
+			expected: affectedCPERange{
+				VersionStartIncluding: "1.0",
+				VersionEndExcluding:   "2.0",
+				FixInfo:               nil,
+			},
+		},
+		{
+			name: "range with fix info",
+			match: nvd.CpeMatch{
+				VersionStartIncluding: stringPtr("1.0"),
+				VersionEndExcluding:   stringPtr("2.0"),
+				Fix: &nvd.FixInfo{
+					Version: "2.0",
+					Date:    "2023-06-15",
+					Kind:    "advisory",
+				},
+			},
+			expected: affectedCPERange{
+				VersionStartIncluding: "1.0",
+				VersionEndExcluding:   "2.0",
+				FixInfo: &nvd.FixInfo{
+					Version: "2.0",
+					Date:    "2023-06-15",
+					Kind:    "advisory",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := newAffectedRange(tt.match)
+			if diff := cmp.Diff(tt.expected, actual); diff != "" {
+				t.Errorf("newAffectedRange() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

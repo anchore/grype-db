@@ -20,7 +20,7 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -82,77 +82,45 @@ jobs:
           checkName: "CLI tests (Python)"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
+      - name: Check acceptance test results
+        uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
+        id: acceptance
+        if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "DB acceptance tests"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Quality gate
-        if: (steps.static-analysis.outputs.conclusion != 'success' || steps.unit-go.outputs.conclusion != 'success' || steps.cli-go-linux.outputs.conclusion != 'success' || steps.unit-python.outputs.conclusion != 'success' || steps.cli-python.outputs.conclusion != 'success') && github.event.inputs.bypassQualityGate != 'true'
+        if: (steps.static-analysis.outputs.conclusion != 'success' || steps.unit-go.outputs.conclusion != 'success' || steps.cli-go-linux.outputs.conclusion != 'success' || steps.unit-python.outputs.conclusion != 'success' || steps.cli-python.outputs.conclusion != 'success' || steps.acceptance.outputs.conclusion != 'success') && github.event.inputs.bypassQualityGate != 'true'
         env:
           STATIC_ANALYSIS_STATUS: ${{ steps.static-analysis.outputs.conclusion }}
           GO_UNIT_STATUS: ${{ steps.unit-go.outputs.conclusion }}
           PYTHON_UNIT_STATUS: ${{ steps.unit-python.outputs.conclusion }}
           GO_CLI_LINUX_STATUS: ${{ steps.cli-go-linux.outputs.conclusion }}
           PYTHON_CLI_STATUS: ${{ steps.cli-python.outputs.conclusion }}
+          ACCEPTANCE_STATUS: ${{ steps.acceptance.outputs.conclusion }}
         run: |
           echo "Static Analysis Status: $STATIC_ANALYSIS_STATUS"
           echo "Go Unit Test Status: $GO_UNIT_STATUS"
           echo "Python Unit Test Status: $PYTHON_UNIT_STATUS"
           echo "Go CLI Test (Linux) Status: $GO_CLI_LINUX_STATUS"
           echo "Python CLI Test Status: $PYTHON_CLI_STATUS"
-          false
-
-  read-schema-versions:
-    runs-on: ubuntu-24.04
-    if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
-    outputs:
-      schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
-    steps:
-
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
-        with:
-          persist-credentials: false
-
-      - name: Read supported schema versions
-        id: read-schema-versions
-        run: |
-          content=`cat manager/src/grype_db_manager/data/schema-info.json | jq -c '[.available[] | select(.supported == true) | select(.validate != false) | .schema]'`
-          echo "schema-versions=$content" >> $GITHUB_OUTPUT
-
-  quality-gate-acceptance-test:
-    needs: read-schema-versions
-    runs-on: ubuntu-24.04
-    if: ${{ github.event.inputs.bypassQualityGate != 'true' }}
-    strategy:
-      matrix:
-        schema-version: ${{fromJson(needs.read-schema-versions.outputs.schema-versions)}}
-    steps:
-
-      - name: Check acceptance test results
-        uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be #v1.2.0
-        id: acceptance
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
-          checkName: "Acceptance tests (${{ matrix.schema-version }})"
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Quality gate
-        if: steps.acceptance.outputs.conclusion != 'success'
-        env:
-          ACCEPTANCE_STATUS: ${{ steps.acceptance.outputs.conclusion }}
-        run: |
-          echo "Acceptance Test Status: $ACCEPTANCE_STATUS"
+          echo "DB Acceptance Test Status: $ACCEPTANCE_STATUS"
           false
 
   release:
     needs:
       - quality-gate
-      - quality-gate-acceptance-test
-    if: always() && (needs.quality-gate.result == 'success' || needs.quality-gate.result == 'skipped') && (needs.quality-gate-acceptance-test.result == 'success' || needs.quality-gate-acceptance-test.result == 'skipped')
+    if: always() && (needs.quality-gate.result == 'success' || needs.quality-gate.result == 'skipped')
     permissions:
       contents: write
       packages: write
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           # we need to persist credentials so that we can push the tag
           persist-credentials: true

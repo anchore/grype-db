@@ -2,6 +2,10 @@
 .claude
 CLAUDE.md
 
+# app configs
+/.grype-db.yaml
+/.grype.yaml
+
 # note: you cannot add exceptions for nested paths. You have to add patterns for each parent path as a pattern and specific exceptions for those parents
 # this dance here is to ignore everything in /data but still include the symlink at /data/yardstick/labels
 /data/*
@@ -15,7 +19,7 @@ CLAUDE.md
 /go.work.sum
 
 # tools
-.mise.toml
+mise.toml
 .tool
 
 # default data directories
@@ -24,6 +28,8 @@ CLAUDE.md
 .yardstick
 .grype-db-manager
 /tmp
+/specs
+/hack
 
 /grype-db
 /build
@@ -46,7 +52,6 @@ coverage.txt
 CHANGELOG.md
 VERSION
 TODO
-/.grype-db.yaml
 
 # Binaries for programs and plugins
 *.exe

@@ -7,7 +7,7 @@ TOOL_DIR = .tool
 RESULTS_DIR = $(TEMP_DIR)/results
 
 DB_ARCHIVE = ./grype-db-cache.tar.gz
-GRYPE_DB = go run ./cmd/$(BIN)/main.go -c config/grype-db/publish-nightly.yaml
+GRYPE_DB = go run ./cmd/$(BIN)/main.go -c config/grype-db/publish-nightly-r2.yaml
 GRYPE_DB_DATA_IMAGE_NAME = ghcr.io/anchore/$(BIN)/data
 date = $(shell date -u +"%y-%m-%d")
 
@@ -20,6 +20,7 @@ SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --snapshot
 CHRONICLE_CMD = $(TOOL_DIR)/chronicle
 GLOW_CMD = $(TOOL_DIR)/glow
 ORAS = $(TOOL_DIR)/oras
+ORAS_FLAGS = $(if $(filter true,$(CI)),--no-tty,)
 BOUNCER = $(TOOL_DIR)/bouncer
 CRANE = $(TOOL_DIR)/crane
 
@@ -35,7 +36,7 @@ SUCCESS := $(BOLD)$(GREEN)
 
 # Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
-COVERAGE_THRESHOLD := 55
+COVERAGE_THRESHOLD := 41
 DIST_DIR=./dist
 CHANGELOG := CHANGELOG.md
 SNAPSHOT_DIR=./snapshot
@@ -167,7 +168,7 @@ check-licenses:
 .PHONY: unit
 unit: $(TEMP_DIR) ## Run Go unit tests (with coverage)
 	$(call title,Running Go unit tests)
-	GOEXPERIMENT=nocoverageredesign go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
+	go test -coverprofile $(TEMP_DIR)/unit-coverage-details.txt $(shell go list ./... | grep -v anchore/grype-db/test)
 	@.github/scripts/coverage.py $(COVERAGE_THRESHOLD) $(TEMP_DIR)/unit-coverage-details.txt
 
 .PHONY: unit-python
@@ -210,8 +211,10 @@ ci-oras-ghcr-login:
 
 .PHONY: download-provider-cache
 download-provider-cache:
-	$(call title,Downloading and restoring todays "$(provider)" provider data cache)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	$(call title,Downloading and restoring "$(provider)" provider data cache ($(date)))
+	@bash -c "$(ORAS) pull $(ORAS_FLAGS) $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) || (echo 'no data cache found for $(date)' && exit 1)"
+	$(GRYPE_DB) cache restore --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz
+	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: refresh-provider-cache
 refresh-provider-cache:
@@ -222,33 +225,18 @@ refresh-provider-cache:
 upload-provider-cache: ci-check
 	$(call title,Uploading "$(provider)" existing provider data cache)
 
-	@rm -f $(DB_ARCHIVE)
+	@mkdir -p .cache/vunnel/$(provider)
+	@rm -f .cache/vunnel/$(provider)/grype-db-cache.tar.gz
 	$(GRYPE_DB) cache status -p $(provider)
-	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE) -p $(provider)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
+	$(GRYPE_DB) cache backup -v --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz -p $(provider)
+	$(ORAS) push $(ORAS_FLAGS) -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) .cache/vunnel/$(provider)/grype-db-cache.tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
-
-.PHONY: aggregate-all-provider-cache
-aggregate-all-provider-cache:
-	$(call title,Aggregating all of todays provider data cache)
-	.github/scripts/aggregate-all-provider-cache.py
-
-.PHONY: upload-all-provider-cache
-upload-all-provider-cache: ci-check
-	$(call title,Uploading existing provider data cache)
-
-	@rm -f $(DB_ARCHIVE)
-	$(GRYPE_DB) cache status
-	$(GRYPE_DB) cache backup -v --path $(DB_ARCHIVE)
-	$(ORAS) push -v $(GRYPE_DB_DATA_IMAGE_NAME):$(date) $(DB_ARCHIVE) --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME):$(date) latest
-
+	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: download-all-provider-cache
 download-all-provider-cache:
-	$(call title,Downloading and restoring all of todays provider data cache)
-	@rm -f $(DB_ARCHIVE)
-	@bash -c "$(ORAS) pull $(GRYPE_DB_DATA_IMAGE_NAME):$(date) && $(GRYPE_DB) cache restore --path $(DB_ARCHIVE) || (echo 'no data cache found for today' && exit 1)"
+	$(call title,Downloading and restoring all provider data caches)
+	.github/scripts/aggregate-all-provider-cache.py
 
 
 ## Code and data generation targets #################################

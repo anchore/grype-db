@@ -1,11 +1,29 @@
-name: 'Daily Data Sync'
+name: "Daily Data Sync"
 on:
   # allow for kicking off data syncs manually
   workflow_dispatch:
+    inputs:
+      providers:
+        description: 'Comma-separated list of providers to sync (e.g., "nvd,github,alpine"). Leave empty to sync all providers.'
+        required: false
+        default: ''
+        type: string
 
-  # run 1 AM (UTC) daily
+  # allow other workflows to call this one
+  workflow_call:
+    inputs:
+      providers:
+        description: 'Comma-separated list of providers to sync. Leave empty to sync all providers.'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      SLACK_TOOLBOX_WEBHOOK_URL:
+        required: false
+
+  # run midnight (UTC) daily
   schedule:
-    - cron:  '0 1 * * *'
+    - cron: "0 0 * * *"
 
 env:
   CGO_ENABLED: "0"
@@ -14,15 +32,17 @@ env:
 jobs:
   discover-providers:
     name: "Discover vulnerability providers"
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     if: github.repository == 'anchore/grype-db' # only run for main repo
     permissions:
       contents: read
       packages: read
     outputs:
       providers: ${{ steps.read-providers.outputs.providers }}
+      multicore-providers: ${{ steps.split-providers.outputs.multicore-providers }}
+      other-providers: ${{ steps.split-providers.outputs.other-providers }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -39,26 +59,45 @@ jobs:
 
       - name: Read configured providers
         id: read-providers
-        # TODO: honor CI overrides
+        env:
+          INPUT_PROVIDERS: ${{ inputs.providers }}
         run: |
-          content=`make show-providers`
+          if [ -n "$INPUT_PROVIDERS" ]; then
+            # Convert comma-separated input to JSON array
+            content=$(echo "$INPUT_PROVIDERS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | jq -R . | jq -s -c .)
+          else
+            # Use all configured providers
+            content=$(make show-providers)
+          fi
           echo "providers=$content" >> $GITHUB_OUTPUT
 
-  update-provider:
-    name: "Update provider"
+      - name: Split providers by concurrency needs
+        id: split-providers
+        env:
+          ALL_PROVIDERS: ${{ steps.read-providers.outputs.providers }}
+        run: |
+          multicore_providers=$(echo "$ALL_PROVIDERS" | jq -c '[.[] | select(. == "ubuntu")]')
+          other_providers=$(echo "$ALL_PROVIDERS" | jq -c '[.[] | select(. != "ubuntu")]')
+          echo "multicore-providers=$multicore_providers" >> $GITHUB_OUTPUT
+          echo "other-providers=$other_providers" >> $GITHUB_OUTPUT
+
+  update-provider-multicore:
+    name: "Update provider (multicore)"
     needs: discover-providers
-    runs-on: ubuntu-22.04-4core-16gb
+    if: ${{ needs.discover-providers.outputs.multicore-providers != '[]' }}
+    runs-on: runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}/cpu=32/volume=80gb:gp3/family=r8+m8+r7+r6i+r6a+m7+m6i+m6a
+    timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
-        provider: ${{fromJson(needs.discover-providers.outputs.providers)}}
+        provider: ${{fromJson(needs.discover-providers.outputs.multicore-providers)}}
       fail-fast: false
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -84,14 +123,23 @@ jobs:
           PROVIDER: ${{ matrix.provider }}
         run: make refresh-provider-cache provider="$PROVIDER"
 
-      - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
+      - name: Notify Slack on failure
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
         with:
-          status: ${{ job.status }}
-          fields: workflow,eventName
-          text: Daily Data Sync for ${{ matrix.provider }} failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+          webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Daily Data Sync for ${{ matrix.provider }} failed"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Daily Data Sync for ${{ matrix.provider }} failed*
+                    • Workflow: `${{ github.workflow }}`
+                    • Event: `${{ github.event_name }}`
+                    • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
       - name: Upload the provider workspace state
         # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
@@ -100,20 +148,22 @@ jobs:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
 
-  aggregate-cache:
-    name: "Aggregate provider cache"
-    runs-on: ubuntu-22.04-4core-16gb
-    if: ${{ always() }}
-    needs:
-      - update-provider
-      - discover-providers
-    # set the permissions granted to the github token to read the pull cache from ghcr.io
+  update-provider:
+    name: "Update provider"
+    needs: discover-providers
+    if: ${{ needs.discover-providers.outputs.other-providers != '[]' }}
+    runs-on: runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}/runner=large
+    timeout-minutes: 480
+    # set the permissions granted to the github token to publish to ghcr.io
     permissions:
-      packages: write
       contents: read
+      packages: write
+    strategy:
+      matrix:
+        provider: ${{fromJson(needs.discover-providers.outputs.other-providers)}}
+      fail-fast: false
     steps:
-
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -128,10 +178,39 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.actor }}
 
-      - name: Aggregate vulnerability data
-        run: make aggregate-all-provider-cache
+      - name: Download the existing provider state
         env:
-          PROVIDERS_USED: ${{ needs.discover-providers.outputs.providers }}
+          PROVIDER: ${{ matrix.provider }}
+        run: bash -c "make download-provider-cache provider=\"$PROVIDER\" date=latest || true"
 
-      - name: Upload vulnerability data cache image
-        run: make upload-all-provider-cache
+      - name: Update the provider
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROVIDER: ${{ matrix.provider }}
+        run: make refresh-provider-cache provider="$PROVIDER"
+
+      - name: Notify Slack on failure
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Daily Data Sync for ${{ matrix.provider }} failed"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Daily Data Sync for ${{ matrix.provider }} failed*
+                    • Workflow: `${{ github.workflow }}`
+                    • Event: `${{ github.event_name }}`
+                    • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
+
+      - name: Upload the provider workspace state
+        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
+        if: ${{ always() }}
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: make upload-provider-cache provider="$PROVIDER"
+

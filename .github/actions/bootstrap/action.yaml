@@ -39,18 +39,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 #v6.2.0
       if: inputs.go == 'true'
       with:
         go-version: ${{ inputs.go-version }}
 
     - name: Install uv
       if: inputs.python == 'true'
-      uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1 # v6.5.0
+      uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
       with:
         enable-cache: true
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
       if: inputs.python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
@@ -63,7 +63,7 @@ runs:
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
-      uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v3.4.0
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}

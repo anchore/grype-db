@@ -1,6 +1,8 @@
 package nvd
 
 import (
+	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/scylladb/go-set/strset"
@@ -16,6 +18,8 @@ import (
 	"github.com/anchore/grype/grype/pkg"
 	"github.com/anchore/syft/syft/cpe"
 )
+
+var cwePattern = regexp.MustCompile(`^CWE-\d+$`)
 
 type Config struct {
 	CPEParts            *strset.Set
@@ -66,6 +70,10 @@ func transform(cfg Config, vulnerability unmarshal.NVDVulnerability, state provi
 
 	for _, a := range getAffected(cfg, vulnerability) {
 		in = append(in, a)
+	}
+
+	for _, cwe := range getCWEs(vulnerability) {
+		in = append(in, cwe)
 	}
 
 	return transformers.NewEntries(in...), nil
@@ -157,6 +165,37 @@ func getAffected(cfg Config, vulnerability unmarshal.NVDVulnerability) []grypeDB
 	return affs
 }
 
+func getCWEs(vulnerability unmarshal.NVDVulnerability) []grypeDB.CWEHandle {
+	var cwes []grypeDB.CWEHandle
+	for _, w := range vulnerability.Weaknesses {
+		for _, d := range w.Description {
+			if !isValidCWE(d.Value) {
+				continue
+			}
+			cwes = append(cwes, grypeDB.CWEHandle{
+				CVE:    vulnerability.ID,
+				CWE:    d.Value,
+				Source: w.Source,
+				Type:   w.Type,
+			})
+		}
+	}
+	return cwes
+}
+
+func isValidCWE(cwe string) bool {
+	switch cwe {
+	case "":
+		return false
+	case "NVD-CWE-noinfo":
+		return false // explicitly skip these rather than fill the database with meaningless entries
+	case "NVD-CWE-Other":
+		return true
+	default:
+		return cwePattern.MatchString(cwe)
+	}
+}
+
 func encodeCPEs(cpes []cpe.Attributes) []string {
 	var results []string
 	for _, c := range cpes {
@@ -168,29 +207,29 @@ func encodeCPEs(cpes []cpe.Attributes) []string {
 func affectedApplicationPackage(cfg Config, vulnerability unmarshal.NVDVulnerability, p affectedPackageCandidate) []grypeDB.AffectedCPEHandle {
 	var affs []grypeDB.AffectedCPEHandle
 
-	var qualifiers *grypeDB.AffectedPackageQualifiers
+	var qualifiers *grypeDB.PackageQualifiers
 	if len(p.PlatformCPEs) > 0 {
-		qualifiers = &grypeDB.AffectedPackageQualifiers{
+		qualifiers = &grypeDB.PackageQualifiers{
 			PlatformCPEs: encodeCPEs(p.PlatformCPEs),
 		}
 	}
 
 	affs = append(affs, grypeDB.AffectedCPEHandle{
 		CPE: getCPEFromAttributes(p.VulnerableCPE),
-		BlobValue: &grypeDB.AffectedPackageBlob{
+		BlobValue: &grypeDB.PackageBlob{
 			CVEs:       []string{vulnerability.ID},
 			Qualifiers: qualifiers,
-			Ranges:     getRanges(cfg, p.VulnerableCPE, p.Ranges.toSlice()),
+			Ranges:     getRanges(cfg, p.VulnerableCPE, p.Ranges.toSlice(), vulnerability.ID),
 		},
 	})
 
 	return affs
 }
 
-func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange) []grypeDB.AffectedRange {
-	var ranges []grypeDB.AffectedRange
+func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange, vulnID string) []grypeDB.Range {
+	var ranges []grypeDB.Range
 	for _, ra := range ras {
-		r := getRange(cfg, c, ra)
+		r := getRange(cfg, c, ra, vulnID)
 		if r != nil {
 			ranges = append(ranges, *r)
 		}
@@ -199,17 +238,17 @@ func getRanges(cfg Config, c cpe.Attributes, ras []affectedCPERange) []grypeDB.A
 	return ranges
 }
 
-func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange) *grypeDB.AffectedRange {
-	return &grypeDB.AffectedRange{
-		Version: grypeDB.AffectedVersion{
+func getRange(cfg Config, c cpe.Attributes, ra affectedCPERange, vulnID string) *grypeDB.Range {
+	return &grypeDB.Range{
+		Version: grypeDB.Version{
 			Type:       getVersionFormat(c.Product),
 			Constraint: ra.String(),
 		},
-		Fix: getFix(cfg, c, ra),
+		Fix: getFix(cfg, c, ra, vulnID),
 	}
 }
 
-func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange) *grypeDB.Fix {
+func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange, vulnID string) *grypeDB.Fix {
 	if !cfg.InferNVDFixVersions {
 		return nil
 	}
@@ -240,9 +279,26 @@ func getFix(cfg Config, vulnCPE cpe.Attributes, ra affectedCPERange) *grypeDB.Fi
 		return nil
 	}
 
+	fixVersion := possiblyFixed.List()[0]
+
+	// only include fix details if we have a date and kind that matches the inferred fix version
+	var detail *grypeDB.FixDetail
+	if ra.FixInfo != nil {
+		if fixVersion == ra.FixInfo.Version {
+			detail = &grypeDB.FixDetail{
+				Available: &grypeDB.FixAvailability{
+					Date: internal.ParseTime(ra.FixInfo.Date),
+					Kind: ra.FixInfo.Kind,
+				},
+			}
+		} else {
+			log.WithFields("cpe", vulnCPE, "vuln", vulnID, "range", ra, "fix", ra.FixInfo.Version).Debug("skipping fix detail because it does not match inferred fix version")
+		}
+	}
 	return &grypeDB.Fix{
-		Version: possiblyFixed.List()[0],
+		Version: fixVersion,
 		State:   grypeDB.FixedStatus,
+		Detail:  detail,
 	}
 }
 
@@ -292,12 +348,14 @@ func getReferences(vuln unmarshal.NVDVulnerability) []grypeDB.Reference {
 		if reference.URL == "" {
 			continue
 		}
+		tags := grypeDB.NormalizeReferenceTags(reference.Tags)
+		sort.Strings(tags)
 		// TODO there is other info we could be capturing too (source)
 		references = append(references, grypeDB.Reference{
 			URL:  reference.URL,
-			Tags: grypeDB.NormalizeReferenceTags(reference.Tags),
+			Tags: tags,
 		})
 	}
 
-	return references
+	return transformers.DeduplicateReferences(references)
 }

@@ -14,9 +14,9 @@ on:
         required: true
         default: true
 
-  # run 4 AM (UTC) daily
+  # run 6 AM (UTC) daily
   schedule:
-    - cron:  '0 4 * * *'
+    - cron:  '0 6 * * *'
 
 env:
   CGO_ENABLED: "0"
@@ -30,7 +30,7 @@ jobs:
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
     if: ${{ github.event.inputs.publish-databases != 'false' && github.repository == 'anchore/grype-db' }} # only run for main repo
     name: "Pull vulnerability data"
-    runs-on: ubuntu-24.04
+    runs-on: runs-on=${{ github.run_id }}/runner=small
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
       pull-date: ${{ steps.timestamp.outputs.date }}
@@ -40,7 +40,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
 
@@ -57,7 +57,7 @@ jobs:
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
     needs: discover-schema-versions
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/family=i7i/cpu=4+16/ram=32+128
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
@@ -67,7 +67,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
           submodules: true
@@ -98,14 +98,25 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_CLOUDFLARE_SECRET_ACCESS_KEY }}
           GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
 
-      - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
+      - name: Notify Slack on failure
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
         with:
-          status: ${{ job.status }}
-          fields: workflow,eventName,job
-          text: Publishing the Grype DB has failed (schema ${{ matrix.schema-version }})
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+          webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Publishing the Grype DB has failed (schema ${{ matrix.schema-version }})"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Publishing the Grype DB has failed*
+                    • Schema Version: `${{ matrix.schema-version }}`
+                    • Workflow: `${{ github.workflow }}`
+                    • Event: `${{ github.event_name }}`
+                    • Job Status: `${{ job.status }}`
+                    • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
   publish-listing-file:
     # fun! https://github.com/actions/runner/issues/491#issuecomment-850884422
@@ -122,12 +133,12 @@ jobs:
 
     name: "Publish listing file"
     needs: generate-and-publish-dbs
-    runs-on: ubuntu-22.04-4core-16gb
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
           submodules: true
@@ -146,14 +157,24 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_CLOUDFLARE_SECRET_ACCESS_KEY }}
             GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
 
-      - uses: 8398a7/action-slack@1750b5085f3ec60384090fb7c52965ef822e869e #v3.18.0
+      - name: Notify Slack on failure
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
         with:
-          status: ${{ job.status }}
-          fields: workflow,eventName,job
-          text: Publishing the Grype DB listing file has failed
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
-        if: ${{ failure() && env.SLACK_NOTIFICATIONS == 'true' }}
+          webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Publishing the Grype DB listing file has failed"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Publishing the Grype DB listing file has failed*
+                    • Workflow: `${{ github.workflow }}`
+                    • Event: `${{ github.event_name }}`
+                    • Job Status: `${{ job.status }}`
+                    • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
   sync-listing-file-to-s3:
     name: "Sync listing file to S3"

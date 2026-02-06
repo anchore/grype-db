@@ -44,6 +44,10 @@ func expectedProvider() *grypeDB.Provider {
 	}
 }
 
+func timeRef(t time.Time) *time.Time {
+	return &t
+}
+
 func loadFixture(t *testing.T, fixturePath string) []unmarshal.OSVVulnerability {
 	t.Helper()
 
@@ -64,6 +68,14 @@ func affectedPkgSlice(a ...grypeDB.AffectedPackageHandle) []any {
 	return r
 }
 
+func unaffectedPkgSlice(u ...grypeDB.UnaffectedPackageHandle) []any {
+	var r []any
+	for _, v := range u {
+		r = append(r, v)
+	}
+	return r
+}
+
 func TestTransform(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -79,8 +91,8 @@ func TestTransform(t *testing.T) {
 					Status:        grypeDB.VulnerabilityActive,
 					ProviderID:    "osv",
 					Provider:      expectedProvider(),
-					ModifiedDate:  &[]time.Time{time.Date(2025, time.January, 17, 15, 26, 01, 971000000, time.UTC)}[0],
-					PublishedDate: &[]time.Time{time.Date(2024, time.March, 6, 10, 57, 57, 770000000, time.UTC)}[0],
+					ModifiedDate:  timeRef(time.Date(2025, time.January, 17, 15, 26, 01, 971000000, time.UTC)),
+					PublishedDate: timeRef(time.Date(2024, time.March, 6, 10, 57, 57, 770000000, time.UTC)),
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "BIT-apache-2020-11984",
 						Description: "Apache HTTP server 2.4.32 to 2.4.44 mod_proxy_uwsgi info disclosure and possible RCE",
@@ -107,11 +119,11 @@ func TestTransform(t *testing.T) {
 							Name:      "apache",
 							Ecosystem: "Bitnami",
 						},
-						BlobValue: &grypeDB.AffectedPackageBlob{
+						BlobValue: &grypeDB.PackageBlob{
 							CVEs: []string{"CVE-2020-11984"},
-							Ranges: []grypeDB.AffectedRange{{
-								Version: grypeDB.AffectedVersion{
-									Type:       "semver",
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "bitnami",
 									Constraint: ">=2.4.32,<=2.4.43",
 								},
 							}},
@@ -129,8 +141,8 @@ func TestTransform(t *testing.T) {
 					Status:        grypeDB.VulnerabilityActive,
 					ProviderID:    "osv",
 					Provider:      expectedProvider(),
-					ModifiedDate:  &[]time.Time{time.Date(2024, time.March, 6, 11, 25, 28, 861000000, time.UTC)}[0],
-					PublishedDate: &[]time.Time{time.Date(2024, time.March, 6, 11, 8, 9, 371000000, time.UTC)}[0],
+					ModifiedDate:  timeRef(time.Date(2024, time.March, 6, 11, 25, 28, 861000000, time.UTC)),
+					PublishedDate: timeRef(time.Date(2024, time.March, 6, 11, 8, 9, 371000000, time.UTC)),
 					BlobValue: &grypeDB.VulnerabilityBlob{
 						ID:          "BIT-node-2020-8201",
 						Description: "Node.js < 12.18.4 and < 14.11 can be exploited to perform HTTP desync attacks and deliver malicious payloads to unsuspecting users. The payloads can be crafted by an attacker to hijack user sessions, poison cookies, perform clickjacking, and a multitude of other attacks depending on the architecture of the underlying system. The attack was possible due to a bug in processing of carrier-return symbols in the HTTP header names.",
@@ -157,24 +169,109 @@ func TestTransform(t *testing.T) {
 							Name:      "node",
 							Ecosystem: "Bitnami",
 						},
-						BlobValue: &grypeDB.AffectedPackageBlob{
+						BlobValue: &grypeDB.PackageBlob{
 							CVEs: []string{"CVE-2020-8201"},
-							Ranges: []grypeDB.AffectedRange{{
-								Version: grypeDB.AffectedVersion{
-									Type:       "semver",
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "bitnami",
 									Constraint: ">=12.0.0,<12.18.4",
 								},
 								Fix: &grypeDB.Fix{
 									Version: "12.18.4",
 									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: timeRef(time.Date(2020, time.September, 15, 0, 0, 0, 0, time.UTC)),
+											Kind: "first-observed",
+										},
+									},
 								},
 							}, {
-								Version: grypeDB.AffectedVersion{
-									Type:       "semver",
+								Version: grypeDB.Version{
+									Type:       "bitnami",
 									Constraint: ">=14.0.0,<14.11.0",
 								},
 								Fix: &grypeDB.Fix{
 									Version: "14.11.0",
+									State:   grypeDB.FixedStatus,
+									Detail: &grypeDB.FixDetail{
+										Available: &grypeDB.FixAvailability{
+											Date: timeRef(time.Date(2020, time.September, 15, 0, 0, 0, 0, time.UTC)),
+											Kind: "first-observed",
+										},
+									},
+								},
+							}},
+						},
+					},
+				),
+			}},
+		},
+		{
+			name:        "AlmaLinux Advisory",
+			fixturePath: "test-fixtures/ALSA-2025-7467.json",
+			want: []transformers.RelatedEntries{{
+				VulnerabilityHandle: &grypeDB.VulnerabilityHandle{
+					Name:          "ALSA-2025:7467",
+					Status:        grypeDB.VulnerabilityActive,
+					ProviderID:    "osv",
+					Provider:      expectedProvider(),
+					ModifiedDate:  timeRef(time.Date(2025, time.July, 2, 12, 50, 6, 0, time.UTC)),
+					PublishedDate: timeRef(time.Date(2025, time.May, 13, 0, 0, 0, 0, time.UTC)),
+					BlobValue: &grypeDB.VulnerabilityBlob{
+						ID:          "ALSA-2025:7467",
+						Description: "The skopeo command lets you inspect images from container image registries.",
+						References: []grypeDB.Reference{{
+							ID:   "ALSA-2025:7467",
+							URL:  "https://errata.almalinux.org/10/ALSA-2025-7467.html",
+							Tags: []string{"ADVISORY"},
+						}},
+						Aliases:    []string{"CVE-2025-27144"},
+						Severities: nil,
+					},
+				},
+				Related: unaffectedPkgSlice(
+					grypeDB.UnaffectedPackageHandle{
+						Package: &grypeDB.Package{
+							Name:      "skopeo",
+							Ecosystem: "rpm",
+						},
+						OperatingSystem: &grypeDB.OperatingSystem{
+							Name:         "almalinux",
+							MajorVersion: "10",
+						},
+						BlobValue: &grypeDB.PackageBlob{
+							CVEs: []string{"CVE-2025-27144"},
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "ecosystem",
+									Constraint: ">= 2:1.18.1-1.el10_0",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2:1.18.1-1.el10_0",
+									State:   grypeDB.FixedStatus,
+								},
+							}},
+						},
+					},
+					grypeDB.UnaffectedPackageHandle{
+						Package: &grypeDB.Package{
+							Name:      "skopeo-tests",
+							Ecosystem: "rpm",
+						},
+						OperatingSystem: &grypeDB.OperatingSystem{
+							Name:         "almalinux",
+							MajorVersion: "10",
+						},
+						BlobValue: &grypeDB.PackageBlob{
+							CVEs: []string{"CVE-2025-27144"},
+							Ranges: []grypeDB.Range{{
+								Version: grypeDB.Version{
+									Type:       "ecosystem",
+									Constraint: ">= 2:1.18.1-1.el10_0",
+								},
+								Fix: &grypeDB.Fix{
+									Version: "2:1.18.1-1.el10_0",
 									State:   grypeDB.FixedStatus,
 								},
 							}},
@@ -209,12 +306,14 @@ func TestTransform(t *testing.T) {
 }
 func Test_getGrypeRangesFromRange(t *testing.T) {
 	tests := []struct {
-		name string
-		rnge models.Range
-		want []grypeDB.AffectedRange
+		name      string
+		rnge      models.Range
+		ecosystem string
+		want      []grypeDB.Range
 	}{
 		{
-			name: "single range with 'fixed' status",
+			name:      "single range with 'fixed' status",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -223,8 +322,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					Fixed: "0.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1,<0.0.5",
 				},
@@ -235,7 +334,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			}},
 		},
 		{
-			name: "single range with 'last affected' status",
+			name:      "single range with 'last affected' status",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -244,30 +344,32 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					LastAffected: "0.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1,<=0.0.5",
 				},
 			}},
 		},
 		{
-			name: "single range with no 'fixed' or 'last affected' status",
+			name:      "single range with no 'fixed' or 'last affected' status",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
 					Introduced: "0.0.1",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1",
 				},
 			}},
 		},
 		{
-			name: "single range introduced with '0'",
+			name:      "single range introduced with '0'",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -276,15 +378,16 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					LastAffected: "0.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: "<=0.0.5",
 				},
 			}},
 		},
 		{
-			name: "multiple ranges",
+			name:      "multiple ranges",
+			ecosystem: "npm",
 			rnge: models.Range{
 				Type: models.RangeSemVer,
 				Events: []models.Event{{
@@ -297,8 +400,8 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					Fixed: "1.0.5",
 				}},
 			},
-			want: []grypeDB.AffectedRange{{
-				Version: grypeDB.AffectedVersion{
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=0.0.1,<0.0.5",
 				},
@@ -307,7 +410,7 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 					State:   grypeDB.FixedStatus,
 				},
 			}, {
-				Version: grypeDB.AffectedVersion{
+				Version: grypeDB.Version{
 					Type:       "semver",
 					Constraint: ">=1.0.1,<1.0.5",
 				},
@@ -318,13 +421,52 @@ func Test_getGrypeRangesFromRange(t *testing.T) {
 			},
 			},
 		},
+		{
+			name:      "single range with database-specific fix availability",
+			ecosystem: "npm",
+			rnge: models.Range{
+				Type: models.RangeSemVer,
+				Events: []models.Event{{
+					Introduced: "1.0.0",
+				}, {
+					Fixed: "1.2.3",
+				}},
+				DatabaseSpecific: map[string]interface{}{
+					"anchore": map[string]interface{}{
+						"fixes": []interface{}{
+							map[string]interface{}{
+								"version": "1.2.3",
+								"date":    "2023-06-15",
+								"kind":    "first-observed",
+							},
+						},
+					},
+				},
+			},
+			want: []grypeDB.Range{{
+				Version: grypeDB.Version{
+					Type:       "semver",
+					Constraint: ">=1.0.0,<1.2.3",
+				},
+				Fix: &grypeDB.Fix{
+					Version: "1.2.3",
+					State:   grypeDB.FixedStatus,
+					Detail: &grypeDB.FixDetail{
+						Available: &grypeDB.FixAvailability{
+							Date: timeRef(time.Date(2023, time.June, 15, 0, 0, 0, 0, time.UTC)),
+							Kind: "first-observed",
+						},
+					},
+				},
+			}},
+		},
 	}
 	t.Parallel()
 	for _, testToRun := range tests {
 		test := testToRun
 		t.Run(test.name, func(tt *testing.T) {
 			tt.Parallel()
-			if got := getGrypeRangesFromRange(test.rnge); !reflect.DeepEqual(got, test.want) {
+			if got := getGrypeRangesFromRange(test.rnge, test.ecosystem); !reflect.DeepEqual(got, test.want) {
 				t.Errorf("getGrypeRangesFromRange() = %v, want %v", got, test.want)
 			}
 		})
@@ -445,4 +587,138 @@ func Test_extractCVSSInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_extractRpmModularity(t *testing.T) {
+	tests := []struct {
+		name     string
+		affected models.Affected
+		want     string
+	}{
+		{
+			name: "with rpm_modularity",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "mariadb:10.3",
+				},
+			},
+			want: "mariadb:10.3",
+		},
+		{
+			name: "no ecosystem_specific",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			want: "",
+		},
+		{
+			name: "no rpm_modularity key",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"other_key": "some_value",
+				},
+			},
+			want: "",
+		},
+		{
+			name: "rpm_modularity not string",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": 123,
+				},
+			},
+			want: "",
+		},
+		{
+			name: "nodejs modularity",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "nodejs:16",
+				},
+			},
+			want: "nodejs:16",
+		},
+	}
+
+	for _, testToRun := range tests {
+		test := testToRun
+		t.Run(test.name, func(tt *testing.T) {
+			got := extractRpmModularity(test.affected)
+			if got != test.want {
+				t.Errorf("extractRpmModularity() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func Test_getPackageQualifiers(t *testing.T) {
+	tests := []struct {
+		name     string
+		affected models.Affected
+		cpes     any
+		withCPE  bool
+		want     *grypeDB.PackageQualifiers
+	}{
+		{
+			name: "with rpm_modularity only",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "mariadb:10.3",
+				},
+			},
+			cpes:    nil,
+			withCPE: false,
+			want: &grypeDB.PackageQualifiers{
+				RpmModularity: stringRef("mariadb:10.3"),
+			},
+		},
+		{
+			name: "with CPE only",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			cpes:    []string{"cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*"},
+			withCPE: true,
+			want: &grypeDB.PackageQualifiers{
+				PlatformCPEs: []string{"cpe:2.3:a:vendor:product:*:*:*:*:*:*:*:*"},
+			},
+		},
+		{
+			name: "with both rpm_modularity and CPE",
+			affected: models.Affected{
+				EcosystemSpecific: map[string]interface{}{
+					"rpm_modularity": "nodejs:16",
+				},
+			},
+			cpes:    []string{"cpe:2.3:a:nodejs:nodejs:*:*:*:*:*:*:*:*"},
+			withCPE: true,
+			want: &grypeDB.PackageQualifiers{
+				PlatformCPEs:  []string{"cpe:2.3:a:nodejs:nodejs:*:*:*:*:*:*:*:*"},
+				RpmModularity: stringRef("nodejs:16"),
+			},
+		},
+		{
+			name: "no qualifiers",
+			affected: models.Affected{
+				EcosystemSpecific: nil,
+			},
+			cpes:    nil,
+			withCPE: false,
+			want:    nil,
+		},
+	}
+
+	for _, testToRun := range tests {
+		test := testToRun
+		t.Run(test.name, func(tt *testing.T) {
+			got := getPackageQualifiers(test.affected, test.cpes, test.withCPE)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("getPackageQualifiers() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func stringRef(s string) *string {
+	return &s
 }
