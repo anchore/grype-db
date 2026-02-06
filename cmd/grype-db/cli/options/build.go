@@ -15,6 +15,7 @@ type Build struct {
 	// bound options
 	SkipValidation bool `yaml:"skip-validation" json:"skip-validation" mapstructure:"skip-validation"`
 	SchemaVersion  int  `yaml:"schema-version" json:"schema-version" mapstructure:"schema-version"`
+	BatchSize      int  `yaml:"batch-size" json:"batch-size" mapstructure:"batch-size"`
 
 	// unbound options
 	IncludeCPEParts      []string `yaml:"include-cpe-parts" json:"include-cpe-parts" mapstructure:"include-cpe-parts"`
@@ -28,6 +29,7 @@ func DefaultBuild() Build {
 		DBLocation:           DefaultDBLocation(),
 		SkipValidation:       false,
 		SchemaVersion:        process.DefaultSchemaVersion,
+		BatchSize:            process.DefaultBatchSize,
 		IncludeCPEParts:      []string{"a", "h", "o"},
 		InferNVDFixVersions:  true,
 		Hydrate:              false,
@@ -48,6 +50,12 @@ func (o *Build) AddFlags(flags *pflag.FlagSet) {
 		"DB Schema version to build for",
 	)
 
+	flags.IntVarP(
+		&o.BatchSize,
+		"batch-size", "", o.BatchSize,
+		"number of database operations to batch before flushing to disk (balances throughput with memory usage)",
+	)
+
 	o.DBLocation.AddFlags(flags)
 }
 
@@ -57,6 +65,9 @@ func (o *Build) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 		return err
 	}
 	if err := Bind(v, "build.schema-version", flags.Lookup("schema")); err != nil {
+		return err
+	}
+	if err := Bind(v, "build.batch-size", flags.Lookup("batch-size")); err != nil {
 		return err
 	}
 

@@ -121,6 +121,7 @@ func runBuild(cfg buildConfig) error {
 		InferNVDFixVersions:  cfg.InferNVDFixVersions,
 		Hydrate:              cfg.Hydrate,
 		FailOnMissingFixDate: cfg.FailOnMissingFixDate,
+		BatchSize:            cfg.BatchSize,
 	})
 }
 
