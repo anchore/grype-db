@@ -1,55 +1,88 @@
 # grype-db
 
-Anchore's vulnerability database builder for Grype - transforms upstream vulnerability data into actionable security intelligence.
+Anchore's vulnerability database builder for Grype - transforms upstream vulnerability data into a SQLite database for the Grype vulnerability scanner.
 
 ## Overview
 
-grype-db is a Go-based application that aggregates vulnerability data from multiple upstream sources (NVD, GitHub, Red Hat, etc.) and builds a comprehensive vulnerability database used by Grype vulnerability scanner. It processes various data formats and creates a unified SQLite database with standardized vulnerability information.
+grype-db is a Go-based CLI that aggregates vulnerability data from multiple upstream sources and builds a SQLite database consumed by [Grype](https://github.com/anchore/grype). It uses [vunnel](https://github.com/anchore/vunnel) to fetch upstream data, normalizes it through source-specific processors and transformers, and packages the result for distribution.
 
 ## Core Components
 
-### Database Building (`cmd/grype-db/`)
-- `main.go` - CLI entry point with commands: build, pull, package, cache
-- `cli/commands/` - Command implementations for data operations
-- `application/` - Core application logic and configuration
+### CLI (`cmd/grype-db/`)
+- `main.go` - Entry point
+- `cli/commands/` - Subcommands: `build`, `pull`, `package`, `cache` (with `status`, `delete`, `backup`, `restore`), `list-providers`, `version`
+- `cli/options/` - Flag and config binding for each command
+- `application/` - App lifecycle, config loading, logging
 
 ### Data Processing (`pkg/process/`)
-- Processors for different vulnerability sources (NVD, GitHub, OS vendors, etc.)
-- Schema versioning support (v5, v6) for backward compatibility
-- Data transformers for normalizing vulnerability formats
+- Source-specific processors in `processors/`: NVD, GitHub, OS distros, MSRC (Microsoft), OSV, OpenVEX, EPSS, KEV (Known Exploited Vulnerabilities), EOL (End-of-Life), match exclusions
+- Schema-versioned transformers in `v5/transformers/` and `v6/transformers/` that normalize each source's data into the target DB schema
+- `build.go` - Orchestrates the build pipeline
+- `pull.go` - Orchestrates concurrent provider data fetching
+- `package.go` - Archives the built DB into tar.zst for distribution
 
 ### Provider System (`pkg/provider/`)
-- Interfaces for vulnerability data sources
-- Vunnel integration for upstream data fetching
-- File and SQLite-based data storage
+- `provider.go` - Provider interface for vulnerability data sources
+- `providers/vunnel/` - Vunnel-backed provider (docker or local execution)
+- `providers/external/` - External process-backed provider
+- `entry/` - File and SQLite-based data entry readers
+- `unmarshal/` - Typed deserializers for each data source format (NVD CVE, GitHub advisory, OS advisory, MSRC, OSV, OpenVEX, EPSS, KEV, EOL)
 
 ### Database Management (`manager/`)
-- Python-based database management utilities
-- Distribution and validation tooling
-- S3 integration for database publishing
+- Python package (`grype_db_manager`) for database lifecycle operations
+- `db/` - Schema handling, validation, metadata, listing file management
+- `distribution.py` - S3-based database publishing
+- `grypedb.py` - Orchestration of grype-db CLI from Python
+- `cli/` - CLI for DB validation, listing management, and configuration
 
 ## Key Features
 
-- Multi-source vulnerability aggregation (NVD, GitHub Security Advisories, OS vendors)
-- Schema versioning with backward compatibility
-- Caching system for efficient data updates
-- Database packaging and distribution
-- Validation and testing frameworks
+- Multi-source vulnerability aggregation: NVD, GitHub Security Advisories, OS vendor advisories (Red Hat, Debian, Ubuntu, Alpine, etc.), MSRC, OSV, OpenVEX, EPSS scores, KEV catalog, EOL data
+- Schema versioning (v5, v6) with per-schema transformers for backward compatibility
+- Provider data caching with backup/restore support
+- Database packaging into tar.zst archives with listing file generation
+- Configurable vunnel execution: docker container or local binary
 
 ## Usage
 
+The root command runs the full pipeline (pull + build + package). Subcommands run individual steps.
+
 ```bash
-# Build database from all sources
+# Full pipeline: pull all provider data, build DB, and package it
+# -g generates provider configs from vunnel
 grype-db -g
 
-# Build from specific providers
-grype-db -g -p nvd,github
+# Full pipeline for specific providers (-p takes repeated args, not comma-separated)
+grype-db -g -p nvd -p github
 
-# Pull data only
-grype-db pull -p nvd
+# Pull provider data only
+grype-db pull -g -p nvd
 
-# Package for distribution
+# Build DB from already-pulled data
+grype-db build -g -p nvd
+
+# Package the built DB for distribution
 grype-db package
+
+# List available providers
+grype-db list-providers
+
+# Cache management
+grype-db cache status
+grype-db cache backup --path backup.tar.gz
+grype-db cache restore --path backup.tar.gz
+grype-db cache delete
 ```
 
-The tool requires a GitHub token for accessing GitHub Security Advisories and uses vunnel for upstream data management.
+## Configuration
+
+grype-db is configured via `.grype-db.yaml`, environment variables (`GRYPE_DB_*`), or CLI flags. Key settings:
+
+- `provider.root` - Where provider data is stored (default: `./data`)
+- `provider.vunnel.executor` - How to run vunnel: `docker` (default) or `local`
+- `provider.vunnel.generate-configs` / `-g` flag - Auto-generate provider configs from `vunnel list`
+- `build.schema-version` - Target DB schema version (default: 5)
+- `build.dir` - Output directory for built DB (default: `./build`)
+- `package.publish-base-url` - Base URL for the listing file download entries
+
+A GitHub token (`GITHUB_TOKEN` env var) is needed when pulling from the GitHub provider. Other providers do not require it.
