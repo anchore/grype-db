@@ -21,6 +21,7 @@ CLAUDE.md
 # tools
 mise.toml
 .tool
+.task
 
 # default data directories
 /vunnel

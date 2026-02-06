@@ -17,8 +17,8 @@ inputs:
     description: "Python version to install"
     required: true
     default: "3.12"
-  use-go-cache:
-    description: "Restore go cache"
+  go-dependencies:
+    description: "Download go dependencies"
     required: true
     default: "true"
   cache-key-prefix:
@@ -26,9 +26,9 @@ inputs:
     required: true
     default: "311808ac26"
   build-cache-key-prefix:
-    description: "Prefix build cache key with this value"
-    required: true
-    default: "6d31debf8b"
+    description: "Prefix build cache key with this value (unused, kept for compatibility)"
+    required: false
+    default: ""
   tools:
     description: "whether to install tools"
     default: "true"
@@ -61,22 +61,22 @@ runs:
       run: make bootstrap-python
 
     - name: Restore tool cache
-      if: inputs.tools == 'true'
       id: tool-cache
       uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      if: inputs.tools == 'true'
       with:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}
 
-    - name: (cache-miss) Bootstrap project tools
+    - name: Install project tools
+      if: inputs.tools == 'true'
       shell: bash
-      if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'
-      run: make bootstrap-tools
+      run: make tools
 
-    - name: (cache-miss) Bootstrap go dependencies
+    - name: Install go dependencies
+      if: inputs.go-dependencies == 'true'
       shell: bash
-      if: inputs.go == 'true' && steps.go-mod-cache.outputs.cache-hit != 'true' && inputs.use-go-cache == 'true'
-      run: make bootstrap-go
+      run: make ci-bootstrap-go
 
     - name: Install apt packages
       if: inputs.bootstrap-apt-packages != ''
