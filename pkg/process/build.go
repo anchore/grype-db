@@ -29,6 +29,7 @@ type BuildConfig struct {
 	InferNVDFixVersions  bool
 	Hydrate              bool
 	FailOnMissingFixDate bool // any fixes found without at least one available date will cause a build failure
+	BatchSize            int  // number of operations to batch before committing (default: 2000)
 }
 
 func Build(cfg BuildConfig) error {
@@ -96,11 +97,17 @@ func getProcessors(cfg BuildConfig) ([]data.Processor, error) {
 }
 
 func getWriter(cfg BuildConfig) (data.Writer, error) {
+	// Use default if not configured
+	batchSize := cfg.BatchSize
+	if batchSize == 0 {
+		batchSize = DefaultBatchSize
+	}
+
 	switch cfg.SchemaVersion {
 	case grypeDBv5.SchemaVersion:
-		return v5.NewWriter(cfg.Directory, cfg.Timestamp, cfg.States)
+		return v5.NewWriter(cfg.Directory, cfg.Timestamp, cfg.States, batchSize)
 	case grypeDBv6.ModelVersion:
-		return v6.NewWriter(cfg.Directory, cfg.States, cfg.FailOnMissingFixDate)
+		return v6.NewWriter(cfg.Directory, cfg.States, cfg.FailOnMissingFixDate, batchSize)
 	default:
 		return nil, fmt.Errorf("unable to create writer: unsupported schema version: %+v", cfg.SchemaVersion)
 	}
