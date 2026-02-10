@@ -27,6 +27,7 @@ provider:
     - name: mariner
     - name: minimos
     - name: oracle
+    - name: photon
     - name: rhel
     - name: secureos
     - name: sles
