@@ -6,7 +6,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.0.0-20250318195838-07ae343dd722
-	github.com/anchore/grype v0.108.1-0.20260210202509-08da0c9eae57
+	github.com/anchore/grype v0.108.1-0.20260211150009-1b67076efe2f
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.0
@@ -42,7 +42,7 @@ require (
 	cyphar.com/go-pathrs v0.2.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/CycloneDX/cyclonedx-go v0.9.3 // indirect
+	github.com/CycloneDX/cyclonedx-go v0.10.0 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.29.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.54.0 // indirect
