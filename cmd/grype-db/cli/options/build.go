@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/anchore/grype-db/pkg/process"
+	"github.com/anchore/grype/grype/db"
 )
 
 var _ Interface = &Build{}
@@ -28,8 +28,8 @@ func DefaultBuild() Build {
 	return Build{
 		DBLocation:           DefaultDBLocation(),
 		SkipValidation:       false,
-		SchemaVersion:        process.DefaultSchemaVersion,
-		BatchSize:            process.DefaultBatchSize,
+		SchemaVersion:        db.DefaultSchemaVersion,
+		BatchSize:            db.DefaultBatchSize,
 		IncludeCPEParts:      []string{"a", "h", "o"},
 		InferNVDFixVersions:  true,
 		Hydrate:              false,

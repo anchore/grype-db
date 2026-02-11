@@ -12,7 +12,7 @@ import (
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/provider"
+	"github.com/anchore/grype/grype/db/provider"
 )
 
 var _ options.Interface = &cacheDeleteConfig{}

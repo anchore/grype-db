@@ -17,7 +17,7 @@ import (
 
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/tarutil"
-	"github.com/anchore/grype-db/pkg/provider"
+	"github.com/anchore/grype/grype/db/provider"
 )
 
 func Test_archiveProvider(t *testing.T) {

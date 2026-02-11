@@ -11,12 +11,12 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/providers"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/providers/vunnel"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/process"
-	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype-db/pkg/provider/providers"
-	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
+	"github.com/anchore/grype/grype/db"
+	"github.com/anchore/grype/grype/db/provider"
 )
 
 var _ options.Interface = &buildConfig{}
@@ -112,7 +112,7 @@ func runBuild(cfg buildConfig) error {
 		return fmt.Errorf("unable to get earliest timestamp: %w", err)
 	}
 
-	return process.Build(process.BuildConfig{
+	return db.Build(db.BuildConfig{
 		SchemaVersion:        cfg.SchemaVersion,
 		Directory:            cfg.Directory,
 		States:               states,
@@ -125,7 +125,7 @@ func runBuild(cfg buildConfig) error {
 	})
 }
 
-func providerStates(skipValidation bool, providers []provider.Provider) ([]provider.State, error) {
+func providerStates(skipValidation bool, providers []provider.Reader) ([]provider.State, error) {
 	var states []provider.State
 	log.Debug("reading all provider state")
 

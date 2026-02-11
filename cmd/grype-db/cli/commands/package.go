@@ -10,7 +10,7 @@ import (
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
-	"github.com/anchore/grype-db/pkg/process"
+	"github.com/anchore/grype/grype/db"
 )
 
 var _ options.Interface = &buildConfig{}
@@ -58,5 +58,5 @@ func Package(app *application.Application) *cobra.Command {
 }
 
 func runPackage(cfg packageConfig) error {
-	return process.Package(cfg.Directory, cfg.PublishBaseURL, cfg.OverrideArchiveExtension, cfg.CompressorCommands)
+	return db.Package(cfg.Directory, cfg.PublishBaseURL, cfg.OverrideArchiveExtension, cfg.CompressorCommands)
 }

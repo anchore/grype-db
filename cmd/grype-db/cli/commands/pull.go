@@ -8,12 +8,12 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/anchore/grype-db/cmd/grype-db/application"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/providers"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/providers/vunnel"
+	"github.com/anchore/grype-db/cmd/grype-db/cli/internal/pull"
 	"github.com/anchore/grype-db/cmd/grype-db/cli/options"
 	"github.com/anchore/grype-db/internal/log"
-	"github.com/anchore/grype-db/pkg/process"
-	"github.com/anchore/grype-db/pkg/provider"
-	"github.com/anchore/grype-db/pkg/provider/providers"
-	"github.com/anchore/grype-db/pkg/provider/providers/vunnel"
+	"github.com/anchore/grype/grype/db/provider"
 )
 
 var _ options.Interface = &pullConfig{}
@@ -76,7 +76,7 @@ func runPull(cfg pullConfig) error {
 		ps = ps.Filter(cfg.IncludeFilter...)
 	}
 
-	c := process.PullConfig{
+	c := pull.Config{
 		Parallelism: cfg.Parallelism,
 		Collection: provider.Collection{
 			Root:      cfg.Root,
@@ -84,5 +84,5 @@ func runPull(cfg pullConfig) error {
 		},
 	}
 
-	return process.Pull(c)
+	return pull.Pull(c)
 }
