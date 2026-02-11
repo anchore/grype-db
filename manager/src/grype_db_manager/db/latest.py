@@ -59,7 +59,7 @@ class Latest:
 
 @contextlib.contextmanager
 def _http_server(directory: str, schema_version: str) -> Iterator[str]:
-    major_version = schema_version.split(".")[0].removeprefix("v")
+    major_version = schema_version.split(".", maxsplit=1)[0].removeprefix("v")
     server_address = ("127.0.0.1", 5555)
     url = f"http://{server_address[0]}:{server_address[1]}"
     latest_url = f"{url}/v{major_version}/{LATEST_FILENAME}"

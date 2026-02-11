@@ -116,7 +116,7 @@ def get_paths_by_basename(paths: list[str]) -> dict[str, str]:
 
 
 def age_from_basename(basename: str) -> int | None:
-    fields = basename.split(".")[0].split("_")
+    fields = basename.split(".", maxsplit=1)[0].split("_")
     if len(fields) < 3:
         return None
 
