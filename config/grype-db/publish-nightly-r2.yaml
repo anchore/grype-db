@@ -42,6 +42,9 @@ provider:
       GITHUB_TOKEN: $GITHUB_TOKEN
       NVD_API_KEY: $NVD_API_KEY
 
+build:
+  batch-size: 10000
+
 pull:
   parallelism: 4
 
