@@ -43,7 +43,7 @@ provider:
       NVD_API_KEY: $NVD_API_KEY
 
 build:
-  batch-size: 40000
+  batch-size: 10000
 
 pull:
   parallelism: 4
