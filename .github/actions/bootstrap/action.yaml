@@ -12,7 +12,7 @@ inputs:
   go-version:
     description: "Go version to install"
     required: true
-    default: "1.24.x"
+    default: "1.25.x"
   python-version:
     description: "Python version to install"
     required: true
@@ -66,7 +66,7 @@ runs:
       uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
         path: ${{ github.workspace }}/.tool
-        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-tool-${{ hashFiles('.binny.yaml') }}
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}
 
     - name: (cache-miss) Bootstrap project tools
       shell: bash
