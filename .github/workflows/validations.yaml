@@ -131,7 +131,7 @@ jobs:
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/family=i7ie+i8g+i4i/cpu=4+16/ram=32+128/spot=price-capacity-optimized
+    runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/family=i7ie+i8g/cpu=4+16/ram=32+128/spot=price-capacity-optimized
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
