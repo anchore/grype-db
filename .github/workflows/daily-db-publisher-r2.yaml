@@ -30,7 +30,7 @@ jobs:
     # b) if not using workflow_dispatch the default values are empty, which means we want these to effectively evaluate to true (so only check the negative case)
     if: ${{ github.event.inputs.publish-databases != 'false' && github.repository == 'anchore/grype-db' }} # only run for main repo
     name: "Pull vulnerability data"
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: ubuntu-24.04
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
       pull-date: ${{ steps.timestamp.outputs.date }}
@@ -57,7 +57,7 @@ jobs:
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
     needs: discover-schema-versions
-    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/family=i7i/cpu=4+16/ram=32+128
+    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/family=i7ie/cpu=4+16/ram=32+64/spot=price-capacity-optimized
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}

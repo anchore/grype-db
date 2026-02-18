@@ -21,7 +21,7 @@ jobs:
     name: "Static analysis"
     permissions:
       contents: read
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -39,7 +39,7 @@ jobs:
     name: "Unit tests (Go)"
     permissions:
       contents: read
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -59,7 +59,7 @@ jobs:
     name: "Unit tests (Python)"
     permissions:
       contents: read
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -79,7 +79,7 @@ jobs:
     name: "Build snapshot artifacts"
     permissions:
       contents: read
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: runs-on=${{ github.run_id }}/cpu=16/ram=32/family=c5+c6+c7/spot=price-capacity-optimized
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
@@ -112,7 +112,7 @@ jobs:
     name: "Discover supported schema versions"
     permissions:
       contents: read
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: ubuntu-latest
     outputs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
@@ -131,7 +131,7 @@ jobs:
   Acceptance-Test:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
-    runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/family=i7i/cpu=4+16/ram=32+128
+    runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/family=i7ie/cpu=4+16/ram=32+64/spot=price-capacity-optimized
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
@@ -188,7 +188,7 @@ jobs:
     permissions:
       contents: read
     needs: [Build-Snapshot-Artifacts]
-    runs-on: runs-on=${{ github.run_id }}/runner=small
+    runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
@@ -219,7 +219,7 @@ jobs:
     name: "CLI tests (Python)"
     permissions:
       contents: read
-    runs-on: runs-on=${{ github.run_id }}/runner=large
+    runs-on: runs-on=${{ github.run_id }}/cpu=8/ram=32/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
