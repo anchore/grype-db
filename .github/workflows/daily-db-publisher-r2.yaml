@@ -57,7 +57,7 @@ jobs:
     if: ${{ github.event.inputs.publish-databases != 'false' }}
     name: "Generate and publish DBs"
     needs: discover-schema-versions
-    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/family=i7ie+i8g/cpu=4+16/ram=32+64/spot=price-capacity-optimized
+    runs-on: runs-on=${{ github.run_id }}-publish-${{ strategy.job-index }}/family=i7ie/cpu=4+16/ram=32+64/spot=price-capacity-optimized
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.discover-schema-versions.outputs.schema-versions)}}
