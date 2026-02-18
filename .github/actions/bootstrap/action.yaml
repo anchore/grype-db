@@ -12,7 +12,7 @@ inputs:
   go-version:
     description: "Go version to install"
     required: true
-    default: "1.24.x"
+    default: "1.25.x"
   python-version:
     description: "Python version to install"
     required: true
@@ -43,6 +43,7 @@ runs:
       if: inputs.go == 'true'
       with:
         go-version: ${{ inputs.go-version }}
+        check-latest: true
 
     - name: Install uv
       if: inputs.python == 'true'
