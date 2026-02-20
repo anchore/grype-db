@@ -41,7 +41,7 @@ type autoDeleteFile struct {
 func (f *autoDeleteFile) Close() error {
 	name := f.Name()
 	err := f.File.Close()
-	if removeErr := os.Remove(name); removeErr != nil && err == nil {
+	if removeErr := os.Remove(name); removeErr != nil && err == nil { // #nosec G703 -- removing file we own, not user-controlled path
 		err = removeErr
 	}
 	return err
@@ -77,14 +77,14 @@ func readerWithSize(reader io.Reader) (int64, io.ReadCloser, error) {
 		size, err := io.Copy(tmpFile, reader)
 		if err != nil {
 			tmpFile.Close()
-			os.Remove(tmpFile.Name())
+			os.Remove(tmpFile.Name()) // #nosec G703 -- removing temp file we just created
 			return 0, nil, fmt.Errorf("unable to copy to temp file: %w", err)
 		}
 
 		// Seek back to beginning for reading
 		if _, err := tmpFile.Seek(0, 0); err != nil {
 			tmpFile.Close()
-			os.Remove(tmpFile.Name())
+			os.Remove(tmpFile.Name()) // #nosec G703 -- removing temp file we just created
 			return 0, nil, fmt.Errorf("unable to seek temp file: %w", err)
 		}
 

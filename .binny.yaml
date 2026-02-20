@@ -10,7 +10,7 @@ tools:
   # used for linting
   - name: golangci-lint
     version:
-      want: v2.9.0
+      want: v2.10.1
     method: github-release
     with:
       repo: golangci/golangci-lint
@@ -58,7 +58,7 @@ tools:
   # used for triggering a release
   - name: gh
     version:
-      want: v2.86.0
+      want: v2.87.0
     method: github-release
     with:
       repo: cli/cli
@@ -73,7 +73,7 @@ tools:
 
   - name: crane
     version:
-      want: v0.20.7
+      want: v0.21.0
     method: go-install
     with:
       module: github.com/google/go-containerregistry
