@@ -97,7 +97,20 @@ jobs:
     name: "Update provider (multicore)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.multicore-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}/runner=grype-db-pull-multicore
+    # runson family --cpu=16 --mem="32:64" --budget=1.0 --globs -o yaml
+    # - "c6*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.54-$0.91/hr
+    # - "c7*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.58-$1.00/hr
+    # - "c5*"  # compute, amd64/x86_64, 16 CPU, 32-42GB, NVMe:400-600GB, $0.62-$0.86/hr
+    # - "m6*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.62-$0.95/hr
+    # - "m7*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.65-$0.93/hr
+    # - "m5*"  # general, amd64/x86_64, 16 CPU, 64GB, NVMe:600GB, $0.69-$0.95/hr
+    runs-on:
+      - runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}
+      - cpu=16
+      - ram=32+64
+      - family=c6+c7+c5+m6+m7+m5
+      - spot=price-capacity-optimized
+      - extras=s3-cache
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
@@ -164,7 +177,29 @@ jobs:
     name: "Update provider (large)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.large-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-large-${{ strategy.job-index }}/runner=grype-db-pull-large
+    # runson family --cpu=8 --mem="16:64" --budget=0.7 --local-nvme --globs -o yaml
+    # - "c6gd*"  # compute, arm64, 8 CPU, 16GB, NVMe:474GB, $0.31/hr
+    # - "c5ad*"  # compute, amd64, 8 CPU, 16GB, NVMe:300GB, $0.34/hr
+    # - "m6gd*"  # general, arm64, 8 CPU, 32GB, NVMe:474GB, $0.36/hr
+    # - "c7gd*"  # compute, arm64, 8 CPU, 16GB, NVMe:474GB, $0.36/hr
+    # - "c5d*"   # compute, x86_64, 8 CPU, 16GB, NVMe:200GB, $0.38/hr
+    # - "c6id*"  # compute, x86_64, 8 CPU, 16GB, NVMe:474GB, $0.40/hr
+    # - "m5ad*"  # general, amd64, 8 CPU, 32GB, NVMe:300GB, $0.41/hr
+    # - "m7gd*"  # general, arm64, 8 CPU, 32GB, NVMe:474GB, $0.43/hr
+    # - "m5d*"   # general, x86_64, 8 CPU, 32GB, NVMe:300GB, $0.45-$0.54/hr
+    # - "r6gd*"  # memory, arm64, 8 CPU, 64GB, NVMe:474GB, $0.46/hr
+    # - "m6id*"  # general, x86_64, 8 CPU, 32GB, NVMe:474GB, $0.47-$0.64/hr
+    # - "r5ad*"  # memory, amd64, 8 CPU, 64GB, NVMe:300GB, $0.52/hr
+    # - "r7gd*"  # memory, arm64, 8 CPU, 64GB, NVMe:474GB, $0.54/hr
+    # - "r5d*"   # memory, x86_64, 8 CPU, 64GB, NVMe:300GB, $0.58-$0.67/hr
+    # - "r6id*"  # memory, x86_64, 8 CPU, 64GB, NVMe:474GB, $0.60/hr
+    runs-on:
+      - runs-on=${{ github.run_id }}-large-${{ strategy.job-index }}
+      - cpu=8
+      - ram=16+64
+      - family=c6gd+c5ad+m6gd+c7gd+c5d+c6id+m5ad+m7gd+m5d+r6gd+m6id+r5ad+r7gd+r5d+r6id
+      - spot=price-capacity-optimized
+      - extras=s3-cache
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
@@ -230,7 +265,22 @@ jobs:
     name: "Update provider"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.other-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}/runner=grype-db-pull
+    # runson family --cpu=8 --mem="16:32" --budget=0.5 --globs -o yaml
+    # - "t4*"  # burstable, arm64, 8 CPU, 32GB, EBS:695Mbps, $0.27/hr
+    # - "c6*"  # compute, amd64/arm64/x86_64, 8 CPU, 16GB, NVMe:474GB, $0.27-$0.45/hr
+    # - "c7*"  # compute, amd64/arm64/x86_64, 8 CPU, 16GB, NVMe:474GB, $0.29-$0.50/hr
+    # - "t3*"  # burstable, amd64/x86_64, 8 CPU, 32GB, EBS:695Mbps, $0.30-$0.33/hr
+    # - "c5*"  # compute, amd64/x86_64, 8 CPU, 16-21GB, NVMe:200-300GB, $0.31-$0.43/hr
+    # - "m6*"  # general, amd64/arm64/x86_64, 8 CPU, 32GB, NVMe:474GB, $0.31-$0.47/hr
+    # - "m7*"  # general, amd64/arm64/x86_64, 8 CPU, 32GB, NVMe:474GB, $0.33-$0.46/hr
+    # - "m5*"  # general, amd64/x86_64, 8 CPU, 32GB, NVMe:300GB, $0.34-$0.48/hr
+    runs-on:
+      - runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}
+      - cpu=8
+      - ram=16+32
+      - family=t4+c6+c7+t3+c5+m6+m7+m5
+      - spot=price-capacity-optimized
+      - extras=s3-cache
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
