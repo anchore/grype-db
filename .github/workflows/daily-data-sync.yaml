@@ -97,7 +97,7 @@ jobs:
     name: "Update provider (multicore)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.multicore-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}/cpu=16/ram=64/family=m5+m6+m7/spot=price-capacity-optimized
+    runs-on: runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}/runner=grype-db-pull-multicore
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
@@ -164,7 +164,7 @@ jobs:
     name: "Update provider (large)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.large-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-large-${{ strategy.job-index }}/cpu=8/ram=32/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized/volume=100gb:gp3:750mbs:4000iops
+    runs-on: runs-on=${{ github.run_id }}-large-${{ strategy.job-index }}/runner=grype-db-pull-large
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
@@ -230,7 +230,7 @@ jobs:
     name: "Update provider"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.other-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}/cpu=8/ram=32/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
+    runs-on: runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}/runner=grype-db-pull
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
