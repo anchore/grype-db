@@ -40,6 +40,7 @@ jobs:
     outputs:
       providers: ${{ steps.read-providers.outputs.providers }}
       multicore-providers: ${{ steps.split-providers.outputs.multicore-providers }}
+      large-providers: ${{ steps.split-providers.outputs.large-providers }}
       other-providers: ${{ steps.split-providers.outputs.other-providers }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -71,21 +72,45 @@ jobs:
           fi
           echo "providers=$content" >> $GITHUB_OUTPUT
 
-      - name: Split providers by concurrency needs
+      - name: Split providers by resource needs
         id: split-providers
         env:
           ALL_PROVIDERS: ${{ steps.read-providers.outputs.providers }}
         run: |
-          multicore_providers=$(echo "$ALL_PROVIDERS" | jq -c '[.[] | select(. == "ubuntu")]')
-          other_providers=$(echo "$ALL_PROVIDERS" | jq -c '[.[] | select(. != "ubuntu")]')
+          # use vunnel tags to determine resource requirements
+          multicore_tagged=$(docker run --rm --pull=always ghcr.io/anchore/vunnel:latest list --tag multicore -o json | jq -c '[.providers[].name]')
+          large_tagged=$(docker run --rm ghcr.io/anchore/vunnel:latest list --tag large --tag '!multicore' -o json | jq -c '[.providers[].name]')
+
+          # intersect with the requested provider list and split into three categories
+          multicore_providers=$(jq -n -c --argjson all "$ALL_PROVIDERS" --argjson tagged "$multicore_tagged" \
+            '$all | map(select(. as $p | $tagged | index($p)))')
+          large_providers=$(jq -n -c --argjson all "$ALL_PROVIDERS" --argjson tagged "$large_tagged" \
+            '$all | map(select(. as $p | $tagged | index($p)))')
+          other_providers=$(jq -n -c --argjson all "$ALL_PROVIDERS" --argjson mc "$multicore_tagged" --argjson lg "$large_tagged" \
+            '$all | map(select(. as $p | ($mc | index($p) | not) and ($lg | index($p) | not)))')
+
           echo "multicore-providers=$multicore_providers" >> $GITHUB_OUTPUT
+          echo "large-providers=$large_providers" >> $GITHUB_OUTPUT
           echo "other-providers=$other_providers" >> $GITHUB_OUTPUT
 
   update-provider-multicore:
     name: "Update provider (multicore)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.multicore-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}/cpu=16/ram=64/family=m5+m6+m7/spot=price-capacity-optimized
+    # runson family --cpu=16 --mem="32:64" --budget=1.0 --globs -o yaml
+    # - "c6*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.54-$0.91/hr
+    # - "c7*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.58-$1.00/hr
+    # - "c5*"  # compute, amd64/x86_64, 16 CPU, 32-42GB, NVMe:400-600GB, $0.62-$0.86/hr
+    # - "m6*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.62-$0.95/hr
+    # - "m7*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.65-$0.93/hr
+    # - "m5*"  # general, amd64/x86_64, 16 CPU, 64GB, NVMe:600GB, $0.69-$0.95/hr
+    runs-on:
+      - runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}
+      - cpu=16
+      - ram=32+64
+      - family=c6+c7+c5+m6+m7+m5
+      - spot=price-capacity-optimized
+      - extras=s3-cache
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
@@ -148,11 +173,114 @@ jobs:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
 
+  update-provider-large:
+    name: "Update provider (large)"
+    needs: discover-providers
+    if: ${{ needs.discover-providers.outputs.large-providers != '[]' }}
+    # runson family --cpu=8 --mem="16:64" --budget=0.7 --local-nvme --globs -o yaml
+    # - "c6gd*"  # compute, arm64, 8 CPU, 16GB, NVMe:474GB, $0.31/hr
+    # - "c5ad*"  # compute, amd64, 8 CPU, 16GB, NVMe:300GB, $0.34/hr
+    # - "m6gd*"  # general, arm64, 8 CPU, 32GB, NVMe:474GB, $0.36/hr
+    # - "c7gd*"  # compute, arm64, 8 CPU, 16GB, NVMe:474GB, $0.36/hr
+    # - "c5d*"   # compute, x86_64, 8 CPU, 16GB, NVMe:200GB, $0.38/hr
+    # - "c6id*"  # compute, x86_64, 8 CPU, 16GB, NVMe:474GB, $0.40/hr
+    # - "m5ad*"  # general, amd64, 8 CPU, 32GB, NVMe:300GB, $0.41/hr
+    # - "m7gd*"  # general, arm64, 8 CPU, 32GB, NVMe:474GB, $0.43/hr
+    # - "m5d*"   # general, x86_64, 8 CPU, 32GB, NVMe:300GB, $0.45-$0.54/hr
+    # - "r6gd*"  # memory, arm64, 8 CPU, 64GB, NVMe:474GB, $0.46/hr
+    # - "m6id*"  # general, x86_64, 8 CPU, 32GB, NVMe:474GB, $0.47-$0.64/hr
+    # - "r5ad*"  # memory, amd64, 8 CPU, 64GB, NVMe:300GB, $0.52/hr
+    # - "r7gd*"  # memory, arm64, 8 CPU, 64GB, NVMe:474GB, $0.54/hr
+    # - "r5d*"   # memory, x86_64, 8 CPU, 64GB, NVMe:300GB, $0.58-$0.67/hr
+    # - "r6id*"  # memory, x86_64, 8 CPU, 64GB, NVMe:474GB, $0.60/hr
+    runs-on:
+      - runs-on=${{ github.run_id }}-large-${{ strategy.job-index }}
+      - cpu=8
+      - ram=16+64
+      - family=c6gd+c5ad+m6gd+c7gd+c5d+c6id+m5ad+m7gd+m5d+r6gd+m6id+r5ad+r7gd+r5d+r6id
+      - spot=price-capacity-optimized
+      - extras=s3-cache
+    timeout-minutes: 480
+    # set the permissions granted to the github token to publish to ghcr.io
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        provider: ${{fromJson(needs.discover-providers.outputs.large-providers)}}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+        with:
+          python: false
+
+      - name: Login to ghcr.io
+        run: make ci-oras-ghcr-login
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+
+      - name: Download the existing provider state
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: bash -c "make download-provider-cache provider=\"$PROVIDER\" date=latest || true"
+
+      - name: Update the provider
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROVIDER: ${{ matrix.provider }}
+        run: make refresh-provider-cache provider="$PROVIDER"
+
+      - name: Notify Slack on failure
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Daily Data Sync for ${{ matrix.provider }} failed"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: |
+                    *Daily Data Sync for ${{ matrix.provider }} failed*
+                    • Workflow: `${{ github.workflow }}`
+                    • Event: `${{ github.event_name }}`
+                    • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
+        if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
+
+      - name: Upload the provider workspace state
+        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
+        if: ${{ always() }}
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: make upload-provider-cache provider="$PROVIDER"
+
   update-provider:
     name: "Update provider"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.other-providers != '[]' }}
-    runs-on: runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}/cpu=8/ram=32/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
+    # runson family --cpu=8 --mem="16:32" --budget=0.5 --globs -o yaml
+    # - "t4*"  # burstable, arm64, 8 CPU, 32GB, EBS:695Mbps, $0.27/hr
+    # - "c6*"  # compute, amd64/arm64/x86_64, 8 CPU, 16GB, NVMe:474GB, $0.27-$0.45/hr
+    # - "c7*"  # compute, amd64/arm64/x86_64, 8 CPU, 16GB, NVMe:474GB, $0.29-$0.50/hr
+    # - "t3*"  # burstable, amd64/x86_64, 8 CPU, 32GB, EBS:695Mbps, $0.30-$0.33/hr
+    # - "c5*"  # compute, amd64/x86_64, 8 CPU, 16-21GB, NVMe:200-300GB, $0.31-$0.43/hr
+    # - "m6*"  # general, amd64/arm64/x86_64, 8 CPU, 32GB, NVMe:474GB, $0.31-$0.47/hr
+    # - "m7*"  # general, amd64/arm64/x86_64, 8 CPU, 32GB, NVMe:474GB, $0.33-$0.46/hr
+    # - "m5*"  # general, amd64/x86_64, 8 CPU, 32GB, NVMe:300GB, $0.34-$0.48/hr
+    runs-on:
+      - runs-on=${{ github.run_id }}-provider-${{ strategy.job-index }}
+      - cpu=8
+      - ram=16+32
+      - family=t4+c6+c7+t3+c5+m6+m7+m5
+      - spot=price-capacity-optimized
+      - extras=s3-cache
     timeout-minutes: 480
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
