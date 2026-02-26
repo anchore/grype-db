@@ -26,7 +26,7 @@ tools:
   # used to release all artifacts
   - name: goreleaser
     version:
-      want: v2.14.0
+      want: v2.14.1
     method: github-release
     with:
       repo: goreleaser/goreleaser
@@ -58,7 +58,7 @@ tools:
   # used for triggering a release
   - name: gh
     version:
-      want: v2.87.2
+      want: v2.87.3
     method: github-release
     with:
       repo: cli/cli
@@ -73,7 +73,7 @@ tools:
 
   - name: crane
     version:
-      want: v0.21.0
+      want: v0.21.1
     method: go-install
     with:
       module: github.com/google/go-containerregistry
