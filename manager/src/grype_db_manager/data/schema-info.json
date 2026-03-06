@@ -23,7 +23,7 @@
     {
       "schema": "5",
       "grype-version": "v0.87.0",
-      "supported": true
+      "supported": false
     },
     {
       "schema": "6",
