@@ -48,7 +48,7 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
 
       - name: Notify Slack on failure
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 #v3.0.1
         if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
         with:
           webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
