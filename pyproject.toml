@@ -82,6 +82,9 @@ vcs = "git"
 style = "semver"
 fallback-version = "0.0.0"
 
+[tool.uv]
+exclude-newer = "1 week"
+
 [tool.pytest.ini_options]
 testpaths = ["manager/tests"]
 cache_dir = ".cache/pytest"
