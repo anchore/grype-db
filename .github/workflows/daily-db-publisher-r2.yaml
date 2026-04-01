@@ -175,15 +175,3 @@ jobs:
                     • Job Status: `${{ job.status }}`
                     • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
         if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
-
-  sync-listing-file-to-s3:
-    name: "Sync listing file to S3"
-    needs:
-      - publish-listing-file
-    permissions:
-      contents: read
-    uses: ./.github/workflows/copy-listing-from-r2.yaml
-    secrets:
-      TOOLBOX_AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
-      TOOLBOX_AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
-      SLACK_TOOLBOX_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
