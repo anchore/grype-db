@@ -5,8 +5,8 @@ go 1.25.8
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
-	github.com/anchore/go-logger v0.0.0-20250318195838-07ae343dd722
-	github.com/anchore/grype v0.110.1-0.20260326160548-ac38ed5203f5
+	github.com/anchore/go-logger v0.0.0-20260402185541-19c6eec60f08
+	github.com/anchore/grype v0.110.1-0.20260407173637-94fe6a41c970
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.0
@@ -59,19 +59,19 @@ require (
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/clio v0.0.0-20250715152405-a0fa658e5084 // indirect
-	github.com/anchore/fangs v0.0.0-20250716230140-94c22408c232 // indirect
-	github.com/anchore/go-collections v0.0.0-20251016125210-a3c352120e8c // indirect
-	github.com/anchore/go-homedir v0.0.0-20250319154043-c29668562e4d // indirect
+	github.com/anchore/clio v0.0.0-20260402185550-53bd6cfe83ad // indirect
+	github.com/anchore/fangs v0.0.0-20260406184609-4730b8d296cb // indirect
+	github.com/anchore/go-collections v0.0.0-20260402185600-611d7ba80116 // indirect
+	github.com/anchore/go-homedir v0.0.0-20260402185613-b35908c97765 // indirect
 	github.com/anchore/go-lzo v0.1.0 // indirect
-	github.com/anchore/go-macholibre v0.0.0-20250320151634-807da7ad2331 // indirect
-	github.com/anchore/go-rpmdb v0.0.0-20250516171929-f77691e1faec // indirect
+	github.com/anchore/go-macholibre v0.0.0-20260402185605-cfb1b3effca2 // indirect
+	github.com/anchore/go-rpmdb v0.0.0-20260402185617-485fb0f5e362 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
-	github.com/anchore/go-sync v0.0.0-20250714163430-add63db73ad1 // indirect
+	github.com/anchore/go-sync v0.0.0-20260402185622-3f368c4ba644 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
-	github.com/anchore/packageurl-go v0.1.1-0.20250220190351-d62adb6e1115 // indirect
-	github.com/anchore/stereoscope v0.1.22 // indirect
-	github.com/anchore/syft v1.42.4-0.20260326151233-d71b747cd160 // indirect
+	github.com/anchore/packageurl-go v0.1.1-0.20260402185609-8c6f5af11973 // indirect
+	github.com/anchore/stereoscope v0.1.23-0.20260401204556-32bc81fdad68 // indirect
+	github.com/anchore/syft v1.42.4-0.20260402205043-99158be0baba // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
