@@ -60,7 +60,7 @@ func FormatPositionalArgsHelp(args map[string]string) string {
 	return "Arguments:\n" + strings.TrimSuffix(ret, "\n")
 }
 
-func Summarize(itf interface{}, currentPath []string) string {
+func Summarize(itf any, currentPath []string) string {
 	var desc []string
 
 	t := reflect.TypeOf(itf)

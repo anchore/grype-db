@@ -12,7 +12,7 @@ inputs:
   go-version:
     description: "Go version to install"
     required: true
-    default: "1.25.x"
+    default: "1.26.2"
   python-version:
     description: "Python version to install"
     required: true
@@ -35,7 +35,6 @@ inputs:
   bootstrap-apt-packages:
     description: "Space delimited list of tools to install via apt"
     default: "sqlite3 libsqlite3-dev"
-
 runs:
   using: "composite"
   steps:
@@ -44,23 +43,19 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
         check-latest: true
-
     - name: Install uv
       if: inputs.python == 'true'
       uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
       with:
         enable-cache: true
-
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
       if: inputs.python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
-
     - name: Bootstrap python dependencies
       if: inputs.python == 'true'
       shell: bash
       run: make bootstrap-python
-
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
@@ -68,17 +63,14 @@ runs:
       with:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}
-
     - name: (cache-miss) Bootstrap project tools
       shell: bash
       if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'
       run: make bootstrap-tools
-
     - name: (cache-miss) Bootstrap go dependencies
       shell: bash
       if: inputs.go == 'true' && steps.go-mod-cache.outputs.cache-hit != 'true' && inputs.use-go-cache == 'true'
       run: make bootstrap-go
-
     - name: Install apt packages
       if: inputs.bootstrap-apt-packages != ''
       shell: bash
