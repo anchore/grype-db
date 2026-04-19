@@ -5,8 +5,8 @@ go 1.26.2
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
-	github.com/anchore/go-logger v0.1.0
-	github.com/anchore/grype v0.111.0
+	github.com/anchore/go-logger v0.1.1-0.20260414131315-beb30ae87c9e
+	github.com/anchore/grype v0.111.1-0.20260417185255-5540558a6dce
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.0
@@ -59,19 +59,19 @@ require (
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/clio v0.1.0 // indirect
+	github.com/anchore/clio v0.1.1-0.20260414122717-c63b2994e85a // indirect
 	github.com/anchore/fangs v0.1.0 // indirect
-	github.com/anchore/go-collections v0.1.0 // indirect
+	github.com/anchore/go-collections v0.1.1-0.20260414124948-fc3f7459f372 // indirect
 	github.com/anchore/go-homedir v0.1.0 // indirect
 	github.com/anchore/go-lzo v0.1.0 // indirect
-	github.com/anchore/go-macholibre v0.1.0 // indirect
+	github.com/anchore/go-macholibre v0.1.1-0.20260413185634-25fb39cdef19 // indirect
 	github.com/anchore/go-rpmdb v0.1.0 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
 	github.com/anchore/go-sync v0.1.0 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
 	github.com/anchore/packageurl-go v0.2.0 // indirect
-	github.com/anchore/stereoscope v0.1.22 // indirect
-	github.com/anchore/syft v1.42.4 // indirect
+	github.com/anchore/stereoscope v0.1.23-0.20260414014649-aeb4170b528f // indirect
+	github.com/anchore/syft v1.42.5-0.20260418002121-076fb211ccf8 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
@@ -134,8 +134,7 @@ require (
 	github.com/deitch/magic v0.0.0-20240306090643-c67ab88f10cb // indirect
 	github.com/diskfs/go-diskfs v1.7.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v29.3.0+incompatible // indirect
-	github.com/docker/distribution v2.8.3+incompatible // indirect
+	github.com/docker/cli v29.3.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.5 // indirect
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -169,7 +168,7 @@ require (
 	github.com/gohugoio/hashstructure v0.6.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-containerregistry v0.21.3 // indirect
+	github.com/google/go-containerregistry v0.21.4 // indirect
 	github.com/google/licensecheck v0.3.1 // indirect
 	github.com/google/osv-scanner v1.9.2 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
@@ -185,6 +184,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/henvic/httpretty v0.1.4 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
+	github.com/in-toto/attestation v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
@@ -231,8 +231,8 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/opencontainers/runtime-spec v1.3.0 // indirect
 	github.com/opencontainers/selinux v1.13.1 // indirect
-	github.com/openvex/go-vex v0.2.7 // indirect
-	github.com/package-url/packageurl-go v0.1.3 // indirect
+	github.com/openvex/go-vex v0.2.8 // indirect
+	github.com/package-url/packageurl-go v0.1.5 // indirect
 	github.com/pandatix/go-cvss v0.6.2 // indirect
 	github.com/pborman/indent v1.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -288,16 +288,16 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
-	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/term v0.41.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/term v0.42.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
 	google.golang.org/api v0.271.0 // indirect
