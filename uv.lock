@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.11, <3.14"
 
 [options]
-exclude-newer = "2026-04-13T14:03:22.652121732Z"
+exclude-newer = "2026-04-13T14:59:43.020686882Z"
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -427,7 +427,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "coverage", extras = ["toml"], specifier = ">=7.6.10,<8.0.0" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.13.5,<8.0.0" },
     { name = "moto", specifier = ">=4.1.14,<6" },
     { name = "mypy", specifier = ">=1.20.1,<2" },
     { name = "pytest", specifier = ">=9.0.3,<10" },
