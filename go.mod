@@ -1,12 +1,12 @@
 module github.com/anchore/grype-db
 
-go 1.26.2
+go 1.25.8
 
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
-	github.com/anchore/go-logger v0.1.1-0.20260414131315-beb30ae87c9e
-	github.com/anchore/grype v0.111.1-0.20260417185255-5540558a6dce
+	github.com/anchore/go-logger v0.1.1-0.20260421185257-01c4e7fbebe1
+	github.com/anchore/grype v0.111.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.0
@@ -59,9 +59,9 @@ require (
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/clio v0.1.1-0.20260414122717-c63b2994e85a // indirect
+	github.com/anchore/clio v0.1.0 // indirect
 	github.com/anchore/fangs v0.1.0 // indirect
-	github.com/anchore/go-collections v0.1.1-0.20260414124948-fc3f7459f372 // indirect
+	github.com/anchore/go-collections v0.1.1-0.20260421185544-35c7122ceefc // indirect
 	github.com/anchore/go-homedir v0.1.0 // indirect
 	github.com/anchore/go-lzo v0.1.0 // indirect
 	github.com/anchore/go-macholibre v0.1.1-0.20260413185634-25fb39cdef19 // indirect
@@ -70,8 +70,8 @@ require (
 	github.com/anchore/go-sync v0.1.0 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
 	github.com/anchore/packageurl-go v0.2.0 // indirect
-	github.com/anchore/stereoscope v0.1.23-0.20260414014649-aeb4170b528f // indirect
-	github.com/anchore/syft v1.42.5-0.20260418002121-076fb211ccf8 // indirect
+	github.com/anchore/stereoscope v0.1.22 // indirect
+	github.com/anchore/syft v1.42.4 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
