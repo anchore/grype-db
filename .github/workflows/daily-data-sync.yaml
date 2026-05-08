@@ -29,6 +29,8 @@ env:
   CGO_ENABLED: "0"
   SLACK_NOTIFICATIONS: true
 
+permissions: {}
+
 jobs:
   discover-providers:
     name: "Discover vulnerability providers"

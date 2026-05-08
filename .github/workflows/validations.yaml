@@ -11,8 +11,7 @@ on:
 env:
   CGO_ENABLED: "0"
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
 
