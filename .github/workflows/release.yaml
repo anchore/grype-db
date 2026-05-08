@@ -29,7 +29,7 @@ jobs:
       # these are checks that should be run on pull-request and merges to main.
       # we do NOT want to kick off a release if these have not been verified on main.
       # Please see the validations.yaml workflow for the names that should be used here.
-      checks: '["Build snapshot artifacts", "CLI tests", "DB acceptance tests", "Discover supported schema versions", "Static analysis", "Unit tests"]'
+      checks: '["Build snapshot artifacts", "CLI tests (Go-Linux)", "CLI tests (Python)", "DB acceptance tests", "Discover supported schema versions", "Static analysis", "Unit tests (Go)", "Unit tests (Python)"]'
 
   release:
     needs: [check-gate, version-available]
