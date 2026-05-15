@@ -33,7 +33,7 @@ grype-db-manager = "grype_db_manager.cli:run"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.20.2,<2",
+    "mypy>=2.0.0,<3",
     "pytest>=9.0.3,<10",
     "pytest-sugar>=0.9.7",
     "pytest-unordered>=0.5.2",
