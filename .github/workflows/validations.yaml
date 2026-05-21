@@ -230,3 +230,39 @@ jobs:
 
       - name: Run Python CLI Tests
         run: make cli-python
+
+  # Note: this job name is required by branch protection on main. Do not rename.
+  Unit-Test-Gate:
+    name: "Unit tests"
+    needs: [Unit-Test-Go, Unit-Test-Python]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check unit test results
+        env:
+          GO_RESULT: ${{ needs.Unit-Test-Go.result }}
+          PYTHON_RESULT: ${{ needs.Unit-Test-Python.result }}
+        run: |
+          if [[ "$GO_RESULT" != "success" || "$PYTHON_RESULT" != "success" ]]; then
+            echo "Unit tests failed: Go=$GO_RESULT Python=$PYTHON_RESULT"
+            exit 1
+          fi
+          echo "All unit tests passed"
+
+  # Note: this job name is required by branch protection on main. Do not rename.
+  Cli-Test-Gate:
+    name: "CLI tests"
+    needs: [Cli-Go-Linux, Cli-Python]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CLI test results
+        env:
+          GO_LINUX_RESULT: ${{ needs.Cli-Go-Linux.result }}
+          PYTHON_RESULT: ${{ needs.Cli-Python.result }}
+        run: |
+          if [[ "$GO_LINUX_RESULT" != "success" || "$PYTHON_RESULT" != "success" ]]; then
+            echo "CLI tests failed: Go-Linux=$GO_LINUX_RESULT Python=$PYTHON_RESULT"
+            exit 1
+          fi
+          echo "All CLI tests passed"
