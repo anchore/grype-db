@@ -117,6 +117,11 @@ jobs:
     # sync and data publish. In that case, data will still publish, but will catch the
     # next day.
     timeout-minutes: 1200
+    # serialize syncs per provider across daily + incremental workflows; the running
+    # job is never cancelled, so the first-started run wins and later runs queue.
+    concurrency:
+      group: provider-sync-${{ matrix.provider }}
+      cancel-in-progress: false
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -205,6 +210,9 @@ jobs:
       - spot=price-capacity-optimized
       - extras=s3-cache
     timeout-minutes: 480
+    concurrency:
+      group: provider-sync-${{ matrix.provider }}
+      cancel-in-progress: false
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -286,6 +294,9 @@ jobs:
       - spot=price-capacity-optimized
       - extras=s3-cache
     timeout-minutes: 480
+    concurrency:
+      group: provider-sync-${{ matrix.provider }}
+      cancel-in-progress: false
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
