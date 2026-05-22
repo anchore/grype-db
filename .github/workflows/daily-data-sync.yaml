@@ -99,18 +99,22 @@ jobs:
     name: "Update provider (multicore)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.multicore-providers != '[]' }}
-    # runson family --cpu=16 --mem="32:64" --budget=1.0 --globs -o yaml
-    # - "c6*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.54-$0.91/hr
-    # - "c7*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.58-$1.00/hr
-    # - "c5*"  # compute, amd64/x86_64, 16 CPU, 32-42GB, NVMe:400-600GB, $0.62-$0.86/hr
-    # - "m6*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.62-$0.95/hr
-    # - "m7*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.65-$0.93/hr
-    # - "m5*"  # general, amd64/x86_64, 16 CPU, 64GB, NVMe:600GB, $0.69-$0.95/hr
+    # runson family --cpu=16 --mem="32:64" --budget=1.0 --local-nvme --globs -o yaml
+    # - "c6gd*"  # compute, arm64, 16 CPU, 32GB, NVMe:950GB, $0.61/hr
+    # - "c5ad*"  # compute, amd64, 16 CPU, 32GB, NVMe:600GB, $0.69/hr
+    # - "m6gd*"  # general, arm64, 16 CPU, 64GB, NVMe:950GB, $0.72/hr
+    # - "c7gd*"  # compute, arm64, 16 CPU, 32GB, NVMe:950GB, $0.73/hr
+    # - "c5d*"   # compute, x86_64, 16 CPU, 32GB, NVMe:400GB, $0.77/hr
+    # - "c6id*"  # compute, x86_64, 16 CPU, 32GB, NVMe:950GB, $0.81/hr
+    # - "m5ad*"  # general, amd64, 16 CPU, 64GB, NVMe:600GB, $0.82/hr
+    # - "m7gd*"  # general, arm64, 16 CPU, 64GB, NVMe:950GB, $0.85/hr
+    # - "m5d*"   # general, x86_64, 16 CPU, 64GB, NVMe:600GB, $0.90/hr
+    # - "m6id*"  # general, x86_64, 16 CPU, 64GB, NVMe:950GB, $0.95/hr
     runs-on:
       - runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}
       - cpu=16
       - ram=32+64
-      - family=c6+c7+c5+m6+m7+m5
+      - family=c5ad+c5d+c6gd+c6id+c7gd+m5ad+m5d+m6gd+m6id+m7gd
       - spot=price-capacity-optimized
       - extras=s3-cache
     # 20 hours; occasionally the ubuntu provider exceeds the six hour gap between data
