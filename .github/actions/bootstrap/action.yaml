@@ -12,7 +12,8 @@ inputs:
   go-version:
     description: "Go version to install"
     required: true
-    default: "1.26.2"
+    # unpin from patch version so that deps bumps in grype that bump go don't break CI/db builds here
+    default: "1.26"
   python-version:
     description: "Python version to install"
     required: true
