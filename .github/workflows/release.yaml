@@ -17,6 +17,8 @@ on:
 jobs:
 
   version-available:
+    permissions:
+      contents: read
     uses: anchore/workflows/.github/workflows/check-version-available.yaml@b3e328b5ae31ba96297e2ed9a6124e5e6352a4c5 # v0.7.0
     with:
       version: ${{ github.event.inputs.version }}
