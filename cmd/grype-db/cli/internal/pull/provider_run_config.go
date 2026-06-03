@@ -7,7 +7,7 @@ import (
 
 type ProviderRunConfig struct {
 	provider.Identifier `yaml:",inline" mapstructure:",squash"`
-	Config              interface{} `yaml:"config,omitempty" json:"config" mapstructure:"config"`
+	Config              any `yaml:"config,omitempty" json:"config" mapstructure:"config"`
 }
 
 func (c ProviderRunConfig) Redact() {

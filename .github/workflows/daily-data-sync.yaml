@@ -6,16 +6,16 @@ on:
       providers:
         description: 'Comma-separated list of providers to sync (e.g., "nvd,github,alpine"). Leave empty to sync all providers.'
         required: false
-        default: ''
+        default: ""
         type: string
 
   # allow other workflows to call this one
   workflow_call:
     inputs:
       providers:
-        description: 'Comma-separated list of providers to sync. Leave empty to sync all providers.'
+        description: "Comma-separated list of providers to sync. Leave empty to sync all providers."
         required: false
-        default: ''
+        default: ""
         type: string
     secrets:
       SLACK_TOOLBOX_WEBHOOK_URL:
@@ -28,6 +28,8 @@ on:
 env:
   CGO_ENABLED: "0"
   SLACK_NOTIFICATIONS: true
+
+permissions: {}
 
 jobs:
   discover-providers:
@@ -97,21 +99,33 @@ jobs:
     name: "Update provider (multicore)"
     needs: discover-providers
     if: ${{ needs.discover-providers.outputs.multicore-providers != '[]' }}
-    # runson family --cpu=16 --mem="32:64" --budget=1.0 --globs -o yaml
-    # - "c6*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.54-$0.91/hr
-    # - "c7*"  # compute, amd64/arm64/x86_64, 16 CPU, 32GB, NVMe:950GB, $0.58-$1.00/hr
-    # - "c5*"  # compute, amd64/x86_64, 16 CPU, 32-42GB, NVMe:400-600GB, $0.62-$0.86/hr
-    # - "m6*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.62-$0.95/hr
-    # - "m7*"  # general, amd64/arm64/x86_64, 16 CPU, 64GB, NVMe:950GB, $0.65-$0.93/hr
-    # - "m5*"  # general, amd64/x86_64, 16 CPU, 64GB, NVMe:600GB, $0.69-$0.95/hr
+    # runson family --cpu=16 --mem="32:64" --budget=1.0 --local-nvme --globs -o yaml
+    # - "c6gd*"  # compute, arm64, 16 CPU, 32GB, NVMe:950GB, $0.61/hr
+    # - "c5ad*"  # compute, amd64, 16 CPU, 32GB, NVMe:600GB, $0.69/hr
+    # - "m6gd*"  # general, arm64, 16 CPU, 64GB, NVMe:950GB, $0.72/hr
+    # - "c7gd*"  # compute, arm64, 16 CPU, 32GB, NVMe:950GB, $0.73/hr
+    # - "c5d*"   # compute, x86_64, 16 CPU, 32GB, NVMe:400GB, $0.77/hr
+    # - "c6id*"  # compute, x86_64, 16 CPU, 32GB, NVMe:950GB, $0.81/hr
+    # - "m5ad*"  # general, amd64, 16 CPU, 64GB, NVMe:600GB, $0.82/hr
+    # - "m7gd*"  # general, arm64, 16 CPU, 64GB, NVMe:950GB, $0.85/hr
+    # - "m5d*"   # general, x86_64, 16 CPU, 64GB, NVMe:600GB, $0.90/hr
+    # - "m6id*"  # general, x86_64, 16 CPU, 64GB, NVMe:950GB, $0.95/hr
     runs-on:
       - runs-on=${{ github.run_id }}-multicore-${{ strategy.job-index }}
       - cpu=16
       - ram=32+64
-      - family=c6+c7+c5+m6+m7+m5
+      - family=c5ad+c5d+c6gd+c6id+c7gd+m5ad+m5d+m6gd+m6id+m7gd
       - spot=price-capacity-optimized
       - extras=s3-cache
-    timeout-minutes: 480
+    # 20 hours; occasionally the ubuntu provider exceeds the six hour gap between data
+    # sync and data publish. In that case, data will still publish, but will catch the
+    # next day.
+    timeout-minutes: 1200
+    # serialize syncs per provider across daily + incremental workflows; the running
+    # job is never cancelled, so the first-started run wins and later runs queue.
+    concurrency:
+      group: provider-sync-${{ matrix.provider }}
+      cancel-in-progress: false
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -121,7 +135,6 @@ jobs:
         provider: ${{fromJson(needs.discover-providers.outputs.multicore-providers)}}
       fail-fast: false
     steps:
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           persist-credentials: false
@@ -149,7 +162,7 @@ jobs:
         run: make refresh-provider-cache provider="$PROVIDER"
 
       - name: Notify Slack on failure
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c #v3.0.3
         with:
           webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -201,6 +214,9 @@ jobs:
       - spot=price-capacity-optimized
       - extras=s3-cache
     timeout-minutes: 480
+    concurrency:
+      group: provider-sync-${{ matrix.provider }}
+      cancel-in-progress: false
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -237,7 +253,7 @@ jobs:
         run: make refresh-provider-cache provider="$PROVIDER"
 
       - name: Notify Slack on failure
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c #v3.0.3
         with:
           webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -282,6 +298,9 @@ jobs:
       - spot=price-capacity-optimized
       - extras=s3-cache
     timeout-minutes: 480
+    concurrency:
+      group: provider-sync-${{ matrix.provider }}
+      cancel-in-progress: false
     # set the permissions granted to the github token to publish to ghcr.io
     permissions:
       contents: read
@@ -318,7 +337,7 @@ jobs:
         run: make refresh-provider-cache provider="$PROVIDER"
 
       - name: Notify Slack on failure
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c #v3.0.3
         with:
           webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -341,4 +360,3 @@ jobs:
         env:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
-

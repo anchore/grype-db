@@ -15,4 +15,4 @@ def test_grype_version():
 
 
 def test_supported_schema_versions():
-    assert schema.supported_schema_versions() == [5, 6]
+    assert schema.supported_schema_versions() == [6]

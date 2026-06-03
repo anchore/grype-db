@@ -12,7 +12,8 @@ inputs:
   go-version:
     description: "Go version to install"
     required: true
-    default: "1.25.x"
+    # unpin from patch version so that deps bumps in grype that bump go don't break CI/db builds here
+    default: "1.26"
   python-version:
     description: "Python version to install"
     required: true
@@ -35,50 +36,42 @@ inputs:
   bootstrap-apt-packages:
     description: "Space delimited list of tools to install via apt"
     default: "sqlite3 libsqlite3-dev"
-
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 #v6.2.0
+    - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c #v6.4.0
       if: inputs.go == 'true'
       with:
         go-version: ${{ inputs.go-version }}
         check-latest: true
-
     - name: Install uv
       if: inputs.python == 'true'
-      uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       with:
         enable-cache: true
-
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
       if: inputs.python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
-
     - name: Bootstrap python dependencies
       if: inputs.python == 'true'
       shell: bash
       run: make bootstrap-python
-
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ${{ github.workspace }}/.tool
         key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}
-
     - name: (cache-miss) Bootstrap project tools
       shell: bash
       if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'
       run: make bootstrap-tools
-
     - name: (cache-miss) Bootstrap go dependencies
       shell: bash
       if: inputs.go == 'true' && steps.go-mod-cache.outputs.cache-hit != 'true' && inputs.use-go-cache == 'true'
       run: make bootstrap-go
-
     - name: Install apt packages
       if: inputs.bootstrap-apt-packages != ''
       shell: bash

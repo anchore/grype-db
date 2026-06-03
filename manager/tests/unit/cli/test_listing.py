@@ -4,7 +4,7 @@ import tarfile
 import boto3
 import pytest
 from click.testing import CliRunner
-from moto import mock_s3
+from moto import mock_aws
 from unittest.mock import patch
 
 from grype_db_manager import cli, utils
@@ -129,7 +129,7 @@ def create_tar_gz(built: str, version: int):
         ),
     ],
 )
-@mock_s3
+@mock_aws
 @patch("grype_db_manager.distribution.age_from_basename")
 def test_create_listing(
     mock_file_age, test_dir_path, listing_s3_mock, case_dir, expected_exit_code, extra_dbs: list[str], contains

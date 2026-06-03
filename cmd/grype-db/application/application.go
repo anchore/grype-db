@@ -131,7 +131,7 @@ func (a Application) Run(ctx context.Context, errs <-chan error) error {
 	return err
 }
 
-func logConfiguration(app *Config, opts interface{}) {
+func logConfiguration(app *Config, opts any) {
 	var optsStr string
 
 	if opts != nil {

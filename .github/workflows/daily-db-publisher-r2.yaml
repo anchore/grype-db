@@ -99,7 +99,7 @@ jobs:
           GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
 
       - name: Notify Slack on failure
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c #v3.0.3
         with:
           webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -158,7 +158,7 @@ jobs:
             GRYPE_DB_MANAGER_DISTRIBUTION_S3_ENDPOINT_URL: ${{ secrets.TOOLBOX_CLOUDFLARE_R2_ENDPOINT }}
 
       - name: Notify Slack on failure
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a #v2.1.1
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c #v3.0.3
         with:
           webhook: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -175,15 +175,3 @@ jobs:
                     • Job Status: `${{ job.status }}`
                     • <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>
         if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
-
-  sync-listing-file-to-s3:
-    name: "Sync listing file to S3"
-    needs:
-      - publish-listing-file
-    permissions:
-      contents: read
-    uses: ./.github/workflows/copy-listing-from-r2.yaml
-    secrets:
-      TOOLBOX_AWS_ACCESS_KEY_ID: ${{ secrets.TOOLBOX_AWS_ACCESS_KEY_ID }}
-      TOOLBOX_AWS_SECRET_ACCESS_KEY: ${{ secrets.TOOLBOX_AWS_SECRET_ACCESS_KEY }}
-      SLACK_TOOLBOX_WEBHOOK_URL: ${{ secrets.SLACK_TOOLBOX_WEBHOOK_URL }}

@@ -11,8 +11,7 @@ on:
 env:
   CGO_ENABLED: "0"
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
 
@@ -103,7 +102,7 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 #v5.0.3
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -200,13 +199,13 @@ jobs:
           python: false
 
       - name: Restore CLI test-fixture cache
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 #v5.0.3
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
         with:
           path: ${{ github.workspace }}/test/cli/test-fixtures/cache
           key: ${{ runner.os }}-cli-test-cache-${{ hashFiles('test/cli/test-fixtures/cache.fingerprint') }}
 
       - name: Download snapshot build
-        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 #v5.0.3
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -231,3 +230,39 @@ jobs:
 
       - name: Run Python CLI Tests
         run: make cli-python
+
+  # Note: this job name is required by branch protection on main. Do not rename.
+  Unit-Test-Gate:
+    name: "Unit tests"
+    needs: [Unit-Test-Go, Unit-Test-Python]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check unit test results
+        env:
+          GO_RESULT: ${{ needs.Unit-Test-Go.result }}
+          PYTHON_RESULT: ${{ needs.Unit-Test-Python.result }}
+        run: |
+          if [[ "$GO_RESULT" != "success" || "$PYTHON_RESULT" != "success" ]]; then
+            echo "Unit tests failed: Go=$GO_RESULT Python=$PYTHON_RESULT"
+            exit 1
+          fi
+          echo "All unit tests passed"
+
+  # Note: this job name is required by branch protection on main. Do not rename.
+  Cli-Test-Gate:
+    name: "CLI tests"
+    needs: [Cli-Go-Linux, Cli-Python]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CLI test results
+        env:
+          GO_LINUX_RESULT: ${{ needs.Cli-Go-Linux.result }}
+          PYTHON_RESULT: ${{ needs.Cli-Python.result }}
+        run: |
+          if [[ "$GO_LINUX_RESULT" != "success" || "$PYTHON_RESULT" != "success" ]]; then
+            echo "CLI tests failed: Go-Linux=$GO_LINUX_RESULT Python=$PYTHON_RESULT"
+            exit 1
+          fi
+          echo "All CLI tests passed"
