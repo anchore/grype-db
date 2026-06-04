@@ -6,7 +6,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
 	github.com/anchore/go-logger v0.1.0
-	github.com/anchore/grype v0.113.1-0.20260603160810-7e47096960cb
+	github.com/anchore/grype v0.113.1-0.20260604203350-024e26b9c93c
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.1

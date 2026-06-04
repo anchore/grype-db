@@ -146,8 +146,8 @@ github.com/anchore/go-sync v0.1.0 h1:1TEZM7jISrvtoBMOF79xP0caQKASAtgW1yKqc0EjyZg
 github.com/anchore/go-sync v0.1.0/go.mod h1:Iposeub0kHipoTei1icj4Tys0SJN+cCdxEnkS7bZUFs=
 github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 h1:rmZG77uXgE+o2gozGEBoUMpX27lsku+xrMwlmBZJtbg=
 github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4/go.mod h1:Bkc+JYWjMCF8OyZ340IMSIi2Ebf3uwByOk6ho4wne1E=
-github.com/anchore/grype v0.113.1-0.20260603160810-7e47096960cb h1:g2Tdy9pXsGXSxyyaJ+1j+SIEpu8NkAVi68px1mJwwOQ=
-github.com/anchore/grype v0.113.1-0.20260603160810-7e47096960cb/go.mod h1:UzRNWNyvQuLND6vX4wPLKbXHTHQALsubXQn59GefZDc=
+github.com/anchore/grype v0.113.1-0.20260604203350-024e26b9c93c h1:1nVl9DegCf77xjWe1UFYDOJP09qwXViqRNNojvzWlC4=
+github.com/anchore/grype v0.113.1-0.20260604203350-024e26b9c93c/go.mod h1:UzRNWNyvQuLND6vX4wPLKbXHTHQALsubXQn59GefZDc=
 github.com/anchore/packageurl-go v0.2.0 h1:CkrM4RMUwrEGAiE1OVlxaZNzWj0TuHRey7o4T/EAErk=
 github.com/anchore/packageurl-go v0.2.0/go.mod h1:2JCgOQMIsqZ7TmliXG4PnUthPJAKE3mWQbsW2XHjAOE=
 github.com/anchore/stereoscope v0.2.0 h1:8haOu2ugLymmxvyfrZR7OTBFiRFRBh5LlNUtRrSRoxI=
