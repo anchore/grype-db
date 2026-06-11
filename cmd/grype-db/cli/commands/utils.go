@@ -8,6 +8,11 @@ import (
 	"github.com/anchore/grype-db/internal/bus"
 )
 
+const (
+	formatText = "text"
+	formatJSON = "json"
+)
+
 func async(f func() error) <-chan error {
 	errs := make(chan error)
 	go func() {
