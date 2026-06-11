@@ -30,7 +30,7 @@ func Version(_ *application.Application) *cobra.Command {
 			buildInfo := application.ReadBuildInfo()
 
 			switch format {
-			case "text":
+			case formatText:
 				fmt.Println("Application:       ", application.Name)
 				fmt.Println("Version:           ", buildInfo.Version)
 				fmt.Println("BuildDate:         ", buildInfo.BuildDate)
@@ -40,7 +40,7 @@ func Version(_ *application.Application) *cobra.Command {
 				fmt.Println("GoVersion:         ", buildInfo.GoVersion)
 				fmt.Println("Compiler:          ", buildInfo.Compiler)
 
-			case "json":
+			case formatJSON:
 				enc := json.NewEncoder(os.Stdout)
 				enc.SetEscapeHTML(false)
 				enc.SetIndent("", " ")

@@ -37,8 +37,8 @@ func ListProviders(app *application.Application) *cobra.Command {
 	cfg := listProvidersConfig{
 		Provider: options.DefaultProvider(),
 		Format: options.Format{
-			Output:           "text",
-			AllowableFormats: []string{"text", "json"},
+			Output:           formatText,
+			AllowableFormats: []string{formatText, formatJSON},
 		},
 	}
 
@@ -85,11 +85,11 @@ func runListProviders(cfg listProvidersConfig) error {
 	}
 
 	switch cfg.Output {
-	case "text":
+	case formatText:
 		for _, p := range ps {
 			fmt.Println(p.ID().Name)
 		}
-	case "json":
+	case formatJSON:
 		names := make([]string, 0, len(ps))
 		for _, p := range ps {
 			names = append(names, p.ID().Name)
