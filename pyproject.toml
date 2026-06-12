@@ -9,7 +9,7 @@ authors = [
 license = {text = "Apache 2.0"}
 requires-python = "<3.14,>=3.11"
 dependencies = [
-    "boto3>=1.43.17,<2",
+    "boto3>=1.43.23,<2",
     "click>=8.4.1,<9",
     "dataclass-wizard<1,>=0.22.2",
     "iso8601<3,>=2.0.0",
@@ -41,7 +41,7 @@ dev = [
     "pytest-picked>=0.5.0",
     "pytest-mock>=3.11.1",
     "pytest-xdist>=3.3.1",
-    "ruff>=0.15.15,<1",
+    "ruff>=0.15.16,<1",
     "types-requests>=2.33.0.20260518,<3",
     "moto>=5.2.1,<6",
     "coverage[toml]>=7.14.1,<8.0.0",
