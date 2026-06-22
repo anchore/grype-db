@@ -13,11 +13,6 @@ on:
       version:
         description: tag the latest commit on main with the given version (prefixed with v)
         required: true
-      skip-checks:
-        description: skip the check-gate (release even if checks haven't passed on main)
-        type: boolean
-        default: false
-        required: false
 
 jobs:
 
@@ -29,7 +24,6 @@ jobs:
       version: ${{ github.event.inputs.version }}
 
   check-gate:
-    if: ${{ !inputs.skip-checks }}
     permissions:
       contents: read
       checks: read   # required for getting the status of specific check names
@@ -42,14 +36,6 @@ jobs:
 
   release:
     needs: [check-gate, version-available]
-    # run even when check-gate is skipped, but never when version-available
-    # failed/was skipped, nor when check-gate failed or was cancelled. note:
-    # always() disables the implicit success() gate on ALL needs, so the
-    # version-available requirement must be re-asserted explicitly here.
-    if: >-
-      ${{ always()
-          && needs.version-available.result == 'success'
-          && !contains(fromJSON('["failure", "cancelled"]'), needs.check-gate.result) }}
     permissions:
       contents: write
       packages: write
@@ -71,13 +57,11 @@ jobs:
 
       - name: Tag release
         env:
-          # for pushing tags (does not inherit workflow permissions)
-          TAG_TOKEN: ${{ secrets.TAG_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ github.event.inputs.version }}
-          REPO: ${{ github.repository }}
         run: |
-          git tag "$VERSION"
-          git push "https://x-access-token:${TAG_TOKEN}@github.com/${REPO}" "$VERSION"
+          git tag $VERSION
+          git push origin --tags
 
       - name: Build release artifacts
         run: make ci-release

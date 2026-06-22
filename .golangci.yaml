@@ -83,15 +83,8 @@ issues:
   uniq-by-line: false
 formatters:
   enable:
-    - gci
     - gofmt
-  settings:
-    gci:
-      # See https://golangci-lint.run/docs/formatters/configuration/#gci
-      sections:
-        - standard # Standard section: captures all standard packages.
-        - default  # Default section: contains all imports that could not be matched to another section type.
-        - prefix(github.com/anchore)
+    - goimports
   exclusions:
     generated: lax
     paths:
