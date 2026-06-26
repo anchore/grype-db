@@ -68,7 +68,7 @@ tools:
   # used for triggering a release
   - name: gh
     version:
-      want: v2.94.0
+      want: v2.95.0
     method: github-release
     with:
       repo: cli/cli
@@ -83,7 +83,7 @@ tools:
 
   - name: crane
     version:
-      want: v0.21.6
+      want: v0.21.7
     method: go-install
     with:
       module: github.com/google/go-containerregistry
