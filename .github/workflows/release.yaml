@@ -57,7 +57,7 @@ jobs:
 
       - name: Tag release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TAG_TOKEN }}
           VERSION: ${{ github.event.inputs.version }}
         run: |
           git tag $VERSION
