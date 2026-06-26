@@ -23,7 +23,7 @@ jobs:
     runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -41,7 +41,7 @@ jobs:
     runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -61,7 +61,7 @@ jobs:
     runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -80,7 +80,7 @@ jobs:
       contents: read
     runs-on: runs-on=${{ github.run_id }}/cpu=16/ram=32/family=c5+c6+c7/spot=price-capacity-optimized
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -116,7 +116,7 @@ jobs:
       schema-versions: ${{ steps.read-schema-versions.outputs.schema-versions }}
     steps:
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -140,7 +140,7 @@ jobs:
       packages: read
     steps:
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           submodules: true
           persist-credentials: false
@@ -189,7 +189,7 @@ jobs:
     needs: [Build-Snapshot-Artifacts]
     runs-on: runs-on=${{ github.run_id }}/cpu=2/ram=8/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -220,7 +220,7 @@ jobs:
       contents: read
     runs-on: runs-on=${{ github.run_id }}/cpu=8/ram=32/family=m5+m6+m7+t3+t4/spot=price-capacity-optimized
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 #v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           submodules: true
           persist-credentials: false
