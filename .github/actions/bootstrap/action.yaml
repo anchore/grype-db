@@ -56,10 +56,6 @@ runs:
       if: inputs.python == 'true'
       shell: bash
       run: make bootstrap-python
-    - name: (cache-miss) Bootstrap project tools
-      shell: bash
-      if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'
-      run: make bootstrap-tools
     - name: Install apt packages
       if: inputs.bootstrap-apt-packages != ''
       shell: bash
