@@ -13,20 +13,25 @@ on:
       version:
         description: tag the latest commit on main with the given version (prefixed with v)
         required: true
+      skip-checks:
+        description: skip the check-gate (release even if checks haven't passed on main)
+        type: boolean
+        default: false
+        required: false
 
 jobs:
-
   version-available:
     permissions:
-      contents: read
+      contents: read # for the most recent tags
     uses: anchore/workflows/.github/workflows/check-version-available.yaml@b0c30a80409130d329aaa356fd64a34d8c0b3375 # v0.7.2
     with:
       version: ${{ github.event.inputs.version }}
 
   check-gate:
+    if: ${{ !inputs.skip-checks }}
     permissions:
       contents: read
-      checks: read   # required for getting the status of specific check names
+      checks: read # required for getting the status of specific check names
     uses: anchore/workflows/.github/workflows/check-gate.yaml@b0c30a80409130d329aaa356fd64a34d8c0b3375 # v0.7.2
     with:
       # these are checks that should be run on pull-request and merges to main.
@@ -34,36 +39,48 @@ jobs:
       # Please see the validations.yaml workflow for the names that should be used here.
       checks: '["Build snapshot artifacts", "CLI tests (Go-Linux)", "CLI tests (Python)", "DB acceptance tests", "Discover supported schema versions", "Static analysis", "Unit tests (Go)", "Unit tests (Python)"]'
 
+  # only release core assets within the "release" job. Any other assets not already under the purview of the
+  # goreleaser configuration should be added as separate jobs to allow for debugging separately from the release workflow
+  # as well as not accidentally be re-run as a step multiple times (as could be done within the release workflow) as
+  # not all actions are guaranteed to be idempotent.
   release:
     needs: [check-gate, version-available]
+    # run even when check-gate is skipped, but never when version-available
+    # failed/was skipped, nor when check-gate failed or was cancelled. note:
+    # always() disables the implicit success() gate on ALL needs, so the
+    # version-available requirement must be re-asserted explicitly here.
+    if: >-
+      ${{ always()
+          && needs.version-available.result == 'success'
+          && !contains(fromJSON('["failure", "cancelled"]'), needs.check-gate.result) }}
+    environment: release
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       packages: write
-    runs-on: ubuntu-latest
+      id-token: write
     steps:
-
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
-          # we need to persist credentials so that we can push the tag
-          persist-credentials: true
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
         with:
           # use the same cache we used for building snapshots
-          build-cache-key-prefix: "snapshot"
-          python: false
+          cache-key-prefix: "snapshot"
 
-      - name: Tag release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ github.event.inputs.version }}
-        run: |
-          git tag $VERSION
-          git push origin --tags
-
-      - name: Build release artifacts
+      - name: Build & publish release artifacts
         run: make ci-release
         env:
+          # for pushing tags (does not inherit workflow permissions)
+          TAG_TOKEN: ${{ secrets.TAG_TOKEN }}
+          RELEASE_VERSION: ${{ github.event.inputs.version }}
+          # for creating the release (requires write access to packages and content)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        continue-on-error: true
+        with:
+          artifact-name: sbom.spdx.json
