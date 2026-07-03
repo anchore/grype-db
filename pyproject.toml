@@ -44,7 +44,7 @@ dev = [
     "ruff>=0.15.18,<1",
     "types-requests>=2.33.0.20260518,<3",
     "moto>=5.2.2,<6",
-    "coverage[toml]>=7.14.1,<8.0.0",
+    "coverage[toml]>=7.14.3,<8.0.0",
     "uv-dynamic-versioning>=0.6.0",
 ]
 
