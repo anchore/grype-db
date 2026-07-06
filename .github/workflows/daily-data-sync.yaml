@@ -180,8 +180,10 @@ jobs:
         if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
       - name: Upload the provider workspace state
-        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
-        if: ${{ always() }}
+        # only upload on success: a failed pull can leave a partially-updated workspace behind, which
+        # must not be published. Consumers pull the "latest" tag, which stays pointed at the last
+        # successful sync when this step is skipped.
+        if: ${{ success() }}
         env:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
@@ -271,8 +273,10 @@ jobs:
         if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
       - name: Upload the provider workspace state
-        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
-        if: ${{ always() }}
+        # only upload on success: a failed pull can leave a partially-updated workspace behind, which
+        # must not be published. Consumers pull the "latest" tag, which stays pointed at the last
+        # successful sync when this step is skipped.
+        if: ${{ success() }}
         env:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
@@ -355,8 +359,10 @@ jobs:
         if: ${{ always() && job.status != 'success' && env.SLACK_NOTIFICATIONS == 'true' }}
 
       - name: Upload the provider workspace state
-        # even if the job fails, we want to upload yesterdays cache as todays cache to continue the DB build
-        if: ${{ always() }}
+        # only upload on success: a failed pull can leave a partially-updated workspace behind, which
+        # must not be published. Consumers pull the "latest" tag, which stays pointed at the last
+        # successful sync when this step is skipped.
+        if: ${{ success() }}
         env:
           PROVIDER: ${{ matrix.provider }}
         run: make upload-provider-cache provider="$PROVIDER"
