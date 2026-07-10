@@ -9,7 +9,7 @@ authors = [
 license = {text = "Apache 2.0"}
 requires-python = "<3.14,>=3.11"
 dependencies = [
-    "boto3>=1.43.36,<2",
+    "boto3>=1.43.40,<2",
     "click>=8.4.2,<9",
     "dataclass-wizard<1,>=0.22.2",
     "iso8601<3,>=2.0.0",
