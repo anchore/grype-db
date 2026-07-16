@@ -316,5 +316,3 @@ require (
 
 // the go.mod file did not have the correct minimum go version at the time of release tagging
 retract v0.30.0
-
-replace github.com/anchore/grype => ../grype
