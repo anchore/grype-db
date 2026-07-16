@@ -5,8 +5,8 @@ go 1.26.3
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
-	github.com/anchore/go-logger v0.1.2-0.20260703155440-4c13ff616c7b
-	github.com/anchore/grype v0.115.1-0.20260715144227-fcf08ae0a418
+	github.com/anchore/go-logger v0.1.1
+	github.com/anchore/grype v0.116.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.1
@@ -58,19 +58,19 @@ require (
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/clio v0.1.2-0.20260703204413-273d1dff5ca6 // indirect
-	github.com/anchore/fangs v0.1.2-0.20260703223445-c302d3bb5487 // indirect
-	github.com/anchore/go-collections v0.1.2-0.20260703083431-98a481f81cb3 // indirect
+	github.com/anchore/clio v0.1.1 // indirect
+	github.com/anchore/fangs v0.1.1 // indirect
+	github.com/anchore/go-collections v0.1.1 // indirect
 	github.com/anchore/go-homedir v0.1.1 // indirect
-	github.com/anchore/go-lzo v0.1.2-0.20260703041337-38a9fdab1b95 // indirect
-	github.com/anchore/go-macholibre v0.1.2-0.20260703232422-1f01b9f5cd4e // indirect
+	github.com/anchore/go-lzo v0.1.1 // indirect
+	github.com/anchore/go-macholibre v0.1.1 // indirect
 	github.com/anchore/go-rpmdb v0.2.0 // indirect
 	github.com/anchore/go-struct-converter v0.2.0-rc2 // indirect
-	github.com/anchore/go-sync v0.1.2-0.20260710235446-9104d937a76f // indirect
+	github.com/anchore/go-sync v0.1.1 // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
-	github.com/anchore/packageurl-go v0.2.1-0.20260622180350-663437b4879b // indirect
-	github.com/anchore/stereoscope v0.2.3-0.20260703204057-440fca2e37ea // indirect
-	github.com/anchore/syft v1.46.1-0.20260714124953-2805655ab046 // indirect
+	github.com/anchore/packageurl-go v0.2.0 // indirect
+	github.com/anchore/stereoscope v0.2.2 // indirect
+	github.com/anchore/syft v1.48.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
