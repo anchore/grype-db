@@ -9,7 +9,7 @@ authors = [
 license = {text = "Apache 2.0"}
 requires-python = "<3.14,>=3.11"
 dependencies = [
-    "boto3>=1.43.40,<2",
+    "boto3>=1.43.45,<2",
     "click>=8.4.2,<9",
     "dataclass-wizard<1,>=0.22.2",
     "iso8601<3,>=2.0.0",
@@ -33,7 +33,7 @@ grype-db-manager = "grype_db_manager.cli:run"
 
 [dependency-groups]
 dev = [
-    "mypy>=2.1.0,<3",
+    "mypy>=2.2.0,<3",
     "pytest>=9.1.1,<10",
     "pytest-sugar>=0.9.7",
     "pytest-unordered>=0.8.0",
@@ -41,7 +41,7 @@ dev = [
     "pytest-picked>=0.5.0",
     "pytest-mock>=3.11.1",
     "pytest-xdist>=3.3.1",
-    "ruff>=0.15.20,<1",
+    "ruff>=0.15.21,<1",
     "types-requests>=2.33.0.20260518,<3",
     "moto>=5.2.2,<6",
     "coverage[toml]>=7.15.0,<8.0.0",
