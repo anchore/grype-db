@@ -5,8 +5,8 @@ go 1.26.3
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
-	github.com/anchore/go-logger v0.1.1
-	github.com/anchore/grype v0.116.0
+	github.com/anchore/go-logger v0.1.2-0.20260717155448-597b44424b5b
+	github.com/anchore/grype v0.116.1-0.20260722144620-4562c55cebba
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.1
@@ -58,19 +58,19 @@ require (
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/clio v0.1.1 // indirect
-	github.com/anchore/fangs v0.1.1 // indirect
-	github.com/anchore/go-collections v0.1.1 // indirect
+	github.com/anchore/clio v0.1.2-0.20260717204439-dab29a4b678a // indirect
+	github.com/anchore/fangs v0.1.2-0.20260703223445-c302d3bb5487 // indirect
+	github.com/anchore/go-collections v0.1.2-0.20260724083453-1fbde0ce85fd // indirect
 	github.com/anchore/go-homedir v0.1.1 // indirect
-	github.com/anchore/go-lzo v0.1.1 // indirect
-	github.com/anchore/go-macholibre v0.1.1 // indirect
+	github.com/anchore/go-lzo v0.1.2-0.20260724041532-5397e3809775 // indirect
+	github.com/anchore/go-macholibre v0.1.2-0.20260703232422-1f01b9f5cd4e // indirect
 	github.com/anchore/go-rpmdb v0.2.0 // indirect
 	github.com/anchore/go-struct-converter v0.2.0-rc2 // indirect
-	github.com/anchore/go-sync v0.1.1 // indirect
+	github.com/anchore/go-sync v0.1.2-0.20260710235446-9104d937a76f // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
-	github.com/anchore/packageurl-go v0.2.0 // indirect
-	github.com/anchore/stereoscope v0.2.2 // indirect
-	github.com/anchore/syft v1.48.0 // indirect
+	github.com/anchore/packageurl-go v0.2.1-0.20260622180350-663437b4879b // indirect
+	github.com/anchore/stereoscope v0.3.0 // indirect
+	github.com/anchore/syft v1.49.1-0.20260723190336-c890e7f17f8d // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aquasecurity/go-pep440-version v0.0.1 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/containerd/cgroups/v3 v3.1.3 // indirect
 	github.com/containerd/containerd/api v1.11.1 // indirect
-	github.com/containerd/containerd/v2 v2.3.2 // indirect
+	github.com/containerd/containerd/v2 v2.3.3 // indirect
 	github.com/containerd/continuity v0.5.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
@@ -233,7 +233,7 @@ require (
 	github.com/pandatix/go-cvss v0.6.2 // indirect
 	github.com/pborman/indent v1.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.4.2 // indirect
+	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
 	github.com/piprate/json-gold v0.7.0 // indirect
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
@@ -287,16 +287,16 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/mod v0.37.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/mod v0.38.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/term v0.45.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.47.0 // indirect
+	golang.org/x/tools v0.48.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
 	google.golang.org/api v0.271.0 // indirect
