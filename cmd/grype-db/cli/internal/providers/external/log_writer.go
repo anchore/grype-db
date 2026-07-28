@@ -18,11 +18,18 @@ var (
 
 type logWriter struct {
 	name string
+
+	// lastLevel is the level of the most recent line that carried one. A
+	// multi-line record -- a python traceback is the common case -- only marks
+	// its first line, so the continuation lines are attributed to it rather
+	// than silently dropping to the default level.
+	lastLevel string
 }
 
 func newLogWriter(name string) *logWriter {
 	return &logWriter{
-		name: name,
+		name:      name,
+		lastLevel: defaultLogLevel,
 	}
 }
 
@@ -74,26 +81,32 @@ func processLogLine(line string) (string, string) {
 
 	level, ok := groups["level"]
 	if !ok || level == "" {
-		return defaultLogLevel, line
+		return "", line
 	}
 
 	prefix, ok := groups["prefix"]
 	if !ok {
-		return defaultLogLevel, line
+		return "", line
 	}
 
 	suffix, ok := groups["suffix"]
 	if !ok {
-		return defaultLogLevel, line
+		return "", line
 	}
 
 	message := fmt.Sprintf("%s%s", prefix, suffix)
 	return strings.ToUpper(level), message
 }
 
-func (lw logWriter) Write(p []byte) (n int, err error) {
+func (lw *logWriter) Write(p []byte) (n int, err error) {
 	for _, line := range strings.Split(string(p), "\n") {
 		level, line := processLogLine(line)
+		if level == "" {
+			// the line carries no level of its own: it continues the previous record
+			level = lw.lastLevel
+		} else {
+			lw.lastLevel = level
+		}
 		if line != "" {
 			message := fmt.Sprintf("[%s]", lw.name) + line
 
