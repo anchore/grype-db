@@ -18,6 +18,7 @@ provider:
     - name: bitnami
     - name: chainguard
     - name: chainguard-libraries
+    - name: cpan
     - name: debian
     - name: echo
     - name: eol
