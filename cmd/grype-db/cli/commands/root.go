@@ -40,7 +40,7 @@ func Root(app *application.Application) *cobra.Command {
 	appCfg := app.Config
 
 	cmd := &cobra.Command{
-		Use:     "",
+		Use:     "grype-db",
 		Short:   "pull all vulnerability data, build the database, and package it for distribution",
 		Version: application.ReadBuildInfo().Version,
 		PreRunE: app.Setup(&cfg),
