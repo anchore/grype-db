@@ -20,6 +20,7 @@ provider:
     - name: chainguard-libraries
     - name: debian
     - name: echo
+    - name: echo-osv
     - name: eol
     - name: epss
     - name: fedora
