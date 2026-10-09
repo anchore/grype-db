@@ -4,7 +4,7 @@ tools:
   # we want to use a pinned version of binny to manage the toolchain (so binny manages itself!)
   - name: binny
     version:
-      want: v0.13.3
+      want: v0.13.4
     method: github-release
     with:
       repo: anchore/binny
@@ -44,7 +44,7 @@ tools:
   # used to release all artifacts
   - name: goreleaser
     version:
-      want: v2.18.2
+      want: nightly
     method: github-release
     with:
       repo: goreleaser/goreleaser
