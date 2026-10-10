@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import glob
+import hashlib
 import json
 import logging
 import os
@@ -12,10 +13,12 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+import tarfile
 import uuid
 
 import requests
 import xxhash
+import yaml
 
 from grype_db_manager.db.format import Format
 
@@ -23,6 +26,11 @@ TOOLS_DIR = "tools"
 BIN_DIR = f"{TOOLS_DIR}/grype-db/bin"
 CLONE_DIR = f"{TOOLS_DIR}/grype-db/src"
 DB_DIR = "dbs"
+
+DB_DIFF_FILENAME = "vulnerability-db-diff.json"
+
+# grype-db's default compressor for .tar.zst archives (grype tarutil); used to compress the archive once after the diff is added
+ZSTD_COMMAND = ["zstd", "-T0", "-22", "--ultra", "-c"]
 
 # TODO:
 # - add tests for GrypeDB.install*
@@ -409,17 +417,32 @@ class GrypeDB:
 
         return cls(bin_path=bin_path, config_path=config_path)
 
-    def build_and_package(self, schema_version: int, provider_root_dir: str, root_dir: str) -> str:
+    def build_and_package(
+        self,
+        schema_version: int,
+        provider_root_dir: str,
+        root_dir: str,
+        diff_against: str | None = None,
+    ) -> str:
         db_manager = DBManager(root_dir=root_dir)
         db_uuid = db_manager.new_session()
 
         logging.info(f"building DB schema={schema_version} db-session={db_uuid!r}")
 
         stage_dir, build_dir = db_manager.db_paths(db_uuid=db_uuid)
+        session_dir = os.path.dirname(build_dir)
 
         # generate a new DB archive
         self.build_db(build_dir=build_dir, schema_version=schema_version, provider_root_dir=provider_root_dir)
-        self.package_db(build_dir=build_dir, provider_root_dir=provider_root_dir)
+        if diff_against:
+            # package without compression so the diff can be added before the single compression pass
+            self.package_db(
+                build_dir=build_dir,
+                provider_root_dir=provider_root_dir,
+                config=self._uncompressed_package_config(session_dir),
+            )
+        else:
+            self.package_db(build_dir=build_dir, provider_root_dir=provider_root_dir)
 
         db_pattern = os.path.join(
             build_dir,
@@ -433,6 +456,14 @@ class GrypeDB:
             raise RuntimeError(msg)
 
         logging.info(f"db archive created: {matches[0]}")
+
+        if diff_against:
+            add_db_diff(
+                archive_path=matches[0],
+                build_dir=build_dir,
+                previous_archive=diff_against,
+                work_dir=session_dir,
+            )
 
         # move the build db archive to the staging dir
         dest = os.path.join(stage_dir, os.path.basename(matches[0]))
@@ -452,14 +483,27 @@ class GrypeDB:
             config=self.config_path,
         )
 
-    def package_db(self, build_dir: str, provider_root_dir: str) -> None:
+    def package_db(self, build_dir: str, provider_root_dir: str, config: str | None = None) -> None:
         self.run(
             "package",
             "--dir",
             build_dir,
             provider_root_dir=provider_root_dir,
-            config=self.config_path,
+            config=config or self.config_path,
         )
+
+    def _uncompressed_package_config(self, work_dir: str) -> str:
+        # a copy of the grype-db config whose zst compressor passes the tar through unchanged
+        cfg = {}
+        if self.config_path:
+            with open(self.config_path) as f:
+                cfg = yaml.safe_load(f) or {}
+        cfg.setdefault("package", {}).setdefault("compressor-commands", {})["zst"] = "cat"
+
+        path = os.path.join(work_dir, "grype-db-uncompressed.yaml")
+        with open(path, "w") as f:
+            yaml.safe_dump(cfg, f)
+        return path
 
     def run(self, *args, provider_root_dir: str, config: str) -> int:
         cmd = [self.bin_path, *args] if self.bin_path else ["grype-db", *args]
@@ -482,6 +526,44 @@ class GrypeDB:
 
         print_annotation("[end grype-db output]")
         return ret
+
+
+def add_db_diff(archive_path: str, build_dir: str, previous_archive: str, work_dir: str) -> None:
+    """Add a `grype db diff` against previous_archive to an uncompressed archive, then compress it once."""
+    grype = shutil.which("grype")
+    if not grype:
+        msg = "grype is required on PATH to diff against a previous database"
+        raise RuntimeError(msg)
+
+    diff_path = os.path.join(work_dir, DB_DIFF_FILENAME)
+    logging.info(f"diffing {previous_archive!r} against the new database in {build_dir!r}")
+    with open(diff_path, "wb") as out:
+        subprocess.run([grype, "db", "diff", "-o", "json", "-q", previous_archive, build_dir], stdout=out, check=True)  # noqa: S603
+
+    with tarfile.open(archive_path, "a") as tar:
+        tar.add(diff_path, arcname=DB_DIFF_FILENAME)
+
+    compressed_path = os.path.join(work_dir, os.path.basename(archive_path))
+    logging.info(f"compressing {archive_path!r}")
+    with open(archive_path, "rb") as src, open(compressed_path, "wb") as dst:
+        subprocess.run(ZSTD_COMMAND, stdin=src, stdout=dst, check=True)  # noqa: S603
+    os.replace(compressed_path, archive_path)
+
+    _update_latest_checksum(latest_path=os.path.join(build_dir, "latest.json"), archive_path=archive_path)
+
+
+def _update_latest_checksum(latest_path: str, archive_path: str) -> None:
+    digest = hashlib.sha256()
+    with open(archive_path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    with open(latest_path) as f:
+        latest = json.load(f)
+    latest["checksum"] = f"sha256:{digest.hexdigest()}"
+    with open(latest_path, "w") as f:
+        # grype-db writes latest.json with a single-space indent
+        f.write(json.dumps(latest, indent=1))
 
 
 def print_annotation(s: str, italic: bool = True, grey: bool = True) -> None:
