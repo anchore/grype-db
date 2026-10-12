@@ -22,6 +22,7 @@ type Build struct {
 	InferNVDFixVersions  bool     `yaml:"infer-nvd-fix-versions" json:"infer-nvd-fix-versions" mapstructure:"infer-nvd-fix-versions"`
 	Hydrate              bool     `yaml:"hydrate" json:"hydrate" mapstructure:"hydrate"`
 	FailOnMissingFixDate bool     `yaml:"fail-on-missing-fix-date" json:"fail-on-missing-fix-date" mapstructure:"fail-on-missing-fix-date"`
+	ReconcileCNA         bool     `yaml:"reconcile-cna" json:"reconcile-cna" mapstructure:"reconcile-cna"`
 }
 
 func DefaultBuild() Build {
@@ -34,6 +35,7 @@ func DefaultBuild() Build {
 		InferNVDFixVersions:  true,
 		Hydrate:              false,
 		FailOnMissingFixDate: false,
+		ReconcileCNA:         false,
 	}
 }
 
@@ -76,6 +78,7 @@ func (o *Build) BindFlags(flags *pflag.FlagSet, v *viper.Viper) error {
 	v.SetDefault("build.infer-nvd-fix-versions", o.InferNVDFixVersions)
 	v.SetDefault("build.hydrate", o.Hydrate)
 	v.SetDefault("build.fail-on-missing-fix-date", o.FailOnMissingFixDate)
+	v.SetDefault("build.reconcile-cna", o.ReconcileCNA)
 
 	return o.DBLocation.BindFlags(flags, v)
 }

@@ -122,6 +122,7 @@ func runBuild(cfg buildConfig) error {
 		Hydrate:              cfg.Hydrate,
 		FailOnMissingFixDate: cfg.FailOnMissingFixDate,
 		BatchSize:            cfg.BatchSize,
+		ReconcileCNA:         cfg.ReconcileCNA,
 	})
 }
 
