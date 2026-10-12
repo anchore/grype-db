@@ -18,6 +18,7 @@ provider:
     - name: bitnami
     - name: chainguard
     - name: chainguard-libraries
+    - name: cve5
     - name: debian
     - name: dhi
     - name: echo
