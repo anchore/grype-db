@@ -8,6 +8,13 @@ exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
 certifi = "2026-10-21T00:00:00Z"
+uv = "2026-10-21T00:00:00Z"
+
+[manifest]
+constraints = [
+    { name = "certifi", specifier = ">=2026.10.19" },
+    { name = "uv", specifier = ">=0.13.4" },
+]
 
 [[package]]
 name = "ast-serialize"
