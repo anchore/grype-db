@@ -84,6 +84,9 @@ fallback-version = "0.0.0"
 
 [tool.uv]
 exclude-newer = "1 week"
+# certifi 2026.10.19 drops the compromised emSign ECC Root CA - G3; exempt it from the
+# cooldown until it ages past the 1 week window (remove after 2026-10-27)
+exclude-newer-package = { certifi = "2026-10-21T00:00:00Z" }
 
 [tool.pytest.ini_options]
 testpaths = ["manager/tests"]
