@@ -22,6 +22,7 @@ expected-providers:
   - minimos
   - nvd
   - oracle
+  - rapidfort
   - rhel
   - sles
   - ubuntu
