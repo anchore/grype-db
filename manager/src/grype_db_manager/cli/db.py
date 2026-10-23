@@ -63,15 +63,27 @@ def remove_db(cfg: config.Application, db_uuid: str) -> None:
 
 @group.command(name="build", help="build and validate a grype database")
 @click.option("--schema-version", "-s", required=True, help="the DB schema version to build")
+@click.option(
+    "--with-diff",
+    "with_diff",
+    type=click.Path(exists=True, dir_okay=False),
+    default=None,
+    help="previous DB archive to diff against; the diff is added to the new archive (schema v6+, requires grype on PATH)",
+)
 @click.pass_obj
-def build_db(cfg: config.Application, schema_version: int) -> str:
+def build_db(cfg: config.Application, schema_version: int, with_diff: str | None) -> str:
     logging.info(f"building DB (schema v{schema_version})")
+
+    if with_diff and int(schema_version) < 6:
+        msg = "--with-diff requires schema v6 or later"
+        raise click.UsageError(msg)
 
     grypedb = GrypeDB.install(version=cfg.grype_db.version, root_dir=cfg.data.root, config_path=cfg.grype_db.config)
     db_uuid = grypedb.build_and_package(
         schema_version=schema_version,
         provider_root_dir=cfg.data.vunnel_root,
         root_dir=cfg.data.root,
+        diff_against=with_diff,
     )
     click.echo(db_uuid)
     return db_uuid
