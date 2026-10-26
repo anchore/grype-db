@@ -1,8 +1,13 @@
 import os
 import datetime
+import hashlib
+import json
 import pathlib
+import shutil
+import tarfile
 
 import pytest
+import yaml
 
 from grype_db_manager import grypedb
 
@@ -378,3 +383,107 @@ class TestGrypeDB:
         assert os.path.exists(stage_dir)
         assert len(os.listdir(stage_dir)) == 1
         assert os.path.isfile(os.path.join(stage_dir, "something_v5_else.tar.gz"))
+
+    def test_package_db_with_config_override(self, top_level_fixture, mocker):
+        root = top_level_fixture(case="tools-case-1")
+        bin_path = os.path.join(root, "tools", "grype-db", "bin", "grype-db-v0.19.0")
+        gdb = grypedb.GrypeDB(bin_path, config_path="config_path")
+        mock_run = mocker.patch("grype_db_manager.grypedb.GrypeDB.run")
+
+        gdb.package_db(build_dir="build_path", provider_root_dir="provider_root_path", config="other_config")
+
+        args, kwargs = mock_run.call_args
+        assert kwargs["config"] == "other_config"
+        assert args == ("package", "--dir", "build_path")
+
+    def test_uncompressed_package_config(self, tmp_path: pathlib.Path):
+        config_path = tmp_path / "grype-db.yaml"
+        config_path.write_text(
+            yaml.safe_dump({"package": {"compressor-commands": {"gz": "pigz -6"}}, "build": {"hydrate": True}}),
+        )
+        gdb = grypedb.GrypeDB("bin_path", config_path=config_path.as_posix())
+
+        path = gdb._uncompressed_package_config(tmp_path.as_posix())
+
+        with open(path) as f:
+            assert yaml.safe_load(f) == {
+                "package": {"compressor-commands": {"gz": "pigz -6", "zst": "cat"}},
+                "build": {"hydrate": True},
+            }
+        # the original config is untouched
+        assert "zst" not in config_path.read_text()
+
+    def test_add_db_diff(self, tmp_path: pathlib.Path, mocker):
+        build_dir = tmp_path / "build"
+        build_dir.mkdir()
+        (build_dir / "vulnerability.db").write_bytes(b"db")
+        archive = build_dir / "vulnerability-db_v6.1.10_2026-10-09T00:35:49Z_1791527552.tar.zst"
+        with tarfile.open(archive, "w") as tar:  # uncompressed, as grype-db package writes it with the cat compressor
+            tar.add(build_dir / "vulnerability.db", arcname="vulnerability.db")
+        latest = build_dir / "latest.json"
+        latest.write_text(json.dumps({"status": "active", "path": archive.name, "checksum": "sha256:uncompressed"}))
+
+        mocker.patch("grype_db_manager.grypedb.shutil.which", return_value="/usr/bin/grype")
+        calls = []
+
+        def fake_run(cmd, stdin=None, stdout=None, check=False):
+            calls.append(cmd)
+            if cmd[0] == "/usr/bin/grype":
+                stdout.write(b'{"databases": {}}')
+            else:  # stand-in for zstd: pass the tar through
+                shutil.copyfileobj(stdin, stdout)
+
+        mocker.patch("grype_db_manager.grypedb.subprocess.run", side_effect=fake_run)
+
+        grypedb.add_db_diff(
+            archive_path=archive.as_posix(),
+            build_dir=build_dir.as_posix(),
+            previous_archive="/previous/archive.tar.zst",
+            work_dir=tmp_path.as_posix(),
+        )
+
+        assert calls == [
+            ["/usr/bin/grype", "db", "diff", "-o", "json", "-q", "/previous/archive.tar.zst", build_dir.as_posix()],
+            grypedb.ZSTD_COMMAND,
+        ]
+        with tarfile.open(archive) as tar:
+            assert tar.getnames() == ["vulnerability.db", grypedb.DB_DIFF_FILENAME]
+            assert tar.extractfile(grypedb.DB_DIFF_FILENAME).read() == b'{"databases": {}}'
+        expected_checksum = "sha256:" + hashlib.sha256(archive.read_bytes()).hexdigest()
+        assert json.loads(latest.read_text()) == {"status": "active", "path": archive.name, "checksum": expected_checksum}
+
+    def test_add_db_diff_requires_grype(self, tmp_path: pathlib.Path, mocker):
+        mocker.patch("grype_db_manager.grypedb.shutil.which", return_value=None)
+
+        with pytest.raises(RuntimeError, match="grype is required"):
+            grypedb.add_db_diff("archive", "build", "previous", tmp_path.as_posix())
+
+    def test_build_and_package_with_diff(self, tmp_path: pathlib.Path, mocker):
+        gdb = grypedb.GrypeDB("bin_path", config_path="config_path")
+        mocker.patch("grype_db_manager.grypedb.GrypeDB.build_db")
+        mocker.patch("grype_db_manager.grypedb.GrypeDB._uncompressed_package_config", return_value="uncompressed_config")
+        mock_add_db_diff = mocker.patch("grype_db_manager.grypedb.add_db_diff")
+        mock_package_db = mocker.patch("grype_db_manager.grypedb.GrypeDB.package_db")
+
+        def package_db(build_dir: str, provider_root_dir: str, config: str | None = None):
+            open(os.path.join(build_dir, "vulnerability-db_v6.1.10_x_1.tar.zst"), "w").close()
+
+        mock_package_db.side_effect = package_db
+
+        db_uuid = gdb.build_and_package(
+            schema_version=6,
+            provider_root_dir="provider_root_path",
+            root_dir=tmp_path.as_posix(),
+            diff_against="/previous/archive.tar.zst",
+        )
+
+        session_dir = os.path.join(tmp_path.as_posix(), grypedb.DB_DIR, db_uuid)
+        build_dir = os.path.join(session_dir, "build")
+        assert mock_package_db.call_args.kwargs["config"] == "uncompressed_config"
+        mock_add_db_diff.assert_called_once_with(
+            archive_path=os.path.join(build_dir, "vulnerability-db_v6.1.10_x_1.tar.zst"),
+            build_dir=build_dir,
+            previous_archive="/previous/archive.tar.zst",
+            work_dir=session_dir,
+        )
+        assert os.listdir(os.path.join(session_dir, "stage")) == ["vulnerability-db_v6.1.10_x_1.tar.zst"]
