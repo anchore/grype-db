@@ -1,1 +1,3 @@
-store-root: cli-test-data/yardstick
+# the Go yardstick's app config: the quality gates written by `grype-db-manager db validate` read labels and SBOMs from here
+claims:
+  - github.com/anchore/claims@main

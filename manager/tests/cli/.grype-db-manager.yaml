@@ -42,6 +42,8 @@ validate:
         # integer, how many true positives found by the reference may be missed by the candidate on any image
         max_new_false_negatives: 10
 
-      # note: always reference images by digest
+      # note: always reference images by digest, named the way anchore/claims stores their labels
       images:
         - docker.io/oraclelinux:6@sha256:a06327c0f1d18d753f2a60bb17864c84a850bb6dcbcf5946dd1a8123f6e75495
+        # the test DB only has oracle data, so it misses every alpine match the published DB finds (which fails the gate)
+        - docker.io/alpine:3.2@sha256:ddac200f3ebc9902fb8cfcd599f41feb2151f1118929da21bcef57dc276975f9
