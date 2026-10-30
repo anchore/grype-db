@@ -21,9 +21,15 @@ def _validate() -> config.Validate:
 
 
 def test_write_gates(tmp_path):
-    paths = validation.write_gates(_validate(), images=[], grype_bin="/bin/grype", db_archive="/db.tar.zst", gates_dir=str(tmp_path))
+    paths = validation.write_gates(
+        _validate(),
+        images=[],
+        grype_bin=str(tmp_path / ".tool" / "grype"),
+        db_archive=str(tmp_path / "data" / "db.tar.zst"),
+        gates_dir=str(tmp_path / "gates"),
+    )
 
-    assert [p.removeprefix(str(tmp_path)) for p in paths] == ["/gate-0.yaml", "/gate-1.yaml"]
+    assert [p.removeprefix(str(tmp_path)) for p in paths] == ["/gates/gate-0.yaml", "/gates/gate-1.yaml"]
 
     with open(paths[0]) as f:
         gate = yaml.safe_load(f)
@@ -32,8 +38,9 @@ def test_write_gates(tmp_path):
         "schema": "v1",
         "name": "gate-0",
         "description": "grype with the newly built DB vs the same grype with the published DB",
-        "candidate": {"grype": "/bin/grype", "db": "/db.tar.zst"},
-        "reference": {"grype": "/bin/grype", "db": "latest"},
+        # paths are relative to the gate file
+        "candidate": {"grype": "../.tool/grype", "db": "../data/db.tar.zst"},
+        "reference": {"grype": "../.tool/grype", "db": "latest"},
         "undecided": "pass",
         "subjects": ["oci:docker.io/alpine:3.2@sha256:abc", "oci:docker.io/debian:7@sha256:def"],
         "checks": [

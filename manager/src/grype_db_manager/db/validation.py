@@ -51,6 +51,11 @@ def write_gates(
     """write a yardstick gate file per configured gate, keeping only the given images (all when none are given)"""
     os.makedirs(gates_dir, exist_ok=True)
 
+    # yardstick resolves paths against the gate file and compares them that way when re-scoring, so relative paths
+    # keep a gate (and its scans) re-scorable from another checkout (e.g. from a CI artifact)
+    grype_bin = os.path.relpath(grype_bin, gates_dir)
+    db_archive = os.path.relpath(db_archive, gates_dir)
+
     paths = []
     for idx, entry in enumerate(validate.gates):
         if images:
