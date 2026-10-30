@@ -1,1 +1,7 @@
-store-root: data/yardstick
+# the Go yardstick's app config: every quality gate written by `grype-db-manager db validate` reads its labels and
+# SBOMs from these, in order (a label in a later source wins over the same label in an earlier one).
+#   - the published anchore/claims corpus
+#   - grype's quality gate labels (test/integration/additional-claims on grype main)
+claims:
+  - github.com/anchore/claims@main
+  - github.com/anchore/grype/test/integration/additional-claims@main
