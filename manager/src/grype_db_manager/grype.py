@@ -44,7 +44,6 @@ class Grype:
             self.env["GRYPE_DB_UPDATE_URL"] = update_url
 
         self.bin = install(self.release, os.path.join(store_root, "bin"))
-        self.update_db()
 
     def update_db(self) -> None:
         subprocess.run([self.bin, "db", "update", "-vv"], env=self.env, check=True)  # noqa: S603
@@ -55,10 +54,10 @@ class Grype:
 
 def install(release: str, path: str) -> str:
     """the path to a grype binary for the given release (a version tag or branch)"""
-    # grype main is installed by binny, anything else is built from source on demand
-    binny_grype = tool_path("grype")
-    if release == "main" and os.path.exists(binny_grype):
-        return binny_grype
+    # grype main is installed by binny, anything else (e.g. the staging publisher's grype-branch override) is built
+    # from source on demand
+    if release == "main":
+        return tool_path("grype")
 
     binary = os.path.abspath(os.path.join(path, "grype"))
     logging.info(f"building grype@{release} to {binary!r}")
@@ -69,6 +68,8 @@ def install(release: str, path: str) -> str:
     with tempfile.TemporaryDirectory(prefix="grype-src-") as src:
         clone = ["git", "clone", "--depth", "1", "--branch", release, "https://github.com/anchore/grype.git", src]
         subprocess.run(clone, check=True)  # noqa: S603, S607
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=src).decode().strip()  # noqa: S603, S607
+        logging.info(f"building grype@{release} at commit {commit}")
         subprocess.run(["go", "build", "-o", binary, "./cmd/grype"], cwd=src, env=env, check=True)  # noqa: S603, S607
     return binary
 

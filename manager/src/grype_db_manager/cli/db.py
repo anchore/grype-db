@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import subprocess
 
 import click
 from tabulate import tabulate
@@ -155,7 +156,13 @@ def _validate_db(
         return
 
     root = cfg.data.yardstick_root
-    grype_bin = grype.install(db.schema.grype_version(db_info.schema_version), os.path.join(root, "grype"))
+    try:
+        grype_bin = grype.install(db.schema.grype_version(db_info.schema_version), os.path.join(root, "grype"))
+    except FileNotFoundError as e:
+        raise error.CLIError(str(e)) from e
+
+    # grype main is whatever binny last built, so record which one this gate ran with
+    subprocess.run([grype_bin, "version"], check=True)  # noqa: S603
 
     gate_paths = db.validation.write_gates(
         cfg.validate,
@@ -168,9 +175,10 @@ def _validate_db(
         msg = "no configured quality gate has any of the given images"
         raise click.UsageError(msg)
 
-    if not db.validation.run(gate_paths, rescan=recapture, verbosity=cfg.verbosity):
-        msg = "quality gate failed"
-        raise click.ClickException(msg)
+    try:
+        db.validation.run(gate_paths, rescan=recapture, verbosity=cfg.verbosity)
+    except (db.validation.GateFailedError, db.validation.GateError, FileNotFoundError) as e:
+        raise error.CLIError(str(e)) from e
 
 
 def _validate_latest(cfg: config.Application, latest_file: str, archive_path: str) -> None:

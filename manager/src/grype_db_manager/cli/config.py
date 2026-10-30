@@ -10,6 +10,7 @@ import mergedeep
 import yaml
 import yaml_include  # pyyaml-include >= 2.x
 from dataclass_wizard import asdict, fromdict
+from dataclass_wizard.utils.string_conv import to_snake_case
 
 from grype_db_manager import db, s3utils
 
@@ -45,6 +46,9 @@ class Gate:
     # how many true positives found by the reference may be missed by the candidate on any image
     max_new_false_negatives: int = 0
 
+    # how many matches only one side reports may stay unlabeled on any image (unset means no limit)
+    max_unlabeled_changes: int | None = None
+
 
 @dataclass
 class ValidateDB:
@@ -77,6 +81,8 @@ class ValidateListing:
 @dataclass()
 class Validate:
     default_max_year: int = 0
+    # yardstick claims sources every gate reads labels and SBOMs from, in order (a later source wins)
+    claims: list[str] = field(default_factory=list)
     gates: list[ValidateDB] = field(default_factory=list)
     listing: ValidateListing = field(default_factory=ValidateListing)
     expected_providers: list[str] = field(default_factory=list)
@@ -106,6 +112,8 @@ class Distribution:
 class Data:
     root: str = ""
     vunnel_root: str = ""
+    # where the generated yardstick gates (and any non-main grype build) are written. Scans are stored by yardstick
+    # in ./.yardstick/runs, relative to the working directory
     yardstick_root: str = ""
 
 
@@ -240,13 +248,15 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
 def _check_gate_keys(app_object: dict) -> None:
     # unknown keys are otherwise silently dropped, which would hide a python yardstick setting (e.g.
     # max_unlabeled_percent) that no longer has any effect
-    def norm(key: str) -> str:
-        return key.replace("-", "").replace("_", "").lower()
-
     for entry in (app_object.get("validate") or {}).get("gates") or []:
+        if not isinstance(entry, dict) or not isinstance(entry.get("gate") or {}, dict):
+            msg = f"quality gate config entries must be mappings, got {entry!r}"
+            raise ValueError(msg)  # noqa: TRY004
+
         for obj, cls in ((entry, ValidateDB), (entry.get("gate") or {}, Gate)):
-            allowed = {norm(f.name) for f in fields(cls)}
-            unknown = sorted(k for k in obj if norm(k) not in allowed)
+            # match keys the way dataclass_wizard does when loading, so a key that passes here is never dropped there
+            allowed = {f.name for f in fields(cls)}
+            unknown = sorted(k for k in obj if to_snake_case(k) not in allowed)
             if unknown:
                 msg = f"unsupported quality gate config keys: {unknown} (allowed: {sorted(f.name for f in fields(cls))})"
                 raise ValueError(msg)

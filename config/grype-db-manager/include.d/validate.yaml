@@ -27,21 +27,33 @@ expected-providers:
   - ubuntu
   - wolfi
 
+# new vulnerabilities are added all the time, instead of keeping up it's easier to ignore newer entries.
+# This approach helps tremendously with keeping the analysis relatively stable.
 default-max-year: 2021
+
+# where every gate reads labels and SBOMs from. Pinned so labels can't change under the gate between runs; to bump,
+# use the "commit" from https://yardstick.anchore.io/claims/matches/latest-v1.json (the last published anchore/claims
+# snapshot). Add grype's test/integration/additional-claims (pinned the same way) once it holds labels.
+claims:
+  - github.com/anchore/claims@f2bef354324428f961262d87adec716bb669338f
+
 gates:
   # each entry becomes one yardstick gate (see https://github.com/anchore/yardstick/blob/main/docs/gate-file.md): grype
-  # with the newly built DB (the candidate) vs the same grype with the published DB (the reference). Matches only one
-  # side reports that no label judges never fail the gate, only a decided F1 or FN regression does.
+  # with the newly built DB (the candidate) vs the same grype with the published DB (the reference). Unlabeled matches
+  # that only one side reports leave the F1 and FN checks undecided, which passes. A gate still fails on:
+  #   - a decided F1 or FN regression beyond the limits below
+  #   - more unlabeled changes than max_unlabeled_changes on any image
+  #   - an image the two sides disagree on that has no tp/fp label (after max_year) to decide it
+  #   - an image neither side reports any match on
   - gate:
-      # new vulnerabilities are added all the time, instead of keeping up it's easier to ignore newer entries.
-      # This approach helps tremendously with keeping the analysis relatively stable.
-      max_year: 2021
-
       # float between 0 and 1, how far below the reference's F1 score the candidate's may be on any image
       max_f1_regression: 0.15
 
       # integer, how many true positives the reference finds may be missed by the candidate on any image
       max_new_false_negatives: 10
+
+      # integer, how many matches only one side reports may stay unlabeled on any image
+      max_unlabeled_changes: 50
 
     # these are the set of images we will capture grype scans for using an existing published DB and a newly build DB.
     # The assumption is that they should perform similarly or the new DB should perform better. We do allow for the new
@@ -63,6 +75,7 @@ gates:
       max_year: 2022 # important - Azure Linux 3 doesn't have enough CVEs going back to 2021
       max_f1_regression: 0.15
       max_new_false_negatives: 10
+      max_unlabeled_changes: 50
 
     images:
       - ghcr.io/anchore/test-images/azurelinux3@sha256:2d761ba36575ddd4e07d446f4f2a05448298c20e5bdcd3dedfbbc00f9865240d

@@ -110,7 +110,9 @@ def test_workflow_2(cli_env, command, logger):
         env=cli_env,
         expect_fail=True,
     )
+    # only a failing gate (yardstick exit 1) says this; a gate yardstick could not run says "could not run"
     assert "quality gate failed" in stderr
+    assert "could not run" not in stderr
 
     ## case 2: fail DB validation (missing providers) ###
     logger.step("case 2: fail DB validation (missing providers)")

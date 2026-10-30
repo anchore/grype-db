@@ -34,6 +34,9 @@ validate:
     minimum-packages: 10          # 14 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
     minimum-vulnerabilities: 10   # 15 as of 2023-08-14, leaving some room for possible out-of-band changes to the data
   default-max-year: 2021
+  # pinned so the test doesn't change when anchore/claims does
+  claims:
+    - github.com/anchore/claims@f2bef354324428f961262d87adec716bb669338f
   gates:
     - gate:
         # float between 0 and 1, how far below the reference's F1 score the candidate's may be on any image

@@ -48,15 +48,17 @@ make db-acceptance schema=6
 grype scanning with the published DB (the reference), using the [Go yardstick](https://github.com/anchore/yardstick).
 Each entry under `validate.gates` in `config/grype-db-manager/include.d/validate.yaml` is written as a yardstick gate
 file to `data/yardstick/gates/`, and scans are stored in `.yardstick/runs/`. Labels and SBOMs come from
-[anchore/claims](https://github.com/anchore/claims) (see `.yardstick.yaml`).
+[anchore/claims](https://github.com/anchore/claims), pinned to a commit by `validate.claims` in the same file.
 
-Only a decided F1 or false negative regression fails the gate; a match only one side reports that no label judges does
-not. To dig into a gate's result without scanning again, or after adding labels:
+Unlabeled matches that only one side reports leave the F1 and false negative checks undecided, which passes. A gate
+still fails on a decided F1 or false negative regression, on more unlabeled changes than `max_unlabeled_changes` on any
+image, on an image the two sides disagree on that has no tp/fp label to decide it, and on an image neither side reports
+any match on. To dig into a gate's result without scanning again, or after adding labels:
 
 ```bash
 .tool/yardstick score data/yardstick/gates/*.yaml -o table
-# label what changed into a local checkout of anchore/claims (and open a PR there)
-.tool/yardstick claims serve data/yardstick/gates/gate-0.yaml --claims ../claims --open
+# label what changed (gate-N is the gate to look at) into a local checkout of anchore/claims (and open a PR there)
+.tool/yardstick claims serve data/yardstick/gates/gate-N.yaml --claims ../claims --open
 ```
 
 The main make tasks for common static analysis functions are `lint`, `format`, `lint-fix`, `unit`, `cli`.

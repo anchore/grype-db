@@ -131,6 +131,8 @@ jobs:
     name: "Acceptance tests"
     needs: Discover-Schema-Versions
     runs-on: runs-on=${{ github.run_id }}-acceptance-${{ strategy.job-index }}/family=i7ie/cpu=4+16/ram=32+64/spot=price-capacity-optimized
+    # usually under an hour; a hung scan or fetch would otherwise hold the runner for 6
+    timeout-minutes: 150
     strategy:
       matrix:
         schema-version: ${{fromJson(needs.Discover-Schema-Versions.outputs.schema-versions)}}
@@ -166,7 +168,7 @@ jobs:
         if: ${{ failure() }}
         env:
           SCHEMA_VERSION: ${{ matrix.schema-version }}
-        run: tar -czvf "qg-capture-state-v$SCHEMA_VERSION.tar.gz" --ignore-failed-read .yardstick.yaml data/yardstick/gates .yardstick/runs
+        run: tar -czvf "qg-capture-state-v$SCHEMA_VERSION.tar.gz" --ignore-failed-read data/yardstick/gates .yardstick/runs
 
       - name: Upload the quality gate state
         if: ${{ failure() }}
@@ -184,16 +186,23 @@ jobs:
           ## Troubleshooting a failed quality gate (schema v$SCHEMA_VERSION)
 
           Download the \`qg-capture-state-v$SCHEMA_VERSION\` artifact from this workflow run. It holds the gate files and their scans,
-          which re-score without the DB or new scans (\`yardstick\` is \`.tool/yardstick\` after \`make bootstrap-tools\`):
+          which re-score without the DB or new scans. Artifacts from fork PRs are untrusted, so extract it into a new, empty
+          directory outside your checkout and run the yardstick from your own checkout (\`make bootstrap-tools\` installs it):
           \`\`\`bash
-          # from the repo root
-          unzip qg-capture-state-v$SCHEMA_VERSION.zip && tar -xzf qg-capture-state-v$SCHEMA_VERSION.tar.gz
-          .tool/yardstick score data/yardstick/gates/*.yaml -o table   # every check on every image
+          GRYPE_DB=/path/to/your/grype-db/checkout
+          mkdir /tmp/qg-capture-state-v$SCHEMA_VERSION && cd /tmp/qg-capture-state-v$SCHEMA_VERSION
+          unzip ~/Downloads/qg-capture-state-v$SCHEMA_VERSION.zip
+          # expect only data/yardstick/gates/ and .yardstick/runs/
+          tar -tzf qg-capture-state-v$SCHEMA_VERSION.tar.gz
+          tar -xzf qg-capture-state-v$SCHEMA_VERSION.tar.gz
+          # score never runs grype, it reads .yardstick/runs from the working directory
+          "\$GRYPE_DB/.tool/yardstick" score data/yardstick/gates/*.yaml -o table
           \`\`\`
 
-          Then label what changed into a local checkout of https://github.com/anchore/claims (and open a PR there):
+          Then label what changed (gate-N is the failing gate) into a local checkout of https://github.com/anchore/claims and
+          open a PR there:
           \`\`\`bash
-          .tool/yardstick claims serve data/yardstick/gates/gate-0.yaml --claims ../claims --open
+          "\$GRYPE_DB/.tool/yardstick" claims serve data/yardstick/gates/gate-N.yaml --claims /path/to/your/claims/checkout --open
           \`\`\`
           EOF
 
