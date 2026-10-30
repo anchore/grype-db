@@ -1,168 +1,82 @@
 from __future__ import annotations
 
-import collections
 import logging
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+import os
+import subprocess
+from typing import TYPE_CHECKING, Any
 
-import yardstick
-from yardstick import artifact, capture
+import yaml
 
-from grype_db_manager import grypedb
+from grype_db_manager.utils import tool_path
 
 if TYPE_CHECKING:
-    from yardstick.cli import config as ycfg
+    from grype_db_manager.cli import config
 
 
-@dataclass
-class GateConfig:
-    # between 0 and 1, the maximum allowable difference below the OSS F1 score before the gate fails (default 0,
-    # meaning the test F1 score must be equal to or greater than the OSS F1 score to pass the gate)
-    f1_score_threshold: float = 0.0
-
-    # between 0 and 100, the maximum % of unlabeled matches for a scan result before the gate fails (default 10%,
-    # meaning the test scan must have less than 10% unlabeled matches to pass the gate)
-    unlabeled_matches_threshold: float = 10.0
-
-    # integer, the maximum allowable introduced FNs by the test scan (but found by the OSS scan) before the gate fails
-    # (default 0, meaning the test scan must have the same or fewer FNs than the OSS scan to pass the gate)
-    introduced_fns_threshold: int = 0
-
-
-# note: a class property on a dataclass will not work since it is not mutable (cannot convey
-# changes to all future instances)
-_default_gate_config = GateConfig()  # noqa: PLW0603
-
-
-def _get_config() -> GateConfig:
-    return _default_gate_config
-
-
-def set_default_gate_config(config: GateConfig) -> None:
-    global _default_gate_config  # noqa: PLW0603
-    _default_gate_config = config
-
-
-def capture_results(cfg: ycfg.Application, db_uuid: str, result_set: str, root_dir: str, recapture: bool = False) -> None:
-    dbm = grypedb.DBManager(root_dir=root_dir)
-    db_info = dbm.get_db_info(db_uuid)
-
-    request_images = cfg.result_sets[result_set].images()
-
-    is_stale = True
-    if not recapture:
-        is_stale = _is_result_set_stale(
-            request_images=request_images,
-            result_set=result_set,
-            db_info=db_info,
-            yardstick_root_dir=cfg.store_root,
-        )
-
-    if is_stale or recapture:
-        capture.result_set(
-            result_set=result_set,
-            scan_requests=cfg.result_sets[result_set].scan_requests(),
-            profiles=cfg.profiles.data,
-        )
-    else:
-        logging.info(f"skipping grype capture for result-set={result_set} (already exists)")
-
-
-def _is_result_set_stale(
-    request_images: list[str],
-    result_set: str,
-    db_info: grypedb.DBInfo,
-    yardstick_root_dir: str,
-) -> bool:
-    try:
-        result_set_object = yardstick.store.result_set.load(result_set, store_root=yardstick_root_dir)
-    except FileNotFoundError as e:
-        logging.warning(f"result-set does not exist: {e}")
-        return True
-
-    if not result_set_object:
-        logging.warning("result-set does is empty")
-        return True
-
-    if _is_db_checksums_stale(result_set_object, db_info):
-        return True
-
-    return bool(_is_result_set_consistent(result_set_object, request_images))
-
-
-def _is_result_set_consistent(result_set_object: artifact.ResultSet, request_images: list[str]) -> bool:
-    # all requests should have configs...
-    requests_with_no_configs = [s.request for s in result_set_object.state if not s.config]
-    if requests_with_no_configs:
-        logging.warning(f"result-set has unfulfilled requests ({len(requests_with_no_configs)} missing results)")
-        return True
-
-    grype_requests_by_image = collections.defaultdict(list)
-    for s in result_set_object.state:
-        if s.config and "grype" in s.config.tool:
-            grype_requests_by_image[s.config.full_image].append(s.request)
-
-    missing_grype_requests = [image for image in request_images if image not in grype_requests_by_image or len(grype_requests_by_image[image]) != 2]
-
-    if missing_grype_requests:
-        logging.warning(f"result-set has missing grype requests: {missing_grype_requests}")
-        return True
-
-    grype_config_images = {s.config.full_image for s in result_set_object.state if s.config and "grype" in s.config.tool_name}
-    mismatched_images = set(request_images) != set(grype_config_images)
-    if mismatched_images:
-        logging.warning("result-set has mismatched image sets")
-        return True
-
-    return False
-
-
-def _is_db_checksums_stale(result_set_object: artifact.ResultSet, db_info: grypedb.DBInfo) -> bool:
-    # all existing requests should be for the same db we are validating...
-    db_checksums = {
-        s.config.detail.get("db", {}).get("checksum", "")
-        for s in result_set_object.state
-        if s.config and s.request.tool.startswith("grype") and s.request.label == "custom-db"
+def gate(name: str, entry: config.ValidateDB, grype_bin: str, db_archive: str, default_max_year: int) -> dict[str, Any]:
+    """
+    the yardstick gate file for one configured gate, as a dict ready to dump to YAML
+    (see https://github.com/anchore/yardstick/blob/main/docs/gate-file.md)
+    """
+    obj: dict[str, Any] = {
+        "schema": "v1",
+        "name": name,
+        "description": "grype with the newly built DB vs the same grype with the published DB",
+        "candidate": {"grype": grype_bin, "db": db_archive},
+        "reference": {"grype": grype_bin, "db": "latest"},
+        # matches only one side reports that no label judges leave the F1/FN checks undecided. The gate is
+        # diff-based, so only a decided regression fails
+        "undecided": "pass",
+        "subjects": [f"oci:{image}" for image in entry.images],
+        "checks": [
+            {"name": "f1NotWorse", "params": {"tolerance": entry.gate.max_f1_regression}},
+            {"name": "noNewFalseNegatives", "params": {"max": entry.gate.max_new_false_negatives}},
+        ],
     }
 
-    if len(db_checksums) > 1:
-        logging.warning("result-set has multiple db checksums")
-        return True
+    max_year = entry.gate.max_year or default_max_year
+    if max_year:
+        obj["vulnerabilities"] = {"maxYear": max_year}
 
-    if not db_checksums:
-        logging.warning("result-set has no db checksums")
-        return True
-
-    if db_info.db_checksum not in db_checksums:
-        logging.warning(
-            f"result-set was captured for a different db: expected={db_info.db_checksum} actual={next(iter(db_checksums))}",
-        )
-        return True
-
-    return False
+    return obj
 
 
-def guess_tool_orientation(tools: list[str]) -> tuple[str, str]:
-    if len(tools) != 2:
-        msg = f"expected 2 tools, got {tools}"
-        raise RuntimeError(msg)
+def write_gates(
+    validate: config.Validate,
+    images: list[str],
+    grype_bin: str,
+    db_archive: str,
+    gates_dir: str,
+) -> list[str]:
+    """write a yardstick gate file per configured gate, keeping only the given images (all when none are given)"""
+    os.makedirs(gates_dir, exist_ok=True)
 
-    current_tool = None
-    latest_release_tool = None
-    for _idx, tool_name_version in enumerate(tools):
-        if "@" not in tool_name_version:
-            msg = f"tool is missing a version: {tool_name_version}"
-            raise ValueError(msg)
-        if "custom-db" not in tool_name_version:
-            latest_release_tool = tool_name_version
+    paths = []
+    for idx, entry in enumerate(validate.gates):
+        if images:
+            entry.images = [i for i in entry.images if i in images]
+
+        if not entry.images:
+            logging.info(f"no images found for gate {idx}")
             continue
-        current_tool = tool_name_version
 
-    if latest_release_tool is None:
-        # "latest" value isn't accessible, so we do a best guess at which version is latest
-        latest_release_tool, current_tool = sorted(tools)
+        name = f"gate-{idx}"
+        path = os.path.join(gates_dir, f"{name}.yaml")
+        logging.info(f"writing yardstick gate to {path!r}")
+        with open(path, "w") as f:
+            f.write(yaml.safe_dump(gate(name, entry, grype_bin, db_archive, validate.default_max_year), sort_keys=False))
+        paths.append(path)
 
-    if current_tool is None:
-        msg = "current tool not found"
-        raise ValueError(msg)
-    return latest_release_tool, current_tool
+    return paths
+
+
+def run(gate_paths: list[str], rescan: bool = False, verbosity: int = 0) -> bool:
+    """run the yardstick gates (from the current directory, where yardstick reads .yardstick.yaml), True if all passed"""
+    cmd = [tool_path("yardstick"), *gate_paths]
+    if rescan:
+        cmd.append("--rescan")
+    if verbosity:
+        cmd.append("-" + "v" * verbosity)
+
+    logging.info(f"running {' '.join(cmd)}")
+    return subprocess.run(cmd, check=False).returncode == 0  # noqa: S603
