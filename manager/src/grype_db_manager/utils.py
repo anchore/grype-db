@@ -21,6 +21,11 @@ def repo_root() -> str:
     return base.decode("utf-8").strip()
 
 
+def tool_path(name: str) -> str:
+    """the path to a tool installed by binny (see .binny.yaml)"""
+    return os.path.join(repo_root(), ".tool", name)
+
+
 @contextlib.contextmanager
 def set_directory(path: pathlib.Path | str) -> Iterable[None]:
     origin = pathlib.Path().absolute()

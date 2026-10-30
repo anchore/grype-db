@@ -5,12 +5,12 @@ import json
 import logging
 import os
 import re
+import subprocess
+import tempfile
 from typing import TYPE_CHECKING
 
-from yardstick.tool import grype
-
 from grype_db_manager.db import schema
-from grype_db_manager.utils import repo_root
+from grype_db_manager.utils import tool_path
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -20,8 +20,6 @@ Vulnerability = collections.namedtuple("Vulnerability", "id")
 
 
 class Grype:
-    BIN = "grype"
-
     def __init__(self, schema_version: int | str, store_root: str, update_url: str = "", release: str | None = None):
         if isinstance(schema_version, str):
             schema_version = int(schema_version.split(".")[0].removeprefix("v"))
@@ -33,37 +31,46 @@ class Grype:
             self.release = schema.grype_version(schema_version)
         logging.debug(f"using grype release={self.release!r} for schema={schema_version!r}")
 
-        env = self._env()
+        self.env = os.environ.copy()
+        self.env.update(
+            {
+                "GRYPE_CHECK_FOR_APP_UPDATE": "false",
+                "GRYPE_DB_VALIDATE_AGE": "false",
+                "GRYPE_DB_AUTO_UPDATE": "false",
+                "GRYPE_DB_CACHE_DIR": os.path.join(store_root, "db"),
+            },
+        )
         if update_url:
-            env["GRYPE_DB_UPDATE_URL"] = update_url
-        self.tool = grype.Grype.install(version=self.release, path=os.path.join(store_root, self.release), env=env)
+            self.env["GRYPE_DB_UPDATE_URL"] = update_url
 
-    @staticmethod
-    def supported_schema_versions() -> list[str]:
-        path = os.path.join(repo_root(), "grype-schema-version-mapping.json")
-        with open(path) as fh:
-            obj = json.load(fh)
-        return obj.keys()
-
-    def _env(self, env: dict[str, str] | None = None) -> dict[str, str]:
-        if not env:
-            env = os.environ.copy()
-        return env
+        self.bin = install(self.release, os.path.join(store_root, "bin"))
+        self.update_db()
 
     def update_db(self) -> None:
-        self.tool.run("db", "update", "-vv", env=self._env())
-
-        # ensure the db cache is not empty for the current schema
-        check_db_cache_dir(self.schema_version, os.path.join(self.tool.path, "db"))
-
-    def import_db(self, db_path: str) -> None:
-        self.tool.run("db", "import", db_path, env=self._env())
-
-        # ensure the db cache is not empty for the current schema
-        check_db_cache_dir(self.schema_version, os.path.join(self.tool.path, "db"))
+        subprocess.run([self.bin, "db", "update", "-vv"], env=self.env, check=True)  # noqa: S603
 
     def run(self, user_input: str) -> str:
-        return self.tool.run("-o", "json", "-v", user_input, env=self._env())
+        return subprocess.check_output([self.bin, "-o", "json", "-v", user_input], env=self.env).decode("utf-8")  # noqa: S603
+
+
+def install(release: str, path: str) -> str:
+    """the path to a grype binary for the given release (a version tag or branch)"""
+    # grype main is installed by binny, anything else is built from source on demand
+    binny_grype = tool_path("grype")
+    if release == "main" and os.path.exists(binny_grype):
+        return binny_grype
+
+    binary = os.path.abspath(os.path.join(path, "grype"))
+    logging.info(f"building grype@{release} to {binary!r}")
+
+    # note: "go install ...@<ref>" would be simpler, but it refuses branch names containing a "/"
+    env = os.environ.copy()
+    env["GOWORK"] = "off"
+    with tempfile.TemporaryDirectory(prefix="grype-src-") as src:
+        clone = ["git", "clone", "--depth", "1", "--branch", release, "https://github.com/anchore/grype.git", src]
+        subprocess.run(clone, check=True)  # noqa: S603, S607
+        subprocess.run(["go", "build", "-o", binary, "./cmd/grype"], cwd=src, env=env, check=True)  # noqa: S603, S607
+    return binary
 
 
 class Report:
@@ -102,33 +109,3 @@ class Report:
             packages.add(package)
             vulnerabilities.add(vulnerability)
         return packages, vulnerabilities
-
-
-def check_db_cache_dir(schema_version: int, db_runtime_dir: str) -> None:
-    """
-    Ensure that there is a `metadata.json` file for the cache directory, which signals that there
-    are files related to a database pull
-    """
-    # ensure the db cache is not empty for the current schema
-    if schema_version == 1:
-        # older grype versions do not support schema-based cache directories
-        db_metadata_file = os.path.join(db_runtime_dir, "metadata.json")
-    else:
-        db_metadata_file = os.path.join(db_runtime_dir, str(schema_version), "metadata.json")
-
-    if os.path.exists(db_metadata_file):
-        # the metadata.json file exists and grype will be able to work with it
-        return
-
-    logging.error(f"db_runtime_dir: {db_runtime_dir}")
-    logging.error(
-        f"db import appears to have failed, was expecting path: {db_metadata_file}",
-    )
-    logging.error("db runtime directory has these files: ")
-    for _f in os.listdir(db_runtime_dir):
-        logging.error(f"{_f}")
-
-    msg = f"db import appears to have failed, was expecting path: {db_metadata_file}"
-    raise RuntimeError(
-        msg,
-    )
