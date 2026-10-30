@@ -3,14 +3,13 @@ from __future__ import annotations
 import enum
 import os
 import sys
-from dataclasses import dataclass, field, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from typing import TYPE_CHECKING, Any
 
 import mergedeep
 import yaml
 import yaml_include  # pyyaml-include >= 2.x
 from dataclass_wizard import asdict, fromdict
-from yardstick.cli.config import Validation
 
 from grype_db_manager import db, s3utils
 
@@ -36,16 +35,21 @@ class GrypeDB:
 
 
 @dataclass
-class Grype:
-    config: str = ""
+class Gate:
+    # the latest vulnerability year considered (default is validate.default-max-year)
+    max_year: int | None = None
+
+    # between 0 and 1, how far below the reference's F1 score the candidate's may be on any image
+    max_f1_regression: float = 0.0
+
+    # how many true positives found by the reference may be missed by the candidate on any image
+    max_new_false_negatives: int = 0
 
 
 @dataclass
 class ValidateDB:
     images: list[str] = field(default_factory=list)
-    grype: Grype = field(default_factory=Grype)
-    gate: Validation = field(default_factory=Validation)
-    allow_empty_results_for_schemas: list[int] = field(default_factory=list)
+    gate: Gate = field(default_factory=Gate)
 
     def __post_init__(self):
         # flatten elements in images (in case yaml anchors are used)
@@ -191,6 +195,7 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
         # single field in the config and all other fields would be set to the default value
         # based on the dataclass definition and not any field(default_factory=...) hints
         # from the containing class.
+        _check_gate_keys(app_object)
         instance = asdict(Application())
 
         mergedeep.merge(instance, app_object)
@@ -230,6 +235,21 @@ def _load(path: str, wire_values: bool = True, env: Mapping | None = None) -> Ap
             db.schema.register_mapping(cfg.schema_mapping_file)
 
     return cfg
+
+
+def _check_gate_keys(app_object: dict) -> None:
+    # unknown keys are otherwise silently dropped, which would hide a python yardstick setting (e.g.
+    # max_unlabeled_percent) that no longer has any effect
+    def norm(key: str) -> str:
+        return key.replace("-", "").replace("_", "").lower()
+
+    for entry in (app_object.get("validate") or {}).get("gates") or []:
+        for obj, cls in ((entry, ValidateDB), (entry.get("gate") or {}, Gate)):
+            allowed = {norm(f.name) for f in fields(cls)}
+            unknown = sorted(k for k in obj if norm(k) not in allowed)
+            if unknown:
+                msg = f"unsupported quality gate config keys: {unknown} (allowed: {sorted(f.name for f in fields(cls))})"
+                raise ValueError(msg)
 
 
 def override_from_environment(obj: Any, prefix: str = "", path: str = "", env: Mapping | None = None) -> None:
