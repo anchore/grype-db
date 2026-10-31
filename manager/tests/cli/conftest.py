@@ -8,6 +8,8 @@ from pathlib import Path
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
+from grype_db_manager.utils import tool_path
+
 
 class Format(Enum):
     RESET = "\033[0m"
@@ -170,7 +172,12 @@ class GrypeHelper:
 
         grype_binary = Path(bin_dir) / "grype"
 
-        if branch_or_version.startswith("v"):
+        if branch_or_version == "main":
+            # the same grype main the quality gate uses
+            grype_binary.unlink(missing_ok=True)
+            grype_binary.symlink_to(tool_path("grype"))
+
+        elif branch_or_version.startswith("v"):
             self.command.run(
                 f"curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b {bin_dir} {branch_or_version}",
                 use_shell=True,

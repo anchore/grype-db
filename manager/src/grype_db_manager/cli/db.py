@@ -1,14 +1,12 @@
 import logging
 import os
 import shutil
+import subprocess
 
 import click
-import yardstick
 from tabulate import tabulate
-from yardstick.cli import config as ycfg
-from yardstick.cli.validate import validate as yardstick_validate
 
-from grype_db_manager import db, grypedb, s3utils
+from grype_db_manager import db, grype, grypedb, s3utils
 from grype_db_manager.cli import config, error
 from grype_db_manager.db.format import Format
 from grype_db_manager.grypedb import DB_DIR, DBManager, GrypeDB
@@ -97,7 +95,7 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
     multiple=True,
     help="the image (or images) to validate with (default is to use all configured images)",
 )
-@click.option("--recapture", "-r", is_flag=True, help="recapture grype results (even if not stale)")
+@click.option("--recapture", "-r", is_flag=True, help="rescan with grype (even if scans for the same inputs are stored)")
 @click.option(
     "--skip-namespace-check",
     "skip_namespace_check",
@@ -107,9 +105,7 @@ def show_db(cfg: config.Application, db_uuid: str) -> None:
 @click.option("--force", "-f", is_flag=True, help="force validation even if disabled for the schema version")
 @click.argument("db-uuid")
 @click.pass_obj
-@click.pass_context
 def validate_db(
-    ctx: click.Context,
     cfg: config.Application,
     db_uuid: str,
     images: list[str],
@@ -134,7 +130,7 @@ def validate_db(
             # ensure the minimum number of namespaces are present
             db_manager.validate_providers(db_uuid=db_uuid, expected=cfg.validate.expected_providers)
 
-    _validate_db(ctx, cfg, db_info, images, db_uuid, recapture, force=force)
+    _validate_db(cfg, db_info, images, recapture, force=force)
 
     if db_info.schema_version >= 6:
         validations_enabled = db.schema.validations_enabled(db_info.schema_version)
@@ -148,107 +144,41 @@ def validate_db(
 
 
 def _validate_db(
-    ctx: click.Context,
     cfg: config.Application,
     db_info: grypedb.DBInfo,
     images: list[str],
-    db_uuid: str,
     recapture: bool,
     force: bool = False,
 ) -> None:
-    # resolve tool versions and install them
-    yardstick.store.config.set_values(store_root=cfg.data.yardstick_root)
-
     validations_enabled = db.schema.validations_enabled(db_info.schema_version)
     if not validations_enabled and not force:
         click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, skipping{Format.RESET}")
         return
 
-    grype_version = db.schema.grype_version(db_info.schema_version)
-    basis_grype_version = grype_version
+    root = cfg.data.yardstick_root
+    try:
+        grype_bin = grype.install(db.schema.grype_version(db_info.schema_version), os.path.join(root, "grype"))
+    except FileNotFoundError as e:
+        raise error.CLIError(str(e)) from e
 
-    yardstick_profile_data = ycfg.Profiles()
-    profile_name = None
-    # this is a good example of how to add a custom profile configuration by a profile when working on a new schema version
-    # if db_info.schema_version >= 6:
-    #     profile_name = f"v{db_info.schema_version}"
-    #     yardstick_profile_data = ycfg.Profiles(
-    #         data={
-    #             "grype[custom-db]": {
-    #                 profile_name: {"config_path": f"./.grype-v{db_info.schema_version}.yaml"},
-    #             },
-    #         },
-    #     )
+    # grype main is whatever binny last built, so record which one this gate ran with
+    subprocess.run([grype_bin, "version"], check=True)  # noqa: S603
 
-    result_sets = {}
-    for idx, rs in enumerate(cfg.validate.gates):
-        if images:
-            logging.info(f"filtering images for gate {idx}")
-            rs.images = [i for i in rs.images if i in images]
-
-        if not rs.images:
-            logging.info(f"no images found for gate {idx}")
-            continue
-
-        if db_info.schema_version in rs.allow_empty_results_for_schemas:
-            rs.gate.fail_on_empty_match_set = False
-
-        logging.info(f"writing config for result set result_set_{idx}")
-
-        result_sets[f"result_set_{idx}"] = ycfg.ResultSet(
-            description=f"generated result set for gate {idx}",
-            validations=[rs.gate],
-            matrix=ycfg.ScanMatrix(
-                images=rs.images,
-                tools=[
-                    ycfg.Tool(
-                        label="custom-db",
-                        name="grype",
-                        version=grype_version + f"+import-db={db_info.archive_path}",
-                        profile=profile_name,
-                    ),
-                    ycfg.Tool(
-                        name="grype",
-                        version=basis_grype_version,
-                    ),
-                ],
-            ),
-        )
-
-    yardstick_cfg = ycfg.Application(
-        profiles=yardstick_profile_data,
-        store_root=cfg.data.yardstick_root,
-        default_max_year=cfg.validate.default_max_year,
-        result_sets=result_sets,
+    gate_paths = db.validation.write_gates(
+        cfg.validate,
+        images=images,
+        grype_bin=os.path.abspath(grype_bin),
+        db_archive=db_info.archive_path,
+        gates_dir=os.path.join(root, "gates"),
     )
-
-    for r in result_sets:
-        # workaround for test setup issues
-        os.environ["GRYPE_DB_VALIDATE_BY_HASH_ON_START"] = "true"
-        db.capture_results(
-            cfg=yardstick_cfg,
-            db_uuid=db_uuid,
-            result_set=r,
-            recapture=recapture,
-            root_dir=cfg.data.root,
-        )
-
-    ctx.obj = yardstick_cfg
+    if not gate_paths:
+        msg = "no configured quality gate has any of the given images"
+        raise click.UsageError(msg)
 
     try:
-        ctx.invoke(
-            yardstick_validate,
-            always_run_label_comparison=False,
-            breakdown_by_ecosystem=False,
-            verbosity=cfg.verbosity,
-            result_sets=[],
-            all_result_sets=True,
-        )
-    except:
-        if not validations_enabled and not force:
-            click.echo(f"{Format.BOLD}{Format.OKGREEN}Validation disabled, ignoring failure{Format.RESET}")
-            return
-        raise
+        db.validation.run(gate_paths, rescan=recapture, verbosity=cfg.verbosity)
+    except (db.validation.GateFailedError, db.validation.GateError, FileNotFoundError) as e:
+        raise error.CLIError(str(e)) from e
 
 
 def _validate_latest(cfg: config.Application, latest_file: str, archive_path: str) -> None:

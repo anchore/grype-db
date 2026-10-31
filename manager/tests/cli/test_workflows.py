@@ -84,8 +84,12 @@ def test_workflow_2(cli_env, command, logger):
     This test creates a database from raw vunnel data and performs validations via the quality gate.
     """
 
+    cfg = config.load(".grype-db-manager.yaml")
+    oracle_image, alpine_image = cfg.validate.gates[0].images
+
     logger.step("setup: create the DB")
     command.run("make clean-manager", env=cli_env)
+    command.run("make clean-yardstick", env=cli_env)
     command.run("make vunnel-oracle-data", env=cli_env)
 
     # create the database
@@ -93,28 +97,25 @@ def test_workflow_2(cli_env, command, logger):
     assert stdout.strip(), "Expected non-empty output"
     db_id = stdout.splitlines()[-1]  # Get the last line as the DB ID
 
-    ### case 1: fail DB validation (too many unknowns) ###
-    logger.step("case 1: fail DB validation (too many unknowns)")
-    command.run("make clean-yardstick-labels", env=cli_env)
+    ### case 1: fail DB validation (regression against the published DB) ###
+    logger.step("case 1: fail DB validation (regression against the published DB)")
 
     # workaround for Go 1.23+ parent directory module lookup
     cli_env["GOWORK"] = "off"
 
+    # the test DB has no alpine data, so the candidate misses every true positive the published DB finds on alpine.
     # note: we add --force to ensure we're checking validations (even if it's disabled for the schema)
-    stdout, stderr = command.run(
-        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --force --recapture",
+    _, stderr = command.run(
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --force --recapture -i {alpine_image}",
         env=cli_env,
         expect_fail=True,
     )
-
-    assert "current indeterminate matches % is greater than 10%" in stdout
+    # only a failing gate (yardstick exit 1) says this; a gate yardstick could not run says "could not run"
+    assert "quality gate failed" in stderr
+    assert "could not run" not in stderr
 
     ## case 2: fail DB validation (missing providers) ###
     logger.step("case 2: fail DB validation (missing providers)")
-    command.run("make clean-yardstick-labels", env=cli_env)
-
-    logger.info("installing labels")
-    command.run("make install-oracle-labels", env=cli_env)
 
     _, stderr = command.run(
         f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --force",
@@ -125,13 +126,9 @@ def test_workflow_2(cli_env, command, logger):
 
     ### case 3: pass DB validation ###
     logger.step("case 3: pass DB validation")
-    command.run("make clean-yardstick-labels", env=cli_env)
-
-    logger.info("installing labels")
-    command.run("make install-oracle-labels", env=cli_env)
 
     stdout, _ = command.run(
-        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --force",
+        f"grype-db-manager -c .grype-db-manager.yaml -vv db validate {db_id} --skip-namespace-check --force -i {oracle_image}",
         env=cli_env,
     )
-    assert "Quality gate passed!" in stdout
+    assert "Validation passed" in stdout

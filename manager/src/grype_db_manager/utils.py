@@ -21,6 +21,15 @@ def repo_root() -> str:
     return base.decode("utf-8").strip()
 
 
+def tool_path(name: str) -> str:
+    """the path to a tool installed by binny (see .binny.yaml)"""
+    path = os.path.join(repo_root(), ".tool", name)
+    if not os.path.exists(path):
+        msg = f"{path} does not exist (run 'make bootstrap-tools' from the repo root)"
+        raise FileNotFoundError(msg)
+    return path
+
+
 @contextlib.contextmanager
 def set_directory(path: pathlib.Path | str) -> Iterable[None]:
     origin = pathlib.Path().absolute()
