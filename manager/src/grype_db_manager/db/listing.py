@@ -230,13 +230,16 @@ def _smoke_test(
     minimum_packages: int,
     minimum_vulnerabilities: int,
     store_root: str,
+    release: str | None = None,
 ) -> None:
     logging.info(f"testing listing.json grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
         store_root=store_root,
         update_url=listing_url,
+        release=release,
     )
+    tool_obj.update_db()
 
     output = tool_obj.run(user_input=image)
     packages, vulnerabilities = grype.Report(report_contents=output).parse()
@@ -289,6 +292,7 @@ def smoke_test(
                     minimum_packages=minimum_packages,
                     minimum_vulnerabilities=minimum_vulnerabilities,
                     store_root=installation_path,
+                    release=override_release,
                 )
 
             else:

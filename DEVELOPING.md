@@ -35,11 +35,30 @@ To unit test the Go code and unit test the publisher python scripts:
 make unit
 ```
 
-To verify that all supported schema versions interop with grype run:
+To build a DB and run it through the quality gate (see below):
 
 ```bash
-make acceptance
+make db-acceptance schema=6
 # Note: this may take a while... go make some coffee.
+```
+
+### The DB quality gate
+
+`grype-db-manager db validate` compares grype main scanning with the newly built DB (the candidate) against the same
+grype scanning with the published DB (the reference), using the [Go yardstick](https://github.com/anchore/yardstick).
+Each entry under `validate.gates` in `config/grype-db-manager/include.d/validate.yaml` is written as a yardstick gate
+file to `data/yardstick/gates/`, and scans are stored in `.yardstick/runs/`. Labels and SBOMs come from
+[anchore/claims](https://github.com/anchore/claims), pinned to a commit by `validate.claims` in the same file.
+
+Unlabeled matches that only one side reports leave the F1 and false negative checks undecided, which passes. A gate
+still fails on a decided F1 or false negative regression, on more unlabeled changes than `max_unlabeled_changes` on any
+image, on an image the two sides disagree on that has no tp/fp label to decide it, and on an image neither side reports
+any match on. To dig into a gate's result without scanning again, or after adding labels:
+
+```bash
+.tool/yardstick score data/yardstick/gates/*.yaml -o table
+# label what changed (gate-N is the gate to look at) into a local checkout of anchore/claims (and open a PR there)
+.tool/yardstick claims serve data/yardstick/gates/gate-N.yaml --claims ../claims --open
 ```
 
 The main make tasks for common static analysis functions are `lint`, `format`, `lint-fix`, `unit`, `cli`.
@@ -264,8 +283,8 @@ for all supported schema versions and making them available to the public. The p
 
    This call needs to be repeated for all schema versions that are supported (see `manager/src/grype_db_manager/data/schema-info.json`).
 
-   Once built each DB is smoke tested with grype by comparing the performance of the last OSS DB with the current
-   (local) DB, using the [vulnerability-match-label](https://github.com/anchore/vulnerability-match-labels) to quality differences.
+   Once built each DB is run through the quality gate, comparing grype's matches with the last published DB against
+   the current (local) DB, using the labels in [anchore/claims](https://github.com/anchore/claims) to judge the differences.
 
    Only DBs that pass validation are uploaded to S3. At this step the DBs can be downloaded from S3 but are NOT yet
    discoverable via `grype db download` yet (this is what the listing file update will do).

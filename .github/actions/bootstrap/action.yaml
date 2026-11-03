@@ -61,13 +61,19 @@ runs:
       if: inputs.python == 'true'
       shell: bash
       run: make bootstrap-python
+    # grype is installed from main, so rebuild the tools weekly rather than only when .binny.yaml changes
+    - name: Tool cache week
+      if: inputs.tools == 'true'
+      id: tool-cache-week
+      shell: bash
+      run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ github.workspace }}/.tool
-        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}-${{ steps.tool-cache-week.outputs.week }}
     - name: (cache-miss) Bootstrap project tools
       shell: bash
       if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'

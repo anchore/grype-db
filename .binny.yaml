@@ -9,6 +9,7 @@ tools:
     with:
       repo: anchore/binny
 
+  # used by the DB quality gate (both setups scan with this one binary) and the listing smoke tests
   - name: grype
     version:
       want: main
@@ -16,6 +17,14 @@ tools:
     with:
       module: github.com/anchore/grype
       entrypoint: cmd/grype
+
+  # used to run the DB quality gate
+  - name: yardstick
+    version:
+      want: v0.17.0
+    method: github-release
+    with:
+      repo: anchore/yardstick
 
   # used at release to generate the changelog
   - name: chronicle

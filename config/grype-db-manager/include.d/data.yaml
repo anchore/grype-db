@@ -2,4 +2,5 @@
 
 root: data/manager
 vunnel-root: data/vunnel
+# generated quality gates (yardstick stores their scans in ./.yardstick/runs, relative to the working directory)
 yardstick-root: data/yardstick

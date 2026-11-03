@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import yaml
 
 from grype_db_manager.cli import config
@@ -75,28 +76,16 @@ log:
   level: INFO
 schemaMappingFile: mapping.json
 validate:
+  claims: []
   defaultMaxYear: 2021
   expectedProviders:
     - alpine
   gates:
-    - allowEmptyResultsForSchemas:
-        - 1
-        - 2
-        - 3
-      gate:
-        allowedNamespaces: []
-        candidateToolLabel: candidate
-        failOnEmptyMatchSet: true
+    - gate:
         maxF1Regression: 0.15
         maxNewFalseNegatives: 10
-        maxUnlabeledPercent: 50
+        maxUnlabeledChanges: null
         maxYear: 2021
-        name: default
-        referenceToolLabel: reference
-        requiredNamespaces: []
-        yearFromCveOnly: null
-      grype:
-        config: ''
       images:
         - docker.io/cloudbees/cloudbees-core-agent:2.289.2.2@sha256:d48f0546b4cf5ef4626136242ce302f94a42751156b7be42f4b1b75a66608880
   listing:
@@ -109,3 +98,44 @@ verbosity: 2
 """
 
     assert actual == expected
+
+
+def test_load_rejects_unsupported_gate_keys(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        """
+validate:
+  gates:
+    - gate:
+        max_f1_regression: 0.15
+        max_unlabeled_percent: 50
+      images: [docker.io/alpine:3.2]
+""",
+    )
+
+    with pytest.raises(ValueError, match="max_unlabeled_percent"):
+        config.load(str(config_path), wire_values=False)
+
+
+@pytest.mark.parametrize(
+    ("gates", "match"),
+    [
+        # the loader would drop this key (it keeps underscores), so it must not pass as max_year
+        ("    - gate:\n        maxyear: 2030\n      images: [docker.io/alpine:3.2]\n", "maxyear"),
+        ("    - docker.io/alpine:3.2\n", "must be mappings"),
+    ],
+)
+def test_load_rejects_malformed_gates(tmp_path, gates, match):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("validate:\n  gates:\n" + gates)
+
+    with pytest.raises(ValueError, match=match):
+        config.load(str(config_path), wire_values=False)
+
+
+def test_load_accepts_gate_keys_the_loader_maps(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("validate:\n  gates:\n    - gate:\n        max-year: 2030\n        maxUnlabeledChanges: 5\n")
+
+    gate = config.load(str(config_path), wire_values=False).validate.gates[0].gate
+    assert (gate.max_year, gate.max_unlabeled_changes) == (2030, 5)

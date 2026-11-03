@@ -17,11 +17,6 @@ cli-test-data/vunnel/oracle: ## Prepare oracle data for CLI tests
 	go build -C ../../../cmd/grype-db -o $(shell pwd)/grype-db
 	./grype-db cache restore --path .cache/vunnel/oracle/grype-db-cache.tar.gz
 
-.PHONY: install-oracle-labels
-install-oracle-labels:
-	mkdir -p cli-test-data/yardstick/labels
-	cp -a ../../../data/vulnerability-match-labels/labels/docker.io+oraclelinux* ./cli-test-data/yardstick/labels/
-
 .PHONY: clean
 clean: clean-data ## Clear all existing yardstick results and delete python environment
 
@@ -34,12 +29,7 @@ clean-vunnel:
 
 .PHONY: clean-yardstick
 clean-yardstick:
-	rm -rf cli-test-data/yardstick
-
-.PHONY: clean-yardstick-labels
-clean-yardstick-labels:
-	rm -rf cli-test-data/yardstick/labels
-	mkdir -p cli-test-data/yardstick/labels
+	rm -rf cli-test-data/yardstick .yardstick
 
 .PHONY: clean-manager
 clean-manager:
