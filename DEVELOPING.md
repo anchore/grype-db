@@ -50,6 +50,10 @@ Each entry under `validate.gates` in `config/grype-db-manager/include.d/validate
 file to `data/yardstick/gates/`, and scans are stored in `.yardstick/runs/`. Labels and SBOMs come from
 [anchore/claims](https://github.com/anchore/claims), pinned to a commit by `validate.claims` in the same file.
 
+The gate runs yardstick and grype from `.tool/` (installed by `make bootstrap-tools`). To use other binaries, for
+example when running an installed `grype-db-manager` outside a checkout of this repo, set `YARDSTICK_EXECUTABLE_PATH`
+and `GRYPE_EXECUTABLE_PATH`, the same way `GRYPE_DB_EXECUTABLE_PATH` overrides the grype-db binary.
+
 Unlabeled matches that only one side reports leave the F1 and false negative checks undecided, which passes. A gate
 still fails on a decided F1 or false negative regression, on more unlabeled changes than `max_unlabeled_changes` on any
 image, on an image the two sides disagree on that has no tp/fp label to decide it, and on an image neither side reports
