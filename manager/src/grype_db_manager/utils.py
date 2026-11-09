@@ -28,7 +28,7 @@ def _override_env_var(name: str) -> str:
     return f"{name.upper().replace('-', '_')}_EXECUTABLE_PATH"
 
 
-def _executable_override(name: str) -> str | None:
+def executable_override(name: str) -> str | None:
     """the absolute path of the binary set by <NAME>_EXECUTABLE_PATH, or None when unset"""
     env_var = _override_env_var(name)
     override = os.getenv(env_var)
@@ -49,7 +49,7 @@ def tool_path(name: str) -> str:
     (e.g. YARDSTICK_EXECUTABLE_PATH, or GRYPE_EXECUTABLE_PATH which only applies to grype main). The override
     allows running from an installed package, outside a checkout of this repo.
     """
-    if override := _executable_override(name):
+    if override := executable_override(name):
         return override
 
     hint = f"set {_override_env_var(name)} or run 'make bootstrap-tools' in a grype-db checkout"

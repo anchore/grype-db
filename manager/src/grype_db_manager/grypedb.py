@@ -17,6 +17,7 @@ import uuid
 import requests
 import xxhash
 
+from grype_db_manager import utils
 from grype_db_manager.db.format import Format
 
 TOOLS_DIR = "tools"
@@ -495,23 +496,14 @@ def print_annotation(s: str, italic: bool = True, grey: bool = True) -> None:
     sys.stderr.write(s + "\n")
 
 
-def _check_executable_path_override() -> str | None:
-    """Check for existing grype-db binary via GRYPE_DB_EXECUTABLE_PATH environment variable."""
-    if grype_db_path := os.getenv("GRYPE_DB_EXECUTABLE_PATH"):
-        if shutil.which(grype_db_path):
-            logging.info(f"Using grype-db from GRYPE_DB_EXECUTABLE_PATH: {grype_db_path}")
-            return grype_db_path
-        logging.warning(f"GRYPE_DB_EXECUTABLE_PATH points to non-executable: {grype_db_path}")
-    return None
-
-
 def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912, C901
     """
     Install grype-db CLI from a specified version.
 
     This can be a specific semver version (e.g. v0.7.0), "latest", a GitHub repo (e.g. user/repo or user/repo@branch),
     or a local file path (e.g. file:///path/to/grype-db).
-    If an environment variable GRYPE_DB_EXECUTABLE_PATH is set and points to an executable, that binary will be used instead.
+    If the environment variable GRYPE_DB_EXECUTABLE_PATH is set, that binary is used instead, and it is an error for it
+    not to be an executable.
 
     Args:
         input_version (str): The version or source to install from.
@@ -528,8 +520,8 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str: 
 
     os.makedirs(bin_dir, exist_ok=True)
 
-    # Check for explicit grype-db binary override (opt-in only)
-    if existing_binary := _check_executable_path_override():
+    # check for explicit grype-db binary override (opt-in only)
+    if existing_binary := utils.executable_override("grype-db"):
         return existing_binary
 
     version = input_version
