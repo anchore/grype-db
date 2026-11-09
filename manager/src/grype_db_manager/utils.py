@@ -29,7 +29,10 @@ def _override_env_var(name: str) -> str:
 
 
 def executable_override(name: str) -> str | None:
-    """the absolute path of the binary set by <NAME>_EXECUTABLE_PATH, or None when unset"""
+    """
+    the absolute path of the binary set by <NAME>_EXECUTABLE_PATH, or None when unset (or empty). Raises
+    FileNotFoundError when it is set but is not an executable, since silently using another binary would be surprising.
+    """
     env_var = _override_env_var(name)
     override = os.getenv(env_var)
     if not override:
@@ -37,10 +40,11 @@ def executable_override(name: str) -> str | None:
     resolved = shutil.which(os.path.expanduser(override))
     if not resolved:
         # an explicit override that can't be honored must not silently run a different binary
-        msg = f"{env_var}={override!r} is not an executable file"
+        msg = f"{env_var}={override!r} is not an executable file or a command on PATH"
         raise FileNotFoundError(msg)
+    resolved = os.path.abspath(resolved)
     logging.info(f"using {name} from {env_var}: {resolved}")
-    return os.path.abspath(resolved)
+    return resolved
 
 
 def tool_path(name: str) -> str:

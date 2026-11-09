@@ -52,8 +52,9 @@ file to `data/yardstick/gates/`, and scans are stored in `.yardstick/runs/`. Lab
 
 The gate runs yardstick and grype from `.tool/` (installed by `make bootstrap-tools`). To use other binaries, for
 example when running an installed `grype-db-manager` outside a checkout of this repo, set `YARDSTICK_EXECUTABLE_PATH`
-and `GRYPE_EXECUTABLE_PATH` (grype `main` only, which is what the supported schema uses). A value that is not an
-executable fails the gate rather than falling back to `.tool/`.
+and `GRYPE_EXECUTABLE_PATH` (grype `main` only, which is what the supported schema uses). Likewise
+`GRYPE_DB_EXECUTABLE_PATH` replaces the grype-db version set by `grype_db.version`. Each takes an absolute, relative or
+`~` path, or a command name on `PATH`, and a value that is not an executable is an error rather than a fallback.
 
 Unlabeled matches that only one side reports leave the F1 and false negative checks undecided, which passes. A gate
 still fails on a decided F1 or false negative regression, on more unlabeled changes than `max_unlabeled_changes` on any

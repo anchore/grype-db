@@ -400,6 +400,10 @@ class GrypeDB:
 
     @classmethod
     def install(cls, version: str, config_path: str, root_dir: str) -> GrypeDB:
+        # an explicit GRYPE_DB_EXECUTABLE_PATH wins over the configured version (even "disabled")
+        if override := utils.executable_override("grype-db"):
+            return cls(bin_path=override, config_path=config_path)
+
         bin_path = None
         if version != "disabled":
             bin_path = _install_grype_db(
@@ -501,9 +505,7 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str: 
     Install grype-db CLI from a specified version.
 
     This can be a specific semver version (e.g. v0.7.0), "latest", a GitHub repo (e.g. user/repo or user/repo@branch),
-    or a local file path (e.g. file:///path/to/grype-db).
-    If the environment variable GRYPE_DB_EXECUTABLE_PATH is set, that binary is used instead, and it is an error for it
-    not to be an executable.
+    or a local file path (e.g. file:///path/to/grype-db). GRYPE_DB_EXECUTABLE_PATH is handled by GrypeDB.install.
 
     Args:
         input_version (str): The version or source to install from.
@@ -519,10 +521,6 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str: 
         raise ValueError(msg)
 
     os.makedirs(bin_dir, exist_ok=True)
-
-    # check for explicit grype-db binary override (opt-in only)
-    if existing_binary := utils.executable_override("grype-db"):
-        return existing_binary
 
     version = input_version
     is_semver = re.match(r"v\d+\.\d+\.\d+", input_version)

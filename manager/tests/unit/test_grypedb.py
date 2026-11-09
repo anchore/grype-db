@@ -183,28 +183,32 @@ class TestGrypeDB:
         assert kwargs["env"]["GRYPE_DB_LOG_LEVEL"] == "DEBUG"
         assert args[0] == [bin_path, "version"]
 
-    def test_install_grype_db_uses_executable_path_override(self, tmp_path: pathlib.Path, mocker):
-        """Test _install_grype_db returns GRYPE_DB_EXECUTABLE_PATH without building anything."""
+    @pytest.mark.parametrize("version", ["latest", "disabled", ""])
+    def test_install_uses_executable_path_override(self, tmp_path: pathlib.Path, mocker, version: str):
+        """Test GrypeDB.install uses GRYPE_DB_EXECUTABLE_PATH for any configured version, without installing anything."""
         fake_grype_db = tmp_path / "fake-grype-db"
         fake_grype_db.write_text("#!/bin/bash\necho 'fake grype-db'")
         fake_grype_db.chmod(0o755)
         mocker.patch.dict(os.environ, {"GRYPE_DB_EXECUTABLE_PATH": str(fake_grype_db)})
-        mock_requests = mocker.patch("grype_db_manager.grypedb.requests")
+        mock_install = mocker.patch("grype_db_manager.grypedb._install_grype_db")
 
-        result = grypedb._install_grype_db("latest", str(tmp_path / "bin"), str(tmp_path / "clone"))
+        gdb = grypedb.GrypeDB.install(version=version, config_path="config_path", root_dir=str(tmp_path / "root"))
 
-        assert result == str(fake_grype_db)
-        mock_requests.get.assert_not_called()
+        assert gdb.bin_path == str(fake_grype_db)
+        assert gdb.config_path == "config_path"
+        mock_install.assert_not_called()
+        assert not (tmp_path / "root").exists()
 
-    def test_install_grype_db_with_invalid_executable_path(self, tmp_path: pathlib.Path, mocker):
-        """Test _install_grype_db fails rather than building when GRYPE_DB_EXECUTABLE_PATH is not executable."""
+    @pytest.mark.parametrize("version", ["latest", "disabled"])
+    def test_install_with_invalid_executable_path(self, tmp_path: pathlib.Path, mocker, version: str):
+        """Test GrypeDB.install fails rather than installing when GRYPE_DB_EXECUTABLE_PATH is not executable."""
         mocker.patch.dict(os.environ, {"GRYPE_DB_EXECUTABLE_PATH": "/nonexistent/grype-db"})
-        mock_requests = mocker.patch("grype_db_manager.grypedb.requests")
+        mock_install = mocker.patch("grype_db_manager.grypedb._install_grype_db")
 
         with pytest.raises(FileNotFoundError, match="GRYPE_DB_EXECUTABLE_PATH"):
-            grypedb._install_grype_db("latest", str(tmp_path), str(tmp_path))
+            grypedb.GrypeDB.install(version=version, config_path="config_path", root_dir=str(tmp_path))
 
-        mock_requests.get.assert_not_called()
+        mock_install.assert_not_called()
 
     def test_install_grype_db_without_executable_path(self, tmp_path: pathlib.Path, mocker):
         """Test _install_grype_db proceeds normally when GRYPE_DB_EXECUTABLE_PATH is not set."""
@@ -219,8 +223,8 @@ class TestGrypeDB:
         with pytest.raises(Exception):  # Will fail on actual build, but that's expected
             grypedb._install_grype_db("latest", str(tmp_path), str(tmp_path))
 
-        # Should not have called shutil.which since no env var was set
-        # (we can't easily assert this without mocking shutil.which, but the test passing means it worked)
+        # reaching the release lookup proves nothing failed before the install proper
+        mock_requests.get.assert_called_once()
 
     def test_package_db(self, top_level_fixture, mocker):
         root = top_level_fixture(case="tools-case-1")

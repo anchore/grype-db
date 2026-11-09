@@ -56,6 +56,31 @@ class TestToolPath:
 
         assert utils.tool_path("grype") == str(binary)
 
+    def test_home_relative_executable_path_is_expanded(self, tmp_path: pathlib.Path, mocker, monkeypatch):
+        """Test tool_path expands ~ in an override."""
+        binary = _make_executable(tmp_path / "bin" / "grype")
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("GRYPE_EXECUTABLE_PATH", "~/bin/grype")
+        mocker.patch("grype_db_manager.utils.repo_root", side_effect=OSError("not a git repository"))
+
+        assert utils.tool_path("grype") == str(binary)
+
+    def test_empty_executable_path_is_unset(self, tmp_path: pathlib.Path, mocker):
+        """Test an empty override counts as unset and uses .tool/<name>."""
+        binary = _make_executable(tmp_path / ".tool" / "grype")
+        mocker.patch.dict(os.environ, {"GRYPE_EXECUTABLE_PATH": ""})
+        mocker.patch("grype_db_manager.utils.repo_root", return_value=str(tmp_path))
+
+        assert utils.tool_path("grype") == str(binary)
+
+    def test_directory_executable_path_raises(self, tmp_path: pathlib.Path, mocker):
+        """Test an override pointing at a directory is rejected."""
+        mocker.patch.dict(os.environ, {"GRYPE_EXECUTABLE_PATH": str(tmp_path)})
+        mocker.patch("grype_db_manager.utils.repo_root", side_effect=OSError("not a git repository"))
+
+        with pytest.raises(FileNotFoundError, match="GRYPE_EXECUTABLE_PATH"):
+            utils.tool_path("grype")
+
     def test_dashed_name_uses_underscored_env_var(self, tmp_path: pathlib.Path, mocker):
         """Test a dashed tool name maps to a shell-settable env var (grype-db -> GRYPE_DB_EXECUTABLE_PATH)."""
         binary = _make_executable(tmp_path / "bin" / "grype-db")
