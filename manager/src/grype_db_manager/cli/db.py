@@ -65,7 +65,10 @@ def remove_db(cfg: config.Application, db_uuid: str) -> None:
 def build_db(cfg: config.Application, schema_version: int) -> str:
     logging.info(f"building DB (schema v{schema_version})")
 
-    grypedb = GrypeDB.install(version=cfg.grype_db.version, root_dir=cfg.data.root, config_path=cfg.grype_db.config)
+    try:
+        grypedb = GrypeDB.install(version=cfg.grype_db.version, root_dir=cfg.data.root, config_path=cfg.grype_db.config)
+    except FileNotFoundError as e:
+        raise error.CLIError(str(e)) from e
     db_uuid = grypedb.build_and_package(
         schema_version=schema_version,
         provider_root_dir=cfg.data.vunnel_root,
