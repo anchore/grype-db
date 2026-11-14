@@ -5,8 +5,8 @@ go 1.26.8
 require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adrg/xdg v0.5.3
-	github.com/anchore/go-logger v0.2.0
-	github.com/anchore/grype v0.121.3
+	github.com/anchore/go-logger v0.2.1-0.20261113155452-d9a9975e4c8d
+	github.com/anchore/grype v0.121.4-0.20261114032221-5339b391b986
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gookit/color v1.6.3
@@ -60,19 +60,19 @@ require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acobaugh/osrelease v0.1.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/clio v0.1.2 // indirect
-	github.com/anchore/fangs v0.1.1 // indirect
-	github.com/anchore/go-collections v0.1.1 // indirect
-	github.com/anchore/go-homedir v0.1.1 // indirect
-	github.com/anchore/go-lzo v0.1.1 // indirect
-	github.com/anchore/go-macholibre v0.1.1 // indirect
-	github.com/anchore/go-rpmdb v0.2.2 // indirect
+	github.com/anchore/clio v0.1.3-0.20261113204513-18da1f4a030e // indirect
+	github.com/anchore/fangs v0.1.2-0.20261113223454-d8ff0432a380 // indirect
+	github.com/anchore/go-collections v0.1.2-0.20261113083500-ba4aad2faeb9 // indirect
+	github.com/anchore/go-homedir v0.1.2-0.20261113170613-7dbc6b942b2d // indirect
+	github.com/anchore/go-lzo v0.1.2-0.20261113041526-80bc12f55e8c // indirect
+	github.com/anchore/go-macholibre v0.1.2-0.20261113232453-590aa9dafa3a // indirect
+	github.com/anchore/go-rpmdb v0.2.3-0.20261109005757-22483d422fb5 // indirect
 	github.com/anchore/go-struct-converter v0.2.0-rc2 // indirect
-	github.com/anchore/go-sync v0.1.2 // indirect
+	github.com/anchore/go-sync v0.1.3-0.20261113235518-efdcdeacccef // indirect
 	github.com/anchore/go-version v1.2.2-0.20210903204242-51efa5b487c4 // indirect
-	github.com/anchore/packageurl-go v0.2.0 // indirect
-	github.com/anchore/stereoscope v0.4.1 // indirect
-	github.com/anchore/syft v1.57.1 // indirect
+	github.com/anchore/packageurl-go v0.2.1-0.20261113033656-eaa3d8472743 // indirect
+	github.com/anchore/stereoscope v0.4.2-0.20261113205631-61e46aa6b120 // indirect
+	github.com/anchore/syft v1.57.2-0.20261114040530-8cb6f6aeb623 // indirect
 	github.com/andybalholm/brotli v1.2.8 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v17 v17.0.1 // indirect
@@ -137,7 +137,7 @@ require (
 	github.com/deitch/magic v1.0.0 // indirect
 	github.com/diskfs/go-diskfs v1.9.4 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v29.9.2+incompatible // indirect
+	github.com/docker/cli v29.9.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.10 // indirect
 	github.com/docker/go-connections v0.8.2 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -333,7 +333,7 @@ require (
 	modernc.org/libc v1.79.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sqlite v1.61.0 // indirect
+	modernc.org/sqlite v1.61.1 // indirect
 )
 
 // the go.mod file did not have the correct minimum go version at the time of release tagging
