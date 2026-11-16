@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-import datetime
+import datetime as dt
 import glob
 import json
 import logging
@@ -150,8 +150,8 @@ class DBInfo:
     uuid: str
     schema_version: int
     db_checksum: str
-    db_created: datetime.datetime
-    data_created: datetime.datetime
+    db_created: dt.datetime
+    data_created: dt.datetime
     archive_path: str
     latest_path: str | None = None
 
@@ -188,7 +188,7 @@ class DBManager:
 
         session_dir = os.path.join(self.db_dir, db_uuid)
         with open(os.path.join(session_dir, "timestamp"), "w") as f:
-            now = datetime.datetime.now(tz=datetime.UTC)
+            now = dt.datetime.now(tz=dt.UTC)
             f.write(now.isoformat())
 
         return db_uuid
@@ -262,7 +262,7 @@ class DBManager:
         timestamp_path = os.path.join(session_dir, "timestamp")
         if os.path.exists(timestamp_path):
             with open(timestamp_path) as f:
-                db_created_timestamp = datetime.datetime.fromisoformat(f.read())
+                db_created_timestamp = dt.datetime.fromisoformat(f.read())
 
         # read info from the metadata file in build/metadata.json (v1 - v5) or build/latest.json (v6+)
         metadata = db_metadata(build_dir=os.path.join(session_dir, "build"))
@@ -369,8 +369,8 @@ def db_metadata(build_dir: str) -> dict:
     raise DBInvalidException(msg)
 
 
-def parse_datetime(s: str) -> datetime.datetime:
-    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
+def parse_datetime(s: str) -> dt.datetime:
+    return dt.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.UTC)
 
 
 class GrypeDB:

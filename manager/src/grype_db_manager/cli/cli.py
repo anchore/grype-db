@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import time
 from typing import Any
 
@@ -42,7 +42,7 @@ def cli(ctx: click.core.Context, verbosity: int, config_path: str | None) -> Non
 
         def format(self, record: logging.LogRecord) -> str:  # noqa: A003
             elapsed_seconds = record.created - self.start_time
-            elapsed = datetime.timedelta(seconds=elapsed_seconds)
+            elapsed = dt.timedelta(seconds=elapsed_seconds)
             record.delta = f"{int(elapsed.total_seconds()):04d}"
             return super().format(record)
 
