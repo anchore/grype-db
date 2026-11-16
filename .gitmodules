@@ -1,4 +1,0 @@
-[submodule "data/vulnerability-match-labels"]
-	path = data/vulnerability-match-labels
-	url = https://github.com/anchore/vulnerability-match-labels.git
-	branch = main

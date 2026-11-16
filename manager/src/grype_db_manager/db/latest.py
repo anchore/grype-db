@@ -110,6 +110,7 @@ def _smoke_test(
         store_root=store_root,
         update_url=listing_url,
     )
+    tool_obj.update_db()
 
     output = tool_obj.run(user_input=image)
     packages, vulnerabilities = grype.Report(report_contents=output).parse()

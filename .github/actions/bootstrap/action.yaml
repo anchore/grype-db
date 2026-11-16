@@ -49,7 +49,7 @@ runs:
         check-latest: true
     - name: Install uv
       if: inputs.python == 'true'
-      uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       with:
         version: ${{ inputs.uv-version }}
         enable-cache: true
@@ -61,13 +61,19 @@ runs:
       if: inputs.python == 'true'
       shell: bash
       run: make bootstrap-python
+    # grype is installed from main, so rebuild the tools weekly rather than only when .binny.yaml changes
+    - name: Tool cache week
+      if: inputs.tools == 'true'
+      id: tool-cache-week
+      shell: bash
+      run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
     - name: Restore tool cache
       if: inputs.tools == 'true'
       id: tool-cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ github.workspace }}/.tool
-        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-tool-${{ hashFiles('.binny.yaml') }}-${{ steps.tool-cache-week.outputs.week }}
     - name: (cache-miss) Bootstrap project tools
       shell: bash
       if: steps.tool-cache.outputs.cache-hit != 'true' && inputs.tools == 'true'

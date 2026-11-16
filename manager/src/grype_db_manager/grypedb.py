@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-import datetime
+import datetime as dt
 import glob
 import json
 import logging
@@ -17,6 +17,7 @@ import uuid
 import requests
 import xxhash
 
+from grype_db_manager import utils
 from grype_db_manager.db.format import Format
 
 TOOLS_DIR = "tools"
@@ -149,8 +150,8 @@ class DBInfo:
     uuid: str
     schema_version: int
     db_checksum: str
-    db_created: datetime.datetime
-    data_created: datetime.datetime
+    db_created: dt.datetime
+    data_created: dt.datetime
     archive_path: str
     latest_path: str | None = None
 
@@ -187,7 +188,7 @@ class DBManager:
 
         session_dir = os.path.join(self.db_dir, db_uuid)
         with open(os.path.join(session_dir, "timestamp"), "w") as f:
-            now = datetime.datetime.now(tz=datetime.UTC)
+            now = dt.datetime.now(tz=dt.UTC)
             f.write(now.isoformat())
 
         return db_uuid
@@ -261,7 +262,7 @@ class DBManager:
         timestamp_path = os.path.join(session_dir, "timestamp")
         if os.path.exists(timestamp_path):
             with open(timestamp_path) as f:
-                db_created_timestamp = datetime.datetime.fromisoformat(f.read())
+                db_created_timestamp = dt.datetime.fromisoformat(f.read())
 
         # read info from the metadata file in build/metadata.json (v1 - v5) or build/latest.json (v6+)
         metadata = db_metadata(build_dir=os.path.join(session_dir, "build"))
@@ -368,8 +369,8 @@ def db_metadata(build_dir: str) -> dict:
     raise DBInvalidException(msg)
 
 
-def parse_datetime(s: str) -> datetime.datetime:
-    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
+def parse_datetime(s: str) -> dt.datetime:
+    return dt.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.UTC)
 
 
 class GrypeDB:
@@ -399,6 +400,10 @@ class GrypeDB:
 
     @classmethod
     def install(cls, version: str, config_path: str, root_dir: str) -> GrypeDB:
+        # an explicit GRYPE_DB_EXECUTABLE_PATH wins over the configured version (even "disabled")
+        if override := utils.executable_override("grype-db"):
+            return cls(bin_path=override, config_path=config_path)
+
         bin_path = None
         if version != "disabled":
             bin_path = _install_grype_db(
@@ -495,23 +500,12 @@ def print_annotation(s: str, italic: bool = True, grey: bool = True) -> None:
     sys.stderr.write(s + "\n")
 
 
-def _check_executable_path_override() -> str | None:
-    """Check for existing grype-db binary via GRYPE_DB_EXECUTABLE_PATH environment variable."""
-    if grype_db_path := os.getenv("GRYPE_DB_EXECUTABLE_PATH"):
-        if shutil.which(grype_db_path):
-            logging.info(f"Using grype-db from GRYPE_DB_EXECUTABLE_PATH: {grype_db_path}")
-            return grype_db_path
-        logging.warning(f"GRYPE_DB_EXECUTABLE_PATH points to non-executable: {grype_db_path}")
-    return None
-
-
 def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str:  # noqa: PLR0912, C901
     """
     Install grype-db CLI from a specified version.
 
     This can be a specific semver version (e.g. v0.7.0), "latest", a GitHub repo (e.g. user/repo or user/repo@branch),
-    or a local file path (e.g. file:///path/to/grype-db).
-    If an environment variable GRYPE_DB_EXECUTABLE_PATH is set and points to an executable, that binary will be used instead.
+    or a local file path (e.g. file:///path/to/grype-db). GRYPE_DB_EXECUTABLE_PATH is handled by GrypeDB.install.
 
     Args:
         input_version (str): The version or source to install from.
@@ -527,10 +521,6 @@ def _install_grype_db(input_version: str, bin_dir: str, clone_dir: str) -> str: 
         raise ValueError(msg)
 
     os.makedirs(bin_dir, exist_ok=True)
-
-    # Check for explicit grype-db binary override (opt-in only)
-    if existing_binary := _check_executable_path_override():
-        return existing_binary
 
     version = input_version
     is_semver = re.match(r"v\d+\.\d+\.\d+", input_version)

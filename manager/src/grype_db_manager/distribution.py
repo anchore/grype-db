@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import hashlib
 import logging
 import os
@@ -132,8 +132,8 @@ def age_from_basename(basename: str) -> int | None:
         logging.exception(f"unable to parse age from basename {basename}")
 
 
-def _now() -> datetime.datetime:
-    return datetime.datetime.now(tz=datetime.UTC)
+def _now() -> dt.datetime:
+    return dt.datetime.now(tz=dt.UTC)
 
 
 def hash_file(path: str) -> str:

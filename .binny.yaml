@@ -4,11 +4,12 @@ tools:
   # we want to use a pinned version of binny to manage the toolchain (so binny manages itself!)
   - name: binny
     version:
-      want: v0.13.4
+      want: v0.14.0
     method: github-release
     with:
       repo: anchore/binny
 
+  # used by the DB quality gate (both setups scan with this one binary) and the listing smoke tests
   - name: grype
     version:
       want: main
@@ -16,6 +17,14 @@ tools:
     with:
       module: github.com/anchore/grype
       entrypoint: cmd/grype
+
+  # used to run the DB quality gate
+  - name: yardstick
+    version:
+      want: v0.17.0
+    method: github-release
+    with:
+      repo: anchore/yardstick
 
   # used at release to generate the changelog
   - name: chronicle
@@ -68,7 +77,7 @@ tools:
   # used for triggering a release
   - name: gh
     version:
-      want: v2.103.0
+      want: v2.103.3
     method: github-release
     with:
       repo: cli/cli
@@ -76,7 +85,7 @@ tools:
   # used to upload test fixture cache
   - name: oras
     version:
-      want: v1.3.5
+      want: v1.3.6
     method: github-release
     with:
       repo: oras-project/oras

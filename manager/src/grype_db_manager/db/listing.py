@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-import datetime
+import datetime as dt
 import functools
 import json
 import logging
@@ -41,9 +41,9 @@ class Entry:
 
         return basename
 
-    def age_in_days(self, now: datetime.datetime | None = None) -> int:
+    def age_in_days(self, now: dt.datetime | None = None) -> int:
         if not now:
-            now = datetime.datetime.now(tz=datetime.UTC)
+            now = dt.datetime.now(tz=dt.UTC)
         return (now - iso8601.parse_date(self.built)).days
 
 
@@ -66,7 +66,7 @@ class Listing:
     def to_dict(self) -> dict:
         return asdict(self)
 
-    def prune(self, max_age_days: int, minimum_elements: int, now: datetime.datetime | None = None) -> None:
+    def prune(self, max_age_days: int, minimum_elements: int, now: dt.datetime | None = None) -> None:
         self.sort()
 
         for schema_version, entries in self.available.items():
@@ -230,13 +230,16 @@ def _smoke_test(
     minimum_packages: int,
     minimum_vulnerabilities: int,
     store_root: str,
+    release: str | None = None,
 ) -> None:
     logging.info(f"testing listing.json grype schema-version={schema_version!r}")
     tool_obj = grype.Grype(
         schema_version=schema_version,
         store_root=store_root,
         update_url=listing_url,
+        release=release,
     )
+    tool_obj.update_db()
 
     output = tool_obj.run(user_input=image)
     packages, vulnerabilities = grype.Report(report_contents=output).parse()
@@ -289,6 +292,7 @@ def smoke_test(
                     minimum_packages=minimum_packages,
                     minimum_vulnerabilities=minimum_vulnerabilities,
                     store_root=installation_path,
+                    release=override_release,
                 )
 
             else:
