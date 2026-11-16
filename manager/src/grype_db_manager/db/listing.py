@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-import datetime
+import datetime as dt
 import functools
 import json
 import logging
@@ -41,9 +41,9 @@ class Entry:
 
         return basename
 
-    def age_in_days(self, now: datetime.datetime | None = None) -> int:
+    def age_in_days(self, now: dt.datetime | None = None) -> int:
         if not now:
-            now = datetime.datetime.now(tz=datetime.UTC)
+            now = dt.datetime.now(tz=dt.UTC)
         return (now - iso8601.parse_date(self.built)).days
 
 
@@ -66,7 +66,7 @@ class Listing:
     def to_dict(self) -> dict:
         return asdict(self)
 
-    def prune(self, max_age_days: int, minimum_elements: int, now: datetime.datetime | None = None) -> None:
+    def prune(self, max_age_days: int, minimum_elements: int, now: dt.datetime | None = None) -> None:
         self.sort()
 
         for schema_version, entries in self.available.items():
