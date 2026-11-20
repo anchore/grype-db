@@ -226,8 +226,7 @@ upload-provider-cache: ci-check
 	@rm -f .cache/vunnel/$(provider)/grype-db-cache.tar.gz
 	$(GRYPE_DB) cache status -p $(provider)
 	$(GRYPE_DB) cache backup -v --path .cache/vunnel/$(provider)/grype-db-cache.tar.gz -p $(provider)
-	$(ORAS) push $(ORAS_FLAGS) -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) .cache/vunnel/$(provider)/grype-db-cache.tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
-	$(CRANE) tag $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date) latest
+	$(ORAS) push $(ORAS_FLAGS) -v $(GRYPE_DB_DATA_IMAGE_NAME)/$(provider):$(date),latest .cache/vunnel/$(provider)/grype-db-cache.tar.gz --annotation org.opencontainers.image.source=$(SOURCE_REPO_URL)
 	@rm -rf .cache/vunnel/$(provider)
 
 .PHONY: download-all-provider-cache
