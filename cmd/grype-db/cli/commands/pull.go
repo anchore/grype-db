@@ -73,7 +73,9 @@ func runPull(cfg pullConfig) error {
 
 	if len(cfg.IncludeFilter) > 0 {
 		log.WithFields("keep-only", cfg.Provider.IncludeFilter).Debug("filtering providers by name")
-		ps = ps.Filter(cfg.IncludeFilter...)
+		if ps, err = filterProviders(ps, cfg.IncludeFilter); err != nil {
+			return err
+		}
 	}
 
 	c := pull.Config{
