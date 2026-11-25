@@ -107,7 +107,15 @@ func runBuild(cfg buildConfig) error {
 		return fmt.Errorf("unable to get provider states: %w", err)
 	}
 
-	earliest, err := provider.States(states).EarliestTimestamp()
+	// cve5 only supplements nvd records, so a stale cve5 snapshot should not set the db build timestamp
+	var timestampStates []provider.State
+	for _, s := range states {
+		if s.Provider != "cve5" {
+			timestampStates = append(timestampStates, s)
+		}
+	}
+
+	earliest, err := provider.States(timestampStates).EarliestTimestamp()
 	if err != nil {
 		return fmt.Errorf("unable to get earliest timestamp: %w", err)
 	}
@@ -122,6 +130,7 @@ func runBuild(cfg buildConfig) error {
 		Hydrate:              cfg.Hydrate,
 		FailOnMissingFixDate: cfg.FailOnMissingFixDate,
 		BatchSize:            cfg.BatchSize,
+		ReconcileCNA:         cfg.ReconcileCNA,
 	})
 }
 
