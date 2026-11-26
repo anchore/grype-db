@@ -99,7 +99,9 @@ func runBuild(cfg buildConfig) error {
 
 	if len(cfg.IncludeFilter) > 0 {
 		log.WithFields("keep-only", cfg.Provider.IncludeFilter).Debug("filtering providers by name")
-		pvdrs = pvdrs.Filter(cfg.IncludeFilter...)
+		if pvdrs, err = filterProviders(pvdrs, cfg.IncludeFilter); err != nil {
+			return err
+		}
 	}
 
 	states, err := providerStates(cfg.SkipValidation, pvdrs)
