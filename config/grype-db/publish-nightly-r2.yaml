@@ -32,6 +32,7 @@ provider:
     - name: minimos
     - name: oracle
     - name: photon
+    - name: rapidfort
     - name: rhel
     - name: secureos
     - name: sles
